@@ -174,8 +174,9 @@ export type SpCoinReadAccess = {
   getActiveAccountListSize?: () => Promise<number>;
   getActiveAccountKeyAt?: (index: string | number) => Promise<string>;
   getActiveAccountElement?: (index: string | number) => Promise<string>;
-  getSponsorKeys?: () => Promise<string[]>;
+  getSponsorKeys?: (_accountKey?: string) => Promise<string[]>;
   getRecipientKeys?: (_accountKey: string) => Promise<string[]>;
+  getParentRecipientKeys?: (_accountKey: string) => Promise<string[]>;
   getRecipientList?: (_accountKey: string) => Promise<string[]>;
   getAccountRecipientList: (_accountKey: string) => Promise<string[]>;
   getAgentKeys?: (_accountKey: string) => Promise<string[]>;
@@ -194,6 +195,8 @@ export type SpCoinReadAccess = {
   isAgent?: (_accountKey: string) => Promise<boolean>;
   getAccountStakingRewards: (_accountKey: string) => Promise<RewardsStruct>;
   getSpCoinMetaData: () => Promise<unknown>;
+  getSponsorRecipientRates?: (_sponsorKey: string, _recipientKey: string) => Promise<(string | number | bigint)[]>;
+  getSponsorRecipientRateKeys?: (_sponsorKey: string, _recipientKey: string) => Promise<(string | number | bigint)[]>;
   getRecipientRateKeys: (_sponsorKey: string, _recipientKey: string) => Promise<(string | number | bigint)[]>;
   getRecipientRateList: (_sponsorKey: string, _recipientKey: string) => Promise<(string | number | bigint)[]>;
   getRecipientRateAgentKeys: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number) => Promise<string[]>;
@@ -308,6 +311,8 @@ export type SpCoinContractAccess = Contract & {
   ) => Promise<unknown>;
   getRecipientRateList?: (sponsorKey: unknown, recipientKey: unknown) => Promise<Array<string | bigint>>;
   getRecipientRateKeys?: (sponsorKey: unknown, recipientKey: unknown) => Promise<Array<string | bigint>>;
+  getSponsorRecipientRates?: (sponsorKey: unknown, recipientKey: unknown) => Promise<Array<string | bigint>>;
+  getSponsorRecipientRateKeys?: (sponsorKey: unknown, recipientKey: unknown) => Promise<Array<string | bigint>>;
   getAgentRateList?: (
     sponsorKey: unknown,
     recipientKey: unknown,
@@ -559,8 +564,9 @@ function createSpCoinOffChainAccess(
     if (typeof typedContract.isAccountInserted === 'function') {
       snapshot.recipientInserted = await typedContract.isAccountInserted(recipientKey);
     }
-    if (typeof read.getRecipientRateList === 'function') {
-      snapshot.recipientRateList = await read.getRecipientRateList(sponsorKey, recipientKey);
+    const getSponsorRecipientRates = read.getSponsorRecipientRates || read.getSponsorRecipientRateKeys || read.getRecipientRateKeys || read.getRecipientRateList;
+    if (typeof getSponsorRecipientRates === 'function') {
+      snapshot.recipientRateList = await getSponsorRecipientRates(sponsorKey, recipientKey);
     }
     logDebug(`JS => deleteAccountTree recipient ${stageLabel} = ${toDebugJson(snapshot)}`);
   };
@@ -636,7 +642,11 @@ function createSpCoinOffChainAccess(
             if (accountKeySet.has(recipientKey)) {
               await walkAccountTree(recipientKey, true);
             }
-            const recipientRateList = await read.getRecipientRateList(sponsorKey, recipientKey);
+            const getSponsorRecipientRates = read.getSponsorRecipientRates || read.getSponsorRecipientRateKeys || read.getRecipientRateKeys || read.getRecipientRateList;
+            if (typeof getSponsorRecipientRates !== 'function') {
+              throw new Error('deleteAccountTree requires getSponsorRecipientRates(), getRecipientRateKeys(), or getRecipientRateList().');
+            }
+            const recipientRateList = await getSponsorRecipientRates(sponsorKey, recipientKey);
             logDebug(
               `JS => deleteAccountTree recipient rate list sponsor=${sponsorKey} recipient=${recipientKey} = ${toDebugJson(recipientRateList)}`,
             );

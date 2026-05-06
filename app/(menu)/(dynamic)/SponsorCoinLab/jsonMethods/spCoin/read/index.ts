@@ -32,9 +32,11 @@ export type SpCoinReadMethod =
   | 'getSponsorKeys'
   | 'getRecipientKeys'
   | 'getAgentKeys'
+  | 'getParentRecipientKeys'
   | 'getRecipientKeyCount'
   | 'getAgentKeyCount'
   | 'getAccountAgentCount'
+  | 'getAccountLinks'
   | 'getAccountRecord'
   | 'getAccountRoleSummary'
   | 'getAccountRoles'
@@ -52,6 +54,8 @@ export type SpCoinReadMethod =
   | 'getAgentTransactionIdKeys'
   | 'getRecipientRateList'
   | 'getRecipientRateKeys'
+  | 'getSponsorRecipientRates'
+  | 'getSponsorRecipientRateKeys'
   | 'getRecipientTransaction'
   | 'getRecipientTransactionList'
   | 'getRecipientRateAgentList'
@@ -115,6 +119,8 @@ const LEGACY_READ_METHOD_RENAMES: Partial<Record<string, SpCoinReadMethod>> = {
   getAgentList: 'getAgentKeys',
   getAgentListSize: 'getAgentKeyCount',
   getRecipientRateList: 'getRecipientRateKeys',
+  getSponsorRecipientRates: 'getRecipientRateKeys',
+  getSponsorRecipientRateKeys: 'getRecipientRateKeys',
   getRecipientRateAgentList: 'getRecipientRateAgentKeys',
   getAgentRateList: 'getAgentRateKeys',
   getSerializedAccountRecord: 'getAccountRecord',
@@ -125,7 +131,6 @@ const LEGACY_READ_METHOD_RENAMES: Partial<Record<string, SpCoinReadMethod>> = {
 };
 
 export const SPCOIN_OFFCHAIN_READ_METHODS: SpCoinReadMethod[] = [
-  'getAccountRecord',
   'getAccountStakingRewards',
   'getStakingRewards',
   'getRecipientTransaction',

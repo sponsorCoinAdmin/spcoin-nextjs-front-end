@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { buildHandler } from '../../readMethodRuntime';
-import getAccountCore from './getAccountCore';
+import getAccountRecord from './getAccountRecord';
 
 function toCount(value) {
     if (value == null) return null;
@@ -11,8 +11,8 @@ function toCount(value) {
 const handler = buildHandler('getRecipientKeyCount', async (context) => {
     const accountKey = String(context.methodArgs[0]);
     try {
-        const accountCore = await getAccountCore.run({ ...context, methodArgs: [accountKey] });
-        const count = toCount(accountCore?.recipientCount ?? accountCore?.[7]);
+        const accountRecord = await getAccountRecord.run({ ...context, methodArgs: [accountKey] });
+        const count = toCount(accountRecord?.recipientCount ?? accountRecord?.[6]);
         if (count != null) return count;
     } catch {
         // Older deployments can derive this from the recipient list.

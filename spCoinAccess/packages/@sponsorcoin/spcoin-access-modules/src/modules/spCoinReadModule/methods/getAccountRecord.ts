@@ -426,6 +426,11 @@ function normalizeAccountRelationshipKeys(accountStruct) {
     accountStruct.recipientKeys = normalizeDisplayAddressList(accountStruct.recipientKeys);
     accountStruct.agentKeys = normalizeDisplayAddressList(accountStruct.agentKeys);
     accountStruct.parentRecipientKeys = normalizeDisplayAddressList(accountStruct.parentRecipientKeys);
+    accountStruct.sponsorCount = String(accountStruct.sponsorCount ?? accountStruct.sponsorKeys.length ?? 0);
+    accountStruct.recipientCount = String(accountStruct.recipientCount ?? accountStruct.recipientKeys.length ?? 0);
+    accountStruct.agentCount = String(accountStruct.agentCount ?? accountStruct.agentKeys.length ?? 0);
+    accountStruct.parentRecipientCount = String(accountStruct.parentRecipientCount ?? accountStruct.parentRecipientKeys.length ?? 0);
+    accountStruct.active = Boolean(accountStruct.active);
 }
 
 function isEmptyBaseAccountRecord(accountStruct) {

@@ -1177,7 +1177,7 @@ export function useSponsorCoinLabScripts({
     (nextNameRaw: string, steps: LabScriptStep[]) => {
       const nextName = String(nextNameRaw || '').trim();
       if (!nextName) {
-        setStatus('Srript Name Required');
+        setStatus('Script Name Required');
         return false;
       }
 
@@ -1422,10 +1422,15 @@ export function useSponsorCoinLabScripts({
           'msg.sender': sender,
           params: serializationTestParams
             .slice(0, activeSerializationTestDef.params.length)
-            .map((value, idx) => ({
-              key: activeSerializationTestDef.params[idx]?.label || `param${idx + 1}`,
-              value: String(value || '').trim(),
-            }))
+            .map((value, idx) => {
+              const param = activeSerializationTestDef.params[idx];
+              return {
+                key: param?.label || `param${idx + 1}`,
+                value: isAmountParam(param)
+                  ? normalizeAmountForMethod(value, spWriteAmountUnits[idx] || 'RAW', activeTokenDecimals)
+                  : String(value || '').trim(),
+              };
+            })
             .filter((param) => param.value.length > 0),
         };
       }

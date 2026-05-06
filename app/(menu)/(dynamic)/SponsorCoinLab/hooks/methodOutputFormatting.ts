@@ -136,9 +136,20 @@ export function deriveReadWarningPayload(
         : null;
     const recipientKeys = Array.isArray(record.recipientKeys) ? record.recipientKeys : [];
     const agentKeys = Array.isArray(record.agentKeys) ? record.agentKeys : [];
+    const accountBalance = toDisplayString(record.accountBalance ?? record.balanceOf, '0').trim();
+    const stakedAccountSPCoins = toDisplayString(record.stakedAccountSPCoins ?? record.stakedSPCoins, '0').trim();
+    const hasCountFields =
+      'sponsorCount' in record ||
+      'recipientCount' in record ||
+      'agentCount' in record ||
+      'parentRecipientCount' in record ||
+      'active' in record;
     const isEmptyAccountRecord =
-      toDisplayString(record.creationTime).trim() === '' &&
+      !hasCountFields &&
+      ['', '0'].includes(toDisplayString(record.creationTime).trim()) &&
       toDisplayString(totalSpCoins?.totalSpCoins, '0').trim() === '0' &&
+      accountBalance === '0' &&
+      stakedAccountSPCoins === '0' &&
       recipientKeys.length === 0 &&
       agentKeys.length === 0;
     if (isEmptyAccountRecord) {

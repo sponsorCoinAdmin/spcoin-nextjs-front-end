@@ -1,6 +1,5 @@
 // @ts-nocheck
 import compareSpCoinContractSize from './compareSpCoinContractSize';
-import getAccountRecord from './getAccountRecord';
 import getAccountRoleSummary from './getAccountRoleSummary';
 import getAccountRoles from './getAccountRoles';
 import getAccountStakingRewards from './getAccountStakingRewards';
@@ -13,7 +12,6 @@ import isRecipient from './isRecipient';
 import isAgent from './isAgent';
 export const OFFCHAIN_READ_METHOD_HANDLERS = {
     compareSpCoinContractSize,
-    getAccountRecord,
     getAccountRoleSummary,
     getAccountRoles,
     getAccountStakingRewards,

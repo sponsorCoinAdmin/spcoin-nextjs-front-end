@@ -240,10 +240,16 @@ export const addAgentSponsorship = async (
         []
       );
     }
-    if (typeof context.spCoinContractDeployed.getRecipientRateList === "function") {
+    const getSponsorRecipientRates =
+      typeof context.spCoinContractDeployed.getSponsorRecipientRates === "function"
+        ? context.spCoinContractDeployed.getSponsorRecipientRates
+        : typeof context.spCoinContractDeployed.getSponsorRecipientRateKeys === "function"
+          ? context.spCoinContractDeployed.getSponsorRecipientRateKeys
+        : context.spCoinContractDeployed.getRecipientRateList;
+    if (typeof getSponsorRecipientRates === "function") {
       snapshot.recipientRateList = await safeRead(
         "addAgentSponsorship recipientRateList",
-        () => context.spCoinContractDeployed.getRecipientRateList(
+        () => getSponsorRecipientRates(
           sponsorKey,
           _recipientKey
         ),

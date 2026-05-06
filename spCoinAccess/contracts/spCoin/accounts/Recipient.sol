@@ -68,18 +68,18 @@ contract Recipient is Sponsor {
 
     /// @notice retrieves the recipient rate keys for a sponsor-recipient pair.
     /// @param _recipientKey recipient Key to retrieve the recipient list
-    function getRecipientRateList(address _sponsorKey, address _recipientKey)
+    function getSponsorRecipientRates(address _sponsorKey, address _recipientKey)
         external view  returns (uint[] memory) {
-        // console.log("Recipient.sol:getRecipientRateList (", toString(_sponsorKey), ",", toString(_recipientKey));
+        // console.log("Recipient.sol:getSponsorRecipientRates (", toString(_sponsorKey), ",", toString(_recipientKey));
         RecipientStruct storage recipientRecord = getRecipientRecordByKeys(_sponsorKey, _recipientKey);
-        uint[] memory recipientRateKeys = recipientRecord.recipientRateKeys;
-        // console.log("Recipient.sol:getRecipientRateList recipientRateKeys.length = ", recipientRateKeys.length);
+        uint[] memory recipientRates = recipientRecord.recipientRateKeys;
+        // console.log("Recipient.sol:getSponsorRecipientRates recipientRates.length = ", recipientRates.length);
         // console.log("AGENTS.SOL:recipientRecord.recipientKey = " , recipientRecord.recipientKey);
-        // console.log("AGENTS.SOL:getAgentRateList:recipientRateKeys.length = ",recipientRateKeys.length);
-        return recipientRateKeys;
+        // console.log("AGENTS.SOL:getAgentRateList:recipientRates.length = ", recipientRates.length);
+        return recipientRates;
     }
 
-    function getRecipientRateListPage(address _sponsorKey, address _recipientKey, uint256 offset, uint256 limit)
+    function getSponsorRecipientRatesPage(address _sponsorKey, address _recipientKey, uint256 offset, uint256 limit)
         external
         view
         returns (uint256[] memory page, uint256 total)

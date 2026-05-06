@@ -423,7 +423,8 @@ contract Transactions is RewardsManager {
         // console.log("balanceOf[", msg.sender, "] = ",balanceOf[msg.sender]);
         if (sponsorAmount == 0) revert SpCoinError(AMOUNT_ZERO);
         // string memory errString =
-        if (balanceOf[_sponsorKey] < sponsorAmount) revert SpCoinError(INSUFFICIENT_BALANCE);
+        address payerKey = msg.sender;
+        if (balanceOf[payerKey] < sponsorAmount) revert SpCoinError(INSUFFICIENT_BALANCE);
 
 
         // validateSufficientAccountBalance(_sponsorCoinQty)
@@ -476,7 +477,7 @@ contract Transactions is RewardsManager {
 
         // console.log("BEFORE balanceOf     =", balanceOf[msg.sender]);
         // console.log("BEFORE _sponsorCoinQty ", sponsorAmount);
-        balanceOf[_sponsorKey] -= sponsorAmount;
+        balanceOf[payerKey] -= sponsorAmount;
         totalUnstakedSpCoins -= sponsorAmount;
         // console.log("AFTER balanceOf     =", balanceOf[msg.sender]);
         // console.log("AFTER _sponsorCoinQty ", sponsorAmount);
@@ -847,7 +848,7 @@ contract Transactions is RewardsManager {
         );
     }
 
-    function getSponsorRecipientBoxRecipientRateTransactionSetKeys(
+    function getSponsorRecipientRecipientRateTransactionSetKeys(
         address _sponsorKey,
         address _recipientKey
     )
@@ -860,7 +861,7 @@ contract Transactions is RewardsManager {
             .recipientRateTransactionSetKeys;
     }
 
-    function getSponsorRecipientBoxRecipientRateTransactionSetKeysPage(
+    function getSponsorRecipientRecipientRateTransactionSetKeysPage(
         address _sponsorKey,
         address _recipientKey,
         uint256 _offset,
@@ -879,7 +880,7 @@ contract Transactions is RewardsManager {
         );
     }
 
-    function getSponsorRecipientBoxAgentRateTransactionSetKeys(
+    function getSponsorRecipientAgentRateTransactionSetKeys(
         address _sponsorKey,
         address _recipientKey
     )
@@ -892,7 +893,7 @@ contract Transactions is RewardsManager {
             .agentRateTransactionSetKeys;
     }
 
-    function getSponsorRecipientBoxAgentRateTransactionSetKeysPage(
+    function getSponsorRecipientAgentRateTransactionSetKeysPage(
         address _sponsorKey,
         address _recipientKey,
         uint256 _offset,
@@ -911,7 +912,7 @@ contract Transactions is RewardsManager {
         );
     }
 
-    function getSponsorRecipientBoxRateTransactionSetKeys(
+    function getSponsorRecipientRateTransactionSetKeyGroups(
         address _sponsorKey,
         address _recipientKey
     )

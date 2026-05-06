@@ -713,7 +713,7 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
 
   const loadRecipientRateKeys = async (sponsorKey: string, recipientKey: string) =>
     withAccess(`loadRecipientRateList(${sponsorKey}, ${recipientKey})`, (access) =>
-      callFirstListMethod(access, ['getRecipientRateList', 'getRecipientRateKeys'], [sponsorKey, recipientKey]),
+      callFirstListMethod(access, ['getSponsorRecipientRates', 'getSponsorRecipientRateKeys', 'getRecipientRateKeys', 'getRecipientRateList'], [sponsorKey, recipientKey]),
     );
 
   const loadRecipientRateAgentKeys = async (sponsorKey: string, recipientKey: string, recipientRateKey: string | number) =>

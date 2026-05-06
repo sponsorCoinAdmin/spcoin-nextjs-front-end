@@ -1,6 +1,7 @@
 import React from 'react';
 import AccountDropdownInput from './AccountDropdownInput';
 import AccountSelection from './AccountSelection';
+import AmountInputRow from './AmountInputRow';
 import {
   FALLBACK_CONTRACT_DIRECTORY_OPTIONS,
   getInitialContractDirectoryOptions,
@@ -12,6 +13,7 @@ import {
 import { getMethodOptionColor } from './methodOptionColors';
 import { NativeSelectChevron } from './SelectChevron';
 import type { MethodDef } from '../jsonMethods/shared/types';
+import { isAmountParam, type AmountUnit } from '../utils/amountUnits';
 
 type Props = {
   invalidFieldIds: string[];
@@ -28,6 +30,9 @@ type Props = {
   activeSerializationTestDef: MethodDef;
   serializationTestParams: string[];
   setSerializationTestParams: React.Dispatch<React.SetStateAction<string[]>>;
+  serializationTestAmountUnits: Record<number, AmountUnit>;
+  setSerializationTestAmountUnit: (idx: number, value: AmountUnit) => void;
+  activeTokenDecimals: number;
   initialContractDirectoryOptions?: ContractDirectoryOption[];
   inputStyle: string;
   canRunSelectedSerializationTestMethod: boolean;
@@ -58,6 +63,9 @@ export default function SerializationTestController(props: Props) {
     activeSerializationTestDef,
     serializationTestParams,
     setSerializationTestParams,
+    serializationTestAmountUnits,
+    setSerializationTestAmountUnit,
+    activeTokenDecimals,
     initialContractDirectoryOptions = [],
     inputStyle,
     canRunSelectedSerializationTestMethod,
@@ -362,6 +370,30 @@ export default function SerializationTestController(props: Props) {
                 <NativeSelectChevron />
               </div>
             </label>
+          ) : isAmountParam(param) ? (
+            <AmountInputRow
+              label={param.label}
+              dataFieldId={`serialization-test-param-${idx}`}
+              inputStyle={inputStyle}
+              inputClassName={invalidClass(`serialization-test-param-${idx}`)}
+              value={serializationTestParams[idx] || ''}
+              unit={serializationTestAmountUnits[idx] || 'RAW'}
+              decimals={activeTokenDecimals}
+              onValueChange={(value) => {
+                markEditorAsUserEdited();
+                clearInvalidField(`serialization-test-param-${idx}`);
+                setSerializationTestParams((prev) => {
+                  const next = [...prev];
+                  next[idx] = value;
+                  return next;
+                });
+              }}
+              onUnitChange={(unit) => {
+                markEditorAsUserEdited();
+                setSerializationTestAmountUnit(idx, unit);
+              }}
+              placeholder={param.placeholder}
+            />
           ) : (
             <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
               <span className="text-sm font-semibold text-[#8FA8FF]">{param.label}</span>

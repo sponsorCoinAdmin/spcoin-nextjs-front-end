@@ -1,7 +1,7 @@
 // File: lib/context/ExchangeProvider.tsx
 'use client';
 
-import React, { createContext, useEffect, useRef, useState } from 'react';
+import React, { createContext, useCallback, useEffect, useRef, useState } from 'react';
 import { useAccount, useChainId as useWagmiChainId } from 'wagmi';
 
 import { initExchangeContext } from '@/lib/context/init/initExchangeContext';
@@ -426,8 +426,9 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
   const [tokenAssetsRefreshTick, setTokenAssetsRefreshTick] = useState(0);
   const activeAssetsRefreshHandledRef = useRef(0);
   const roleAssetsRefreshHandledRef = useRef(0);
+  const lastDisconnectedLogKeyRef = useRef<string | undefined>(undefined);
 
-  const setExchangeContext = (
+  const setExchangeContext = useCallback((
     updater: (prev: ExchangeContextTypeOnly) => ExchangeContextTypeOnly,
     _hookName = 'unknown',
   ) => {
@@ -491,7 +492,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
 
       return nextBase;
     });
-  };
+  }, []);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -655,11 +656,17 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       : undefined;
 
     if (!isConnected || !nextAddr) {
-      debugLog.log?.(
-        '[ExchangeProvider] disconnect or missing address — preserving previous accounts.activeAccount',
-      );
+      const logKey = `${isConnected ? 'connected' : 'disconnected'}:${nextAddr ?? ''}:${activeAccountAddress ?? ''}`;
+      if (lastDisconnectedLogKeyRef.current !== logKey) {
+        lastDisconnectedLogKeyRef.current = logKey;
+        debugLog.log?.(
+          '[ExchangeProvider] disconnect or missing address — preserving previous accounts.activeAccount',
+        );
+      }
       return;
     }
+
+    lastDisconnectedLogKeyRef.current = undefined;
 
     const current = contextState.accounts?.activeAccount;
     const currentAddr = current?.address ? (current.address as string) : undefined;

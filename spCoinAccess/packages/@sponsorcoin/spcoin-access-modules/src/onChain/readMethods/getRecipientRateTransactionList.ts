@@ -2,7 +2,11 @@
 import { bigIntToDateTimeString, bigIntToDecString } from '../../utils/dateTime';
 import { buildHandler } from '../../readMethodRuntime';
 const handler = buildHandler('getRecipientTransactionList', async (context) => {
-    const rates = (await context.contract.getRecipientRateList?.(context.methodArgs[0], context.methodArgs[1])) ?? [];
+    const rates = (await (
+        context.contract.getSponsorRecipientRates?.(context.methodArgs[0], context.methodArgs[1]) ??
+        context.contract.getSponsorRecipientRateKeys?.(context.methodArgs[0], context.methodArgs[1]) ??
+        context.contract.getRecipientRateList?.(context.methodArgs[0], context.methodArgs[1])
+    )) ?? [];
     return Promise.all(rates.map(async (rate) => {
         const [, , , creationTime, lastUpdateTime, stakedSPCoins] = await context.contract.getRecipientTransaction(context.methodArgs[0], context.methodArgs[1], rate);
         const serializedRecipientTransaction = [

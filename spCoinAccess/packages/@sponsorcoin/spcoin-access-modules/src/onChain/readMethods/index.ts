@@ -4,7 +4,7 @@ import calculateStakingRewards from './calculateStakingRewards';
 import getAccountKeys from './getMasterAccountList';
 import getMasterAccountMetaData from './getMasterAccountMetaData';
 import getActiveAccountKeys from './getActiveAccountList';
-import getAccountCore from './getAccountCore';
+import getAccountRecord from './getAccountRecord';
 import getRecipientRateKeys from './getRecipientRateList';
 import getRecipientRateAgentKeys from './getRecipientRateAgentList';
 import getLowerRecipientRate from './getLowerRecipientRate';
@@ -35,6 +35,8 @@ import getAgentTransactionIdKeys from './getAgentTransactionIdKeys';
 import getMasterAccountKeyCount from './getAccountListSize';
 import getActiveAccountCount from './getActiveAccountListSize';
 import getSponsorKeys from './getSponsorKeys';
+import getParentRecipientKeys from './getParentRecipientKeys';
+import getAccountLinks from './getAccountLinks';
 import getRecipientKeys from './getAccountRecipientList';
 import getAgentKeys from './getAccountAgentList';
 import getRecipientKeyCount from './getAccountRecipientListSize';
@@ -65,9 +67,11 @@ export const ONCHAIN_READ_METHOD_HANDLERS = {
     getMasterAccountMetaData,
     getMasterAccountKeys: getAccountKeys,
     getAccountKeys,
-    getAccountCore,
+    getAccountRecord,
     getActiveAccountKeys,
     getRecipientRateKeys,
+    getSponsorRecipientRates: getRecipientRateKeys,
+    getSponsorRecipientRateKeys: getRecipientRateKeys,
     getRecipientRateAgentKeys,
     getLowerRecipientRate,
     getUpperRecipientRate,
@@ -101,6 +105,8 @@ export const ONCHAIN_READ_METHOD_HANDLERS = {
     getAccountKeyCount: getMasterAccountKeyCount,
     getActiveAccountCount,
     getSponsorKeys,
+    getParentRecipientKeys,
+    getAccountLinks,
     getRecipientKeys,
     getAgentKeys,
     getRecipientKeyCount,

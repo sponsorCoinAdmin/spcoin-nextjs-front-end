@@ -377,28 +377,67 @@ function normalizeAddressDisplay(value: unknown) {
   return String(value ?? '').trim().toLowerCase();
 }
 
+function toNonNegativeCount(value: unknown): number {
+  const count = Number(String(value ?? '0').replace(/,/g, '').trim());
+  return Number.isFinite(count) && count > 0 ? count : 0;
+}
+
+function normalizeAddressListResult(value: unknown): string[] {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.map((entry) => String(entry));
+  if (typeof (value as { toArray?: () => unknown[] }).toArray === 'function') {
+    return (value as { toArray: () => unknown[] }).toArray().map((entry) => String(entry));
+  }
+  if (typeof (value as { length?: unknown })?.length === 'number') {
+    return Array.from(value as ArrayLike<unknown>, (entry) => String(entry));
+  }
+  return [];
+}
+
+function buildLazyAccountRelation(accountKey: string, relation: string, countValue: unknown) {
+  return {
+    __lazyAccountRelation: true,
+    accountKey,
+    relation,
+    count: toNonNegativeCount(countValue),
+  };
+}
+
+function hasAccountRecordCounts(result: unknown) {
+  return Boolean(
+    result &&
+      typeof result === 'object' &&
+      !Array.isArray(result) &&
+      ('sponsorCount' in result ||
+        'recipientCount' in result ||
+        'agentCount' in result ||
+        'parentRecipientCount' in result ||
+        'active' in result),
+  );
+}
+
 function normalizeOnChainAccountRecordResult(result: unknown, requestedAccountKey: unknown) {
-  if (!Array.isArray(result) || result.length < 9) return result;
+  if (!Array.isArray(result) || result.length < 10) return result;
   const [
     accountKey,
     creationTime,
     accountBalance,
     stakedAccountSPCoins,
     accountStakingRewards,
-    sponsorKeys,
-    recipientKeys,
-    agentKeys,
-    parentRecipientKeys,
+    sponsorCount,
+    recipientCount,
+    agentCount,
+    parentRecipientCount,
+    active,
   ] = result;
   const normalizedCreationTime = String(creationTime ?? '0').trim();
   const normalizedBalance = String(accountBalance ?? '0').trim();
   const normalizedStaked = String(stakedAccountSPCoins ?? '0').trim();
   const normalizedStakingRewards = String(accountStakingRewards ?? '0').trim();
-  const normalizeList = (value: unknown) =>
-    Array.isArray(value) ? value.map((entry) => normalizeAddressDisplay(entry)).filter(Boolean) : [];
+  const normalizedAccountKey = normalizeAddressDisplay(accountKey || requestedAccountKey);
   return {
     TYPE: '--ACCOUNT--',
-    accountKey: normalizeAddressDisplay(accountKey || requestedAccountKey),
+    accountKey: normalizedAccountKey,
     creationTime: normalizedCreationTime === '0' ? '' : normalizedCreationTime,
     accountStakingRewards: normalizedStakingRewards,
     totalSpCoins: {
@@ -415,12 +454,17 @@ function normalizeOnChainAccountRecordResult(result: unknown, requestedAccountKe
         pendingAgentRewards: '0',
       },
     },
-    sponsorKeys: normalizeList(sponsorKeys),
-    recipientKeys: normalizeList(recipientKeys),
+    sponsorCount: String(sponsorCount ?? '0'),
+    recipientCount: String(recipientCount ?? '0'),
+    agentCount: String(agentCount ?? '0'),
+    parentRecipientCount: String(parentRecipientCount ?? '0'),
+    active: Boolean(active),
+    sponsorKeys: buildLazyAccountRelation(normalizedAccountKey, 'sponsorKeys', sponsorCount),
+    recipientKeys: buildLazyAccountRelation(normalizedAccountKey, 'recipientKeys', recipientCount),
     recipientRates: {},
-    agentKeys: normalizeList(agentKeys),
+    agentKeys: buildLazyAccountRelation(normalizedAccountKey, 'agentKeys', agentCount),
     agentRates: {},
-    parentRecipientKeys: normalizeList(parentRecipientKeys),
+    parentRecipientKeys: buildLazyAccountRelation(normalizedAccountKey, 'parentRecipientKeys', parentRecipientCount),
   };
 }
 
@@ -668,9 +712,12 @@ export async function POST(request: NextRequest) {
             case 'getAccountRecord':
               if (typeof (contract as Record<string, unknown>).getAccountRecord === 'function') {
                 const cachedRecord = getCachedAccountRecord(contractAddress, findParam('Account Key'));
-                if (cachedRecord !== null) {
+                if (cachedRecord !== null && hasAccountRecordCounts(cachedRecord)) {
                   stepResult = cachedRecord;
                 } else {
+                  if (cachedRecord !== null) {
+                    invalidateCachedAccountRecord(contractAddress, findParam('Account Key'));
+                  }
                   stepResult = normalizeOnChainAccountRecordResult(await (
                     contract as unknown as { getAccountRecord: (accountKey: string) => Promise<unknown> }
                   ).getAccountRecord(findParam('Account Key')), findParam('Account Key'));
@@ -680,6 +727,67 @@ export async function POST(request: NextRequest) {
                 stepResult = await access.read.getAccountRecord(findParam('Account Key'));
               }
               break;
+            case 'getSponsorKeys':
+            case 'getRecipientKeys':
+            case 'getAgentKeys':
+            case 'getParentRecipientKeys': {
+              const accountKey = findParam('Account Key');
+              const methodName = String(step.method);
+              const contractMethod = (contract as Record<string, unknown>)[methodName];
+              if (typeof contractMethod === 'function') {
+                stepResult = normalizeAddressListResult(await (contractMethod as (accountKey: string) => Promise<unknown>)(accountKey));
+              } else if (typeof (access.read as Record<string, unknown>)[methodName] === 'function') {
+                stepResult = normalizeAddressListResult(
+                  await ((access.read as Record<string, unknown>)[methodName] as (accountKey: string) => Promise<unknown>)(accountKey),
+                );
+              } else if (typeof (contract as Record<string, unknown>).getAccountLinks === 'function') {
+                const links = await (
+                  contract as unknown as { getAccountLinks: (accountKey: string) => Promise<unknown> }
+                ).getAccountLinks(accountKey);
+                const relationMap: Record<string, string> = {
+                  getSponsorKeys: 'sponsorKeys',
+                  getRecipientKeys: 'recipientKeys',
+                  getAgentKeys: 'agentKeys',
+                  getParentRecipientKeys: 'parentRecipientKeys',
+                };
+                const relation = relationMap[methodName];
+                const source = links && typeof links === 'object' ? (links as Record<string, unknown> & { [index: number]: unknown }) : {};
+                const fallbackIndex = methodName === 'getSponsorKeys' ? 0 : methodName === 'getRecipientKeys' ? 1 : methodName === 'getAgentKeys' ? 2 : 3;
+                stepResult = normalizeAddressListResult(source[relation] ?? source[fallbackIndex] ?? []);
+              } else {
+                throw new Error(`${methodName} is not available on the current SpCoin contract.`);
+              }
+              break;
+            }
+            case 'getAccountLinks': {
+              const accountKey = findParam('Account Key');
+              if (typeof (contract as Record<string, unknown>).getAccountLinks === 'function') {
+                const links = await (
+                  contract as unknown as { getAccountLinks: (accountKey: string) => Promise<unknown> }
+                ).getAccountLinks(accountKey);
+                const source = links && typeof links === 'object' ? (links as Record<string, unknown> & { [index: number]: unknown }) : {};
+                stepResult = {
+                  sponsorKeys: normalizeAddressListResult(source.sponsorKeys ?? source[0] ?? []),
+                  recipientKeys: normalizeAddressListResult(source.recipientKeys ?? source[1] ?? []),
+                  agentKeys: normalizeAddressListResult(source.agentKeys ?? source[2] ?? []),
+                  parentRecipientKeys: normalizeAddressListResult(source.parentRecipientKeys ?? source[3] ?? []),
+                };
+              } else if (typeof (access.read as Record<string, unknown>).getAccountLinks === 'function') {
+                const links = await (
+                  access.read as unknown as { getAccountLinks: (accountKey: string) => Promise<unknown> }
+                ).getAccountLinks(accountKey);
+                const source = links && typeof links === 'object' ? (links as Record<string, unknown> & { [index: number]: unknown }) : {};
+                stepResult = {
+                  sponsorKeys: normalizeAddressListResult(source.sponsorKeys ?? source[0] ?? []),
+                  recipientKeys: normalizeAddressListResult(source.recipientKeys ?? source[1] ?? []),
+                  agentKeys: normalizeAddressListResult(source.agentKeys ?? source[2] ?? []),
+                  parentRecipientKeys: normalizeAddressListResult(source.parentRecipientKeys ?? source[3] ?? []),
+                };
+              } else {
+                throw new Error('getAccountLinks is not available on the current SpCoin contract.');
+              }
+              break;
+            }
             case 'getAccountRoleSummary':
               if (typeof (access.read as Record<string, unknown>).getAccountRoleSummary !== 'function') {
                 throw new Error('getAccountRoleSummary is not available on the current SpCoin read access path.');

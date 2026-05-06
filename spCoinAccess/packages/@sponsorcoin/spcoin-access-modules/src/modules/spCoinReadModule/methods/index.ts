@@ -45,6 +45,6 @@ export { getRecipientTransaction } from './getRecipientTransaction';
 export { getRecipientTransactionList } from './getRecipientTransactionCollection';
 export { getRecipient } from './getRecipient';
 export { getRecipientRecordList } from './getRecipientRecordList';
-export { getRecipientRateKeys, getRecipientRateList } from './getRecipientRateList';
+export { getRecipientRateKeys, getRecipientRateList, getSponsorRecipientRates, getSponsorRecipientRateKeys } from './getRecipientRateList';
 export { getRecipientTransactionEntries } from './getRecipientTransactionEntries';
 

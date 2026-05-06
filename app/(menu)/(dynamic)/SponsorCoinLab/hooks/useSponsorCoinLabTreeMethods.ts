@@ -14,6 +14,12 @@ import {
   type MethodExecutionMeta,
 } from './methodExecutionHelpers';
 import type { AccessMethodCaller } from './useAccessMethodCaller';
+import { normalizeExecutionPayload } from './executionPayload';
+import {
+  applyLazyAccountRelationBuckets,
+  parseLazyAccountRelationClick,
+  useLazyAccountRelationExpansion,
+} from './useLazyAccountRelationExpansion';
 
 type OutputPanelMode = 'execution' | 'formatted' | 'tree' | 'raw_status' | 'debug';
 
@@ -194,6 +200,26 @@ export function useSponsorCoinLabTreeMethods({
   useEffect(() => {
     formattedOutputDisplayRef.current = formattedOutputDisplay;
   }, [formattedOutputDisplay]);
+  const treeOutputDisplayRef = useRef('(no tree yet)');
+  const setTrackedTreeOutputDisplay = useCallback(
+    (value: string) => {
+      treeOutputDisplayRef.current = value;
+      setTreeOutputDisplay(value);
+    },
+    [setTreeOutputDisplay],
+  );
+  const expandAccountRelationInline = useLazyAccountRelationExpansion({
+    appendLog,
+    formatFormattedPanelPayload,
+    formattedOutputDisplayRef,
+    treeOutputDisplayRef,
+    normalizeAddressValue,
+    requireContractAddress,
+    rpcUrl,
+    setFormattedOutputDisplay,
+    setStatus,
+    setTrackedTreeOutputDisplay,
+  });
 
   const callTreeAccessMethod = useCallback(
     async <T,>(methodName: string, runner: () => Promise<T> | T) => {
@@ -212,7 +238,7 @@ export function useSponsorCoinLabTreeMethods({
     try {
       const result = executionTimingCollector
         ? await runWithMethodTimingCollector(executionTimingCollector, async () => {
-        setTreeOutputDisplay('(no tree yet)');
+        setTrackedTreeOutputDisplay('(no tree yet)');
         setOutputPanelMode('tree');
         setStatus('Reading SponsorCoin metadata...');
         const target = requireContractAddress();
@@ -235,7 +261,7 @@ export function useSponsorCoinLabTreeMethods({
         }
       })
         : await (async () => {
-        setTreeOutputDisplay('(no tree yet)');
+        setTrackedTreeOutputDisplay('(no tree yet)');
         setOutputPanelMode('tree');
         setStatus('Reading SponsorCoin metadata...');
         const target = requireContractAddress();
@@ -257,12 +283,12 @@ export function useSponsorCoinLabTreeMethods({
           });
         }
       })();
-      setTreeOutputDisplay(formatOutputDisplayValue({ call, result, ...(executionTimingCollector ? { meta: buildExecutionMeta(executionTimingCollector) } : {}) }));
+      setTrackedTreeOutputDisplay(formatOutputDisplayValue({ call, result, ...(executionTimingCollector ? { meta: buildExecutionMeta(executionTimingCollector) } : {}) }));
       appendLog(`spCoinReadMethods/getSpCoinMetaData -> ${toDisplayString(result)}`);
       setStatus('Metadata read complete.');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown metadata read error.';
-      setTreeOutputDisplay(formatOutputDisplayValue({ call, error: message, ...(executionTimingCollector ? { meta: buildExecutionMeta(executionTimingCollector) } : {}) }));
+      setTrackedTreeOutputDisplay(formatOutputDisplayValue({ call, error: message, ...(executionTimingCollector ? { meta: buildExecutionMeta(executionTimingCollector) } : {}) }));
       setStatus(`Metadata read failed: ${message}`);
       appendLog(`Metadata read failed: ${message}`);
     }
@@ -274,7 +300,7 @@ export function useSponsorCoinLabTreeMethods({
     requireContractAddress,
     setOutputPanelMode,
     setStatus,
-    setTreeOutputDisplay,
+    setTrackedTreeOutputDisplay,
     traceEnabled,
     useLocalSpCoinAccessPackage,
   ]);
@@ -291,23 +317,23 @@ export function useSponsorCoinLabTreeMethods({
     try {
       const { list } = executionTimingCollector
         ? await runWithMethodTimingCollector(executionTimingCollector, async () => {
-        setTreeOutputDisplay('(no tree yet)');
+        setTrackedTreeOutputDisplay('(no tree yet)');
         setOutputPanelMode('tree');
         setStatus('Reading account list...');
         return loadTreeAccountOptions();
       })
         : await (async () => {
-        setTreeOutputDisplay('(no tree yet)');
+        setTrackedTreeOutputDisplay('(no tree yet)');
         setOutputPanelMode('tree');
         setStatus('Reading account list...');
         return loadTreeAccountOptions();
       })();
-      setTreeOutputDisplay(formatOutputDisplayValue({ call, result: list, ...(executionTimingCollector ? { meta: buildExecutionMeta(executionTimingCollector) } : {}) }));
+      setTrackedTreeOutputDisplay(formatOutputDisplayValue({ call, result: list, ...(executionTimingCollector ? { meta: buildExecutionMeta(executionTimingCollector) } : {}) }));
       appendLog(`spCoinReadMethods/getMasterAccountKeys -> ${JSON.stringify(list)}`);
       setStatus(`Account read complete (${list.length} account(s)).`);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown account list read error.';
-      setTreeOutputDisplay(formatOutputDisplayValue({ call, error: message, ...(executionTimingCollector ? { meta: buildExecutionMeta(executionTimingCollector) } : {}) }));
+      setTrackedTreeOutputDisplay(formatOutputDisplayValue({ call, error: message, ...(executionTimingCollector ? { meta: buildExecutionMeta(executionTimingCollector) } : {}) }));
       setStatus(`Account list read failed: ${message}`);
       appendLog(`Account list read failed: ${message}`);
     }
@@ -318,7 +344,7 @@ export function useSponsorCoinLabTreeMethods({
     loadTreeAccountOptions,
     setOutputPanelMode,
     setStatus,
-    setTreeOutputDisplay,
+    setTrackedTreeOutputDisplay,
     traceEnabled,
   ]);
 
@@ -340,7 +366,7 @@ export function useSponsorCoinLabTreeMethods({
     try {
       const accountKeys = executionTimingCollector
         ? await runWithMethodTimingCollector(executionTimingCollector, async () => {
-        setTreeOutputDisplay('(no tree yet)');
+        setTrackedTreeOutputDisplay('(no tree yet)');
         setOutputPanelMode('tree');
         setStatus('Reading all tree accounts...');
         const target = requireContractAddress();
@@ -365,7 +391,7 @@ export function useSponsorCoinLabTreeMethods({
         }
       })
         : await (async () => {
-        setTreeOutputDisplay('(no tree yet)');
+        setTrackedTreeOutputDisplay('(no tree yet)');
         setOutputPanelMode('tree');
         setStatus('Reading all tree accounts...');
         const target = requireContractAddress();
@@ -392,12 +418,12 @@ export function useSponsorCoinLabTreeMethods({
       const result = (accountKeys ?? []).map((accountKey) => ({
         address: String(accountKey || ''),
       }));
-      setTreeOutputDisplay(formatOutputDisplayValue({ call, result, ...(executionTimingCollector ? { meta: buildExecutionMeta(executionTimingCollector) } : {}) }));
+      setTrackedTreeOutputDisplay(formatOutputDisplayValue({ call, result, ...(executionTimingCollector ? { meta: buildExecutionMeta(executionTimingCollector) } : {}) }));
       appendLog(`spCoinReadMethods/getTreeAccounts -> ${JSON.stringify(result)}`);
       setStatus(`Tree accounts read complete (${result.length} account stub(s)).`);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown tree accounts read error.';
-      setTreeOutputDisplay(formatOutputDisplayValue({ call, error: message, ...(executionTimingCollector ? { meta: buildExecutionMeta(executionTimingCollector) } : {}) }));
+      setTrackedTreeOutputDisplay(formatOutputDisplayValue({ call, error: message, ...(executionTimingCollector ? { meta: buildExecutionMeta(executionTimingCollector) } : {}) }));
       setStatus(`Tree accounts read failed: ${message}`);
       appendLog(`Tree accounts read failed: ${message}`);
     }
@@ -408,7 +434,7 @@ export function useSponsorCoinLabTreeMethods({
     requireContractAddress,
     setOutputPanelMode,
     setStatus,
-    setTreeOutputDisplay,
+    setTrackedTreeOutputDisplay,
     traceEnabled,
     useLocalSpCoinAccessPackage,
   ]);
@@ -511,106 +537,7 @@ export function useSponsorCoinLabTreeMethods({
           if (firstResult?.payload?.onChainCalls) {
             treeRecord.onChainCalls = firstResult.payload.onChainCalls;
           }
-        }
-        if (
-          tree &&
-          typeof tree === 'object' &&
-          !Array.isArray(tree) &&
-          (!Array.isArray((tree as Record<string, unknown>).recipientKeys) ||
-            ((tree as Record<string, unknown>).recipientKeys as unknown[]).length === 0)
-        ) {
-          const recipientListResponse = await fetch('/api/spCoin/run-script', {
-            method: 'POST',
-            signal: options?.signal,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contractAddress: target,
-              rpcUrl,
-              spCoinAccessSource: 'local',
-              script: {
-                id: `expand-account-recipient-list-${Date.now()}`,
-                name: 'Expand Account Recipient List',
-                network: 'hardhat',
-                steps: [
-                  {
-                    step: 1,
-                    name: 'getRecipientKeys',
-                    panel: 'spcoin_rread',
-                    method: 'getRecipientKeys',
-                    mode: 'hardhat',
-                    params: [{ key: 'Account Key', value: normalizedAccount }],
-                  },
-                ],
-              },
-            }),
-          });
-          const recipientListPayload = (await recipientListResponse.json()) as {
-            ok?: boolean;
-            message?: string;
-            results?: { success?: boolean; payload?: { result?: unknown; error?: { message?: string } } }[];
-          };
-          if (recipientListResponse.ok) {
-            const recipientListResult = Array.isArray(recipientListPayload?.results) ? recipientListPayload.results[0] : null;
-            const rawRecipientKeys = recipientListResult?.success ? recipientListResult?.payload?.result : [];
-            const recipientKeys = Array.isArray(rawRecipientKeys)
-              ? rawRecipientKeys
-                  .map((value) => toDisplayString(value).trim())
-                  .filter((value) => value.length > 0)
-              : [];
-            if (recipientKeys.length > 0) {
-              (tree as Record<string, unknown>).recipientKeys = recipientKeys.map((address) => ({ address }));
-            }
-          }
-        }
-        if (
-          tree &&
-          typeof tree === 'object' &&
-          !Array.isArray(tree) &&
-          (!Array.isArray((tree as Record<string, unknown>).agentKeys) ||
-            ((tree as Record<string, unknown>).agentKeys as unknown[]).length === 0)
-        ) {
-          const agentListResponse = await fetch('/api/spCoin/run-script', {
-            method: 'POST',
-            signal: options?.signal,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contractAddress: target,
-              rpcUrl,
-              spCoinAccessSource: 'local',
-              script: {
-                id: `expand-account-agent-list-${Date.now()}`,
-                name: 'Expand Account Agent List',
-                network: 'hardhat',
-                steps: [
-                  {
-                    step: 1,
-                    name: 'getAgentKeys',
-                    panel: 'spcoin_rread',
-                    method: 'getAgentKeys',
-                    mode: 'hardhat',
-                    params: [{ key: 'Account Key', value: normalizedAccount }],
-                  },
-                ],
-              },
-            }),
-          });
-          const agentListPayload = (await agentListResponse.json()) as {
-            ok?: boolean;
-            message?: string;
-            results?: { success?: boolean; payload?: { result?: unknown; error?: { message?: string } } }[];
-          };
-          if (agentListResponse.ok) {
-            const agentListResult = Array.isArray(agentListPayload?.results) ? agentListPayload.results[0] : null;
-            const rawAgentKeys = agentListResult?.success ? agentListResult?.payload?.result : [];
-            const agentKeys = Array.isArray(rawAgentKeys)
-              ? rawAgentKeys
-                  .map((value) => toDisplayString(value).trim())
-                  .filter((value) => value.length > 0)
-              : [];
-            if (agentKeys.length > 0) {
-              (tree as Record<string, unknown>).agentKeys = agentKeys.map((address) => ({ address }));
-            }
-          }
+          applyLazyAccountRelationBuckets(treeRecord, normalizedAccount);
         }
         treeAccountRecordCacheRef.current.set(normalizedAccount, tree);
       }
@@ -626,19 +553,19 @@ export function useSponsorCoinLabTreeMethods({
     try {
       const { list } = executionTimingCollector
         ? await runWithMethodTimingCollector(executionTimingCollector, async () => {
-        setTreeOutputDisplay('(no tree yet)');
+        setTrackedTreeOutputDisplay('(no tree yet)');
         setOutputPanelMode('tree');
         setStatus('Building tree dump...');
         return loadTreeAccountOptions({ force: options?.force });
       })
         : await (async () => {
-        setTreeOutputDisplay('(no tree yet)');
+        setTrackedTreeOutputDisplay('(no tree yet)');
         setOutputPanelMode('tree');
         setStatus('Building tree dump...');
         return loadTreeAccountOptions({ force: options?.force });
       })();
       if (list.length === 0) {
-        setTreeOutputDisplay(formatOutputDisplayValue({ call: listCall, result: [], ...(executionTimingCollector ? { meta: buildExecutionMeta(executionTimingCollector) } : {}) }));
+        setTrackedTreeOutputDisplay(formatOutputDisplayValue({ call: listCall, result: [], ...(executionTimingCollector ? { meta: buildExecutionMeta(executionTimingCollector) } : {}) }));
         appendLog('Tree dump skipped: no accounts available.');
         setStatus('Tree dump skipped (no accounts).');
         return;
@@ -659,7 +586,7 @@ export function useSponsorCoinLabTreeMethods({
           : await loadAccountRecordForAddress(activeAccount);
         treeAccountRecordCacheRef.current.set(activeAccount, tree);
       }
-      setTreeOutputDisplay(
+      setTrackedTreeOutputDisplay(
         formatOutputDisplayValue({
           call: treeCall,
           result: tree,
@@ -670,7 +597,7 @@ export function useSponsorCoinLabTreeMethods({
       setStatus('Tree dump complete.');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown tree dump error.';
-      setTreeOutputDisplay(formatOutputDisplayValue({ call: listCall, error: message, ...(executionTimingCollector ? { meta: buildExecutionMeta(executionTimingCollector) } : {}) }));
+      setTrackedTreeOutputDisplay(formatOutputDisplayValue({ call: listCall, error: message, ...(executionTimingCollector ? { meta: buildExecutionMeta(executionTimingCollector) } : {}) }));
       setStatus(`Tree dump failed: ${message}`);
       appendLog(`Tree dump failed: ${message}`);
     }
@@ -683,7 +610,7 @@ export function useSponsorCoinLabTreeMethods({
     selectedTreeAccount,
     setOutputPanelMode,
     setStatus,
-    setTreeOutputDisplay,
+    setTrackedTreeOutputDisplay,
     traceEnabled,
   ]);
 
@@ -1021,6 +948,13 @@ export function useSponsorCoinLabTreeMethods({
           accountRecord && typeof accountRecord === 'object' && !Array.isArray(accountRecord)
             ? { ...(accountRecord as Record<string, unknown>) }
             : null;
+        const accountKeyForBuckets =
+          recordObject
+            ? normalizeAddressValue(toDisplayString(recordObject.accountKey || normalizedAccount))
+            : normalizedAccount;
+        if (recordObject) {
+          applyLazyAccountRelationBuckets(recordObject, accountKeyForBuckets);
+        }
         let callMeta = recordObject && 'meta' in recordObject ? (recordObject.meta as unknown) : undefined;
         const topLevelOnChainCalls = recordObject && 'onChainCalls' in recordObject ? recordObject.onChainCalls : undefined;
         const nestedMetaOnChainCalls =
@@ -1149,10 +1083,10 @@ export function useSponsorCoinLabTreeMethods({
             const accountRecord = await loadInlineAccountRecord();
             if (accountRecord === undefined) return 'handled';
             const nextAccountEntry = buildExpandedAccountEntry(accountRecord);
-            const nextRootPayload = writePathValue(payload, target.path, nextAccountEntry) as Record<string, unknown>;
-            const nextPayload = formatFormattedPanelPayload({
-              ...nextRootPayload,
-            });
+            const nextRootPayload = normalizeExecutionPayload(
+              writePathValue(payload, target.path, nextAccountEntry),
+            ) as Record<string, unknown>;
+            const nextPayload = formatFormattedPanelPayload(nextRootPayload);
             if (blocks.length > 1) {
               const nextBlocks = [...blocks];
               nextBlocks[entry.index] = nextPayload;
@@ -1193,7 +1127,8 @@ export function useSponsorCoinLabTreeMethods({
   );
 
   const openAccountFromAddress = useCallback(
-    async (account: string, pathHint?: string) => {
+    async (account: string, pathHint?: string, rawDisplayOverride?: string) => {
+      const relationClick = parseLazyAccountRelationClick(account, normalizeAddressValue);
       if (String(account ?? '').trim() === '__load_spcoin_metadata__') {
         const metadataResult = await expandSpCoinMetaDataInline(pathHint);
         if (metadataResult === 'expanded' || metadataResult === 'handled') {
@@ -1205,6 +1140,13 @@ export function useSponsorCoinLabTreeMethods({
         const keysResult = await expandMasterAccountKeysInline(pathHint);
         if (keysResult === 'expanded' || keysResult === 'handled') {
           setOutputPanelMode('formatted');
+        }
+        return;
+      }
+      if (relationClick || String(account ?? '').trim() === '__load_account_relation__') {
+        const relationResult = await expandAccountRelationInline(pathHint, rawDisplayOverride, relationClick ?? undefined);
+        if (relationResult === 'expanded' || relationResult === 'handled') {
+          setOutputPanelMode(/^tree-/i.test(String(pathHint ?? '').trim()) ? 'tree' : 'formatted');
         }
         return;
       }
@@ -1228,6 +1170,7 @@ export function useSponsorCoinLabTreeMethods({
     },
     [
       appendLog,
+      expandAccountRelationInline,
       expandMasterAccountKeysInline,
       expandMasterSponsorListAccountInline,
       expandSpCoinMetaDataInline,

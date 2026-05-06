@@ -136,6 +136,8 @@ export function useNetworkController() {
   const { openPanel } = usePanelTree();
 
   const appChainId = exchangeContext.network?.appChainId ?? 0;
+  const appNetworkChainId = exchangeContext.network?.chainId ?? 0;
+  const appNetworkConnected = !!exchangeContext.network?.connected;
 
   // LS boot flag from initExchangeContext:
   //   hydratedFromLocalStorage === false  → this boot started with *no* stored context.
@@ -148,6 +150,7 @@ export function useNetworkController() {
   const prevWalletChainIdRef = useRef<number | undefined>(undefined);
   const prevAppChainIdRef = useRef<number | undefined>(undefined);
   const prevWalletConnectedRef = useRef<boolean>(false);
+  const lastWalletDisconnectedLogKeyRef = useRef<string | undefined>(undefined);
 
   const getWagmiChainName = (id?: number): string | undefined => {
     if (typeof id !== 'number' || id <= 0) return undefined;
@@ -286,15 +289,30 @@ export function useNetworkController() {
     // 1) Wallet disconnected → just mark app as disconnected.
     //    Case A/C network choice has already been made by initExchangeContext.
     if (!walletConnected) {
-      logState('wallet-disconnected', {
-        msg: 'Wallet disconnected → mark appConnected=false (keep appChainId)',
-      });
+      const logKey = [
+        status,
+        walletChainId,
+        appChainId,
+        appConnected,
+        appNetworkChainId,
+        appNetworkConnected,
+      ].join(':');
+      if (lastWalletDisconnectedLogKeyRef.current !== logKey) {
+        lastWalletDisconnectedLogKeyRef.current = logKey;
+        logState('wallet-disconnected', {
+          msg: 'Wallet disconnected → mark appConnected=false (keep appChainId)',
+        });
+      }
       if (appConnected) setAppConnected(false);
       // Rule: when disconnected, chainId should be 0.
-      syncNetworkChainId(0, false);
+      if (appNetworkChainId !== 0 || appNetworkConnected) {
+        syncNetworkChainId(0, false);
+      }
       prevWalletConnectedRef.current = false;
       return;
     }
+
+    lastWalletDisconnectedLogKeyRef.current = undefined;
 
     const justConnected = !prevWalletConnectedRef.current && walletConnected;
 
@@ -417,6 +435,8 @@ export function useNetworkController() {
     status,
     walletChainId,
     appChainId,
+    appNetworkChainId,
+    appNetworkConnected,
     appConnected,
     hydratedFromLocalStorage,
     setAppChainId,

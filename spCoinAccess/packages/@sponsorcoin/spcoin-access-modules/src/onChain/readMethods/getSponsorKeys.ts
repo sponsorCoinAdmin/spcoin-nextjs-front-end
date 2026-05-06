@@ -50,6 +50,27 @@ async function isSponsorKey(context, accountKey) {
 }
 
 const handler = buildHandler('getSponsorKeys', async (context) => {
+  const accountKey = String(context.methodArgs?.[0] ?? '').trim();
+  if (/^0x[0-9a-fA-F]{40}$/.test(accountKey)) {
+    const accountSponsorMethod =
+      getDynamicMethod(context.contract, 'getSponsorKeys') ||
+      getDynamicMethod(context.staking, 'getSponsorKeys');
+    if (accountSponsorMethod) {
+      return context.normalizeStringListResult(await accountSponsorMethod(accountKey));
+    }
+
+    const accountLinksMethod =
+      getDynamicMethod(context.contract, 'getAccountLinks') ||
+      getDynamicMethod(context.staking, 'getAccountLinks') ||
+      getDynamicMethod(context.read, 'getAccountLinks');
+    if (accountLinksMethod) {
+      const links = await accountLinksMethod(accountKey);
+      return context.normalizeStringListResult(links?.sponsorKeys ?? links?.[0] ?? []);
+    }
+
+    throw new Error('SpCoin read method getSponsorKeys(address) requires getSponsorKeys(address) or getAccountLinks(address).');
+  }
+
   const readMethod = getDynamicMethod(context.read, 'getSponsorKeys');
   if (readMethod) {
     return context.normalizeStringListResult(await readMethod());

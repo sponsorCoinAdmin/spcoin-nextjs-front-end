@@ -130,7 +130,10 @@ const accountRewardTotalsInterface = new Interface([
   'function getAccountRewardTotals(address _accountKey) view returns (uint256 sponsorRewards, uint256 recipientRewards, uint256 agentRewards)',
 ]);
 const accountRecordInterface = new Interface([
-  'function getAccountRecord(address _accountKey) view returns (address accountKey, uint256 creationTime, uint256 accountBalance, uint256 stakedAccountSPCoins, uint256 accountStakingRewards, address[] sponsorKeys, address[] recipientKeys, address[] agentKeys, address[] parentRecipientKeys)',
+  'function getAccountRecord(address _accountKey) view returns (address accountKey, uint256 creationTime, uint256 accountBalance, uint256 stakedAccountSPCoins, uint256 accountStakingRewards, uint256 sponsorCount, uint256 recipientCount, uint256 agentCount, uint256 parentRecipientCount, bool active)',
+]);
+const accountLinksInterface = new Interface([
+  'function getAccountLinks(address _accountKey) view returns (address[] sponsorKeys, address[] recipientKeys, address[] agentKeys, address[] parentRecipientKeys)',
 ]);
 const recipientRecordInterface = new Interface([
   'function getRecipientRecord(address _sponsorKey, address _recipientKey) view returns (address sponsorKey, address recipientKey, uint256 creationTime, uint256 stakedSPCoins, bool inserted)',
@@ -434,11 +437,23 @@ async function loadRecipientRateKeys(
   sponsorKey: string,
   recipientKey: string,
 ) {
-  if (typeof access.read.getRecipientRateKeys !== 'function' && typeof access.read.getRecipientRateList !== 'function') {
-    throw new Error('getRecipientRateKeys() read method is required.');
+  if (
+    typeof access.read.getSponsorRecipientRates !== 'function' &&
+    typeof access.read.getSponsorRecipientRateKeys !== 'function' &&
+    typeof access.read.getRecipientRateKeys !== 'function' &&
+    typeof access.read.getRecipientRateList !== 'function'
+  ) {
+    throw new Error('getSponsorRecipientRates() read method is required.');
   }
   try {
-    const method = typeof access.read.getRecipientRateKeys === 'function' ? access.read.getRecipientRateKeys : access.read.getRecipientRateList;
+    const method =
+      typeof access.read.getSponsorRecipientRates === 'function'
+        ? access.read.getSponsorRecipientRates
+        : typeof access.read.getSponsorRecipientRateKeys === 'function'
+          ? access.read.getSponsorRecipientRateKeys
+        : typeof access.read.getRecipientRateKeys === 'function'
+          ? access.read.getRecipientRateKeys
+          : access.read.getRecipientRateList;
     return Array.from((await readWithRetry(() => method(sponsorKey, recipientKey))) as unknown[]).map((value) => String(value));
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -576,17 +591,30 @@ async function buildSerializedAccountRecord(contract: any, methodArgs: any[]) {
     accountBalance,
     stakedAccountSPCoins,
     accountStakingRewards,
-    sponsorKeys,
-    recipientKeys,
-    agentKeys,
-    parentRecipientKeys,
+    sponsorCount,
+    recipientCount,
+    agentCount,
+    parentRecipientCount,
+    active,
   ] = await callViewFunction(contract, accountRecordInterface, 'getAccountRecord', [methodArgs[0]]);
+  let sponsorKeys: unknown[] = [];
+  let recipientKeys: unknown[] = [];
+  let agentKeys: unknown[] = [];
+  let parentRecipientKeys: unknown[] = [];
+  if (BigInt(sponsorCount as bigint) > 0n || BigInt(recipientCount as bigint) > 0n || BigInt(agentCount as bigint) > 0n || BigInt(parentRecipientCount as bigint) > 0n) {
+    [sponsorKeys, recipientKeys, agentKeys, parentRecipientKeys] = await callViewFunction(contract, accountLinksInterface, 'getAccountLinks', [methodArgs[0]]);
+  }
 
   return {
     accountKey: normalizeAddress(accountKey),
     creationTime: String(creationTime),
     balanceOf: String(accountBalance),
     stakedSPCoins: String(stakedAccountSPCoins),
+    sponsorCount: String(sponsorCount),
+    recipientCount: String(recipientCount),
+    agentCount: String(agentCount),
+    parentRecipientCount: String(parentRecipientCount),
+    active: Boolean(active),
     sponsorKeys: Array.from(sponsorKeys as unknown[]).map(normalizeAddress),
     recipientKeys: Array.from(recipientKeys as unknown[]).map(normalizeAddress),
     agentKeys: Array.from(agentKeys as unknown[]).map(normalizeAddress),

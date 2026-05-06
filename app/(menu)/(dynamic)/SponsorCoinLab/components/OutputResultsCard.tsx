@@ -184,7 +184,7 @@ type Props = {
     setSelectedTreeAccount: (value: string) => void;
     treeAccountRefreshToken: number;
     requestRefreshSelectedTreeAccount: () => void;
-    openAccountFromAddress: (account: string, pathHint?: string) => Promise<void>;
+    openAccountFromAddress: (account: string, pathHint?: string, rawDisplayOverride?: string) => Promise<void>;
   };
   scriptActions: {
     moveScriptStepToPosition: (
@@ -246,7 +246,7 @@ export default function OutputResultsCard({
     creationDates: true,
     formattedAmounts: false,
   });
-  const [showStructureType, setShowStructureType] = useState(true);
+  const [showStructureType, setShowStructureType] = useState(false);
   const [showPayloadFields, setShowPayloadFields] = useState<Record<PayloadFieldOptionKey, boolean>>({
     meta: true,
     parameters: true,
@@ -325,7 +325,7 @@ export default function OutputResultsCard({
       return { tone: 'invalid' as const, title: 'No Methods Available', actionLabel: 'Save' as const };
     }
     if (!String(saveScriptNameInput || '').trim()) {
-      return { tone: 'invalid' as const, title: 'Srript Name Required', actionLabel: 'Save' as const };
+      return { tone: 'invalid' as const, title: 'Script Name Required', actionLabel: 'Save' as const };
     }
     if (saveScriptNameExists) {
       return { tone: 'update' as const, title: 'Update Script', actionLabel: 'Update' as const };
@@ -373,23 +373,14 @@ export default function OutputResultsCard({
     if (controls.formattedJsonViewEnabled || controls.outputPanelMode !== 'tree') return null;
     return parseCollapsibleBlocks(content.treeOutputDisplay);
   }, [content.treeOutputDisplay, controls.formattedJsonViewEnabled, controls.outputPanelMode, parseCollapsibleBlocks]);
-  const lastAccountExpansionRenderTraceRef = useRef('');
-  useEffect(() => {
-    if (!String(currentFormattedDisplay || '').includes('__forceExpanded')) return;
-    const signature = `${controls.outputPanelMode}:${controls.formattedPanelView}:${currentFormattedDisplay.length}:${String(currentFormattedDisplay).slice(0, 80)}`;
-    if (lastAccountExpansionRenderTraceRef.current === signature) return;
-    lastAccountExpansionRenderTraceRef.current = signature;
-    appendOutputTrace(
-      `[ACCOUNT_EXPAND_TRACE] render check mode=${controls.outputPanelMode} view=${controls.formattedPanelView} formattedJson=${String(controls.formattedJsonViewEnabled)} formattedBlocks=${collapsibleFormattedBlocks?.length ?? 0} containsForce=true displayLength=${currentFormattedDisplay.length}`,
-    );
-  }, [
-    appendOutputTrace,
-    collapsibleFormattedBlocks?.length,
-    controls.formattedJsonViewEnabled,
-    controls.formattedPanelView,
-    controls.outputPanelMode,
-    currentFormattedDisplay,
-  ]);
+  const hiddenPayloadFieldKeys = useMemo(
+    () => Object.entries(showPayloadFields).filter(([, visible]) => !visible).map(([key]) => key),
+    [showPayloadFields],
+  );
+  const visiblePayloadFieldKeys = useMemo(
+    () => Object.entries(showPayloadFields).filter(([, visible]) => visible).map(([key]) => key),
+    [showPayloadFields],
+  );
   const activeInspectorRootLabel = controls.outputPanelMode === 'tree' ? 'Tree' : controls.formattedPanelView === 'script' ? 'Script' : 'Step';
   const seededDefaultCollapseSignatureRef = React.useRef('');
   React.useEffect(() => {
@@ -429,11 +420,31 @@ export default function OutputResultsCard({
   const handleOpenAccountFromInspector = React.useCallback(
     async (value: string, path: string) => {
       const address = String(value || '').trim();
+      const isLazyRelationLoadValue = (() => {
+        if (address === '__load_account_relation__') return true;
+        try {
+          const parsed = JSON.parse(address) as Record<string, unknown>;
+          return parsed?.__loadAccountRelation === true;
+        } catch {
+          return false;
+        }
+      })();
+      const isScriptLazyRelationClick =
+        controls.outputPanelMode === 'formatted' &&
+        controls.formattedPanelView === 'script' &&
+        isLazyRelationLoadValue;
       appendOutputTrace(
         `[ACCOUNT_EXPAND_TRACE] inspector dispatch mode=${controls.outputPanelMode} view=${controls.formattedPanelView} json=${String(controls.formattedJsonViewEnabled)} value=${address ? address : String(value ?? '')} path=${String(path || '')}`,
       );
       if (!/^0x[0-9a-fA-F]{40}$/.test(address)) {
-        await treeActions.openAccountFromAddress(value, path);
+        await treeActions.openAccountFromAddress(
+          value,
+          path,
+          isScriptLazyRelationClick ? currentFormattedDisplay : undefined,
+        );
+        if (isScriptLazyRelationClick) {
+          controls.setFormattedPanelView('output');
+        }
         return;
       }
 
@@ -444,6 +455,8 @@ export default function OutputResultsCard({
       controls.formattedJsonViewEnabled,
       controls.formattedPanelView,
       controls.outputPanelMode,
+      controls.setFormattedPanelView,
+      currentFormattedDisplay,
       treeActions,
     ],
   );
@@ -1204,9 +1217,8 @@ export default function OutputResultsCard({
                     highlightColorClass={inspectorHighlightColorClass}
                     showAll={controls.showAllTreeRecords}
                     hiddenRules={hiddenInspectorRules}
-                    hideEntryKeys={Object.entries(showPayloadFields)
-                      .filter(([, visible]) => !visible)
-                      .map(([key]) => key)}
+                    hideEntryKeys={hiddenPayloadFieldKeys}
+                    forceShowEntryKeys={visiblePayloadFieldKeys}
                     formatTokenAmounts={hiddenInspectorRules.formattedAmounts}
                     tokenDecimals={activeTokenDecimals}
                     showStructureType={showStructureType}
@@ -1259,9 +1271,8 @@ export default function OutputResultsCard({
                     rootLabel={collapsibleTreeBlocks.length === 1 ? 'Tree' : `Tree ${index + 1}`}
                     showAll={controls.showAllTreeRecords}
                     hiddenRules={hiddenInspectorRules}
-                    hideEntryKeys={Object.entries(showPayloadFields)
-                      .filter(([, visible]) => !visible)
-                      .map(([key]) => key)}
+                    hideEntryKeys={hiddenPayloadFieldKeys}
+                    forceShowEntryKeys={visiblePayloadFieldKeys}
                     formatTokenAmounts={hiddenInspectorRules.formattedAmounts}
                     tokenDecimals={activeTokenDecimals}
                     showStructureType={showStructureType}

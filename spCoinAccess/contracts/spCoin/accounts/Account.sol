@@ -130,7 +130,7 @@ contract Account is Utils {
         return hasActiveLinks(_accountKey);
     }
 
-    function getAccountCore(address _accountKey)
+    function getAccountRecord(address _accountKey)
         external
         view
         returns (
@@ -174,51 +174,6 @@ contract Account is Utils {
         active = hasActiveLinks(_accountKey);
     }
 
-    function getAccountRecord(address _accountKey)
-        external
-        view
-        returns (
-            address accountKey,
-            uint256 creationTime,
-            uint256 accountBalance,
-            uint256 stakedAccountSPCoins,
-            uint256 accountStakingRewards,
-            address[] memory sponsorKeys,
-            address[] memory recipientKeys,
-            address[] memory agentKeys,
-            address[] memory parentRecipientKeys
-        )
-    {
-        (bool inserted, AccountStruct storage accountRec) = getInternalAccount(_accountKey);
-        accountKey = _accountKey;
-        if (!inserted) {
-            sponsorKeys = new address[](0);
-            recipientKeys = new address[](0);
-            agentKeys = new address[](0);
-            parentRecipientKeys = new address[](0);
-            return (
-                accountKey,
-                creationTime,
-                accountBalance,
-                stakedAccountSPCoins,
-                accountStakingRewards,
-                sponsorKeys,
-                recipientKeys,
-                agentKeys,
-                parentRecipientKeys
-            );
-        }
-        accountKey = accountRec.accountKey;
-        creationTime = accountRec.creationTime;
-        accountBalance = balanceOf[_accountKey];
-        stakedAccountSPCoins = accountRec.stakedSPCoins;
-        accountStakingRewards = accountRec.stakingRewards;
-        sponsorKeys = accountRec.sponsorKeys;
-        recipientKeys = accountRec.recipientKeys;
-        agentKeys = accountRec.agentKeys;
-        parentRecipientKeys = accountRec.parentRecipientKeys;
-    }
-
     function getAccountLinks(address _accountKey)
         external
         view
@@ -245,6 +200,21 @@ contract Account is Utils {
 
     /////////////////////////// AGENT REQUESTS //////////////////////////////
  
+    /// @notice retrieves the sponsor keys linked to an account.
+    /// @param _accountKey public account key to query
+    function getSponsorKeys(address _accountKey)
+    external view returns (address[] memory) {
+        return accountMap[_accountKey].sponsorKeys;
+    }
+
+    function getSponsorKeysPage(address _accountKey, uint256 offset, uint256 limit)
+        external
+        view
+        returns (address[] memory page, uint256 total)
+    {
+        return _sliceAccountAddressArray(accountMap[_accountKey].sponsorKeys, offset, limit);
+    }
+
     /// @notice retrieves the recipient keys linked to an account.
     /// @param _sponsorKey public account key to set new balance
     function getRecipientKeys(address _sponsorKey) 
@@ -273,6 +243,21 @@ contract Account is Utils {
         returns (address[] memory page, uint256 total)
     {
         return _sliceAccountAddressArray(accountMap[_accountKey].agentKeys, offset, limit);
+    }
+
+    /// @notice retrieves the parent recipient keys linked to an account.
+    /// @param _accountKey public account key to query
+    function getParentRecipientKeys(address _accountKey)
+    external view returns (address[] memory) {
+        return accountMap[_accountKey].parentRecipientKeys;
+    }
+
+    function getParentRecipientKeysPage(address _accountKey, uint256 offset, uint256 limit)
+        external
+        view
+        returns (address[] memory page, uint256 total)
+    {
+        return _sliceAccountAddressArray(accountMap[_accountKey].parentRecipientKeys, offset, limit);
     }
 
     function getAccountListIndex (address _accountKey, 

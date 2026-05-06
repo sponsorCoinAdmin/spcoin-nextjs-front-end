@@ -25,6 +25,11 @@ export class AccountStruct {
         this.accountKey = 0;
         this.creationTime = 0;
         this.totalSpCoins = new TotalSpCoinsStruct();
+        this.sponsorCount = 0;
+        this.recipientCount = 0;
+        this.agentCount = 0;
+        this.parentRecipientCount = 0;
+        this.active = false;
         this.recipientKeys = [];
         this.recipientRates = {};
         this.agentKeys = [];

@@ -5,6 +5,12 @@ const handler = buildHandler('getRecipientRateKeys', async (context) => {
     getDynamicMethod(context.read, 'getRecipientRateKeys')
     || getDynamicMethod(context.staking, 'getRecipientRateKeys')
     || getDynamicMethod(context.contract, 'getRecipientRateKeys')
+    || getDynamicMethod(context.read, 'getSponsorRecipientRates')
+    || getDynamicMethod(context.staking, 'getSponsorRecipientRates')
+    || getDynamicMethod(context.contract, 'getSponsorRecipientRates')
+    || getDynamicMethod(context.read, 'getSponsorRecipientRateKeys')
+    || getDynamicMethod(context.staking, 'getSponsorRecipientRateKeys')
+    || getDynamicMethod(context.contract, 'getSponsorRecipientRateKeys')
     || getDynamicMethod(context.read, 'getRecipientRateList')
     || getDynamicMethod(context.staking, 'getRecipientRateList')
     || getDynamicMethod(context.contract, 'getRecipientRateList');

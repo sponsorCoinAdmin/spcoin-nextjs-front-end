@@ -183,14 +183,14 @@ export default function ScriptBuilderCard({
             aria-disabled={!hasScriptSelection && scriptNameValidation.tone !== 'valid'}
             title={
               isScriptSelectorEmpty
-                ? 'Srript Empty'
+                ? 'Script Empty'
                 : hasScriptSelection
                 ? 'Clear Script'
                 : scriptNameValidation.message
             }
           >
             {isNewScriptHovered && isScriptSelectorEmpty
-              ? 'Srript Empty'
+              ? 'Script Empty'
               : hasScriptSelection
               ? 'Clear Script'
               : (isNewScriptHovered ? primaryHoverTone : primaryBaseTone) === 'invalid' && isNewScriptHovered

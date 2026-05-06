@@ -13,7 +13,10 @@ export const accountRewardTotalsInterface = new Interface([
     'function getAccountRewardTotals(address _accountKey) view returns (uint256 sponsorRewards, uint256 recipientRewards, uint256 agentRewards)',
 ]);
 export const accountRecordInterface = new Interface([
-    'function getAccountRecord(address _accountKey) view returns (address accountKey, uint256 creationTime, uint256 accountBalance, uint256 stakedAccountSPCoins, uint256 accountStakingRewards, address[] sponsorKeys, address[] recipientKeys, address[] agentKeys, address[] parentRecipientKeys)',
+    'function getAccountRecord(address _accountKey) view returns (address accountKey, uint256 creationTime, uint256 accountBalance, uint256 stakedAccountSPCoins, uint256 accountStakingRewards, uint256 sponsorCount, uint256 recipientCount, uint256 agentCount, uint256 parentRecipientCount, bool active)',
+]);
+export const accountLinksInterface = new Interface([
+    'function getAccountLinks(address _accountKey) view returns (address[] sponsorKeys, address[] recipientKeys, address[] agentKeys, address[] parentRecipientKeys)',
 ]);
 export const recipientRecordInterface = new Interface([
     'function getRecipientRecord(address _sponsorKey, address _recipientKey) view returns (address sponsorKey, address recipientKey, uint256 creationTime, uint256 stakedSPCoins, bool inserted)',
@@ -97,6 +100,11 @@ function buildEmptyAccountRecord(accountKey) {
     accountRecord.creationTime = '0';
     accountRecord.balanceOf = '0';
     accountRecord.stakedBalance = '0';
+    accountRecord.sponsorCount = '0';
+    accountRecord.recipientCount = '0';
+    accountRecord.agentCount = '0';
+    accountRecord.parentRecipientCount = '0';
+    accountRecord.active = false;
     accountRecord.sponsorKeys = [];
     accountRecord.recipientKeys = [];
     accountRecord.agentKeys = [];
@@ -104,13 +112,25 @@ function buildEmptyAccountRecord(accountKey) {
     return accountRecord;
 }
 export async function buildSerializedAccountRecordFallback(contract, accountKey) {
-    const [normalizedAccountKey, creationTime, accountBalance, stakedAccountSPCoins, accountStakingRewards, sponsorKeys, recipientKeys, agentKeys, parentRecipientKeys] = await callViewFunction(contract, accountRecordInterface, 'getAccountRecord', [accountKey]);
+    const [normalizedAccountKey, creationTime, accountBalance, stakedAccountSPCoins, accountStakingRewards, sponsorCount, recipientCount, agentCount, parentRecipientCount, active] = await callViewFunction(contract, accountRecordInterface, 'getAccountRecord', [accountKey]);
+    let sponsorKeys = [];
+    let recipientKeys = [];
+    let agentKeys = [];
+    let parentRecipientKeys = [];
+    if (BigInt(sponsorCount) > 0n || BigInt(recipientCount) > 0n || BigInt(agentCount) > 0n || BigInt(parentRecipientCount) > 0n) {
+        [sponsorKeys, recipientKeys, agentKeys, parentRecipientKeys] = await callViewFunction(contract, accountLinksInterface, 'getAccountLinks', [accountKey]);
+    }
     const accountRecord = new AccountStruct();
     accountRecord.accountKey = normalizeAddress(normalizedAccountKey);
     accountRecord.creationTime = String(creationTime).trim() === "0" ? "" : bigIntToDateTimeString(creationTime);
     accountRecord.balanceOf = bigIntToDecString(accountBalance);
     accountRecord.stakedBalance = bigIntToDecString(stakedAccountSPCoins);
     accountRecord.stakingRewards = bigIntToDecString(accountStakingRewards);
+    accountRecord.sponsorCount = String(sponsorCount);
+    accountRecord.recipientCount = String(recipientCount);
+    accountRecord.agentCount = String(agentCount);
+    accountRecord.parentRecipientCount = String(parentRecipientCount);
+    accountRecord.active = Boolean(active);
     accountRecord.sponsorKeys = Array.from(sponsorKeys || []).map(normalizeAddress);
     accountRecord.recipientKeys = Array.from(recipientKeys || []).map(normalizeAddress);
     accountRecord.agentKeys = Array.from(agentKeys || []).map(normalizeAddress);

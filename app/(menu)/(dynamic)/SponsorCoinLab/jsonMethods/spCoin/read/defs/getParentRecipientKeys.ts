@@ -1,7 +1,7 @@
 import type { MethodDef } from '../../../shared/types';
 
 export const methodDef: MethodDef = {
-  title: 'getSponsorKeys',
+  title: 'getParentRecipientKeys',
   params: [{ label: 'Account Key', placeholder: 'address _accountKey', type: 'address' }],
 };
 

@@ -25,7 +25,13 @@ export async function getRecipientRateKeys(context, _sponsorKey, _recipientKey) 
         context.spCoinLogger.logDetail("JS => getRecipientRateKeys provider = " + String(providerType || "(unknown)"));
         context.spCoinLogger.logDetail("JS => getRecipientRateKeys providerUrl = " + String(candidateUrl || "(unavailable)"));
         context.spCoinLogger.logDetail("JS => getRecipientRateKeys stage = send");
-        const networkRateKeys = await context.spCoinContractDeployed.getRecipientRateList(_sponsorKey, _recipientKey);
+        const readMethod =
+            typeof context.spCoinContractDeployed.getSponsorRecipientRates === "function"
+                ? context.spCoinContractDeployed.getSponsorRecipientRates
+                : typeof context.spCoinContractDeployed.getSponsorRecipientRateKeys === "function"
+                    ? context.spCoinContractDeployed.getSponsorRecipientRateKeys
+                : context.spCoinContractDeployed.getRecipientRateList;
+        const networkRateKeys = await readMethod(_sponsorKey, _recipientKey);
         context.spCoinLogger.logDetail("JS => getRecipientRateKeys raw = " + stringifyBigIntSafe(networkRateKeys));
         const recipientRateList = [];
         for (const [, netWorkRateKey] of Object.entries(networkRateKeys)) {
@@ -58,4 +64,6 @@ export async function getRecipientRateKeys(context, _sponsorKey, _recipientKey) 
 }
 
 export const getRecipientRateList = getRecipientRateKeys;
+export const getSponsorRecipientRates = getRecipientRateKeys;
+export const getSponsorRecipientRateKeys = getRecipientRateKeys;
 

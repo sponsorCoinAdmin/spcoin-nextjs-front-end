@@ -9,10 +9,12 @@ import getActiveAccountKeys from './getActiveAccountList';
 import getActiveAccountCount from './getActiveAccountListSize';
 import getSpCoinMetaData from './getSpCoinMetaData';
 import getSponsorKeys from './getSponsorKeys';
+import getParentRecipientKeys from './getParentRecipientKeys';
 import getRecipientList from './getRecipientList';
 import getAgentList from './getAgentList';
 import getRecipientListSize from './getRecipientListSize';
 import getAgentListSize from './getAgentListSize';
+import getAccountLinks from './getAccountLinks';
 import getAccountRecord from './getAccountRecord';
 import getAccountRoleSummary from './getAccountRoleSummary';
 import getAccountRoles from './getAccountRoles';
@@ -80,6 +82,7 @@ export const SPCOIN_READ_METHOD_DEFS = {
   getSpCoinMetaData,
   getSponsorKeys,
   getRecipientKeys: getRecipientList,
+  getParentRecipientKeys,
   getRecipientList,
   getAgentKeys: getAgentList,
   getAgentList,
@@ -88,6 +91,7 @@ export const SPCOIN_READ_METHOD_DEFS = {
   getAgentKeyCount: getAgentListSize,
   getAgentListSize,
   getAccountAgentCount: getAgentListSize,
+  getAccountLinks,
   getAccountRecord,
   getAccountRoleSummary,
   getAccountRoles,
@@ -104,6 +108,8 @@ export const SPCOIN_READ_METHOD_DEFS = {
   getRecipientTransactionIdKeys,
   getAgentTransactionIdKeys,
   getRecipientRateKeys: getRecipientRateList,
+  getSponsorRecipientRates: getRecipientRateList,
+  getSponsorRecipientRateKeys: getRecipientRateList,
   getRecipientRateList,
   getRecipientTransaction,
   getRecipientTransactionList,

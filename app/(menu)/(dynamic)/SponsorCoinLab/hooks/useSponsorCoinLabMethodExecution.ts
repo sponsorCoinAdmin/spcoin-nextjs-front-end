@@ -44,6 +44,7 @@ import {
   deriveReadWarningPayload,
   normalizeWriteResultForDisplay,
 } from './methodOutputFormatting';
+import { normalizeExecutionPayload } from './executionPayload';
 
 interface MethodParamEntry { key: string; value: string }
 type MethodDefMap = Record<string, MethodDef>;
@@ -877,46 +878,11 @@ export function useSponsorCoinLabMethodExecution({
         return { call, result: displayResult, meta: writeMetaRest as MethodExecutionPayloadMeta, ...(writeOc ? { onChainCalls: writeOc as MethodExecutionMeta['onChainCalls'] } : {}) };
       };
 
-      const collectChildOnChainCalls = (value: unknown, parentKey = ''): Array<{ method: string; totalOnChainMs: number }> => {
-        if (!value || typeof value !== 'object' || Array.isArray(value)) return [];
-        const record = value as Record<string, unknown>;
-        const results: Array<{ method: string; totalOnChainMs: number }> = [];
-        for (const [key, child] of Object.entries(record)) {
-          if (key === 'onChainCalls' && child && typeof child === 'object' && !Array.isArray(child)) {
-            const oc = child as Record<string, unknown>;
-            const totalMs = Number(String(oc.totalOnChainMs ?? '0').replace(/,/g, ''));
-            if (totalMs > 0) results.push({ method: parentKey || key, totalOnChainMs: totalMs });
-          } else {
-            results.push(...collectChildOnChainCalls(child, key));
-          }
-        }
-        return results;
-      };
-
-      const promoteOnChainCalls = (payload: MethodExecutionResult): MethodExecutionResult => {
-        const metaOnChainCalls = (payload.meta as Record<string, unknown> | undefined)?.onChainCalls as MethodExecutionMeta['onChainCalls'] | undefined;
-        const topOnChainCalls = payload.onChainCalls ?? metaOnChainCalls;
-        if (!topOnChainCalls) return payload;
-        const childEntries = collectChildOnChainCalls(payload.result);
-        const localMs = Number(String(topOnChainCalls.totalOnChainMs ?? '0').replace(/,/g, ''));
-        const childMs = childEntries.reduce((sum, e) => sum + e.totalOnChainMs, 0);
-        const mergedOnChainCalls = {
-          ...topOnChainCalls,
-          ...(childEntries.length > 0 ? { childOnChainCalls: childEntries } : {}),
-          totalOnChainMs: localMs + childMs,
-        };
-        return {
-          ...payload,
-          meta: omitOnChainCalls(payload.meta),
-          onChainCalls: mergedOnChainCalls,
-        };
-      };
-
       try {
         const payload = executionTimingCollector
           ? await runWithMethodTimingCollector(executionTimingCollector, async () => executeBody(true))
           : await executeBody(false);
-        return promoteOnChainCalls(payload);
+        return normalizeExecutionPayload(payload);
       } catch (error) {
         throw attachExecutionMeta(error, finalizeMeta());
       }
