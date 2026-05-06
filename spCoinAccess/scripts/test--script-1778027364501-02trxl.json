@@ -33,7 +33,7 @@
         },
         {
           "key": "Transaction Quantity",
-          "value": "1"
+          "value": "123000000000000000000"
         }
       ],
       "breakpoint": false,
@@ -50,6 +50,29 @@
           "value": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
         }
       ],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 3,
+      "name": "getAccountRecord",
+      "panel": "spcoin_rread",
+      "method": "getAccountRecord",
+      "params": [
+        {
+          "key": "Account Key",
+          "value": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
+        }
+      ],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 4,
+      "name": "getMasterAccountKeys",
+      "panel": "spcoin_rread",
+      "method": "getMasterAccountKeys",
+      "params": [],
       "breakpoint": false,
       "hasMissingRequiredParams": false
     }
