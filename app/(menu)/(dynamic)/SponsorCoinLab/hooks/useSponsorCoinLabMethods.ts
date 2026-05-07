@@ -91,6 +91,7 @@ interface Params {
   useLocalSpCoinAccessPackage: boolean;
   appendLog: (line: string) => void;
   appendWriteTrace: (line: string) => void;
+  resetWriteTrace: () => void;
   getRecentWriteTrace: () => string[];
   traceEnabled: boolean;
   setStatus: (value: string) => void;
@@ -173,6 +174,7 @@ export function useSponsorCoinLabMethods({
   useLocalSpCoinAccessPackage,
   appendLog,
   appendWriteTrace,
+  resetWriteTrace,
   getRecentWriteTrace,
   traceEnabled,
   setStatus,
@@ -197,6 +199,22 @@ export function useSponsorCoinLabMethods({
   callAccessMethod,
   activeTokenDecimals,
 }: Params) {
+  const startRunTrace = useCallback(
+    (descriptor: MethodExecutionDescriptor) => {
+      resetWriteTrace();
+      appendWriteTrace(
+        `run start; panel=${descriptor.panel}; mode=${descriptor.mode ?? mode}; source=${
+          useLocalSpCoinAccessPackage ? 'local' : 'node_modules'
+        }; method=${descriptor.method}`,
+      );
+      if (descriptor.sender) {
+        appendWriteTrace(`sender=${descriptor.sender}`);
+      }
+      appendWriteTrace(`params=${JSON.stringify(descriptor.params)}`);
+    },
+    [appendWriteTrace, mode, resetWriteTrace, useLocalSpCoinAccessPackage],
+  );
+
   const erc20WriteMissingEntries = useMemo(() => {
     const missingEntries: Entry[] = [];
     if (mode === 'hardhat' && !String(selectedWriteSenderAddress || '').trim()) {
@@ -648,6 +666,7 @@ export function useSponsorCoinLabMethods({
     };
 
     try {
+      startRunTrace(descriptor);
       setFormattedOutputDisplay('(no output yet)');
       const { call, result, warning, meta } = await executeMethodDescriptor(descriptor, {
         executionSignal: options?.executionSignal,
@@ -688,6 +707,7 @@ export function useSponsorCoinLabMethods({
     writeAmountRaw,
     writeAmountUnit,
     activeTokenDecimals,
+    startRunTrace,
   ]);
 
   const runSelectedReadMethod = useCallback(async (options?: MethodExecutionOptions) => {
@@ -714,6 +734,7 @@ export function useSponsorCoinLabMethods({
     };
 
     try {
+      startRunTrace(descriptor);
       setFormattedOutputDisplay('(no output yet)');
       const { call, result, warning, meta } = await executeMethodDescriptor(descriptor, {
         executionSignal: options?.executionSignal,
@@ -745,6 +766,7 @@ export function useSponsorCoinLabMethods({
     setFormattedOutputDisplay,
     setStatus,
     showValidationPopup,
+    startRunTrace,
   ]);
 
   const runSelectedSpCoinReadMethod = useCallback(async (options?: MethodExecutionOptions) => {
@@ -771,6 +793,7 @@ export function useSponsorCoinLabMethods({
     };
 
     try {
+      startRunTrace(descriptor);
       setFormattedOutputDisplay('(no output yet)');
       const { call, result, meta, onChainCalls } = await executeMethodDescriptor(descriptor, {
         executionSignal: options?.executionSignal,
@@ -823,6 +846,7 @@ export function useSponsorCoinLabMethods({
     spCoinReadMissingEntries,
     spReadParams,
     useLocalSpCoinAccessPackage,
+    startRunTrace,
   ]);
 
   const runSelectedSpCoinWriteMethod = useCallback(async (options?: MethodExecutionOptions) => {
@@ -852,6 +876,7 @@ export function useSponsorCoinLabMethods({
     };
 
     try {
+      startRunTrace(descriptor);
       setFormattedOutputDisplay('(no output yet)');
       const { call, result, meta, onChainCalls } = await executeMethodDescriptor(descriptor, {
         executionSignal: options?.executionSignal,
@@ -913,6 +938,7 @@ export function useSponsorCoinLabMethods({
     spWriteParams,
     spWriteAmountUnits,
     activeTokenDecimals,
+    startRunTrace,
   ]);
   const runSelectedSerializationTestMethod = useCallback(async (options?: MethodExecutionOptions) => {
     if (!options?.skipValidation && serializationTestMissingEntries.length > 0) {
@@ -940,6 +966,7 @@ export function useSponsorCoinLabMethods({
     };
 
     try {
+      startRunTrace(descriptor);
       setFormattedOutputDisplay('(no output yet)');
       const { call, result, meta } = await executeMethodDescriptor(descriptor, {
         executionSignal: options?.executionSignal,
@@ -991,12 +1018,15 @@ export function useSponsorCoinLabMethods({
     setFormattedOutputDisplay,
     setStatus,
     showValidationPopup,
+    startRunTrace,
   ]);
   const { runScriptStep } = useSponsorCoinLabScriptRunner({
     appendLog,
     setStatus,
     setFormattedOutputDisplay,
     useLocalSpCoinAccessPackage,
+    appendWriteTrace,
+    resetWriteTrace,
     getRecentWriteTrace,
     executeMethodDescriptor,
     buildMethodCallEntry,

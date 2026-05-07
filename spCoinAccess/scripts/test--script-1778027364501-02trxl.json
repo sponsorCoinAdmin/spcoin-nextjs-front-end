@@ -13,7 +13,7 @@
       "params": [
         {
           "key": "Sponsor Key",
-          "value": "0xbcd4042de499d14e55001ccbb24a551f3b954096"
+          "value": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
         },
         {
           "key": "Recipient Key",
@@ -69,10 +69,39 @@
     },
     {
       "step": 4,
+      "name": "updateAccountStakingRewards",
+      "panel": "spcoin_write",
+      "method": "updateAccountStakingRewards",
+      "msg.sender": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+      "params": [
+        {
+          "key": "Account Key",
+          "value": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
+        }
+      ],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 5,
       "name": "getMasterAccountKeys",
       "panel": "spcoin_rread",
       "method": "getMasterAccountKeys",
       "params": [],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 6,
+      "name": "balanceOf",
+      "panel": "ecr20_read",
+      "method": "balanceOf",
+      "params": [
+        {
+          "key": "Owner Address",
+          "value": "0xbcd4042de499d14e55001ccbb24a551f3b954096"
+        }
+      ],
       "breakpoint": false,
       "hasMissingRequiredParams": false
     }

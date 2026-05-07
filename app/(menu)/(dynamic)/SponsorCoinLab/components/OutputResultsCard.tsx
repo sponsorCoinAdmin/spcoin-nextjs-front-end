@@ -26,7 +26,7 @@ type OutputPanelMode = 'execution' | 'formatted' | 'tree' | 'raw_status' | 'debu
 type FormattedPanelView = 'script' | 'output';
 type DragPlacement = 'before' | 'after';
 const DEBUG_TRACE_PATTERN =
-  /\[EXPAND\]|\[ACCOUNT_EXPAND_TRACE\]|\[ACCOUNT_POPUP_TRACE\]|\[JSON_INSPECTOR_TRACE\]|Lazy-loaded|Inline account record/i;
+  /\[TRACE\]|\[EXPAND\]|\[ACCOUNT_EXPAND_TRACE\]|\[ACCOUNT_POPUP_TRACE\]|\[JSON_INSPECTOR_TRACE\]|Lazy-loaded|Inline account record/i;
 
 type DisplayedOutputCall = {
   method: string;
@@ -293,10 +293,14 @@ export default function OutputResultsCard({
   const lastMetadataRefreshTokenRef = useRef(treeActions.treeAccountRefreshToken);
   const currentFormattedDisplay =
     controls.formattedPanelView === 'script' ? content.scriptDisplay : content.formattedOutputDisplay;
+  const executionDisplay = useMemo(() => {
+    const header = 'Execution log: SponsorCoinLab session';
+    return content.logs.length ? `${header}\n${content.logs.join('\n')}` : `${header}\n(no execution logs yet)`;
+  }, [content.logs]);
   const debugDisplay = useMemo(() => {
     const expansionLogs = content.logs.filter((line) => DEBUG_TRACE_PATTERN.test(line));
     const header = `Trace file: ${ACCOUNT_POPUP_TRACE_FILE}`;
-    return expansionLogs.length ? `${header}\n${expansionLogs.join('\n')}` : `${header}\n(no expansion debug yet)`;
+    return expansionLogs.length ? `${header}\n${expansionLogs.join('\n')}` : `${header}\n(no trace yet)`;
   }, [content.logs]);
   const appendOutputTrace = React.useCallback(
     (line: string) => {
@@ -843,7 +847,7 @@ export default function OutputResultsCard({
                 ['execution', 'Execution'],
                 ['formatted', 'Formatted'],
                 ['raw_status', 'Raw Status'],
-                ['debug', 'Debug'],
+                ['debug', 'Trace'],
               ].map(([value, label]) => (
                 <label key={value} className="inline-flex items-center gap-1">
                   <input
@@ -879,7 +883,7 @@ export default function OutputResultsCard({
                     controls.outputPanelMode === 'execution'
                       ? 'Execution Log'
                       : controls.outputPanelMode === 'debug'
-                        ? 'Debug'
+                        ? 'Trace'
                       : controls.outputPanelMode === 'tree'
                         ? 'Tree'
                         : controls.outputPanelMode === 'raw_status'
@@ -888,7 +892,7 @@ export default function OutputResultsCard({
                             ? 'Current Script'
                             : 'Formatted Output Display',
                     controls.outputPanelMode === 'execution'
-                      ? content.logs.join('\n')
+                      ? executionDisplay
                       : controls.outputPanelMode === 'debug'
                         ? debugDisplay
                       : controls.outputPanelMode === 'tree'
@@ -1314,7 +1318,7 @@ export default function OutputResultsCard({
                     </span>
                   ))
                 : controls.outputPanelMode === 'execution'
-                  ? content.logs.join('\n')
+                  ? executionDisplay
                   : controls.outputPanelMode === 'debug'
                     ? debugDisplay
                   : controls.outputPanelMode === 'tree'

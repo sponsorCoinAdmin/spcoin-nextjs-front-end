@@ -541,24 +541,26 @@ export function useControllerContractMetadata({
     showValidationPopup,
   ]);
 
+  const metadataChainId = Number(selectedSponsorCoinVersionEntry?.chainId || exchangeContext?.network?.chainId || 0);
+  const selectedEntryVersion = String(selectedSponsorCoinVersionEntry?.version || '').trim();
+  const selectedEntryName = String(selectedSponsorCoinVersionEntry?.name || '').trim();
+  const selectedEntrySymbol = String(selectedSponsorCoinVersionEntry?.symbol || '').trim();
+
   useEffect(() => {
     let active = true;
-    const chainId = Number(selectedSponsorCoinVersionEntry?.chainId || exchangeContext?.network?.chainId || 0);
+    const chainId = metadataChainId;
     const activeContractAddress = String(contractAddress || '').trim();
-    const selectedEntry = selectedSponsorCoinVersionEntry;
-    const selectedVersion = String(
-      selectedEntry?.version || selectedSponsorCoinVersion || '',
-    ).trim();
+    const selectedVersion = String(selectedEntryVersion || selectedSponsorCoinVersion || '').trim();
 
-    if (!selectedEntry && !selectedVersion && !activeContractAddress) return;
+    if (!selectedVersion && !activeContractAddress) return;
 
     setSettings((prev) => ({
       ...prev,
       spCoinContract: {
         owner: String(prev?.spCoinContract?.owner ?? '').trim(),
         version: selectedVersion,
-        name: String(selectedEntry?.name || (selectedVersion ? `Sponsor Coin V${selectedVersion}` : '')).trim(),
-        symbol: String(selectedEntry?.symbol || (selectedVersion ? `SPCOIN_V${selectedVersion}` : '')).trim(),
+        name: String(selectedEntryName || (selectedVersion ? `Sponsor Coin V${selectedVersion}` : '')).trim(),
+        symbol: String(selectedEntrySymbol || (selectedVersion ? `SPCOIN_V${selectedVersion}` : '')).trim(),
         decimals: Number(prev?.spCoinContract?.decimals ?? 18),
         totalSypply: String(prev?.spCoinContract?.totalSypply ?? '').trim(),
         inflationRate: Number(prev?.spCoinContract?.inflationRate ?? 0),
@@ -598,26 +600,46 @@ export function useControllerContractMetadata({
           };
         };
         if (!active || !response.ok || !data.ok || !data.spCoinMetaData) return;
-        setSettings((prev) => ({
-          ...prev,
-          spCoinContract: {
-            owner: String(data.spCoinMetaData?.owner ?? '').trim(),
-            version: String(data.spCoinMetaData?.version ?? '').trim(),
-            name: String(data.spCoinMetaData?.name ?? '').trim(),
-            symbol: String(data.spCoinMetaData?.symbol ?? '').trim(),
-            decimals: Number(data.spCoinMetaData?.decimals ?? 0),
-            totalSypply: String(data.spCoinMetaData?.totalSypply ?? '').trim(),
-            inflationRate: Number(data.spCoinMetaData?.inflationRate ?? 0),
-            recipientRateRange: normalizeSpCoinRateRange(
-              data.spCoinMetaData?.recipientRateRange,
-              DEFAULT_RECIPIENT_RATE_RANGE,
-            ),
-            agentRateRange: normalizeSpCoinRateRange(
-              data.spCoinMetaData?.agentRateRange,
-              DEFAULT_AGENT_RATE_RANGE,
-            ),
-          },
-        }));
+        const nextSpCoinContract = {
+          owner: String(data.spCoinMetaData?.owner ?? '').trim(),
+          version: String(data.spCoinMetaData?.version ?? '').trim(),
+          name: String(data.spCoinMetaData?.name ?? '').trim(),
+          symbol: String(data.spCoinMetaData?.symbol ?? '').trim(),
+          decimals: Number(data.spCoinMetaData?.decimals ?? 0),
+          totalSypply: String(data.spCoinMetaData?.totalSypply ?? '').trim(),
+          inflationRate: Number(data.spCoinMetaData?.inflationRate ?? 0),
+          recipientRateRange: normalizeSpCoinRateRange(
+            data.spCoinMetaData?.recipientRateRange,
+            DEFAULT_RECIPIENT_RATE_RANGE,
+          ),
+          agentRateRange: normalizeSpCoinRateRange(
+            data.spCoinMetaData?.agentRateRange,
+            DEFAULT_AGENT_RATE_RANGE,
+          ),
+        };
+        setSettings((prev) => {
+          const current = prev?.spCoinContract;
+          if (
+            current &&
+            current.owner === nextSpCoinContract.owner &&
+            current.version === nextSpCoinContract.version &&
+            current.name === nextSpCoinContract.name &&
+            current.symbol === nextSpCoinContract.symbol &&
+            current.decimals === nextSpCoinContract.decimals &&
+            current.totalSypply === nextSpCoinContract.totalSypply &&
+            current.inflationRate === nextSpCoinContract.inflationRate &&
+            current.recipientRateRange?.[0] === nextSpCoinContract.recipientRateRange[0] &&
+            current.recipientRateRange?.[1] === nextSpCoinContract.recipientRateRange[1] &&
+            current.agentRateRange?.[0] === nextSpCoinContract.agentRateRange[0] &&
+            current.agentRateRange?.[1] === nextSpCoinContract.agentRateRange[1]
+          ) {
+            return prev;
+          }
+          return {
+            ...prev,
+            spCoinContract: nextSpCoinContract,
+          };
+        });
       } catch {
         // Keep the seeded SponsorCoinLab values when metadata fetch fails.
       }
@@ -629,9 +651,11 @@ export function useControllerContractMetadata({
     };
   }, [
     contractAddress,
-    exchangeContext,
+    metadataChainId,
     selectedSponsorCoinVersion,
-    selectedSponsorCoinVersionEntry,
+    selectedEntryName,
+    selectedEntrySymbol,
+    selectedEntryVersion,
     setSettings,
   ]);
 

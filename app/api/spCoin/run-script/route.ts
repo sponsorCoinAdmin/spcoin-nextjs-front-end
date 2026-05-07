@@ -1,6 +1,6 @@
 import { promises as fs } from 'fs';
 import path from 'path';
-import { JsonRpcProvider, Wallet, Contract, Interface } from 'ethers';
+import { JsonRpcProvider, Wallet, Contract, Interface, Transaction } from 'ethers';
 import { NextRequest, NextResponse } from 'next/server';
 import { createSpCoinModuleAccess, type SpCoinAccessSource } from '@/app/(menu)/(dynamic)/SponsorCoinLab/jsonMethods/shared/spCoinAccessIncludes';
 import { getSpCoinLabAbi } from '@/app/(menu)/(dynamic)/SponsorCoinLab/jsonMethods/shared/spCoinAbi';
@@ -50,9 +50,11 @@ type RunScriptRequest = {
   script?: LabScript;
   contractAddress?: string;
   rpcUrl?: string;
+  writeRpcUrl?: string;
   startIndex?: number;
   stopAfterCurrentStep?: boolean;
   spCoinAccessSource?: SpCoinAccessSource;
+  compareOfflineRewards?: boolean;
 };
 
 type StepPayload =
@@ -81,8 +83,10 @@ type StepPayload =
           source: string;
           method: string;
           trace: string[];
+          rpcTransport?: RpcTransportDiagnostic;
         };
       };
+      rpcTransport?: RpcTransportDiagnostic;
       meta?: MethodTimingMeta;
     };
 
@@ -98,6 +102,13 @@ const hardhatDefaultSettings = getDefaultNetworkSettings(CHAIN_ID.HARDHAT_BASE) 
 const DEFAULT_SERVER_HARDHAT_RPC_URL =
   String(hardhatDefaultSettings?.networkHeader?.rpcUrl || '').trim() ||
   'https://rpc.sponsorcoin.org/f5b4d4b4a2614a540189b979d068639c3fd44bbb1dfcdb5a';
+const DEFAULT_SERVER_HARDHAT_WRITE_RPC_URL = String(
+  process.env.SPCOIN_HARDHAT_WRITE_RPC_URL ||
+    process.env.HARDHAT_WRITE_RPC_URL ||
+    process.env.SPCOIN_WRITE_RPC_URL ||
+    '',
+).trim();
+const RPC_TRANSPORT_PROBE_TIMEOUT_MS = 5_000;
 const TEST_ACCOUNTS_PATH = path.join(
   process.cwd(),
   'public',
@@ -107,6 +118,28 @@ const TEST_ACCOUNTS_PATH = path.join(
   '31337',
   'testAccounts.json',
 );
+
+function createServerHardhatProvider(rpcUrl: string) {
+  return new JsonRpcProvider(rpcUrl, CHAIN_ID.HARDHAT_BASE, {
+    batchMaxCount: 1,
+    staticNetwork: true,
+  });
+}
+
+type RpcTransportDiagnostic = {
+  probedAt: string;
+  rpcHost: string;
+  rpcPathLength: number;
+  role: 'read' | 'write';
+  method: string;
+  httpStatus?: number;
+  httpStatusText?: string;
+  responseHeaders?: Record<string, string>;
+  responseBodyPreview?: string;
+  responseJsonRpcError?: unknown;
+  durationMs: number;
+  error?: string;
+};
 
 const SP_COIN_ERROR_MESSAGES: Record<number, string> = {
   0: 'RECIP_RATE_NOT_FOUND',
@@ -274,6 +307,8 @@ function classifyScriptError(error: unknown, trace: string[]): 'token_state' | '
     combined.includes('econnrefused') ||
     combined.includes('failed to fetch') ||
     combined.includes('network error') ||
+    combined.includes('503 service temporarily unavailable') ||
+    combined.includes('server response 503') ||
     combined.includes('socket hang up') ||
     combined.includes('timeout') ||
     combined.includes('missing response') ||
@@ -283,6 +318,95 @@ function classifyScriptError(error: unknown, trace: string[]): 'token_state' | '
   }
 
   return 'server';
+}
+
+function getRpcEndpointIdentity(rpcUrl: string) {
+  try {
+    const parsed = new URL(rpcUrl);
+    return {
+      rpcHost: parsed.host,
+      rpcPathLength: parsed.pathname.length,
+    };
+  } catch {
+    return {
+      rpcHost: '(invalid rpc url)',
+      rpcPathLength: 0,
+    };
+  }
+}
+
+function pickRpcDiagnosticHeaders(headers: Headers) {
+  const names = [
+    'server',
+    'date',
+    'retry-after',
+    'x-ratelimit-limit',
+    'x-ratelimit-remaining',
+    'x-ratelimit-reset',
+    'x-request-id',
+    'via',
+  ];
+  return names.reduce<Record<string, string>>((next, name) => {
+    const value = headers.get(name);
+    if (value) next[name] = value;
+    return next;
+  }, {});
+}
+
+async function probeRpcTransport(rpcUrl: string, role: 'read' | 'write'): Promise<RpcTransportDiagnostic> {
+  const startedAtMs = Date.now();
+  const { rpcHost, rpcPathLength } = getRpcEndpointIdentity(rpcUrl);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), RPC_TRANSPORT_PROBE_TIMEOUT_MS);
+
+  try {
+    const response = await fetch(rpcUrl, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'eth_blockNumber',
+        params: [],
+      }),
+      cache: 'no-store',
+      signal: controller.signal,
+    });
+    const responseText = await response.text();
+    let responseJsonRpcError: unknown;
+    try {
+      const parsed = JSON.parse(responseText) as { error?: unknown };
+      responseJsonRpcError = parsed?.error;
+    } catch {
+      responseJsonRpcError = undefined;
+    }
+
+    return {
+      probedAt: new Date().toISOString(),
+      rpcHost,
+      rpcPathLength,
+      role,
+      method: 'eth_blockNumber',
+      httpStatus: response.status,
+      httpStatusText: response.statusText,
+      responseHeaders: pickRpcDiagnosticHeaders(response.headers),
+      responseBodyPreview: responseText.slice(0, 240),
+      ...(responseJsonRpcError ? { responseJsonRpcError } : {}),
+      durationMs: Math.max(0, Date.now() - startedAtMs),
+    };
+  } catch (error) {
+    return {
+      probedAt: new Date().toISOString(),
+      rpcHost,
+      rpcPathLength,
+      role,
+      method: 'eth_blockNumber',
+      durationMs: Math.max(0, Date.now() - startedAtMs),
+      error: getNestedErrorText(error) || String(error),
+    };
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 function normalizeAddress(value: string) {
@@ -546,6 +670,185 @@ function formatReceiptResult(
   ];
 }
 
+type SignedTransactionResult = {
+  hash: string;
+  wait: () => Promise<unknown>;
+  gasPrice?: bigint | null;
+};
+
+function isRetryableRpcTransportError(error: unknown) {
+  const message = String((error as { message?: unknown } | null)?.message || error || '').toLowerCase();
+  const code = String((error as { code?: unknown } | null)?.code || '').toLowerCase();
+  return (
+    code === 'server_error' ||
+    message.includes('503') ||
+    message.includes('service temporarily unavailable') ||
+    message.includes('missing response') ||
+    message.includes('socket hang up') ||
+    message.includes('timeout') ||
+    message.includes('network error') ||
+    message.includes('could not coalesce error')
+  );
+}
+
+async function sendSignedContractTransaction(params: {
+  label: string;
+  contract: Contract;
+  signer: Wallet;
+  provider: JsonRpcProvider;
+  method: string;
+  args: unknown[];
+  timingCollector?: MethodTimingCollector;
+}) {
+  const { label, contract, signer, provider, method, args, timingCollector } = params;
+  const fn = contract.getFunction(method);
+  const request = await fn.populateTransaction(...args);
+  const populated = await signer.populateTransaction({
+    ...request,
+    from: signer.address,
+  });
+  const signedTransaction = await signer.signTransaction(populated);
+  const hash = String(Transaction.from(signedTransaction).hash || '');
+  const startedAtMs = Date.now();
+  let response: SignedTransactionResult | null = null;
+  let lastError: unknown = null;
+  let timingEntry: { onChainRunTimeMs: number; broadcastMs?: string; receiptWaitMs?: string } | null = null;
+
+  try {
+    response = await provider.broadcastTransaction(signedTransaction);
+  } catch (error) {
+    lastError = error;
+    const knownReceipt = hash ? await provider.getTransactionReceipt(hash).catch(() => null) : null;
+    if (knownReceipt) {
+      response = {
+        hash,
+        gasPrice: knownReceipt.gasPrice,
+        wait: async () => knownReceipt,
+      };
+    } else {
+      const knownTransaction = hash ? await provider.getTransaction(hash).catch(() => null) : null;
+      if (knownTransaction) {
+        response = {
+          hash,
+          gasPrice: knownTransaction.gasPrice,
+          wait: () => knownTransaction.wait(),
+        };
+      } else if (!isRetryableRpcTransportError(error)) {
+        throw error;
+      }
+    }
+  }
+
+  const broadcastMs = Math.max(0, Date.now() - startedAtMs);
+  if (timingCollector) {
+    timingEntry = {
+      method: label,
+      onChainRunTimeMs: broadcastMs,
+      broadcastMs: String(broadcastMs),
+    } as { onChainRunTimeMs: number; broadcastMs?: string; receiptWaitMs?: string };
+    timingCollector.onChainCalls.push(timingEntry as (typeof timingCollector.onChainCalls)[number]);
+  }
+
+  if (!response) {
+    const message =
+      `RPC did not confirm broadcast for signed transaction ${hash || '(hash unavailable)'}. ` +
+      `The same signed transaction was submitted without changing nonce or payload.`;
+    const nextError = new Error(message);
+    (nextError as Error & { cause?: unknown; code?: string; txHash?: string }).cause = lastError;
+    (nextError as Error & { cause?: unknown; code?: string; txHash?: string }).code = 'BROADCAST_UNCONFIRMED';
+    (nextError as Error & { cause?: unknown; code?: string; txHash?: string }).txHash = hash;
+    throw nextError;
+  }
+
+  const rawWait = response.wait.bind(response);
+  return {
+    ...response,
+    wait: async () => {
+      const waitStartedAtMs = Date.now();
+      const receipt = await rawWait();
+      const receiptWaitMs = Math.max(0, Date.now() - waitStartedAtMs);
+      if (timingEntry) {
+        timingEntry.receiptWaitMs = String(receiptWaitMs);
+        timingEntry.onChainRunTimeMs += receiptWaitMs;
+      }
+      return receipt;
+    },
+  };
+}
+
+type AccountRewardSnapshot = {
+  accountStakingRewards: string;
+  sponsorRewards: string;
+  recipientRewards: string;
+  agentRewards: string;
+};
+
+type PendingAccountRewardsReader = {
+  getPendingAccountStakingRewards?: (accountKey: string, timestampOverride?: string | number | bigint) => Promise<unknown>;
+};
+
+function toBigIntAmount(value: unknown) {
+  const text = String(value ?? '0').replace(/,/g, '').trim();
+  if (!text) return 0n;
+  try {
+    return BigInt(text);
+  } catch {
+    return 0n;
+  }
+}
+
+function diffRewardSnapshot(after: AccountRewardSnapshot, before: AccountRewardSnapshot): AccountRewardSnapshot {
+  return {
+    accountStakingRewards: (toBigIntAmount(after.accountStakingRewards) - toBigIntAmount(before.accountStakingRewards)).toString(),
+    sponsorRewards: (toBigIntAmount(after.sponsorRewards) - toBigIntAmount(before.sponsorRewards)).toString(),
+    recipientRewards: (toBigIntAmount(after.recipientRewards) - toBigIntAmount(before.recipientRewards)).toString(),
+    agentRewards: (toBigIntAmount(after.agentRewards) - toBigIntAmount(before.agentRewards)).toString(),
+  };
+}
+
+function pendingRewardsToSnapshot(value: unknown): AccountRewardSnapshot {
+  const record = value && typeof value === 'object' ? (value as Record<string, unknown>) : {};
+  return {
+    accountStakingRewards: toBigIntAmount(record.pendingRewards).toString(),
+    sponsorRewards: toBigIntAmount(record.pendingSponsorRewards).toString(),
+    recipientRewards: toBigIntAmount(record.pendingRecipientRewards).toString(),
+    agentRewards: toBigIntAmount(record.pendingAgentRewards).toString(),
+  };
+}
+
+async function getReceiptBlockTimestamp(provider: JsonRpcProvider, receipt: { blockNumber?: bigint | number | null }) {
+  if (receipt.blockNumber == null) return null;
+  const blockNumber = Number(receipt.blockNumber);
+  if (!Number.isFinite(blockNumber)) return null;
+  const block = await provider.getBlock(blockNumber);
+  return block?.timestamp == null ? null : String(block.timestamp);
+}
+
+async function readAccountRewardSnapshot(contract: Contract, accountKey: string): Promise<AccountRewardSnapshot> {
+  const readableContract = contract as unknown as {
+    getAccountRecord?: (accountKey: string) => Promise<unknown>;
+    getAccountRewardTotals?: (accountKey: string) => Promise<unknown>;
+  };
+  if (typeof readableContract.getAccountRecord !== 'function') {
+    throw new Error('getAccountRecord is not available on the current SpCoin contract access path.');
+  }
+  if (typeof readableContract.getAccountRewardTotals !== 'function') {
+    throw new Error('getAccountRewardTotals is not available on the current SpCoin contract access path.');
+  }
+
+  const accountRecord = await readableContract.getAccountRecord(accountKey);
+  const rewardTotals = await readableContract.getAccountRewardTotals(accountKey);
+  const accountRecordValues = Array.isArray(accountRecord) ? accountRecord : [];
+  const rewardTotalValues = Array.isArray(rewardTotals) ? rewardTotals : [];
+
+  return {
+    accountStakingRewards: toBigIntAmount(accountRecordValues[4]).toString(),
+    sponsorRewards: toBigIntAmount(rewardTotalValues[0]).toString(),
+    recipientRewards: toBigIntAmount(rewardTotalValues[1]).toString(),
+    agentRewards: toBigIntAmount(rewardTotalValues[2]).toString(),
+  };
+}
+
 function resolveStepMode(step: LabScriptStep, script: LabScript) {
   if (step.mode === 'hardhat') return 'hardhat';
   const stepNetwork = String(step.network || '').trim();
@@ -560,9 +863,11 @@ export async function POST(request: NextRequest) {
     const script = body?.script;
     const contractAddress = String(body?.contractAddress || '').trim();
     const rpcUrl = String(body?.rpcUrl || DEFAULT_SERVER_HARDHAT_RPC_URL).trim() || DEFAULT_SERVER_HARDHAT_RPC_URL;
+    const writeRpcUrl = String(body?.writeRpcUrl || DEFAULT_SERVER_HARDHAT_WRITE_RPC_URL || rpcUrl).trim() || rpcUrl;
     const startIndex = Math.max(0, Number(body?.startIndex ?? 0) || 0);
     const stopAfterCurrentStep = body?.stopAfterCurrentStep === true;
     const source: SpCoinAccessSource = body?.spCoinAccessSource === 'local' ? 'local' : 'node_modules';
+    const compareOfflineRewards = body?.compareOfflineRewards === true;
 
     if (!script || !Array.isArray(script.steps)) {
       return NextResponse.json({ ok: false, message: 'A script with steps is required.' }, { status: 400 });
@@ -571,15 +876,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: false, message: 'A valid contract address is required.' }, { status: 400 });
     }
 
-    const provider = new JsonRpcProvider(rpcUrl);
+    const provider = createServerHardhatProvider(rpcUrl);
+    const writeProvider = writeRpcUrl === rpcUrl ? provider : createServerHardhatProvider(writeRpcUrl);
 
     const hardhatAccounts = await readHardhatAccounts();
-    const traceBase = [`server run-script start; rpc=${rpcUrl}; contract=${contractAddress}; script=${script.name || script.id}`];
+    const traceBase = [
+      `server run-script start; rpc=${rpcUrl}; writeRpc=${writeRpcUrl}; contract=${contractAddress}; script=${script.name || script.id}`,
+    ];
     const abi = getSpCoinLabAbi();
     const results: StepResult[] = [];
 
     let haltedReason: 'completed' | 'breakpoint' | 'step' | 'error' = 'completed';
     let nextStepNumber: number | null = null;
+    let sharedRelationshipReadCache: Record<string, unknown> | undefined;
 
     for (let idx = startIndex; idx < script.steps.length; idx += 1) {
       const step = script.steps[idx];
@@ -603,14 +912,23 @@ export async function POST(request: NextRequest) {
         }
 
         const signer = new Wallet(senderEntry.privateKey, provider);
+        const writeSigner = writeProvider === provider ? signer : new Wallet(senderEntry.privateKey, writeProvider);
         const senderAddress = signer.address;
         resolvedSenderAddress = senderAddress;
         const contract = wrapContractWithTiming(new Contract(contractAddress, abi, signer));
+        const writeContract = writeProvider === provider ? contract : wrapContractWithTiming(new Contract(contractAddress, abi, writeSigner));
         const appendTrace = (line: string) => {
           const text = String(line || '').trim();
           if (text) stepTrace.push(text);
         };
+        appendTrace(`resolved hardhat sender=${senderAddress}`);
+        appendTrace(`spCoinAccessSource=${source}`);
         const access = createSpCoinModuleAccess(contract, signer, source, appendTrace);
+        if (source === 'local') {
+          const readWithRelationshipCache = access.read as Record<string, unknown>;
+          readWithRelationshipCache.__relationshipReadCache = sharedRelationshipReadCache;
+          sharedRelationshipReadCache = readWithRelationshipCache.__relationshipReadCache as Record<string, unknown> | undefined;
+        }
         const findParam = (label: string) =>
           String(paramEntries.find((entry) => entry.key === label)?.value || '').trim();
         const call = buildCall(step, senderAddress, paramEntries);
@@ -710,22 +1028,45 @@ export async function POST(request: NextRequest) {
               }
               break;
             case 'getAccountRecord':
-              if (typeof (contract as Record<string, unknown>).getAccountRecord === 'function') {
+              appendTrace(`getAccountRecord path start; accountKey=${findParam('Account Key')}`);
+              if (typeof (access.read as Record<string, unknown>).getAccountRecord === 'function') {
+                appendTrace('getAccountRecord using access.read.getAccountRecord');
+                stepResult = await access.read.getAccountRecord(findParam('Account Key'));
+              } else if (typeof (contract as Record<string, unknown>).getAccountRecord === 'function') {
                 const cachedRecord = getCachedAccountRecord(contractAddress, findParam('Account Key'));
                 if (cachedRecord !== null && hasAccountRecordCounts(cachedRecord)) {
+                  appendTrace('getAccountRecord using cached normalized contract record');
                   stepResult = cachedRecord;
                 } else {
                   if (cachedRecord !== null) {
+                    appendTrace('getAccountRecord invalidating incomplete cached record');
                     invalidateCachedAccountRecord(contractAddress, findParam('Account Key'));
                   }
+                  appendTrace('getAccountRecord using direct contract fallback');
                   stepResult = normalizeOnChainAccountRecordResult(await (
                     contract as unknown as { getAccountRecord: (accountKey: string) => Promise<unknown> }
                   ).getAccountRecord(findParam('Account Key')), findParam('Account Key'));
                   setCachedAccountRecord(contractAddress, findParam('Account Key'), stepResult);
                 }
               } else {
-                stepResult = await access.read.getAccountRecord(findParam('Account Key'));
+                throw new Error('getAccountRecord is not available on the current SpCoin access path.');
               }
+              break;
+            case 'getAccountRecordShallow':
+              if (typeof (access.read as Record<string, unknown>).getAccountRecordShallow !== 'function') {
+                throw new Error('getAccountRecordShallow is not available on the current SpCoin access path.');
+              }
+              stepResult = await (
+                access.read as unknown as { getAccountRecordShallow: (accountKey: string) => Promise<unknown> }
+              ).getAccountRecordShallow(findParam('Account Key'));
+              break;
+            case 'getPendingAccountStakingRewards':
+              if (typeof (access.read as Record<string, unknown>).getPendingAccountStakingRewards !== 'function') {
+                throw new Error('getPendingAccountStakingRewards is not available on the current SpCoin access path.');
+              }
+              stepResult = await (
+                access.read as unknown as { getPendingAccountStakingRewards: (accountKey: string) => Promise<unknown> }
+              ).getPendingAccountStakingRewards(findParam('Account Key'));
               break;
             case 'getSponsorKeys':
             case 'getRecipientKeys':
@@ -1259,6 +1600,60 @@ export async function POST(request: NextRequest) {
               invalidateCachedAccountRecord(contractAddress, agentKey);
               break;
             }
+            case 'updateAccountStakingRewards': {
+              const accountKey = findParam('Account Key') || senderAddress;
+              const updateAccountStakingRewards = access.rewards.updateAccountStakingRewards;
+              if (typeof updateAccountStakingRewards !== 'function') {
+                throw new Error('updateAccountStakingRewards is not available on the current SpCoin access path.');
+              }
+              const pendingRewardsReader = access.read as PendingAccountRewardsReader;
+              const latestBlockOfflinePreview =
+                compareOfflineRewards && typeof pendingRewardsReader.getPendingAccountStakingRewards === 'function'
+                  ? await pendingRewardsReader.getPendingAccountStakingRewards(accountKey)
+                  : null;
+              const beforeRewards = await readAccountRewardSnapshot(contract, accountKey);
+              const tx = await sendSignedContractTransaction({
+                label: 'updateAccountStakingRewards',
+                contract: writeContract,
+                signer: writeSigner,
+                provider: writeProvider,
+                method: 'updateAccountStakingRewards',
+                args: [accountKey],
+                timingCollector,
+              });
+              const receipt = (await tx.wait()) as { hash?: string; blockNumber?: bigint | number | null; status?: number | bigint | null };
+              const settlementTimestamp = compareOfflineRewards ? await getReceiptBlockTimestamp(provider, receipt) : null;
+              const settlementOfflinePreview =
+                compareOfflineRewards && settlementTimestamp && typeof pendingRewardsReader.getPendingAccountStakingRewards === 'function'
+                  ? await pendingRewardsReader.getPendingAccountStakingRewards(accountKey, settlementTimestamp)
+                  : null;
+              invalidateCachedAccountRecord(contractAddress, accountKey);
+              const afterRewards = await readAccountRewardSnapshot(contract, accountKey);
+              const delta = diffRewardSnapshot(afterRewards, beforeRewards);
+              const settlementOfflineDelta = pendingRewardsToSnapshot(settlementOfflinePreview);
+              stepResult = [
+                ...formatReceiptResult('updateAccountStakingRewards', tx, receipt, timingCollector),
+                {
+                  label: 'updateAccountStakingRewards rewards',
+                  accountKey,
+                  before: beforeRewards,
+                  after: afterRewards,
+                  delta,
+                  ...(compareOfflineRewards
+                    ? {
+                        offlineComparison: {
+                          latestBlockPreview: latestBlockOfflinePreview,
+                          settlementTimestamp,
+                          settlementTimestampPreview: settlementOfflinePreview,
+                          settlementTimestampDelta: settlementOfflineDelta,
+                          difference: diffRewardSnapshot(delta, settlementOfflineDelta),
+                        },
+                      }
+                    : {}),
+                },
+              ];
+              break;
+            }
             default:
               throw new Error(`Server runner does not support write method ${String(step.method)} yet.`);
             }
@@ -1267,6 +1662,13 @@ export async function POST(request: NextRequest) {
           }
           return stepResult;
         });
+        if (step.panel === 'spcoin_write') {
+          sharedRelationshipReadCache = undefined;
+        } else if (source === 'local') {
+          sharedRelationshipReadCache = (access.read as Record<string, unknown>).__relationshipReadCache as
+            | Record<string, unknown>
+            | undefined;
+        }
 
         const warning =
           step.method === 'getAccountRecord' &&
@@ -1314,23 +1716,57 @@ export async function POST(request: NextRequest) {
       } catch (error) {
         const classification = classifyScriptError(error, stepTrace);
         const spCoinError = decodeSpCoinError(error);
+        const rawErrorMessage = spCoinError || getNestedErrorText(error) || (error instanceof Error ? error.message : String(error));
+        const errorMessage =
+          classification === 'transport'
+            ? `RPC transport error: ${rawErrorMessage}`
+            : rawErrorMessage;
+        const rpcTransport =
+          classification === 'transport'
+            ? await probeRpcTransport(step.panel === 'spcoin_write' ? writeRpcUrl : rpcUrl, step.panel === 'spcoin_write' ? 'write' : 'read')
+            : undefined;
+        if (rpcTransport) {
+          stepTrace.push(
+            `rpcTransport probe role=${rpcTransport.role}; method=${rpcTransport.method}; status=${
+              rpcTransport.httpStatus ?? 'n/a'
+            }; server=${rpcTransport.responseHeaders?.server ?? 'n/a'}; durationMs=${rpcTransport.durationMs}`,
+          );
+          console.error(
+            '[spcoin-rpc-transport]',
+            JSON.stringify({
+              script: script.name || script.id,
+              step: step.step,
+              panel: String(step.panel || ''),
+              method: String(step.method || ''),
+              sender: resolvedSenderAddress,
+              classification,
+              error: rawErrorMessage,
+              rpcTransport,
+            }),
+          );
+        }
         results.push({
           step: step.step,
           success: false,
           payload: {
             call: buildCall(step, resolvedSenderAddress, paramEntries),
             error: {
-              message: spCoinError || (error instanceof Error ? error.message : String(error)),
+              message: errorMessage,
               name: error instanceof Error ? error.name : typeof error,
               classification,
+              ...(classification === 'transport'
+                ? { action: 'No transaction hash was returned. Check the latest account state before retrying this write.' }
+                : {}),
               ...(error instanceof Error && error.stack ? { stack: { message: error.stack } } : {}),
               debug: {
                 panel: String(step.panel || ''),
                 source,
                 method: String(step.method || ''),
                 trace: stepTrace,
+                ...(rpcTransport ? { rpcTransport } : {}),
               },
             },
+            ...(rpcTransport ? { rpcTransport } : {}),
             meta: buildMethodTimingMeta(timingCollector),
           },
         });

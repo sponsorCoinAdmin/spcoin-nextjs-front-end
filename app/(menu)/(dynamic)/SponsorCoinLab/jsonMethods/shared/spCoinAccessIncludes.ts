@@ -188,12 +188,23 @@ export type SpCoinReadAccess = {
   getAccountKeyCount?: () => Promise<number>;
   getMasterAccountListSize?: () => Promise<number>;
   getAccountRecord: (_accountKey: string) => Promise<AccountStruct>;
+  getAccountRecordShallow?: (_accountKey: string) => Promise<AccountStruct>;
   getAccountRoleSummary?: (_accountKey: string) => Promise<unknown>;
   getAccountRoles?: (_accountKey: string) => Promise<string[]>;
   isSponsor?: (_accountKey: string) => Promise<boolean>;
   isRecipient?: (_accountKey: string) => Promise<boolean>;
   isAgent?: (_accountKey: string) => Promise<boolean>;
   getAccountStakingRewards: (_accountKey: string) => Promise<RewardsStruct>;
+  getPendingAccountStakingRewards?: (_accountKey: string) => Promise<{
+    TYPE: '--PENDING_ACCOUNT_STAKING_REWARDS--';
+    accountKey: string;
+    calculatedAt: string;
+    calculatedAtTimestamp: string;
+    pendingRewards: string;
+    pendingSponsorRewards: string;
+    pendingRecipientRewards: string;
+    pendingAgentRewards: string;
+  }>;
   getSpCoinMetaData: () => Promise<unknown>;
   getSponsorRecipientRates?: (_sponsorKey: string, _recipientKey: string) => Promise<(string | number | bigint)[]>;
   getSponsorRecipientRateKeys?: (_sponsorKey: string, _recipientKey: string) => Promise<(string | number | bigint)[]>;

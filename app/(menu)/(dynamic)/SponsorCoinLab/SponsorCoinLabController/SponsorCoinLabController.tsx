@@ -114,6 +114,9 @@ interface SponsorCoinLabControllerProps {
   initialContractDirectoryOptions?: ContractDirectoryOption[];
 }
 
+const TRACE_LOG_PATTERN =
+  /\[TRACE\]|\[EXPAND\]|\[ACCOUNT_EXPAND_TRACE\]|\[ACCOUNT_POPUP_TRACE\]|\[JSON_INSPECTOR_TRACE\]|Lazy-loaded|Inline account record/i;
+
 export default function SponsorCoinLabPage({
   initialContractDirectoryOptions = [],
 }: SponsorCoinLabControllerProps) {
@@ -301,6 +304,10 @@ export default function SponsorCoinLabPage({
     },
     [appendLog, writeTraceEnabled],
   );
+  const resetWriteTrace = useCallback(() => {
+    recentWriteTraceRef.current = [];
+    setLogs((prev) => prev.filter((line) => !TRACE_LOG_PATTERN.test(line)));
+  }, []);
   const getRecentWriteTrace = useCallback(() => recentWriteTraceRef.current.slice(), []);
 
   const {
@@ -632,6 +639,7 @@ export default function SponsorCoinLabPage({
     useLocalSpCoinAccessPackage,
     appendLog,
     appendWriteTrace,
+    resetWriteTrace,
     getRecentWriteTrace,
     traceEnabled: writeTraceEnabled,
     setStatus,

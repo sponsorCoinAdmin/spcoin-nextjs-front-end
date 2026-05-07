@@ -63,7 +63,9 @@ export function getErrorDebugTrace(error: unknown): string[] {
 
 export function attachReadDebugTrace(error: unknown, trace: string[]) {
   if (!error || typeof error !== 'object') return error;
-  (error as { spCoinDebugTrace?: string[] }).spCoinDebugTrace = [...trace];
+  const target = error as { spCoinDebugTrace?: string[] };
+  const existingTrace = Array.isArray(target.spCoinDebugTrace) ? target.spCoinDebugTrace.map((entry) => String(entry)) : [];
+  target.spCoinDebugTrace = [...existingTrace, ...trace.map((entry) => String(entry))];
   return error;
 }
 
@@ -73,7 +75,8 @@ export function buildExecutionMeta(collector: MethodTimingCollector, completedAt
 
 export function attachExecutionMeta(error: unknown, meta?: MethodExecutionMeta) {
   if (!error || typeof error !== 'object' || !meta) return error;
-  (error as { spCoinExecutionMeta?: MethodExecutionMeta }).spCoinExecutionMeta = meta;
+  const target = error as { spCoinExecutionMeta?: MethodExecutionMeta };
+  target.spCoinExecutionMeta ??= meta;
   return error;
 }
 

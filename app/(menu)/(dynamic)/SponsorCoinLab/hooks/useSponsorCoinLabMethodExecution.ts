@@ -339,8 +339,19 @@ export function useSponsorCoinLabMethodExecution({
       }
       const firstResult = Array.isArray(payload?.results) ? payload.results[0] : null;
       if (!firstResult?.success) {
-        const nextError = new Error(firstResult?.payload?.error?.message ?? `Unable to run ${method}.`);
+        const serverError = firstResult?.payload?.error as
+          | {
+              message?: unknown;
+              debug?: { trace?: unknown };
+            }
+          | undefined;
+        const nextError = new Error(toDisplayString(serverError?.message, `Unable to run ${method}.`));
         attachExecutionMeta(nextError, firstResult?.payload?.meta as MethodExecutionMeta | undefined);
+        if (Array.isArray(serverError?.debug?.trace)) {
+          const serverTrace = serverError.debug.trace.map((entry) => String(entry));
+          serverTrace.forEach((line) => appendWriteTrace(`server ${line}`));
+          attachReadDebugTrace(nextError, serverTrace);
+        }
         throw nextError;
       }
       return {
@@ -505,6 +516,7 @@ export function useSponsorCoinLabMethodExecution({
             `mode=${effectiveMode}`,
             `params=${JSON.stringify(def.params.map((param, idx) => ({ key: param.label, value: localParams[idx] || '' })))}`,
           ];
+          debugTrace.forEach((line) => appendWriteTrace(line));
           let serverBackedMeta: MethodExecutionPayloadMeta | undefined;
           let warning: unknown;
           if (

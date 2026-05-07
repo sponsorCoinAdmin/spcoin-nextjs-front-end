@@ -311,6 +311,9 @@ function formatOutputValue(value: unknown, keyPath: string[] = []): unknown {
       const parsedError = parseStructuredErrorMessage(trimmed);
       return parsedError ?? value;
     }
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/.test(trimmed)) {
+      return value;
+    }
     const parsedSerializedMap = parseSerializedMapString(trimmed);
     if (parsedSerializedMap) return parsedSerializedMap;
     if (/^0x[0-9a-fA-F]+$/.test(trimmed) && !isAddressLike(trimmed)) {

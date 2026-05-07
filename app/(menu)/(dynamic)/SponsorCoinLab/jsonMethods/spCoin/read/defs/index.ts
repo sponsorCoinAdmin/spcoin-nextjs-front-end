@@ -16,9 +16,11 @@ import getRecipientListSize from './getRecipientListSize';
 import getAgentListSize from './getAgentListSize';
 import getAccountLinks from './getAccountLinks';
 import getAccountRecord from './getAccountRecord';
+import getAccountRecordShallow from './getAccountRecordShallow';
 import getAccountRoleSummary from './getAccountRoleSummary';
 import getAccountRoles from './getAccountRoles';
 import getAccountStakingRewards from './getAccountStakingRewards';
+import getPendingAccountStakingRewards from './getPendingAccountStakingRewards';
 import getAccountRewardTransactionList from './getAccountRewardTransactionList';
 import getAccountRewardTransactionRecord from './getAccountRewardTransactionRecord';
 import getAccountTransactionList from './getAccountTransactionList';
@@ -93,6 +95,7 @@ export const SPCOIN_READ_METHOD_DEFS = {
   getAccountAgentCount: getAgentListSize,
   getAccountLinks,
   getAccountRecord,
+  getAccountRecordShallow,
   getAccountRoleSummary,
   getAccountRoles,
   isSponsor,
@@ -100,6 +103,7 @@ export const SPCOIN_READ_METHOD_DEFS = {
   isAgent,
   getAccountStakingRewards,
   getStakingRewards: getAccountStakingRewards,
+  getPendingAccountStakingRewards,
   getAccountRewardTransactionList,
   getAccountRewardTransactionRecord,
   getAccountTransactionList,

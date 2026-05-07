@@ -38,6 +38,7 @@ export type SpCoinReadMethod =
   | 'getAccountAgentCount'
   | 'getAccountLinks'
   | 'getAccountRecord'
+  | 'getAccountRecordShallow'
   | 'getAccountRoleSummary'
   | 'getAccountRoles'
   | 'isSponsor'
@@ -45,6 +46,7 @@ export type SpCoinReadMethod =
   | 'isAgent'
   | 'getAccountStakingRewards'
   | 'getStakingRewards'
+  | 'getPendingAccountStakingRewards'
   | 'getAccountRewardTransactionList'
   | 'getAccountRewardTransactionRecord'
   | 'getAccountTransactionList'
@@ -133,6 +135,8 @@ const LEGACY_READ_METHOD_RENAMES: Partial<Record<string, SpCoinReadMethod>> = {
 export const SPCOIN_OFFCHAIN_READ_METHODS: SpCoinReadMethod[] = [
   'getAccountStakingRewards',
   'getStakingRewards',
+  'getPendingAccountStakingRewards',
+  'getAccountRecordShallow',
   'getRecipientTransaction',
   'getAgentTransaction',
   'getAgentRateTransactionCount',

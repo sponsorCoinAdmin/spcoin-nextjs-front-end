@@ -1,813 +1,631 @@
-# SponsorCoinLab / spCoin Token Session Handoff
+# SponsorCoinLab Session Handoff
 
 Date: 2026-05-06
 Workspace: `c:\Users\robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end`
 
-This file is intentionally detailed. It is meant to let the next session restart from the exact current state without needing the chat history.
+This handoff is intentionally detailed. It is meant to let the next session resume without needing the chat history.
 
-## Project Context
+## Current Goal
 
-This repo is a Next.js 15 TypeScript front end for SponsorCoin workflows.
+We are trying to reduce SponsorCoinLab RPC usage, gas pressure, and token size pressure by moving reward preview/read calculations off-chain while keeping real reward settlement writes authoritative on-chain.
 
-Important areas:
+Important rule:
+
+- Off-chain calculations are for preview/read paths and parity checks.
+- On-chain reward calculations are still required for real writes/security.
+- The long-term goal is to remove redundant on-chain read requests once the off-chain calculation is proven to match.
+
+## Main Accounts Used In Testing
+
+Sponsor:
 
 ```text
-app/(menu)/(dynamic)/SponsorCoinLab/
-app/api/spCoin/
-components/shared/JsonInspector.tsx
-lib/context/ExchangeProvider.tsx
-lib/utils/network/hooks/useNetworkController.ts
-spCoinAccess/contracts/spCoin/
-spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/
-resources/data/ABIs/spcoinABI.json
-resources/data/spCoinLab/methodMemberLists.json
+0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266
 ```
 
-The active user focus has been:
-
-1. Clean up the Solidity token method surface.
-2. Remove serialization-style returns where possible.
-3. Replace full array returns in `getAccountRecord` with counts.
-4. Lazy-load account relationship arrays in SponsorCoinLab only when the user expands them.
-5. Verify the exported method list.
-6. Fix naming that was confusing, especially methods containing `Box` or unnecessary `Keys`.
-7. Fix runtime errors while testing local Hardhat calls.
-
-## Current Working Tree Awareness
-
-Known files modified during this overall session include:
+Recipient:
 
 ```text
-lib/context/ExchangeProvider.tsx
-lib/utils/network/hooks/useNetworkController.ts
-spCoinAccess/contracts/spCoin/accounts/Transactions.sol
+0x70997970c51812dc3a010c7d01b50e0d17dc79c8
+```
+
+Agent:
+
+```text
+0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc
+```
+
+Active SponsorCoin contract:
+
+```text
+0x5ec031d8b89182b29027e9dd157789a1d060fbdf
+```
+
+Current Hardhat RPC public nginx URL:
+
+```text
+https://rpc.sponsorcoin.org/f5b4d4b4a2614a540189b979d068639c3fd44bbb1dfcdb5a
+```
+
+## Important Files Changed
+
+Files touched during this session:
+
+```text
+app/(menu)/(dynamic)/SponsorCoinLab/SponsorCoinLabController/utils.ts
+app/(menu)/(dynamic)/SponsorCoinLab/SponsorCoinLabController/hooks/useControllerContractMetadata.ts
+app/api/spCoin/run-script/route.ts
+spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinReadModule/methods/getAccountRecord.ts
+spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinReadModule/methods/getPendingAccountStakingRewards.ts
+spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/utils/methodTiming.ts
+spCoinAccess/scripts/test2--script-1778097397625-j0s1jx.json
 docs/handoff.md
 ```
 
-There may be other user/work-in-progress changes outside this list. Do not run destructive commands such as `git reset --hard`, `git checkout --`, or broad revert commands unless the user explicitly requests them.
+There may be unrelated dirty workspace changes from earlier interrupted sessions. Do not revert anything unless the user explicitly asks.
 
-## Latest Issue Before Handoff
+## What Was Fixed / Implemented
 
-The user saw this error while calling `addAgentTransaction`:
+### 1. Formatted Output ISO Timestamp Bug
+
+File:
+
+```text
+app/(menu)/(dynamic)/SponsorCoinLab/SponsorCoinLabController/utils.ts
+```
+
+Problem:
+
+- ISO timestamps like `2026-03-14T22:08:39.000Z` were being parsed as serialized map strings because they contain colons.
+- This produced broken formatted output such as:
 
 ```json
-{
-  "call": {
-    "method": "addAgentTransaction",
-    "parameters": {
-      "msg.sender": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
-      "Sponsor Key": "0xbcd4042de499d14e55001ccbb24a551f3b954096",
-      "Recipient Key": "0x70997970c51812dc3A010C7d01b50e0d17dc79c8",
-      "Recipient Rate Key": "20",
-      "Agent Key": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
-      "Agent Rate Key": "2",
-      "Transaction Quantity": "1"
-    }
-  },
-  "error": {
-    "message": {
-      "message": "INSUFFICIENT_BALANCE"
-    }
+"calculatedAt": {
+  "2026-03-14T22": {
+    "08": "39.000Z"
   }
 }
 ```
-
-The user also showed:
-
-```json
-{
-  "call": {
-    "method": "balanceOf",
-    "parameters": {
-      "Owner Address": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
-    }
-  },
-  "result": "999,999,999,999,999,999,999,999,990"
-}
-```
-
-The user clarified the intended model:
-
-```text
-All transaction staking fees should come from:
-0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
-
-That account pays for everything.
-The Sponsor Key is still the sponsor/accounting container, but not necessarily the payer.
-```
-
-## Latest Solidity Fix
-
-File changed:
-
-```text
-spCoinAccess/contracts/spCoin/accounts/Transactions.sol
-```
-
-Function changed:
-
-```solidity
-function _addSponsorshipForSponsor(...)
-```
-
-Previous behavior:
-
-```solidity
-if (balanceOf[_sponsorKey] < sponsorAmount) revert SpCoinError(INSUFFICIENT_BALANCE);
-...
-balanceOf[_sponsorKey] -= sponsorAmount;
-```
-
-This meant `addAgentTransaction` failed if the `Sponsor Key` address had no token balance, even when `msg.sender` had plenty of tokens.
-
-New behavior:
-
-```solidity
-address payerKey = msg.sender;
-if (balanceOf[payerKey] < sponsorAmount) revert SpCoinError(INSUFFICIENT_BALANCE);
-...
-balanceOf[payerKey] -= sponsorAmount;
-```
-
-Meaning:
-
-```text
-msg.sender pays the staking amount.
-_sponsorKey still owns the sponsor relationship and transaction accounting path.
-```
-
-Important warning:
-
-```text
-UnSubscribe.sol currently refunds stake to _sponsorKey.
-```
-
-Specifically, in:
-
-```text
-spCoinAccess/contracts/spCoin/accounts/UnSubscribe.sol
-```
-
-`_refundStakeToSponsor(...)` currently does:
-
-```solidity
-balanceOf[_sponsorKey] += _amount;
-```
-
-If the intended refund model is "return funds to the original payer", the contract needs a deeper data-model change. It would need to record the payer address on each transaction or rate bucket. The current fix only changes who pays at transaction creation time.
-
-## Verification After Latest Solidity Fix
-
-Ran:
-
-```text
-npm.cmd run compare:spcoin:size
-```
-
-First run timed out after 124 seconds. Re-ran with a longer timeout. The second run passed.
-
-Result:
-
-```json
-{
-  "timestamp": "2026-05-05 23:20:25 -04:00",
-  "title": "SPCoin contract size comparison",
-  "compiler": "solc 0.8.18",
-  "entry": "SPCoin.sol:SPCoin",
-  "eip170LimitBytes": 24576,
-  "variants": [
-    {
-      "label": "latest",
-      "sourceCount": 18,
-      "creationBytes": 25391,
-      "deployedBytes": 22991,
-      "deployedMarginBytes": 1585,
-      "deployedMarginLabel": "+1585 bytes vs EIP-170"
-    },
-    {
-      "label": "previous",
-      "sourceCount": 20,
-      "creationBytes": 19969,
-      "deployedBytes": 18067,
-      "deployedMarginBytes": 6509,
-      "deployedMarginLabel": "+6509 bytes vs EIP-170"
-    }
-  ],
-  "delta": {
-    "creationBytes": 5422,
-    "deployedBytes": 4924,
-    "creationPercentChange": "27.15% larger",
-    "deployedPercentChange": "27.25% larger"
-  }
-}
-```
-
-## Immediate Next Step
-
-Because `Transactions.sol` bytecode changed, redeploy the token before testing this behavior.
-
-The ABI signatures did not change for the payer fix, but regenerating ABI as part of deploy is fine.
-
-After redeploy, run these checks in SponsorCoinLab:
-
-1. `balanceOf(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266)`
-2. `balanceOf(<Sponsor Key used for addAgentTransaction>)`
-3. `addAgentTransaction` where:
-   - `msg.sender` is the funded/root payer
-   - `Sponsor Key` is a different sponsor/accounting address
-4. Confirm the call no longer reverts with `INSUFFICIENT_BALANCE`.
-5. Confirm the payer balance decreases.
-6. Confirm the sponsor relationship and transaction records are still indexed under `Sponsor Key`.
-7. Confirm `getAccountRecord(Sponsor Key)` count fields update as expected.
-8. Confirm lazy expansion in the JSON inspector can open the resulting relationship buckets.
-
-## Earlier Contract/API Cleanup
-
-### Account Record Refactor
-
-We decided `getAccountRecord(address)` should be the single account-core read method.
-
-`getAccountCore(address)` was removed.
-
-Reasoning:
-
-```text
-getAccountCore and getAccountRecord overlapped.
-getAccountRecord should return core account scalar data.
-Relationship arrays should not be returned directly by getAccountRecord.
-Arrays are expensive and should be fetched only when needed.
-```
-
-Current intended `getAccountRecord(address)` shape:
-
-```text
-accountKey
-creationTime
-accountBalance
-stakedAccountSPCoins
-accountStakingRewards
-sponsorCount
-recipientCount
-agentCount
-parentRecipientCount
-active
-```
-
-Important: `getAccountRecord(address)` should return counts, not full arrays.
-
-Relationship arrays are fetched through separate methods:
-
-```text
-getRecipientKeys(address)
-getAgentKeys(address)
-getAccountLinks(address)
-getRecipientKeysPage(address,uint256,uint256)
-getAgentKeysPage(address,uint256,uint256)
-```
-
-### Solidity Account Record Change
-
-The Solidity `Account.sol` version of `getAccountRecord(address)` was updated to return scalar account fields and counts.
-
-The count fields are:
-
-```text
-sponsorCount
-recipientCount
-agentCount
-parentRecipientCount
-```
-
-`active` was kept as the account active flag.
-
-The earlier method name `isAccountActive(address)` was renamed to:
-
-```text
-isActiveAccount(address)
-```
-
-`accountHasActiveLinks(address)` was removed.
-
-Reasoning:
-
-```text
-If getAccountRecord gives relationship counts, a separate "has links" call is redundant.
-The UI can display [+] when count > 0 and [-] when count == 0.
-```
-
-### API / Module Account Record Shape
-
-Related package files were updated so the TypeScript-side record shape includes:
-
-```text
-sponsorCount
-recipientCount
-agentCount
-parentRecipientCount
-active
-```
-
-Files involved:
-
-```text
-spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/dataTypes/spCoinDataTypes.ts
-spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/utils/serialize.ts
-spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinReadModule/methods/getAccountRecord.ts
-```
-
-Important behavior in `serialize.ts`:
-
-```text
-buildEmptyAccountRecord sets the count fields to "0" and active=false.
-buildSerializedAccountRecordFallback now understands the new getAccountRecord tuple.
-It only calls getAccountLinks if any count is greater than 0.
-```
-
-## Lazy Account Relationship Buckets
-
-The user wanted account records to display relationship buckets like this:
-
-```text
-[+] recipientKeys[2]
-[-] agentKeys[0]
-[-] parentRecipientKeys[0]
-```
-
-Meaning:
-
-```text
-[+] means count > 0 and the node is expandable.
-[-] means count == 0 and selection does nothing.
-```
-
-User requirement:
-
-```text
-Upon selection of [+], do a blockchain read and populate child results.
-Selection of [-] does nothing.
-```
-
-The lazy relationship bucket work touched:
-
-```text
-components/shared/JsonInspector.tsx
-app/(menu)/(dynamic)/SponsorCoinLab/hooks/useSponsorCoinLabTreeMethods.ts
-app/api/spCoin/run-script/route.ts
-```
-
-Lazy bucket object marker:
-
-```text
-__lazyAccountRelation
-```
-
-Current lazy bucket mapping:
-
-```text
-recipientKeys -> getRecipientKeys
-agentKeys -> getAgentKeys
-sponsorKeys -> getAccountLinks
-parentRecipientKeys -> getAccountLinks
-```
-
-`JsonInspector.tsx` changes:
-
-```text
-Recognizes lazy account relation objects.
-Displays counts in labels, e.g. recipientKeys[2].
-Uses [+] for count > 0.
-Uses [-] for count == 0.
-Allows clicking the relationship label itself, not only the tiny indicator.
-Has fallback interaction for lazy relationship nodes.
-```
-
-`useSponsorCoinLabTreeMethods.ts` changes:
-
-```text
-Added buildLazyAccountRelation().
-Added applyLazyAccountRelationBuckets().
-Added tracked tree output ref via setTrackedTreeOutputDisplay.
-Added fallback replacement logic: if the exact inspector path misses, search the payload for a matching lazy relation node.
-```
-
-Added/wired read method:
-
-```text
-spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/onChain/readMethods/getAccountLinks.ts
-spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/onChain/readMethods/index.ts
-app/(menu)/(dynamic)/SponsorCoinLab/jsonMethods/spCoin/read/defs/getAccountLinks.ts
-resources/data/spCoinLab/methodMemberLists.json
-```
-
-Also added `getAccountLinks` to the SpCoin read method union.
-
-## Run-Script Route Decode Fix
-
-The user observed that:
-
-```text
-getRecipientKeys(0xf39...92266) returned two recipients.
-getAccountRecord(0xf39...92266) showed recipientKeys[0].
-```
-
-The supplied proof:
-
-```json
-{
-  "call": {
-    "method": "getRecipientKeys",
-    "parameters": {
-      "Account Key": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
-    }
-  },
-  "result": [
-    "0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199",
-    "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
-  ]
-}
-```
-
-Root cause:
-
-```text
-app/api/spCoin/run-script/route.ts
-```
-
-`normalizeOnChainAccountRecordResult` was still decoding the old ABI return shape. It treated positions 5-8 as arrays.
 
 Fix:
 
+- Added an ISO UTC timestamp guard before serialized map parsing.
+- Formatted output now keeps `calculatedAt` as a normal string.
+
+### 2. Off-Chain Pending Reward Calculation
+
+File:
+
 ```text
-positions 5-8 are now count fields.
-position 9 is active.
+spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinReadModule/methods/getPendingAccountStakingRewards.ts
 ```
 
-It now builds lazy bucket objects for:
+Implemented/updated:
+
+- Reuses shared cached relationship helpers from `getAccountRecord.ts`.
+- Accepts an optional `timestampOverride` for settlement-block parity checks.
+- Uses Solidity-matching constants and integer arithmetic:
 
 ```text
-sponsorKeys
-recipientKeys
-agentKeys
-parentRecipientKeys
+YEAR_SECONDS = 31556925n
+DECIMAL_MULTIPLIER = 10n ** 18n
+PERCENT_DIVISER = DECIMAL_MULTIPLIER / 100n
 ```
 
-Also added stale cache protection:
+Important detail:
+
+- Parent reward math must use Solidity's two-stage integer division. A small rounding mismatch was fixed here.
+
+Verified:
+
+- Sponsor, recipient, and agent reward previews matched on-chain settlement deltas exactly in parity runs.
+- `offlineComparison.difference` reached zero for all reward buckets after the formula fix.
+
+### 3. Shared Relationship Caching / Fewer RPC Calls
+
+File:
 
 ```text
-hasAccountRecordCounts()
+spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinReadModule/methods/getAccountRecord.ts
 ```
 
-This invalidates/refetches stale account record cache entries that do not include the new count fields.
-
-## Lazy Expansion Status
-
-The user later reported:
+Exported/reused cache helpers:
 
 ```text
-It works, however "[+] recipient[2]" will not expand.
+getInflationRateCached
+getAccountRecordObjectCached
+getRecipientRateListCached
+getRecipientRateAgentListCached
+getAgentRateListCached
+getRateTransactionSetCached
+getRecipientRateTransactionSetCached
+getAgentRateTransactionSetCached
 ```
 
-A later patch made the label itself clickable and added fallback replacement behavior. Confirm after redeploy and reload that:
+Observed call-count improvements:
 
 ```text
-[+] recipientKeys[2]
+getPendingAccountStakingRewards: about 14 -> 10 on-chain calls
+getAccountRecord: about 30 -> 14 on-chain calls
 ```
 
-expands by calling:
+Later runs sometimes showed `getAccountRecord` failing after 8 calls because it was using cache for some earlier values before an nginx 503 occurred.
+
+### 4. Offline Comparison For Writes
+
+File:
 
 ```text
-getRecipientKeys(<account>)
+app/api/spCoin/run-script/route.ts
 ```
 
-and inserts the returned child addresses.
+Added request flag:
 
-If it still does not expand, inspect:
-
-```text
-components/shared/JsonInspector.tsx
-app/(menu)/(dynamic)/SponsorCoinLab/hooks/useSponsorCoinLabTreeMethods.ts
+```ts
+compareOfflineRewards?: boolean
 ```
 
-Likely problem areas:
+When enabled for `updateAccountStakingRewards`, the result can include:
 
 ```text
-onLazyAccountRelationOpen handler not firing
-path mismatch when replacing the lazy node
-label click event swallowed by nested span
-lazy bucket has count but missing accountKey/relationName metadata
+offlineComparison.latestBlockPreview
+offlineComparison.settlementTimestamp
+offlineComparison.settlementTimestampPreview
+offlineComparison.settlementTimestampDelta
+offlineComparison.difference
 ```
 
-## Method Naming Cleanup
+Important:
 
-The user disliked names like:
+- This comparison is now opt-in only.
+- Normal writes do not do the extra 10-read offline comparison by default.
+- Normal write path is back to 5 on-chain calls:
+  - before `getAccountRecord`
+  - before `getAccountRewardTotals`
+  - write tx
+  - after `getAccountRecord`
+  - after `getAccountRewardTotals`
+
+### 5. Script Updated For Reward Parity
+
+File:
 
 ```text
-getSponsorRecipientBoxRecipientRateTransactionSetKeysPage(address,address,uint256,uint256)
+spCoinAccess/scripts/test2--script-1778097397625-j0s1jx.json
 ```
 
-The decision was:
+The script was renamed/repurposed for reward parity testing. It runs:
+
+- pending reward read
+- account record read
+- sponsor settlement write
+- recipient settlement write
+- agent settlement write
+
+This was used repeatedly to compare off-chain preview deltas to on-chain settlement results.
+
+### 6. Transaction Timing Improved
+
+File:
 
 ```text
-Remove "Box" from public method names.
-Avoid "Keys" where the method really returns domain objects/rates, e.g. getSponsorRecipientRates.
+spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/utils/methodTiming.ts
 ```
 
-Current intended public method names:
+Added timing fields:
 
 ```text
-getSponsorRecipientRecipientRateTransactionSetKeys(address,address)
-getSponsorRecipientRecipientRateTransactionSetKeysPage(address,address,uint256,uint256)
-getSponsorRecipientAgentRateTransactionSetKeys(address,address)
-getSponsorRecipientAgentRateTransactionSetKeysPage(address,address,uint256,uint256)
-getSponsorRecipientRateTransactionSetKeyGroups(address,address)
+broadcastMs
+receiptWaitMs
 ```
 
-Also:
+Example successful write output:
 
-```text
-getSponsorRecipientRates(address)
-getSponsorRecipientRatesPage(address,uint256,uint256)
+```json
+{
+  "method": "updateAccountStakingRewards",
+  "onChainRunTimeMs": "54",
+  "broadcastMs": "34",
+  "receiptWaitMs": "20",
+  "gasUsed": "343,138"
+}
 ```
 
-There should be no exported method named:
+This made it clear when a failure occurred at broadcast time versus receipt wait time.
+
+### 7. Server Broadcast Handling
+
+File:
 
 ```text
-getSponsorRecipientRateKeys
-```
-
-If there are TypeScript aliases for old deployments, those are fallbacks only and should not be presented as the new exported token method surface.
-
-## Exported Method Table State
-
-The user has an Excel method table called:
-
-```text
-docs/DropDownAccessMethods.xlsx
-```
-
-Screenshots showed the table grouped by Solidity file:
-
-```text
-SpCoinDataTypes.sol
-SPCoin.sol
-Token.sol
-Security.sol
-Account.sol
-Recipient.sol
-RecipientRates.sol
-Agent.sol
-AgentRates.sol
-StakingManager.sol
-RewardsManager.sol
-Transactions.sol
-UnSubscribe.sol
-```
-
-Important table conclusions:
-
-```text
-SPCoin.sol has no direct Read or Write methods.
-Token.sol has ERC20 writes: transfer, approve, transferFrom.
-SpCoinDataTypes.sol exposes ERC20 metadata/read fields such as balanceOf, allowance, name, symbol, version, decimals, totalSupply, etc.
-Account.sol should list getAccountRecord plus count/page/list helpers, but not getAccountCore.
-Transactions.sol should list the renamed sponsor recipient/agent transaction set methods without "Box".
-```
-
-The user asked multiple times whether the table was good. The latest visible method list looked close after:
-
-```text
-getSponsorRecipientRateKeys was removed/not present.
-getSponsorRecipientRates was present.
-Box names were removed.
-```
-
-## Serialization Replacement
-
-Earlier, the user asked whether to replace serialization with typed/direct mappings and whether it would save gas or deployment size.
-
-Conclusion:
-
-```text
-Returning TypeScript records is not a Solidity concept.
-On-chain functions can return tuples/struct-like ABI values, arrays, primitives, etc.
-The API can map ABI tuples into TypeScript records off-chain.
-Replacing string serialization with direct ABI tuple mapping can reduce runtime string work and may reduce bytecode if serialization helpers are eliminated.
-```
-
-Actions taken earlier:
-
-```text
-Serialization-based return code was replaced with direct mapping code for token/API paths where discussed.
-Serialization.sol was removed from the active token import path.
-```
-
-The user expected a size reduction. Size did not visibly drop at first because:
-
-```text
-The active compiled graph still included other large methods and new accessors.
-The size comparison baseline had changed.
-Removing a file only reduces bytecode if compiled functions from that file were actually linked/reachable.
-```
-
-Current latest size after all current changes:
-
-```text
-deployedBytes: 22991
-EIP-170 margin: +1585 bytes
-```
-
-## Network Console Loop Fix
-
-The user saw apparent infinite console logs:
-
-```text
-[useNetworkController] LOG: [wallet-disconnected] ...
-[ExchangeProvider] LOG: disconnect or missing address - preserving previous accounts.activeAccount
-[Violation] 'message' handler took <N>ms
-```
-
-Files changed:
-
-```text
-lib/utils/network/hooks/useNetworkController.ts
-lib/context/ExchangeProvider.tsx
-```
-
-Root causes / suspected causes:
-
-```text
-Disconnected branch logged on every render even when no state changed.
-useNetworkController called syncNetworkChainId(0, false) even when already chainId=0 and connected=false.
-ExchangeProvider recreated setExchangeContext every render, causing dependent effects to rerun.
-ExchangeProvider disconnected branch logged the same disconnected state repeatedly.
-```
-
-Fixes:
-
-```text
-setExchangeContext is wrapped in useCallback.
-ExchangeProvider has lastDisconnectedLogKeyRef to avoid repeat disconnected logs for identical state.
-useNetworkController tracks appNetworkChainId and appNetworkConnected.
-useNetworkController skips syncNetworkChainId(0, false) if already disconnected at chainId 0.
-useNetworkController has lastWalletDisconnectedLogKeyRef to avoid repeated same-state logs.
-```
-
-Verification:
-
-```text
-npm.cmd run -s typecheck
-```
-
-passed.
-
-Full lint still fails from existing repo-wide lint backlog. The lint failure was not introduced by the loop fix.
-
-## Commands Already Run
-
-Useful completed commands:
-
-```text
-npm.cmd run -s typecheck
-npm.cmd run compare:spcoin:size
-```
-
-`npm.cmd run -s typecheck` passed after the network loop work.
-
-`npm.cmd run compare:spcoin:size` passed after the payer Solidity change when given enough time.
-
-Full lint was attempted:
-
-```text
-npm.cmd run -s lint
-```
-
-It failed with many pre-existing lint issues across the repo. Do not treat that as a new regression from this session.
-
-## Known Open Questions
-
-### Refund Semantics
-
-Question:
-
-```text
-If msg.sender pays for all sponsorship transactions, who should receive refunds on unsubscribe/delete?
+app/api/spCoin/run-script/route.ts
 ```
 
 Current behavior:
 
-```text
-Refunds go to _sponsorKey.
-```
+- Signs transaction once.
+- Computes signed tx hash with `Transaction.from(signedTransaction).hash`.
+- Broadcasts once with `provider.broadcastTransaction(signedTransaction)`.
+- If broadcast errors, checks once whether the transaction is already known via:
+  - `getTransactionReceipt(hash)`
+  - `getTransaction(hash)`
+- Does not do arbitrary retry loops.
 
-Potential desired behavior:
+This was important because the user rejected timer/retry kludges. The current handling is for ambiguity only: if nginx returns a bad response after forwarding the transaction, we check whether the tx actually landed.
 
-```text
-Refunds go back to original payer.
-```
+## 503 / RPC Investigation
 
-If desired, implement payer tracking:
+### What Happened
 
-```text
-Add payer address to transaction/rate records.
-Debit payer on add.
-Refund payer on delete/unsubscribe.
-Decide aggregation behavior when multiple payers fund the same sponsor/recipient/rate bucket.
-```
-
-This is non-trivial because existing stake totals are aggregated by sponsor/recipient/rate/agent, not by payer.
-
-### Lazy Expansion Retest
-
-After redeploy and browser refresh, retest:
+During repeated reward runs, the public EC2 nginx RPC sometimes returned:
 
 ```text
-getMasterAccountKeys
-getAccountRecord
-expand recipientKeys[N]
-expand agentKeys[N]
-expand parentRecipientKeys[N]
+503 Service Temporarily Unavailable
 ```
 
-Expected behavior:
+Errors happened on both:
+
+- write broadcast paths
+- read paths such as `getAccountRecord`
+
+The response was nginx HTML, not a JSON-RPC error:
+
+```html
+<html>
+<head><title>503 Service Temporarily Unavailable</title></head>
+<body>
+<center><h1>503 Service Temporarily Unavailable</h1></center>
+<hr><center>nginx/1.28.0</center>
+</body>
+</html>
+```
+
+### Direct RPC Proof
+
+A direct harmless JSON-RPC call to the public endpoint was tested:
 
 ```text
-count 0 -> [-] and no fetch
-count > 0 -> [+] and one blockchain/API fetch on click
-child results inserted under that bucket
+eth_blockNumber
 ```
 
-### ABI Rebuild
+It sometimes returned nginx `503`, proving the issue was not:
 
-For the latest payer fix, ABI signatures did not change. However, because the bytecode changed, redeploy is required.
+- reward math
+- contract logic
+- ethers only
+- transaction signing
+- the Next route only
 
-If the deploy process automatically regenerates:
+The failure layer is the public nginx RPC proxy / upstream Hardhat path.
+
+### Transport Diagnostics Added
+
+File:
 
 ```text
-resources/data/ABIs/spcoinABI.json
+app/api/spCoin/run-script/route.ts
 ```
 
-that is fine.
+When a step error is classified as `transport`, the route now:
 
-## Suggested Restart Checklist
-
-When resuming:
-
-1. Check current git status:
+1. Runs a same-moment raw `eth_blockNumber` probe against the same RPC role.
+2. Adds transport diagnostics to the failed payload.
+3. Logs a server line beginning with:
 
 ```text
-git status --short
+[spcoin-rpc-transport]
 ```
 
-2. Confirm the latest payer change is still present:
+Diagnostic fields include:
 
 ```text
-rg -n "address payerKey = msg.sender|balanceOf\\[payerKey\\]" spCoinAccess/contracts/spCoin/accounts/Transactions.sol
+probedAt
+rpcHost
+rpcPathLength
+role
+method
+httpStatus
+httpStatusText
+responseHeaders.server
+responseHeaders.date
+responseBodyPreview
+durationMs
 ```
 
-3. Redeploy the local Hardhat token.
+Because formatted output hid the nested diagnostic in one run, the route was also patched to:
 
-4. Rebuild/regenerate ABI if the workflow requires it.
-
-5. Restart or refresh the Next app.
-
-6. In SponsorCoinLab, run:
+- add a top-level `rpcTransport` field on failed payloads
+- append a visible trace line like:
 
 ```text
-balanceOf(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266)
-addAgentTransaction(...)
-getAccountRecord(Sponsor Key)
-getRecipientKeys(Sponsor Key)
+rpcTransport probe role=read; method=eth_blockNumber; status=503; server=nginx/1.28.0; durationMs=...
 ```
 
-7. Confirm:
+### Key 503 Evidence From Latest Logs
+
+The final diagnostic log captured:
 
 ```text
-No INSUFFICIENT_BALANCE when payer has funds.
-Sponsor account counts update.
-recipientKeys[N] shows correct count.
-recipientKeys[N] expands.
-No repeated wallet-disconnected console loop.
+[spcoin-rpc-transport] {
+  "script": "getAccountRecord",
+  "step": 1,
+  "panel": "spcoin_rread",
+  "method": "getAccountRecord",
+  "classification": "transport",
+  "error": "server response 503 Service Temporarily Unavailable ... nginx/1.28.0 ...",
+  "rpcTransport": {
+    "role": "read",
+    "method": "eth_blockNumber",
+    "httpStatus": 200,
+    "httpStatusText": "OK",
+    "responseHeaders": {
+      "server": "nginx/1.28.0"
+    },
+    "durationMs": 55
+  }
+}
 ```
 
-8. If refunds matter, decide payer-refund semantics before polishing unsubscribe behavior.
+Interpretation:
 
-## Mental Model To Preserve
+- The failing request got nginx `503`.
+- Immediately after, a raw `eth_blockNumber` probe to the same public endpoint returned `200 OK`.
+- So the entire RPC was not down.
+- Nginx/upstream is intermittently rejecting or failing individual requests.
 
-Use this distinction throughout the next session:
+Likely causes:
+
+- nginx `limit_req` / `limit_conn`
+- upstream connection exhaustion
+- upstream Hardhat process intermittently closing/refusing one request
+- fragile public proxy under short chained JSON-RPC bursts
+
+## Metadata Loop / Background Pressure Fix
+
+File:
 
 ```text
-msg.sender / root payer:
-  The account whose token balance is debited for staking transactions.
-
-Sponsor Key:
-  The account/container under which sponsor -> recipient -> rate -> agent relationships and transaction indexes are recorded.
-
-Recipient Key:
-  The target recipient account in the sponsor relationship.
-
-Agent Key:
-  Optional agent account under a recipient rate. burnAddress indicates recipient-only transaction path.
+app/(menu)/(dynamic)/SponsorCoinLab/SponsorCoinLabController/hooks/useControllerContractMetadata.ts
 ```
 
-Do not accidentally change `_sponsorKey` indexing to `msg.sender`; only the token balance debit was changed.
+Problem:
+
+- Server logs showed a huge flood of:
+
+```text
+GET /api/spCoin/access-manager?deploymentPublicKey=...&deploymentChainId=31337&includeMetadata=true
+```
+
+- The metadata effect depended on the whole `exchangeContext`.
+- The effect fetched metadata, then called `setSettings`.
+- That could change `exchangeContext`, retriggering the metadata fetch loop.
+
+Fix:
+
+- Narrowed effect dependencies to primitive metadata fields and chain id.
+- Added no-op logic so identical fetched metadata does not write back to settings again.
+
+After restart:
+
+- The `includeMetadata=true` flood stopped.
+- Only one metadata call appeared on startup.
+- Several reward runs succeeded with no 503.
+
+Conclusion:
+
+- The metadata loop was a real pressure source and likely a major contributor.
+- It was not the whole problem because a later normal `getAccountRecord` read still hit nginx 503.
+
+## Current 503 Conclusion
+
+We fixed a local app loop that was hammering the RPC.
+
+However, the public nginx RPC can still intermittently return 503 to individual requests during normal chained reads.
+
+This cannot be fixed 100% from Next app code if the server-backed route continues to use the public nginx RPC URL.
+
+The durable fix is to split RPC paths:
+
+- browser/public clients use nginx public RPC
+- server-side Next reads/writes use a private/internal direct RPC path to Hardhat
+
+## Deployment / Infrastructure Plan Discussed
+
+User's setup:
+
+- Hardhat runs on an EC2 instance.
+- nginx is on the same EC2 instance.
+- Next.js runs locally on the user's PC during development.
+- There is also a deployed Next.js instance on EC2, but current local changes need redeploying there.
+
+For local PC Next.js:
+
+- `http://127.0.0.1:8545` is not valid unless using an SSH tunnel.
+- Optional dev tunnel:
+
+```powershell
+ssh -i C:\path\to\key.pem -L 8545:127.0.0.1:8545 ubuntu@EC2_PUBLIC_IP
+```
+
+Then local `.env.local` can use:
+
+```env
+NEXT_SERVER_HARDHAT_RPC_URL=http://127.0.0.1:8545
+SPCOIN_HARDHAT_WRITE_RPC_URL=http://127.0.0.1:8545
+NEXT_PUBLIC_HARDHAT_RPC_URL=https://rpc.sponsorcoin.org/f5b4d4b4a2614a540189b979d068639c3fd44bbb1dfcdb5a
+```
+
+For EC2-deployed Next.js:
+
+Since Next and Hardhat are on the same EC2 instance, configure the EC2 Next app env as:
+
+```env
+NEXT_SERVER_HARDHAT_RPC_URL=http://127.0.0.1:8545
+SPCOIN_HARDHAT_WRITE_RPC_URL=http://127.0.0.1:8545
+NEXT_PUBLIC_HARDHAT_RPC_URL=https://rpc.sponsorcoin.org/f5b4d4b4a2614a540189b979d068639c3fd44bbb1dfcdb5a
+```
+
+Then rebuild/restart EC2 Next.
+
+Important verification after deploy:
+
+The run-script trace should show:
+
+```text
+server run-script start; rpc=http://127.0.0.1:8545; writeRpc=http://127.0.0.1:8545
+```
+
+If it still shows the public `https://rpc.sponsorcoin.org/...`, then the server route is still using nginx and the test is not valid.
+
+## Nginx Notes
+
+Changing buffers may help but is not the root fix.
+
+Relevant nginx knobs to inspect:
+
+```nginx
+limit_req
+limit_conn
+limit_req_status
+proxy_http_version
+proxy_set_header Connection
+proxy_connect_timeout
+proxy_send_timeout
+proxy_read_timeout
+upstream keepalive
+worker_connections
+```
+
+If rate limiting is the cause, return `429 Too Many Requests` rather than nginx HTML `503`:
+
+```nginx
+limit_req_status 429;
+```
+
+Example upstream hardening shape:
+
+```nginx
+upstream hardhat_rpc {
+    server 127.0.0.1:8545;
+    keepalive 64;
+}
+
+location /... {
+    proxy_http_version 1.1;
+    proxy_set_header Connection "";
+    proxy_connect_timeout 5s;
+    proxy_send_timeout 60s;
+    proxy_read_timeout 60s;
+    proxy_pass http://hardhat_rpc;
+}
+```
+
+Caution:
+
+- Bigger buffers/bursts only create more headroom.
+- They do not make Hardhat production-grade.
+- For real multi-user production, public Hardhat-style RPC is not enough.
+
+## Production Scaling Concern
+
+The user correctly pointed out:
+
+- If one user can occasionally trigger 503s, many users will be worse.
+
+Current answer:
+
+- This setup is not production scalable as-is.
+- Server-side reads/writes should not use the public nginx RPC.
+- Browser traffic needs a hardened public gateway.
+- Writes should use a dedicated write path / transaction service with nonce management.
+- Expensive reads like `getAccountRecord` must keep shrinking RPC fanout.
+- Hardhat is fine for simulation/dev but not a production public RPC backend.
+
+## Current Verification
+
+Command run after code changes:
+
+```text
+npm.cmd run -s typecheck
+```
+
+Status:
+
+```text
+passed
+```
+
+Contract size check previously run:
+
+```text
+npm.cmd run compare:spcoin:size
+```
+
+Observed latest:
+
+```text
+deployedBytes: 23263
+EIP-170 margin: 1313
+```
+
+## Recommended Next Session Steps
+
+1. Redeploy current changes to EC2 Next instance.
+
+2. Configure EC2 Next environment:
+
+```env
+NEXT_SERVER_HARDHAT_RPC_URL=http://127.0.0.1:8545
+SPCOIN_HARDHAT_WRITE_RPC_URL=http://127.0.0.1:8545
+NEXT_PUBLIC_HARDHAT_RPC_URL=https://rpc.sponsorcoin.org/f5b4d4b4a2614a540189b979d068639c3fd44bbb1dfcdb5a
+```
+
+3. Rebuild/restart the EC2 Next app.
+
+4. Run the same SponsorCoinLab reward parity script from the EC2-hosted app.
+
+5. Verify trace contains:
+
+```text
+rpc=http://127.0.0.1:8545
+writeRpc=http://127.0.0.1:8545
+```
+
+6. Run multiple cycles:
+
+- pending rewards
+- account record
+- sponsor update
+- recipient update
+- agent update
+
+7. Watch for:
+
+- no nginx `503`
+- no `[spcoin-rpc-transport]`
+- writes stay at 5 on-chain calls
+- `broadcastMs` and `receiptWaitMs` remain normal
+
+8. If 503s still occur while using `127.0.0.1:8545` on EC2, then nginx is no longer involved and the focus shifts to Hardhat process capacity/health directly.
+
+9. Continue reducing `getAccountRecord` fanout:
+
+- It can still require 10-14 RPC reads.
+- A later 503 happened mid-read after 8 calls.
+- Fewer calls means fewer opportunities for any RPC transport failure.
+
+## Important User Preferences
+
+The user rejected timer/retry/broadcast-loop kludges. Avoid suggesting:
+
+- arbitrary delays between script steps
+- "try up to 5 times" retry loops
+- masking the underlying transport failure
+
+Preferred approach:
+
+- identify the exact failing layer
+- fix root cause there
+- reduce redundant RPC calls
+- keep diagnostics visible and evidence-based
 

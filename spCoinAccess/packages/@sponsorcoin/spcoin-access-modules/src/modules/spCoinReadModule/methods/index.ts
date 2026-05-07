@@ -14,7 +14,7 @@ export { getActiveAccountKeyAt, getActiveAccountElement } from './getActiveAccou
 export { getSponsorKeys } from './getSponsorKeys';
 export { getRecipientKeys, getAccountRecipientList } from './getAccountRecipientList';
 export { getAccountRecipientListSize } from './getAccountRecipientListSize';
-export { getAccountRecord } from './getAccountRecord';
+export { getAccountRecord, getAccountRecordShallow } from './getAccountRecord';
 export {
     getAccountRoleSummary,
     getAccountRoles,
@@ -23,6 +23,7 @@ export {
     isAgent,
 } from './getAccountRoleSummary';
 export { getAccountStakingRewards } from './getAccountStakingRewards';
+export { getPendingAccountStakingRewards } from './getPendingAccountStakingRewards';
 export { getRewardTypeRecord } from './getRewardTypeRecord';
 export { getAccountRewardTransactionList } from './getAccountRewardTransactionList';
 export { getAccountRewardTransactionRecord } from './getAccountRewardTransactionRecord';

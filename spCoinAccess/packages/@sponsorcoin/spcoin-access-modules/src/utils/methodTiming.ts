@@ -1,6 +1,8 @@
 export type OnChainCallTiming = {
     method: string;
     onChainRunTimeMs: number;
+    broadcastMs?: string;
+    receiptWaitMs?: string;
     gasUsed?: string;
     gasPriceWei?: string;
     feePaidWei?: string;
@@ -179,6 +181,8 @@ export function buildMethodTimingMeta(
     const onChainCalls = Array.isArray(collector?.onChainCalls) ? collector.onChainCalls.map((entry) => ({
         method: String(entry?.method || "").trim() || "unknown",
         onChainRunTimeMs: Math.max(0, Number(entry?.onChainRunTimeMs || 0)),
+        ...(entry?.broadcastMs != null ? { broadcastMs: String(entry.broadcastMs) } : {}),
+        ...(entry?.receiptWaitMs != null ? { receiptWaitMs: String(entry.receiptWaitMs) } : {}),
         ...(entry?.gasUsed != null ? { gasUsed: String(entry.gasUsed) } : {}),
         ...(entry?.gasPriceWei != null ? { gasPriceWei: String(entry.gasPriceWei) } : {}),
         ...(entry?.feePaidWei != null ? { feePaidWei: String(entry.feePaidWei) } : {}),

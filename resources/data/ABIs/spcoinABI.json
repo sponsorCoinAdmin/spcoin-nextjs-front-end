@@ -1406,6 +1406,59 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "_accountKey",
+        "type": "address"
+      }
+    ],
+    "name": "getParentRecipientKeys",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "",
+        "type": "address[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_accountKey",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "offset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getParentRecipientKeysPage",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "page",
+        "type": "address[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "total",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "bytes32",
         "name": "_setKey",
         "type": "bytes32"
@@ -2035,6 +2088,59 @@
       }
     ],
     "name": "getSponsorContainerRecipientKeysPage",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "page",
+        "type": "address[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "total",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_accountKey",
+        "type": "address"
+      }
+    ],
+    "name": "getSponsorKeys",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "",
+        "type": "address[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_accountKey",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "offset",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "getSponsorKeysPage",
     "outputs": [
       {
         "internalType": "address[]",

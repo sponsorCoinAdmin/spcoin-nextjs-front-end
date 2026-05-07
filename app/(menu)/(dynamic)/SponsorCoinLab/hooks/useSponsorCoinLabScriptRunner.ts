@@ -45,6 +45,8 @@ interface Params {
   setStatus: (value: string) => void;
   setFormattedOutputDisplay: (value: string) => void;
   useLocalSpCoinAccessPackage: boolean;
+  appendWriteTrace: (line: string) => void;
+  resetWriteTrace: () => void;
   getRecentWriteTrace: () => string[];
   executeMethodDescriptor: (
     descriptor: MethodExecutionDescriptor,
@@ -87,6 +89,8 @@ export function useSponsorCoinLabScriptRunner({
   setStatus,
   setFormattedOutputDisplay,
   useLocalSpCoinAccessPackage,
+  appendWriteTrace,
+  resetWriteTrace,
   getRecentWriteTrace,
   executeMethodDescriptor,
   buildMethodCallEntry,
@@ -98,6 +102,13 @@ export function useSponsorCoinLabScriptRunner({
       const paramEntries = Array.isArray(step.params) ? step.params : [];
       const stepSender = String(step['msg.sender'] ?? '').trim();
       const stepMode = resolveScriptExecutionMode(step, options?.scriptNetwork);
+      const descriptor: MethodExecutionDescriptor = {
+        panel: step.panel,
+        method: step.method,
+        params: paramEntries.map((entry) => ({ key: String(entry.key || ''), value: String(entry.value || '') })),
+        sender: stepSender,
+        mode: stepMode,
+      };
 
       const commitResult = (payload: unknown, success: boolean) => {
         const nextFormattedOutput = mergeFormattedOutput(formatFormattedPanelPayload(payload), formattedOutputBase);
@@ -109,13 +120,17 @@ export function useSponsorCoinLabScriptRunner({
       };
 
       try {
-        const { call, result, warning, meta, onChainCalls } = await executeMethodDescriptor({
-          panel: step.panel,
-          method: step.method,
-          params: paramEntries.map((entry) => ({ key: String(entry.key || ''), value: String(entry.value || '') })),
-          sender: stepSender,
-          mode: stepMode,
-        }, { executionSignal: options?.executionSignal });
+        resetWriteTrace();
+        appendWriteTrace(
+          `script step start; panel=${descriptor.panel}; mode=${descriptor.mode ?? 'current'}; source=${
+            useLocalSpCoinAccessPackage ? 'local' : 'node_modules'
+          }; method=${descriptor.method}`,
+        );
+        if (descriptor.sender) {
+          appendWriteTrace(`sender=${descriptor.sender}`);
+        }
+        appendWriteTrace(`params=${JSON.stringify(descriptor.params)}`);
+        const { call, result, warning, meta, onChainCalls } = await executeMethodDescriptor(descriptor, { executionSignal: options?.executionSignal });
         return commitResult({ call, meta, ...(onChainCalls ? { onChainCalls } : {}), result, ...(warning ? { warning } : {}) }, true);
       } catch (error) {
         const message =
@@ -161,9 +176,11 @@ export function useSponsorCoinLabScriptRunner({
     },
     [
       appendLog,
+      appendWriteTrace,
       buildMethodCallEntry,
       executeMethodDescriptor,
       formatFormattedPanelPayload,
+      resetWriteTrace,
       setFormattedOutputDisplay,
       setStatus,
       useLocalSpCoinAccessPackage,
