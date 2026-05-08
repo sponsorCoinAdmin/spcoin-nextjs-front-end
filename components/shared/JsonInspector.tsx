@@ -84,15 +84,11 @@ function hasInlineAccountRecord(data: any): boolean {
     return true;
   }
   return Boolean(
-    record.__forceExpanded === true ||
-      typeof record.accountKey === 'string' ||
-      typeof record.TYPE === 'string' ||
+    typeof record.TYPE === 'string' ||
       record.totalSpCoins ||
       record.recipientKeys ||
       record.agentKeys ||
-      record.parentRecipientKeys ||
-      record.meta ||
-      record.value !== undefined,
+      record.parentRecipientKeys,
   );
 }
 
@@ -161,8 +157,32 @@ function getExpandedPathKey(path: string) {
 }
 
 function normalizeLegacyDateDisplay(value: any): string | null {
+  const parseScriptCreatedDate = (input: string): string | null => {
+    const normalized = String(input || '').trim().replace(/_/g, ' ');
+    const match = normalized.match(
+      /^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-(\d{1,2})-(\d{4}),\s*(\d{1,2}):(\d{2})(?::(\d{2}))?$/i,
+    );
+    if (!match) return null;
+    const [, monthText, dayText, yearText, hourText, minuteText, secondText = '00'] = match;
+    const monthIndex = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'].indexOf(
+      monthText.toLowerCase(),
+    );
+    if (monthIndex < 0) return null;
+    const date = new Date(
+      Number(yearText),
+      monthIndex,
+      Number(dayText),
+      Number(hourText),
+      Number(minuteText),
+      Number(secondText),
+    );
+    return Number.isNaN(date.getTime()) ? null : date.toISOString();
+  };
   const normalizeDisplayDateString = (input: string): string | null => {
     const trimmed = String(input || '').trim();
+    const scriptCreatedDate = parseScriptCreatedDate(trimmed);
+    if (scriptCreatedDate) return scriptCreatedDate;
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/.test(trimmed)) return trimmed;
     const normalized = trimmed.replace(/_/g, ' ');
     const match = normalized.match(
       /^(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2}),\s+(\d{4})\s+at\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)(?:\s+([A-Z]{2,5}))?$/i,
@@ -337,8 +357,8 @@ function getVisibleEntries(
   const sortEntries = ([leftKey]: [string, any], [rightKey]: [string, any]) => {
     if (leftKey === 'meta' && rightKey !== 'meta') return -1;
     if (rightKey === 'meta' && leftKey !== 'meta') return 1;
-    if (leftKey === 'onChainCalls' && rightKey !== 'onChainCalls') return 1;
-    if (rightKey === 'onChainCalls' && leftKey !== 'onChainCalls') return -1;
+    if ((leftKey === 'onChainCalls' || leftKey === 'methodOnChainCalls') && rightKey !== 'onChainCalls' && rightKey !== 'methodOnChainCalls') return 1;
+    if ((rightKey === 'onChainCalls' || rightKey === 'methodOnChainCalls') && leftKey !== 'onChainCalls' && leftKey !== 'methodOnChainCalls') return -1;
     if (leftKey === 'totalOnChainMs' && rightKey !== 'totalOnChainMs') return 1;
     if (rightKey === 'totalOnChainMs' && leftKey !== 'totalOnChainMs') return -1;
     if (leftKey === 'totalGasUsed' && rightKey !== 'totalGasUsed') return 1;
@@ -557,9 +577,9 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
   };
 
   const getPathLabel = (nextPath: string): string => {
-    if (label && label.startsWith('localOnChainCalls')) return label;
+    if (label && label.startsWith('onChainCalls')) return label;
     if (label && label.startsWith('childOnChainCalls')) return label;
-    if (label) return getAddressNodeLabel(data, formatPathSegmentLabel(nextPath));
+    if (label) return getAddressNodeLabel(data, label);
     if (nextPath === 'root') return rootLabel;
     if (nextPath === 'tradeData.slippage') return 'slippage';
     return getAddressNodeLabel(data, formatPathSegmentLabel(nextPath));
@@ -644,18 +664,26 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
               const ms = Number(String((entry as Record<string, unknown>)?.onChainRunTimeMs ?? '0').replace(/,/g, ''));
               return sum + (Number.isFinite(ms) ? ms : 0);
             }, 0);
-            return `localOnChainCalls: ${totalMs}`;
+            return `onChainCalls: ${totalMs}ms`;
           })()
+        : key === 'onChainCalls' && Array.isArray(value)
+          ? (() => {
+              const totalMs = (value as unknown[]).reduce((sum: number, entry: unknown) => {
+                const ms = Number(String((entry as Record<string, unknown>)?.onChainRunTimeMs ?? '0').replace(/,/g, ''));
+                return sum + (Number.isFinite(ms) ? ms : 0);
+              }, 0);
+              return `onChainCalls: ${totalMs}ms`;
+            })()
         : key === 'childOnChainCalls' && String(path || '').endsWith('.onChainCalls') && Array.isArray(value)
           ? (() => {
               const totalMs = (value as unknown[]).reduce((sum: number, entry: unknown) => {
                 const ms = Number(String((entry as Record<string, unknown>)?.totalOnChainMs ?? '0').replace(/,/g, ''));
                 return sum + (Number.isFinite(ms) ? ms : 0);
               }, 0);
-              return `childOnChainCalls: ${totalMs}`;
+              return `childOnChainCalls: ${totalMs}ms`;
             })()
           : key;
-    if (key === 'creationTime' || key === 'creationDate') {
+    if (key === 'creationTime' || key === 'creationDate' || key === 'Date Created') {
       if (!showAll && hiddenRules.creationDates) return null;
       const normalizedDate = normalizeLegacyDateDisplay(value);
       if (normalizedDate) {

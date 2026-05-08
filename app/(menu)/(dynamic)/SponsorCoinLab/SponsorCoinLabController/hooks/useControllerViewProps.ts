@@ -57,6 +57,8 @@ export function useControllerViewProps(args: UseControllerViewPropsArgs) {
     beginNewMethodDraft: args.beginNewMethodDraft,
     writeTraceEnabled: args.writeTraceEnabled,
     setWriteTraceEnabled: args.setWriteTraceEnabled,
+    useReadCache: args.useReadCache,
+    setUseReadCache: args.setUseReadCache,
     appendLog: args.appendLog,
     showOnChainMethods: args.showOnChainMethods,
     setShowOnChainMethods: args.setShowOnChainMethods,

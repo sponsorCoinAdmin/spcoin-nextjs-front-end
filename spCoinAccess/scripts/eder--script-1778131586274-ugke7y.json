@@ -1,0 +1,22 @@
+{
+  "id": "script-1778131586274-ugke7y",
+  "name": "eder",
+  "Date Created": "May-07-2026, 01:26:26",
+  "network": "Hardhat EC2",
+  "steps": [
+    {
+      "step": 1,
+      "name": "getAccountRecord",
+      "panel": "spcoin_rread",
+      "method": "getAccountRecord",
+      "params": [
+        {
+          "key": "Account Key",
+          "value": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
+        }
+      ],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    }
+  ]
+}

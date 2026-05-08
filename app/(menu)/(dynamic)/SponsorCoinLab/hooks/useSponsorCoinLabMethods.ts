@@ -89,6 +89,7 @@ interface Params {
   effectiveConnectedAddress: string;
   ownerAddress?: string;
   useLocalSpCoinAccessPackage: boolean;
+  useReadCache: boolean;
   appendLog: (line: string) => void;
   appendWriteTrace: (line: string) => void;
   resetWriteTrace: () => void;
@@ -131,6 +132,7 @@ interface Params {
   recipientRateRange?: [number, number];
   agentRateRange?: [number, number];
   callAccessMethod?: AccessMethodCaller;
+  readCacheNamespace?: string;
   activeTokenDecimals: number;
 }
 
@@ -172,6 +174,7 @@ export function useSponsorCoinLabMethods({
   effectiveConnectedAddress,
   ownerAddress,
   useLocalSpCoinAccessPackage,
+  useReadCache,
   appendLog,
   appendWriteTrace,
   resetWriteTrace,
@@ -197,6 +200,7 @@ export function useSponsorCoinLabMethods({
   recipientRateRange,
   agentRateRange,
   callAccessMethod,
+  readCacheNamespace,
   activeTokenDecimals,
 }: Params) {
   const startRunTrace = useCallback(
@@ -589,7 +593,9 @@ export function useSponsorCoinLabMethods({
     ownerAddress,
     hardhatAccounts,
     useLocalSpCoinAccessPackage,
+    useReadCache,
     traceEnabled,
+    readCacheNamespace,
     appendLog,
     appendWriteTrace,
     setStatus,
@@ -638,6 +644,7 @@ export function useSponsorCoinLabMethods({
     formatOutputDisplayValue,
     formatFormattedPanelPayload,
     callAccessMethod,
+    readCacheNamespace,
   });
   const runSelectedWriteMethod = useCallback(async (options?: MethodExecutionOptions) => {
     if (!options?.skipValidation && erc20WriteMissingEntries.length > 0) {

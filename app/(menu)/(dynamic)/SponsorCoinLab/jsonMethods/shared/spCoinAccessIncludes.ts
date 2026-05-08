@@ -187,15 +187,15 @@ export type SpCoinReadAccess = {
   getRecipientListSize?: (_accountKey: string) => Promise<number>;
   getAccountKeyCount?: () => Promise<number>;
   getMasterAccountListSize?: () => Promise<number>;
-  getAccountRecord: (_accountKey: string) => Promise<AccountStruct>;
-  getAccountRecordShallow?: (_accountKey: string) => Promise<AccountStruct>;
+  getAccountRecord: (_accountKey: string, options?: unknown) => Promise<AccountStruct>;
+  getAccountRecordShallow?: (_accountKey: string, options?: unknown) => Promise<AccountStruct>;
   getAccountRoleSummary?: (_accountKey: string) => Promise<unknown>;
   getAccountRoles?: (_accountKey: string) => Promise<string[]>;
   isSponsor?: (_accountKey: string) => Promise<boolean>;
   isRecipient?: (_accountKey: string) => Promise<boolean>;
   isAgent?: (_accountKey: string) => Promise<boolean>;
   getAccountStakingRewards: (_accountKey: string) => Promise<RewardsStruct>;
-  getPendingAccountStakingRewards?: (_accountKey: string) => Promise<{
+  getPendingAccountStakingRewards?: (_accountKey: string, options?: unknown) => Promise<{
     TYPE: '--PENDING_ACCOUNT_STAKING_REWARDS--';
     accountKey: string;
     calculatedAt: string;

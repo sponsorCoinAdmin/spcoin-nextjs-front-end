@@ -145,6 +145,7 @@ export default function SponsorCoinLabPage({
   const [showAllTreeRecords, setShowAllTreeRecords] = useState(false);
   const [isScriptDebugRunning, setIsScriptDebugRunning] = useState(false);
   const [writeTraceEnabled, setWriteTraceEnabled] = useState(false);
+  const [useReadCache, setUseReadCache] = useState(true);
   const recentWriteTraceRef = useRef<string[]>([]);
   const {
     invalidFieldIds,
@@ -204,6 +205,7 @@ export default function SponsorCoinLabPage({
   );
   const [methodSelectionSource, setMethodSelectionSource] = useState<MethodSelectionSource>('dropdown');
   const [editingScriptStepNumber, setEditingScriptStepNumber] = useState<number | null>(null);
+  const [readCacheNamespace] = useState(() => `spcoin-lab-${Date.now()}-${Math.random().toString(36).slice(2)}`);
   const { callAccessMethod, runningMethodPopup } = useAccessMethodCaller({ traceEnabled: writeTraceEnabled });
 
   const appendLog = useCallback((line: string) => {
@@ -637,6 +639,7 @@ export default function SponsorCoinLabPage({
     effectiveConnectedAddress,
     ownerAddress: displayedSpCoinOwnerAddress,
     useLocalSpCoinAccessPackage,
+    useReadCache,
     appendLog,
     appendWriteTrace,
     resetWriteTrace,
@@ -668,6 +671,7 @@ export default function SponsorCoinLabPage({
         ? exchangeContext.settings.spCoinContract.agentRateRange
         : DEFAULT_AGENT_RATE_RANGE,
     callAccessMethod,
+    readCacheNamespace,
     activeTokenDecimals,
   });
 
@@ -1464,6 +1468,8 @@ export default function SponsorCoinLabPage({
     beginNewMethodDraft,
     writeTraceEnabled,
     setWriteTraceEnabled,
+    useReadCache,
+    setUseReadCache,
     appendLog,
     showOnChainMethods,
     setShowOnChainMethods,

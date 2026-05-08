@@ -171,10 +171,33 @@ function parseStructuredErrorMessage(input: string): Record<string, unknown> | n
 }
 
 function formatOutputValue(value: unknown, keyPath: string[] = []): unknown {
-  const DATE_TIME_KEYS = ['creationTime', 'creationDate', 'lastUpdateTime', 'updateTime', 'insertionTime'];
+  const DATE_TIME_KEYS = ['creationTime', 'creationDate', 'Date Created', 'lastUpdateTime', 'updateTime', 'insertionTime'];
   const DURATION_KEYS = ['methodRunTime', 'runtime', 'duration'];
+  const parseScriptCreatedDate = (input: string): string | null => {
+    const normalized = input.trim().replace(/_/g, ' ');
+    const match = normalized.match(
+      /^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-(\d{1,2})-(\d{4}),\s*(\d{1,2}):(\d{2})(?::(\d{2}))?$/i,
+    );
+    if (!match) return null;
+    const [, monthText, dayText, yearText, hourText, minuteText, secondText = '00'] = match;
+    const monthIndex = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'].indexOf(
+      monthText.toLowerCase(),
+    );
+    if (monthIndex < 0) return null;
+    const date = new Date(
+      Number(yearText),
+      monthIndex,
+      Number(dayText),
+      Number(hourText),
+      Number(minuteText),
+      Number(secondText),
+    );
+    return Number.isNaN(date.getTime()) ? null : date.toISOString();
+  };
   const normalizeDisplayDateString = (input: string): string | null => {
     const trimmed = input.trim();
+    const scriptCreatedDate = parseScriptCreatedDate(trimmed);
+    if (scriptCreatedDate) return scriptCreatedDate;
     const normalized = trimmed.replace(/_/g, ' ');
     const match = normalized.match(
       /^(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2}),\s+(\d{4})\s+at\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)(?:\s+([A-Z]{2,5}))?$/i,

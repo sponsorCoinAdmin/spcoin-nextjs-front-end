@@ -71,6 +71,7 @@ interface Params {
   traceEnabled: boolean;
   formattedOutputDisplay: string;
   useLocalSpCoinAccessPackage: boolean;
+  readCacheNamespace?: string;
   appendLog: (line: string) => void;
   setStatus: (value: string) => void;
   setFormattedOutputDisplay: (value: string) => void;
@@ -108,6 +109,7 @@ export function useSponsorCoinLabTreeMethods({
   traceEnabled,
   formattedOutputDisplay,
   useLocalSpCoinAccessPackage,
+  readCacheNamespace,
   appendLog,
   setStatus,
   setFormattedOutputDisplay,
@@ -161,6 +163,7 @@ export function useSponsorCoinLabTreeMethods({
         contractAddress: target,
         rpcUrl,
         spCoinAccessSource: 'local',
+        cacheNamespace: readCacheNamespace,
         script: {
           id: `load-account-list-${Date.now()}`,
           name: 'Load Account List',
@@ -194,7 +197,7 @@ export function useSponsorCoinLabTreeMethods({
     treeAccountListCacheRef.current = list;
     syncTreeAccountOptions(list);
     return { list };
-  }, [mode, requireContractAddress, rpcUrl, syncTreeAccountOptions]);
+  }, [mode, readCacheNamespace, requireContractAddress, rpcUrl, syncTreeAccountOptions]);
 
   const formattedOutputDisplayRef = useRef(formattedOutputDisplay);
   useEffect(() => {
@@ -216,6 +219,8 @@ export function useSponsorCoinLabTreeMethods({
     normalizeAddressValue,
     requireContractAddress,
     rpcUrl,
+    callAccessMethod,
+    readCacheNamespace,
     setFormattedOutputDisplay,
     setStatus,
     setTrackedTreeOutputDisplay,
@@ -479,6 +484,7 @@ export function useSponsorCoinLabTreeMethods({
             contractAddress: target,
             rpcUrl,
             spCoinAccessSource: 'local',
+            cacheNamespace: readCacheNamespace,
             script: {
               id: `expand-account-record-${Date.now()}`,
               name: 'Expand Account Record',
@@ -543,7 +549,7 @@ export function useSponsorCoinLabTreeMethods({
       }
       return tree;
     },
-    [mode, normalizeAddressValue, requireContractAddress, rpcUrl],
+    [mode, normalizeAddressValue, readCacheNamespace, requireContractAddress, rpcUrl],
   );
 
   const runTreeDumpBase = useCallback(async (accountOverride?: string, options?: { force?: boolean }) => {
@@ -1080,7 +1086,9 @@ export function useSponsorCoinLabTreeMethods({
             setStatus(`Loading account record for ${normalizedAccount}...`);
             const loadInlineAccountRecord = (signal?: AbortSignal) =>
               loadAccountRecordForAddress(normalizedAccount, { force: true, signal });
-            const accountRecord = await loadInlineAccountRecord();
+            const accountRecord = callAccessMethod
+              ? await callAccessMethod('getAccountRecord', ({ executionSignal }) => loadInlineAccountRecord(executionSignal))
+              : await loadInlineAccountRecord();
             if (accountRecord === undefined) return 'handled';
             const nextAccountEntry = buildExpandedAccountEntry(accountRecord);
             const nextRootPayload = normalizeExecutionPayload(

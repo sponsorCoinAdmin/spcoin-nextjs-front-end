@@ -187,6 +187,8 @@ interface Params {
   ownerAddress?: string;
   hardhatAccounts: { address: string; privateKey?: string }[];
   useLocalSpCoinAccessPackage: boolean;
+  useReadCache: boolean;
+  readCacheNamespace?: string;
   traceEnabled: boolean;
   appendLog: (line: string) => void;
   appendWriteTrace: (line: string) => void;
@@ -269,6 +271,8 @@ export function useSponsorCoinLabMethodExecution({
   ownerAddress,
   hardhatAccounts,
   useLocalSpCoinAccessPackage,
+  useReadCache,
+  readCacheNamespace,
   traceEnabled,
   appendLog,
   appendWriteTrace,
@@ -302,6 +306,8 @@ export function useSponsorCoinLabMethodExecution({
           contractAddress: target,
           rpcUrl,
           spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
+          useCache: useReadCache,
+          cacheNamespace: readCacheNamespace,
           script: {
             id: `spcoin-rread-${method}-${Date.now()}`,
             name: method,
@@ -361,7 +367,7 @@ export function useSponsorCoinLabMethodExecution({
         onChainCalls: firstResult?.payload?.onChainCalls,
       };
     },
-    [mode, requireContractAddress, rpcUrl, useLocalSpCoinAccessPackage],
+    [mode, readCacheNamespace, requireContractAddress, rpcUrl, useLocalSpCoinAccessPackage, useReadCache],
   );
 
   const executeMethodDescriptor = useCallback(

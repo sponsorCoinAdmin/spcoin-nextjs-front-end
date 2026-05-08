@@ -28,10 +28,215 @@ type DragPlacement = 'before' | 'after';
 const DEBUG_TRACE_PATTERN =
   /\[TRACE\]|\[EXPAND\]|\[ACCOUNT_EXPAND_TRACE\]|\[ACCOUNT_POPUP_TRACE\]|\[JSON_INSPECTOR_TRACE\]|Lazy-loaded|Inline account record/i;
 
+type InspectorDisplayBlock = {
+  data: unknown;
+  label: string;
+  path: string;
+  rootLabel: string;
+};
+
 type DisplayedOutputCall = {
   method: string;
   parameters: Array<{ label: string; value: string }>;
 };
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value && typeof value === 'object' && !Array.isArray(value));
+}
+
+function isScriptDisplayRecord(value: unknown): value is Record<string, unknown> & { steps: unknown[] } {
+  return isRecord(value) && Array.isArray(value.steps) && ('id' in value || 'Date Created' in value || 'network' in value);
+}
+
+function isScriptHeaderDisplayRecord(value: unknown): value is Record<string, unknown> {
+  return (
+    isRecord(value) &&
+    !Array.isArray(value.steps) &&
+    ('id' in value || 'Date Created' in value || 'network' in value) &&
+    !('call' in value) &&
+    !('result' in value) &&
+    !('parameters' in value) &&
+    !('onChainCalls' in value)
+  );
+}
+
+function getStepMethod(block: unknown): string {
+  if (!isRecord(block)) return '';
+  const call = block.call;
+  return isRecord(call) ? String(call.method || '').trim() : '';
+}
+
+function getStepNumber(block: unknown, fallback: number): number {
+  const stepNumber = Number(isRecord(block) ? block.step : undefined);
+  return Number.isInteger(stepNumber) && stepNumber > 0 ? stepNumber : fallback;
+}
+
+function getOnChainMs(value: unknown): number {
+  const parsed = Number(String(value ?? '').replace(/,/g, '').trim());
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function getLocalOnChainCallsTotalMs(calls: unknown): number {
+  if (!Array.isArray(calls)) return 0;
+  return calls.reduce((sum, entry) => {
+    const ms = isRecord(entry) ? getOnChainMs(entry.onChainRunTimeMs) : 0;
+    return sum + ms;
+  }, 0);
+}
+
+function getBigIntTotal(value: unknown): bigint {
+  const normalized = String(value ?? '').replace(/,/g, '').trim();
+  return /^\d+$/.test(normalized) ? BigInt(normalized) : 0n;
+}
+
+function getNumberTotal(value: unknown): number {
+  const parsed = Number(String(value ?? '').replace(/,/g, '').trim());
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function formatWeiAsEth(wei: bigint): string {
+  const base = 1_000_000_000_000_000_000n;
+  const whole = wei / base;
+  const fraction = wei % base;
+  if (fraction === 0n) return whole.toString();
+  return `${whole}.${fraction.toString().padStart(18, '0').replace(/0+$/, '')}`;
+}
+
+function buildStepOnChainEntry(onChainCalls: Record<string, unknown>): Record<string, unknown> {
+  const { calls, ...rest } = onChainCalls;
+  return {
+    __forceExpanded: true,
+    ...rest,
+  };
+}
+
+function buildHeaderMethodOnChainEntry(onChainCalls: Record<string, unknown>): Record<string, unknown> {
+  const { calls: _calls, onChainCalls: _onChainCalls, ...totals } = onChainCalls;
+  return {
+    __forceExpanded: true,
+    ...totals,
+  };
+}
+
+function buildHeaderOnChainCalls(blocks: unknown[]): Record<string, unknown> | null {
+  const entries: Record<string, unknown> = {};
+  let totalFeePaidEth = 0;
+  let totalFeePaidWei = 0n;
+  let totalGasPriceWei = 0n;
+  let totalGasUsed = 0n;
+  let totalOnChainMs = 0;
+  let displayIndex = 0;
+  const hasSeparateStepBlocks = blocks.length > 1 && blocks.some((block) => isScriptDisplayRecord(block));
+
+  const addMethodOnChainEntry = (step: Record<string, unknown>, fallbackIndex: number) => {
+    if (!isRecord(step.onChainCalls)) return;
+    const method = getStepMethod(step);
+    const totalMs = getOnChainMs(step.onChainCalls.totalOnChainMs) || getLocalOnChainCallsTotalMs(step.onChainCalls.calls);
+    totalFeePaidEth += getNumberTotal(step.onChainCalls.totalFeePaidEth);
+    totalFeePaidWei += getBigIntTotal(step.onChainCalls.totalFeePaidWei);
+    totalGasPriceWei += getBigIntTotal(step.onChainCalls.totalGasPriceWei);
+    totalGasUsed += getBigIntTotal(step.onChainCalls.totalGasUsed);
+    totalOnChainMs += totalMs;
+    entries[`${getStepNumber(step, fallbackIndex)} ${method || 'onChainCalls'}: ${totalMs}ms`] = buildHeaderMethodOnChainEntry(step.onChainCalls);
+  };
+
+  for (const block of blocks) {
+    if (isScriptDisplayRecord(block)) {
+      if (hasSeparateStepBlocks) continue;
+      for (const step of block.steps) {
+        displayIndex += 1;
+        if (isRecord(step)) addMethodOnChainEntry(step, displayIndex);
+      }
+      continue;
+    }
+
+    if (isScriptHeaderDisplayRecord(block)) continue;
+
+    displayIndex += 1;
+    if (isRecord(block)) addMethodOnChainEntry(block, displayIndex);
+  }
+
+  return Object.keys(entries).length > 0
+    ? {
+        __forceExpanded: true,
+        totalMethodOnChainCalls: {
+          __forceExpanded: true,
+          totalMethodsFeePaidEth: totalFeePaidWei > 0n ? formatWeiAsEth(totalFeePaidWei) : String(totalFeePaidEth),
+          totalMethodsFeePaidWei: totalFeePaidWei.toLocaleString('en-US'),
+          totalMethodsGasPriceWei: totalGasPriceWei.toLocaleString('en-US'),
+          totalMethodsGasUsed: totalGasUsed.toLocaleString('en-US'),
+          totalMethodsOnChainMs: `${totalOnChainMs}ms`,
+        },
+        ...entries,
+      }
+    : null;
+}
+
+function flattenStepOnChainCalls(step: unknown): unknown {
+  if (!isRecord(step) || !isRecord(step.onChainCalls)) return step;
+  const { onChainCalls, ...rest } = step;
+  return {
+    ...rest,
+    ...buildStepOnChainEntry(onChainCalls),
+  };
+}
+
+function buildScriptHeaderBlock(
+  headerRecord: Record<string, unknown>,
+  path = 'script-header',
+  methodOnChainCalls?: Record<string, unknown> | null,
+): InspectorDisplayBlock {
+  return {
+    data: methodOnChainCalls ? { ...headerRecord, methodOnChainCalls } : headerRecord,
+    label: 'Header:',
+    path,
+    rootLabel: 'Header:',
+  };
+}
+
+function getScriptHeaderFields(scriptRecord: Record<string, unknown>): Record<string, unknown> {
+  const { steps: _steps, ...headerFields } = scriptRecord;
+  return Object.entries(headerFields).reduce<Record<string, unknown>>((next, [key, value]) => {
+    if (value !== undefined) next[key] = value;
+    return next;
+  }, {});
+}
+
+function buildScriptDisplayBlocks(blocks: unknown[]): InspectorDisplayBlock[] | null {
+  if (blocks.some((block) => isScriptHeaderDisplayRecord(block) || isScriptDisplayRecord(block))) {
+    let stepIndex = 0;
+    const headerOnChainCalls = buildHeaderOnChainCalls(blocks);
+    return blocks.flatMap((block, index) => {
+      if (isScriptHeaderDisplayRecord(block)) return [buildScriptHeaderBlock(block, `script-header-${index}`, headerOnChainCalls)];
+      if (isScriptDisplayRecord(block)) {
+        const headerBlock = buildScriptHeaderBlock(getScriptHeaderFields(block), `script-header-${index}`, headerOnChainCalls);
+        if (blocks.length > 1) return [headerBlock];
+        return [
+          headerBlock,
+          ...block.steps.map((step, stepIndex) => {
+            const stepNumber = Number(isRecord(step) ? step.step : undefined);
+            const displayNumber = Number.isInteger(stepNumber) && stepNumber > 0 ? stepNumber : stepIndex + 1;
+            return {
+              data: flattenStepOnChainCalls(step),
+              label: `Step ${displayNumber}`,
+              path: `script-step-${stepIndex}`,
+              rootLabel: `Step ${displayNumber}`,
+            };
+          }),
+        ];
+      }
+      stepIndex += 1;
+      return {
+        data: flattenStepOnChainCalls(block),
+        label: `Step ${stepIndex}`,
+        path: `step-${stepIndex - 1}`,
+        rootLabel: `Step ${stepIndex}`,
+      };
+    });
+  }
+
+  return null;
+}
 
 function parseDisplayedOutputParameters(value: unknown): Array<{ label: string; value: string }> {
   if (Array.isArray(value)) {
@@ -378,7 +583,11 @@ export default function OutputResultsCard({
     return parseCollapsibleBlocks(content.treeOutputDisplay);
   }, [content.treeOutputDisplay, controls.formattedJsonViewEnabled, controls.outputPanelMode, parseCollapsibleBlocks]);
   const hiddenPayloadFieldKeys = useMemo(
-    () => Object.entries(showPayloadFields).filter(([, visible]) => !visible).map(([key]) => key),
+    () =>
+      Object.entries(showPayloadFields).flatMap(([key, visible]) => {
+        if (visible) return [];
+        return key === 'onChainCalls' ? ['onChainCalls', 'methodOnChainCalls'] : [key];
+      }),
     [showPayloadFields],
   );
   const visiblePayloadFieldKeys = useMemo(
@@ -467,7 +676,7 @@ export default function OutputResultsCard({
   const highlightedInspectorPathPrefixes = useMemo(() => {
     if (controls.outputPanelMode !== 'formatted' || controls.formattedPanelView !== 'script') return [];
     if (content.selectedScriptStepNumber === null || content.selectedScriptStepNumber <= 0) return [];
-    return [`script-0.steps.${content.selectedScriptStepNumber - 1}`];
+    return [`script-step-${content.selectedScriptStepNumber - 1}`];
   }, [content.selectedScriptStepNumber, controls.formattedPanelView, controls.outputPanelMode]);
   const inspectorHighlightColorClass =
     content.selectedScriptStepHasMissingRequiredParams || content.selectedScriptStepHasExecutionError
@@ -576,6 +785,42 @@ export default function OutputResultsCard({
       return 'call' in record || 'result' in record || 'parameters' in record || 'step' in record;
     });
   }, [displayFormattedBlocks]);
+
+  const inspectorFormattedBlocks = useMemo<InspectorDisplayBlock[]>(() => {
+    const hydratedDisplayBlocks =
+      controls.outputPanelMode === 'formatted' &&
+      controls.formattedPanelView === 'output' &&
+      displayFormattedBlocks.length > 0 &&
+      !displayFormattedBlocks.some((block) => isScriptHeaderDisplayRecord(block) || isScriptDisplayRecord(block))
+        ? (() => {
+            try {
+              const selectedScriptBlock = JSON.parse(String(content.scriptDisplay || '').trim()) as unknown;
+              if (isScriptDisplayRecord(selectedScriptBlock)) return [selectedScriptBlock, ...displayFormattedBlocks];
+            } catch {
+              // Use the persisted output as-is when no selected script header is available.
+            }
+            return displayFormattedBlocks;
+          })()
+        : displayFormattedBlocks;
+
+    const scriptBlocks =
+      controls.outputPanelMode === 'formatted' ? buildScriptDisplayBlocks(hydratedDisplayBlocks) : null;
+
+    if (scriptBlocks) return scriptBlocks;
+
+    return hydratedDisplayBlocks.map((block, index) => {
+      const label =
+        hydratedDisplayBlocks.length === 1
+          ? activeInspectorRootLabel
+          : `${activeInspectorRootLabel} ${index + 1}`;
+      return {
+        data: block,
+        label,
+        path: `${activeInspectorRootLabel.toLowerCase()}-${index}`,
+        rootLabel: label,
+      };
+    });
+  }, [activeInspectorRootLabel, content.scriptDisplay, controls.formattedPanelView, controls.outputPanelMode, displayFormattedBlocks]);
 
   const isScriptInspectorReorderEnabled =
     controls.outputPanelMode === 'formatted' &&
@@ -846,7 +1091,7 @@ export default function OutputResultsCard({
               {[
                 ['execution', 'Execution'],
                 ['formatted', 'Formatted'],
-                ['raw_status', 'Raw Status'],
+                ['raw_status', 'Raw'],
                 ['debug', 'Trace'],
               ].map(([value, label]) => (
                 <label key={value} className="inline-flex items-center gap-1">
@@ -887,7 +1132,7 @@ export default function OutputResultsCard({
                       : controls.outputPanelMode === 'tree'
                         ? 'Tree'
                         : controls.outputPanelMode === 'raw_status'
-                          ? 'Raw Status'
+                          ? 'Raw'
                           : controls.formattedPanelView === 'script'
                             ? 'Current Script'
                             : 'Formatted Output Display',
@@ -1204,19 +1449,19 @@ export default function OutputResultsCard({
           collapsibleFormattedBlocks ? (
             <div className={`h-full min-h-0 overflow-auto p-3 pr-36 text-xs text-slate-200 ${content.hiddenScrollbarClass}`}>
               <div className="space-y-0">
-                {displayFormattedBlocks.map((block, index) => (
+                {inspectorFormattedBlocks.map((block) => (
                   <JsonInspector
-                    key={`${activeInspectorRootLabel}-${index}`}
+                    key={block.path}
                     data={
-                      block && typeof block === 'object'
-                        ? block
+                      block.data && typeof block.data === 'object'
+                        ? block.data
                         : {
-                            value: block,
+                            value: block.data,
                           }
                     }
                     collapsedKeys={collapsedKeys}
                     updateCollapsedKeys={updateCollapsedKeys}
-                    path={`${activeInspectorRootLabel.toLowerCase()}-${index}`}
+                    path={block.path}
                     highlightPathPrefixes={highlightedInspectorPathPrefixes}
                     highlightColorClass={inspectorHighlightColorClass}
                     showAll={controls.showAllTreeRecords}
@@ -1226,16 +1471,8 @@ export default function OutputResultsCard({
                     formatTokenAmounts={hiddenInspectorRules.formattedAmounts}
                     tokenDecimals={activeTokenDecimals}
                     showStructureType={showStructureType}
-                    label={
-                      displayFormattedBlocks.length === 1
-                        ? activeInspectorRootLabel
-                        : `${activeInspectorRootLabel} ${index + 1}`
-                    }
-                    rootLabel={
-                      displayFormattedBlocks.length === 1
-                        ? activeInspectorRootLabel
-                        : `${activeInspectorRootLabel} ${index + 1}`
-                    }
+                    label={block.label}
+                    rootLabel={block.rootLabel}
                     onLeafValueClick={(value, path) => void handleOpenAccountFromInspector(value, path)}
                     onAddressNodeClick={(value, path) => void handleOpenAccountFromInspector(value, path)}
                     onTrace={appendOutputTrace}

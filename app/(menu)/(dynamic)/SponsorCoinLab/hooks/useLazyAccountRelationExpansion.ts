@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import type { MutableRefObject } from 'react';
 import { normalizeStringListResult } from '../jsonMethods/shared/normalizeListResult';
 import { normalizeExecutionPayload } from './executionPayload';
+import type { AccessMethodCaller } from './useAccessMethodCaller';
 
 export type LazyAccountRelationClick = {
   accountKey: string;
@@ -29,6 +30,8 @@ type Params = {
   normalizeAddressValue: (value: string) => string;
   requireContractAddress: () => string;
   rpcUrl?: string;
+  callAccessMethod?: AccessMethodCaller;
+  readCacheNamespace?: string;
   setFormattedOutputDisplay: (value: string) => void;
   setStatus: (value: string) => void;
   setTrackedTreeOutputDisplay: (value: string) => void;
@@ -166,6 +169,8 @@ export function useLazyAccountRelationExpansion({
   normalizeAddressValue,
   requireContractAddress,
   rpcUrl,
+  callAccessMethod,
+  readCacheNamespace,
   setFormattedOutputDisplay,
   setStatus,
   setTrackedTreeOutputDisplay,
@@ -240,6 +245,7 @@ export function useLazyAccountRelationExpansion({
             contractAddress: target,
             rpcUrl,
             spCoinAccessSource: 'local',
+            cacheNamespace: readCacheNamespace,
             script: {
               id: `expand-account-${relation}-${Date.now()}`,
               name: `Expand Account ${relation}`,
@@ -427,7 +433,19 @@ export function useLazyAccountRelationExpansion({
         try {
           setStatus(`Loading ${relation} for ${accountKey}...`);
           appendLog(accountExpandTrace(`lazy relation calling ${relation === 'recipientKeys' ? 'getRecipientKeys' : relation === 'agentKeys' ? 'getAgentKeys' : relation === 'sponsorKeys' ? 'getSponsorKeys' : 'getParentRecipientKeys'} account=${accountKey}`));
-          const relationRead = await runRelationRead(accountKey, relation);
+          const relationRead = callAccessMethod
+            ? await callAccessMethod(
+                relation === 'recipientKeys'
+                  ? 'getRecipientKeys'
+                  : relation === 'agentKeys'
+                    ? 'getAgentKeys'
+                    : relation === 'sponsorKeys'
+                      ? 'getSponsorKeys'
+                      : 'getParentRecipientKeys',
+                () => runRelationRead(accountKey, relation),
+              )
+            : await runRelationRead(accountKey, relation);
+          if (!relationRead) return 'handled';
           appendLog(accountExpandTrace(`lazy relation loaded relation=${relation} account=${accountKey} count=${relationRead.keys.length} addresses=${relationRead.keys.join(',')}`));
           const relationPayload = {
             call: relationRead.call,
@@ -477,6 +495,8 @@ export function useLazyAccountRelationExpansion({
       normalizeAddressValue,
       requireContractAddress,
       rpcUrl,
+      callAccessMethod,
+      readCacheNamespace,
       setFormattedOutputDisplay,
       setStatus,
       setTrackedTreeOutputDisplay,

@@ -4,6 +4,7 @@
  * the account cache for all affected accounts (sponsor, recipient, agent).
  */
 import { invalidateCachedAccountRecord } from './accountCache';
+import { invalidateReadCacheForAccount } from './readCache';
 
 const activeListeners = new Map<string, () => void>();
 
@@ -35,10 +36,17 @@ export function startAccountCacheEventListener(
     const recipientKey = normalizeAddress(args[2]);
     const agentKey = normalizeAddress(args[3]);
 
-    if (sponsorKey) invalidateCachedAccountRecord(contractAddress, sponsorKey);
-    if (recipientKey) invalidateCachedAccountRecord(contractAddress, recipientKey);
+    if (sponsorKey) {
+      invalidateCachedAccountRecord(contractAddress, sponsorKey);
+      invalidateReadCacheForAccount(sponsorKey);
+    }
+    if (recipientKey) {
+      invalidateCachedAccountRecord(contractAddress, recipientKey);
+      invalidateReadCacheForAccount(recipientKey);
+    }
     if (agentKey && agentKey !== '0x0000000000000000000000000000000000000000') {
       invalidateCachedAccountRecord(contractAddress, agentKey);
+      invalidateReadCacheForAccount(agentKey);
     }
   };
 

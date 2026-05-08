@@ -331,6 +331,7 @@ type StoredMethodsPanelUiState = {
   selectedDisplayGroup?: MethodDisplayFilter;
   selectedAlterMode?: AlterModeOption;
   writeTraceEnabled?: boolean;
+  useReadCache?: boolean;
   showOnChainMethods?: boolean;
   showOffChainMethods?: boolean;
   selectedMethodId?: string;
@@ -357,6 +358,9 @@ function readStoredMethodsPanelUiState(): StoredMethodsPanelUiState | null {
     }
     if (typeof saved.writeTraceEnabled === 'boolean') {
       next.writeTraceEnabled = saved.writeTraceEnabled;
+    }
+    if (typeof saved.useReadCache === 'boolean') {
+      next.useReadCache = saved.useReadCache;
     }
     if (typeof saved.showOnChainMethods === 'boolean') {
       next.showOnChainMethods = saved.showOnChainMethods;
@@ -407,6 +411,8 @@ type Props = {
   beginNewMethodDraft: (afterReset?: () => void) => void;
   writeTraceEnabled: boolean;
   toggleWriteTrace: () => void;
+  useReadCache: boolean;
+  setUseReadCache: (value: boolean) => void;
   showOnChainMethods: boolean;
   setShowOnChainMethods: (value: boolean) => void;
   showOffChainMethods: boolean;
@@ -455,6 +461,8 @@ export default function MethodsPanelCard({
   beginNewMethodDraft,
   writeTraceEnabled,
   toggleWriteTrace,
+  useReadCache,
+  setUseReadCache,
   showOnChainMethods,
   setShowOnChainMethods,
   showOffChainMethods,
@@ -560,6 +568,12 @@ export default function MethodsPanelCard({
     ) {
       toggleWriteTrace();
     }
+    if (
+      typeof storedMethodsPanelUiState?.useReadCache === 'boolean' &&
+      storedMethodsPanelUiState.useReadCache !== useReadCache
+    ) {
+      setUseReadCache(storedMethodsPanelUiState.useReadCache);
+    }
     didHydratePanelUiRef.current = true;
     setIsPanelUiPersistenceReady(true);
   }, [
@@ -567,10 +581,12 @@ export default function MethodsPanelCard({
     setScriptEditorKind,
     setShowOffChainMethods,
     setShowOnChainMethods,
+    setUseReadCache,
     showOffChainMethods,
     showOnChainMethods,
     storedMethodsPanelUiState,
     toggleWriteTrace,
+    useReadCache,
     writeTraceEnabled,
   ]);
   const persistedMemberListPayload = React.useMemo<MethodMemberListPayload>(
@@ -1181,6 +1197,7 @@ export default function MethodsPanelCard({
         selectedDisplayGroup,
         selectedAlterMode,
         writeTraceEnabled,
+        useReadCache,
         showOnChainMethods,
         showOffChainMethods,
         selectedMethodId: currentMethodIdentity?.id || '',
@@ -1195,6 +1212,7 @@ export default function MethodsPanelCard({
     selectedDisplayGroup,
     showOffChainMethods,
     showOnChainMethods,
+    useReadCache,
     writeTraceEnabled,
   ]);
   const activeAlterMemberLists = React.useMemo<EditableMemberLists>(() => {
@@ -1684,7 +1702,7 @@ export default function MethodsPanelCard({
               <label className="inline-flex items-center justify-end gap-2 text-right">
               <input
                 type="checkbox"
-                className="h-4 w-4 accent-green-500"
+                className="h-4 w-4 rounded border border-[#5981F3] bg-transparent accent-green-500 checked:border-green-500 checked:bg-green-500"
                 checked={showOnChainMethods}
                 onChange={(event) => setShowOnChainMethods(event.target.checked)}
               />
@@ -1693,29 +1711,36 @@ export default function MethodsPanelCard({
               <label className="inline-flex items-center justify-end gap-2 text-right">
               <input
                 type="checkbox"
-                className="h-4 w-4 accent-[#5981F3]"
+                className="h-4 w-4 rounded border border-[#5981F3] bg-transparent accent-green-500 checked:border-green-500 checked:bg-green-500"
                 checked={showOffChainMethods}
                 onChange={(event) => setShowOffChainMethods(event.target.checked)}
               />
               <span className={showOffChainMethods ? 'text-green-400' : 'text-[#8FA8FF]'}>Off-Chain</span>
               </label>
-              <div className="ml-auto flex items-start gap-4">
-                <label className="inline-flex items-center justify-end gap-2 text-xs text-[#8FA8FF]">
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4 accent-[#5981F3]"
-                    checked={isManageEnabled}
-                    onChange={(event) => setIsManageEnabled(event.target.checked)}
-                  />
-                  <span className={isManageEnabled ? 'text-green-400' : 'text-[#8FA8FF]'}>Manage Method</span>
-                </label>
-              </div>
+              <label className="inline-flex items-center justify-end gap-2 text-right">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded border border-[#5981F3] bg-transparent accent-green-500 checked:border-green-500 checked:bg-green-500"
+                  checked={useReadCache}
+                  onChange={(event) => setUseReadCache(event.target.checked)}
+                />
+                <span className={useReadCache ? 'text-green-400' : 'text-[#8FA8FF]'}>Cache</span>
+              </label>
+              <label className="inline-flex items-center justify-end gap-2 text-right">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded border border-[#5981F3] bg-transparent accent-green-500 checked:border-green-500 checked:bg-green-500"
+                  checked={isManageEnabled}
+                  onChange={(event) => setIsManageEnabled(event.target.checked)}
+                />
+                <span className={isManageEnabled ? 'text-green-400' : 'text-[#8FA8FF]'}>Manage</span>
+              </label>
               {isJavaScriptScriptMode ? (
                 <div className="flex items-start gap-4">
                   <label className="inline-flex items-center justify-end gap-2 text-xs text-slate-200">
                     <input
                       type="checkbox"
-                      className="h-4 w-4 accent-[#5981F3]"
+                      className="h-4 w-4 rounded border border-[#5981F3] bg-transparent accent-green-500 checked:border-green-500 checked:bg-green-500"
                       checked={javaScriptEditorProps.isTypeScriptEditEnabled}
                       onChange={(event) => javaScriptEditorProps.setIsTypeScriptEditEnabled(event.target.checked)}
                       disabled={!javaScriptEditorProps.canEditSelectedTypeScriptFile}

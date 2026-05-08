@@ -28,7 +28,6 @@ type Props = {
   setIsNewScriptHovered: React.Dispatch<React.SetStateAction<boolean>>;
   isDeleteScriptHovered: boolean;
   setIsDeleteScriptHovered: React.Dispatch<React.SetStateAction<boolean>>;
-  newScriptHoverTone: ValidationTone;
   setNewScriptHoverTone: React.Dispatch<React.SetStateAction<ValidationTone>>;
   deleteScriptHoverTone: 'invalid' | 'valid';
   setDeleteScriptHoverTone: React.Dispatch<React.SetStateAction<'invalid' | 'valid'>>;
@@ -67,7 +66,6 @@ export default function ScriptBuilderCard({
   setIsNewScriptHovered,
   isDeleteScriptHovered,
   setIsDeleteScriptHovered,
-  newScriptHoverTone,
   setNewScriptHoverTone,
   deleteScriptHoverTone,
   setDeleteScriptHoverTone,
@@ -93,7 +91,7 @@ export default function ScriptBuilderCard({
   const selectedStepIndex = activeSelectedScript?.steps.findIndex((step) => step.step === selectedScriptStepNumber) ?? -1;
   const hasScriptSelection = Boolean(String(selectedScriptId || '').trim());
   const isScriptSelectorEmpty = String(scriptNameInput || '').trim() === '';
-  const primaryHoverTone = isScriptSelectorEmpty ? 'invalid' : hasScriptSelection ? 'valid' : newScriptHoverTone;
+  const primaryHoverTone = isScriptSelectorEmpty ? 'invalid' : hasScriptSelection ? 'valid' : scriptNameValidation.tone;
   const primaryBaseTone = hasScriptSelection ? 'valid' : scriptNameValidation.tone;
   const [isCopyPopupOpen, setIsCopyPopupOpen] = React.useState(false);
   const [copyScriptNameInput, setCopyScriptNameInput] = React.useState('');

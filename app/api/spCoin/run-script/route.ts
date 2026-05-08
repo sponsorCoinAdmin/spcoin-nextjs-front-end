@@ -18,13 +18,19 @@ import { getDefaultNetworkSettings } from '@/lib/utils/network/defaultSettings';
 import {
   getCachedAccountRecord,
   setCachedAccountRecord,
-  invalidateCachedAccountRecord,
+  invalidateCachedAccountRecord as invalidatePersistentAccountRecord,
 } from '@/spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/utils/accountCache';
+import { invalidateReadCacheForAccount } from '@/spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/utils/readCache';
 
 type LabScriptParam = {
   key: string;
   value: string;
 };
+
+function invalidateCachedAccountRecord(contractAddress: string, accountKey: string): void {
+  invalidatePersistentAccountRecord(contractAddress, accountKey);
+  invalidateReadCacheForAccount(accountKey);
+}
 
 type LabScriptStep = {
   step: number;
@@ -55,6 +61,10 @@ type RunScriptRequest = {
   stopAfterCurrentStep?: boolean;
   spCoinAccessSource?: SpCoinAccessSource;
   compareOfflineRewards?: boolean;
+  useCache?: boolean;
+  cacheMode?: 'default' | 'refresh' | 'bypass' | 'only';
+  cacheNamespace?: string;
+  traceCache?: boolean;
 };
 
 type StepPayload =
@@ -784,7 +794,11 @@ type AccountRewardSnapshot = {
 };
 
 type PendingAccountRewardsReader = {
-  getPendingAccountStakingRewards?: (accountKey: string, timestampOverride?: string | number | bigint) => Promise<unknown>;
+  getPendingAccountStakingRewards?: (
+    accountKey: string,
+    optionsOrTimestampOverride?: unknown,
+    timestampOverride?: string | number | bigint,
+  ) => Promise<unknown>;
 };
 
 function toBigIntAmount(value: unknown) {
@@ -868,6 +882,17 @@ export async function POST(request: NextRequest) {
     const stopAfterCurrentStep = body?.stopAfterCurrentStep === true;
     const source: SpCoinAccessSource = body?.spCoinAccessSource === 'local' ? 'local' : 'node_modules';
     const compareOfflineRewards = body?.compareOfflineRewards === true;
+    const cacheMode =
+      body?.cacheMode === 'refresh' || body?.cacheMode === 'bypass' || body?.cacheMode === 'only'
+        ? body.cacheMode
+        : body?.useCache === false
+          ? 'refresh'
+          : 'default';
+    const readCacheOptions = {
+      cache: cacheMode,
+      cacheNamespace: String(body?.cacheNamespace || '').trim() || undefined,
+      traceCache: body?.traceCache === true,
+    };
 
     if (!script || !Array.isArray(script.steps)) {
       return NextResponse.json({ ok: false, message: 'A script with steps is required.' }, { status: 400 });
@@ -1031,7 +1056,7 @@ export async function POST(request: NextRequest) {
               appendTrace(`getAccountRecord path start; accountKey=${findParam('Account Key')}`);
               if (typeof (access.read as Record<string, unknown>).getAccountRecord === 'function') {
                 appendTrace('getAccountRecord using access.read.getAccountRecord');
-                stepResult = await access.read.getAccountRecord(findParam('Account Key'));
+                stepResult = await access.read.getAccountRecord(findParam('Account Key'), readCacheOptions);
               } else if (typeof (contract as Record<string, unknown>).getAccountRecord === 'function') {
                 const cachedRecord = getCachedAccountRecord(contractAddress, findParam('Account Key'));
                 if (cachedRecord !== null && hasAccountRecordCounts(cachedRecord)) {
@@ -1057,16 +1082,16 @@ export async function POST(request: NextRequest) {
                 throw new Error('getAccountRecordShallow is not available on the current SpCoin access path.');
               }
               stepResult = await (
-                access.read as unknown as { getAccountRecordShallow: (accountKey: string) => Promise<unknown> }
-              ).getAccountRecordShallow(findParam('Account Key'));
+                access.read as unknown as { getAccountRecordShallow: (accountKey: string, options?: unknown) => Promise<unknown> }
+              ).getAccountRecordShallow(findParam('Account Key'), readCacheOptions);
               break;
             case 'getPendingAccountStakingRewards':
               if (typeof (access.read as Record<string, unknown>).getPendingAccountStakingRewards !== 'function') {
                 throw new Error('getPendingAccountStakingRewards is not available on the current SpCoin access path.');
               }
               stepResult = await (
-                access.read as unknown as { getPendingAccountStakingRewards: (accountKey: string) => Promise<unknown> }
-              ).getPendingAccountStakingRewards(findParam('Account Key'));
+                access.read as unknown as { getPendingAccountStakingRewards: (accountKey: string, options?: unknown) => Promise<unknown> }
+              ).getPendingAccountStakingRewards(findParam('Account Key'), readCacheOptions);
               break;
             case 'getSponsorKeys':
             case 'getRecipientKeys':
