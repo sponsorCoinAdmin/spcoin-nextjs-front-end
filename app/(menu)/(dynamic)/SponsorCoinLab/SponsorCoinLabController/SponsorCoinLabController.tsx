@@ -1070,9 +1070,9 @@ export default function SponsorCoinLabPage({
       ? `Discard unsaved changes to Step ${activeStepNumber} (${currentMethodDisplayName}) or return?`
       : `Discard unsaved changes to ${currentMethodDisplayName} or return?`;
   })();
-  const isUpdateBlockedByNoChanges = isEditingScriptMethod && !hasEditingScriptChanges;
+  const isUpdateBlockedByNoChanges = false;
   const hasEditorScriptSelected = scriptEditorKind === 'json' && Boolean(String(selectedScriptId || '').trim());
-  const addToScriptButtonLabel = isEditingScriptMethod ? `Update Script Step ${editingScriptStepNumber}` : 'Add To Script';
+  const addToScriptButtonLabel = 'Add Method';
   const [scriptStepExecutionErrors, setScriptStepExecutionErrors] = useState<Record<number, boolean>>({});
   const scriptDebugStopRef = useRef(false);
   const {
@@ -1261,10 +1261,10 @@ export default function SponsorCoinLabPage({
       populateActiveAccountsFromMethodParams(activeSpCoinWriteDef.params, spWriteParams);
     }
 
-    const savedStepNumber = addCurrentMethodToScript();
+    const savedStepNumber = addCurrentMethodToScript({ forceAddNewStep: true });
     if (!savedStepNumber) return;
-    setMethodSelectionSource('script');
-    setEditingScriptStepNumber(savedStepNumber);
+    setMethodSelectionSource('dropdown');
+    setEditingScriptStepNumber(null);
     setSelectedScriptStepNumber(savedStepNumber);
     queueEditorBaselineReset();
   }, [

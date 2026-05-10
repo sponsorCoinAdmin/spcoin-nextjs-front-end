@@ -772,19 +772,33 @@ export function useSponsorCoinLabScripts({
     const loadSelectedScript = async () => {
       try {
         const response = await fetch(`/api/spCoin/scripts?scriptId=${encodeURIComponent(scriptId)}`, { cache: 'no-store' });
-        if (!response.ok) return;
+        if (!response.ok) {
+          setStatus(`Unable to load ${selectedScript.name}; the script file is missing.`);
+          setScripts((prev) => prev.filter((script) => script.id !== scriptId));
+          setSelectedScriptId('');
+          setSelectedScriptStepNumber(null);
+          setExpandedScriptStepIds({});
+          return;
+        }
         const payload = (await response.json()) as { script?: LabScript };
-        if (!payload.script || payload.script.id !== scriptId) return;
+        if (!payload.script || payload.script.id !== scriptId) {
+          setStatus(`Unable to load ${selectedScript.name}; the script file is invalid.`);
+          setScripts((prev) => prev.filter((script) => script.id !== scriptId));
+          setSelectedScriptId('');
+          setSelectedScriptStepNumber(null);
+          setExpandedScriptStepIds({});
+          return;
+        }
         setScripts((prev) => prev.map((script) => (script.id === scriptId ? payload.script as LabScript : script)));
       } catch {
-        // Keep the lazy summary in place if a script body cannot be loaded yet.
+        setStatus(`Unable to load ${selectedScript.name}.`);
       } finally {
         lazyScriptLoadIdsRef.current.delete(scriptId);
       }
     };
 
     void loadSelectedScript();
-  }, [selectedScript?.id, selectedScript?.isLazy, selectedScript?.isSystemScript, setScripts]);
+  }, [selectedScript?.id, selectedScript?.isLazy, selectedScript?.isSystemScript, selectedScript?.name, setScripts, setStatus]);
 
   useEffect(() => {
     if (!selectedScript) {
@@ -1474,7 +1488,7 @@ export function useSponsorCoinLabScripts({
     ],
   );
 
-  const addCurrentMethodToScript = useCallback((options?: { skipValidation?: boolean }) => {
+  const addCurrentMethodToScript = useCallback((options?: { skipValidation?: boolean; forceAddNewStep?: boolean }) => {
     if (!selectedScriptId) {
       setStatus('Select or create a script first.');
       setOutputPanelMode('raw_status');
@@ -1502,6 +1516,7 @@ export function useSponsorCoinLabScripts({
               ? spCoinWriteMissingEntries
               : serializationTestMissingEntries;
     const isUpdatingExistingStep =
+      options?.forceAddNewStep !== true &&
       editingScriptStepNumber !== null &&
       Array.isArray(selectedScript?.steps) &&
       selectedScript.steps.some((step) => step.step === editingScriptStepNumber);
@@ -1515,7 +1530,10 @@ export function useSponsorCoinLabScripts({
         {
           confirmLabel: isUpdatingExistingStep ? 'Update Anyway' : 'Add to Script Anyway',
           onConfirm: () => {
-            addCurrentMethodToScript({ skipValidation: true });
+            addCurrentMethodToScript({
+              skipValidation: true,
+              forceAddNewStep: options?.forceAddNewStep,
+            });
           },
         },
       );

@@ -20,7 +20,9 @@ contract Account is Utils {
             accountRec.inserted = true;
             masterAccountList.push(_accountKey);
         }
-        accountRec.accountTypes |= accountType;
+        if (accountType != UNDEFINED && (accountRec.accountTypes & accountType) != accountType) {
+            accountRec.accountTypes |= accountType;
+        }
     }
 
     function hasActiveLinks(address _accountKey) internal view returns (bool) {
@@ -126,10 +128,6 @@ contract Account is Utils {
         return masterAccountList[index];
     }
 
-    function isActiveAccount(address _accountKey) external view returns (bool) {
-        return hasActiveLinks(_accountKey);
-    }
-
     function getAccountRecord(address _accountKey)
         external
         view
@@ -143,7 +141,9 @@ contract Account is Utils {
             uint256 recipientCount,
             uint256 agentCount,
             uint256 parentRecipientCount,
-            bool active
+            uint256 lastSponsorUpdateTimeStamp,
+            uint256 lastRecipientUpdateTimeStamp,
+            uint256 lastAgentUpdateTimeStamp
         )
     {
         (bool inserted, AccountStruct storage accountRec) = getInternalAccount(_accountKey);
@@ -159,7 +159,9 @@ contract Account is Utils {
                 recipientCount,
                 agentCount,
                 parentRecipientCount,
-                active
+                lastSponsorUpdateTimeStamp,
+                lastRecipientUpdateTimeStamp,
+                lastAgentUpdateTimeStamp
             );
         }
         accountKey = accountRec.accountKey;
@@ -171,7 +173,9 @@ contract Account is Utils {
         recipientCount = accountRec.recipientKeys.length;
         agentCount = accountRec.agentKeys.length;
         parentRecipientCount = accountRec.parentRecipientKeys.length;
-        active = hasActiveLinks(_accountKey);
+        lastSponsorUpdateTimeStamp = accountRec.lastSponsorUpdateTimeStamp;
+        lastRecipientUpdateTimeStamp = accountRec.lastRecipientUpdateTimeStamp;
+        lastAgentUpdateTimeStamp = accountRec.lastAgentUpdateTimeStamp;
     }
 
     function getAccountLinks(address _accountKey)

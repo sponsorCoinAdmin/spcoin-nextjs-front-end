@@ -750,9 +750,19 @@
         "type": "uint256"
       },
       {
-        "internalType": "bool",
-        "name": "active",
-        "type": "bool"
+        "internalType": "uint256",
+        "name": "lastSponsorUpdateTimeStamp",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "lastRecipientUpdateTimeStamp",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "lastAgentUpdateTimeStamp",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -2530,25 +2540,6 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_accountKey",
-        "type": "address"
-      }
-    ],
-    "name": "isActiveAccount",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "name",
     "outputs": [
@@ -2792,6 +2783,36 @@
     "outputs": [
       {
         "internalType": "uint256",
+        "name": "lastSponsorUpdateTimeStamp",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "lastRecipientUpdateTimeStamp",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "lastAgentUpdateTimeStamp",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "sponsorRewards",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "recipientRewards",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "agentRewards",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
         "name": "totalRewards",
         "type": "uint256"
       }
@@ -2811,7 +2832,12 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "totalRewards",
+        "name": "lastAgentUpdateTimeStamp",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "agentRewards",
         "type": "uint256"
       }
     ],
@@ -2830,7 +2856,12 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "totalRewards",
+        "name": "lastRecipientUpdateTimeStamp",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "recipientRewards",
         "type": "uint256"
       }
     ],
@@ -2849,7 +2880,12 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "totalRewards",
+        "name": "lastSponsorUpdateTimeStamp",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "sponsorRewards",
         "type": "uint256"
       }
     ],

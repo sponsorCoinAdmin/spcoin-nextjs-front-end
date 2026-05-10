@@ -46,11 +46,7 @@ export type SpCoinReadMethod =
   | 'isAgent'
   | 'getAccountStakingRewards'
   | 'getStakingRewards'
-  | 'getPendingAccountStakingRewards'
-  | 'getAccountRewardTransactionList'
-  | 'getAccountRewardTransactionRecord'
-  | 'getAccountTransactionList'
-  | 'getTransactionList'
+  | 'getPendingRewards'
   | 'getTransactionRecord'
   | 'getRecipientTransactionIdKeys'
   | 'getAgentTransactionIdKeys'
@@ -102,7 +98,6 @@ const LEGACY_READ_METHOD_RENAMES: Partial<Record<string, SpCoinReadMethod>> = {
   getInitialTotalSupply: 'totalInitialSupply',
   initialTotalSupply: 'totalInitialSupply',
   totalInitialSupply: 'totalInitialSupply',
-  getAccountTransactionList: 'getAccountTransactionList',
   getMasterMetaData: 'getMasterAccountMetaData',
   getMasterAccountList: 'getMasterAccountKeys',
   getAccountKeys: 'getMasterAccountKeys',
@@ -135,7 +130,7 @@ const LEGACY_READ_METHOD_RENAMES: Partial<Record<string, SpCoinReadMethod>> = {
 export const SPCOIN_OFFCHAIN_READ_METHODS: SpCoinReadMethod[] = [
   'getAccountStakingRewards',
   'getStakingRewards',
-  'getPendingAccountStakingRewards',
+  'getPendingRewards',
   'getAccountRecordShallow',
   'getRecipientTransaction',
   'getAgentTransaction',
@@ -276,6 +271,40 @@ function isBadDataError(error: unknown) {
   const code = String((error as { code?: unknown } | null)?.code || '');
   const message = String((error as { message?: unknown } | null)?.message || '');
   return code === 'BAD_DATA' || /could not decode result data/i.test(message);
+}
+
+function normalizePendingRewardsResult(value: unknown): unknown {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
+  const record = value as Record<string, unknown>;
+  if (
+    !Object.prototype.hasOwnProperty.call(record, 'pendingRewards') &&
+    !Object.prototype.hasOwnProperty.call(record, 'pendingSponsorRewards') &&
+    !Object.prototype.hasOwnProperty.call(record, 'pendingRecipientRewards') &&
+    !Object.prototype.hasOwnProperty.call(record, 'pendingAgentRewards')
+  ) {
+    return value;
+  }
+  const pendingSponsorRewards = String(record.pendingSponsorRewards ?? '0');
+  const pendingRecipientRewards = String(record.pendingRecipientRewards ?? '0');
+  const pendingAgentRewards = String(record.pendingAgentRewards ?? '0');
+  const calculatedTimeStamp = String(record.calculatedTimeStamp ?? record.calculatedmestamp ?? record.calculatedAtTimestamp ?? '0');
+  const calculatedFormatted = String(record.calculatedFormatted ?? record.calculatedAt ?? '');
+  const { calculatedAt, calculatedAtTimestamp, calculatedmestamp, ...restRecord } = record;
+  void calculatedAt;
+  void calculatedAtTimestamp;
+  void calculatedmestamp;
+  return {
+    TYPE: restRecord.TYPE ?? '--ACCOUNT_PENDING_REWARDS--',
+    accountKey: String(restRecord.accountKey ?? ''),
+    calculatedTimeStamp,
+    calculatedFormatted,
+    ...restRecord,
+    pendingRewards: String(record.pendingRewards ?? '0'),
+    pendingSponsorRewards,
+    pendingRecipientRewards,
+    pendingAgentRewards,
+    __showEmptyFields: true,
+  };
 }
 
 async function buildReadDecodeError(params: {
@@ -698,6 +727,10 @@ export async function runSpCoinReadMethod(args: RunArgs): Promise<unknown> {
       });
     }
     throw error;
+  }
+
+  if (canonicalMethod === 'getPendingRewards') {
+    result = normalizePendingRewardsResult(result);
   }
 
   const out = stringifyResult(result);

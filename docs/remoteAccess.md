@@ -168,7 +168,7 @@ These were the main problems we hit and already addressed:
    - warning for missing account
    - single on-chain call trace
 
-2. Decide whether empty account `sponsorRewardRate` should remain `"0%"`, be omitted, or come from config.
+2. Decide whether empty account `annualInflationRate` should remain `"0%"`, be omitted, or come from config.
 
 3. Consider applying the same direct on-chain simplification pattern to other read methods where a single Solidity call should be the source of truth.
 

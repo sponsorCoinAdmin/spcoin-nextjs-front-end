@@ -23,12 +23,7 @@ export {
     isAgent,
 } from './getAccountRoleSummary';
 export { getAccountStakingRewards } from './getAccountStakingRewards';
-export { getPendingAccountStakingRewards } from './getPendingAccountStakingRewards';
-export { getRewardTypeRecord } from './getRewardTypeRecord';
-export { getAccountRewardTransactionList } from './getAccountRewardTransactionList';
-export { getAccountRewardTransactionRecord } from './getAccountRewardTransactionRecord';
-export { getAccountTransactionList } from './getAccountTransactionList';
-export { getTransactionList } from './getTransactionList';
+export { getPendingRewards } from './getPendingRewards';
 export { getTransactionRecord } from './getTransactionRecord';
 export { getRecipientTransactionIdKeys } from './getRecipientTransactionIdKeys';
 export { getAgentTransactionIdKeys } from './getAgentTransactionIdKeys';

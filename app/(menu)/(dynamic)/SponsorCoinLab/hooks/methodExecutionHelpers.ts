@@ -86,20 +86,6 @@ export function getExecutionMetaFromError(error: unknown): MethodExecutionMeta |
   return meta as MethodExecutionMeta;
 }
 
-export function isEmptyAccountRateListReadError(error: unknown) {
-  const name = toErrorText((error as { name?: unknown } | null)?.name);
-  const message = toErrorText((error as { message?: unknown } | null)?.message);
-  if (name !== 'TypeError') return false;
-  return /Cannot read properties of undefined/i.test(message);
-}
-
-export function isMalformedAccountRateListInput(error: unknown) {
-  const name = toErrorText((error as { name?: unknown } | null)?.name);
-  const message = toErrorText((error as { message?: unknown } | null)?.message);
-  if (name !== 'TypeError') return false;
-  return /Cannot convert undefined to a BigInt/i.test(message);
-}
-
 export async function enrichDirectReadError(params: {
   error: unknown;
   method: string;

@@ -60,17 +60,6 @@ function isScriptHeaderDisplayRecord(value: unknown): value is Record<string, un
   );
 }
 
-function getStepMethod(block: unknown): string {
-  if (!isRecord(block)) return '';
-  const call = block.call;
-  return isRecord(call) ? String(call.method || '').trim() : '';
-}
-
-function getStepNumber(block: unknown, fallback: number): number {
-  const stepNumber = Number(isRecord(block) ? block.step : undefined);
-  return Number.isInteger(stepNumber) && stepNumber > 0 ? stepNumber : fallback;
-}
-
 function getOnChainMs(value: unknown): number {
   const parsed = Number(String(value ?? '').replace(/,/g, '').trim());
   return Number.isFinite(parsed) ? parsed : 0;
@@ -82,6 +71,35 @@ function getLocalOnChainCallsTotalMs(calls: unknown): number {
     const ms = isRecord(entry) ? getOnChainMs(entry.onChainRunTimeMs) : 0;
     return sum + ms;
   }, 0);
+}
+
+function buildOnChainCallBreakdown(calls: unknown): Record<string, unknown> {
+  if (!Array.isArray(calls)) return {};
+  return calls.reduce<Record<string, unknown>>((entries, entry, index) => {
+    if (!isRecord(entry)) return entries;
+    const method = String(entry.method || 'onChainCall').trim();
+    const totalMs = getOnChainMs(entry.onChainRunTimeMs);
+    const { method: _method, onChainRunTimeMs, ...rest } = entry;
+    entries[`${index + 1} ${method}: ${totalMs}ms`] = {
+      __forceExpanded: true,
+      ...rest,
+      totalOnChainMs: totalMs,
+    };
+    void _method;
+    void onChainRunTimeMs;
+    return entries;
+  }, {});
+}
+
+function getStepMethod(block: unknown): string {
+  if (!isRecord(block)) return '';
+  const call = block.call;
+  return isRecord(call) ? String(call.method || '').trim() : '';
+}
+
+function getStepNumber(block: unknown, fallback: number): number {
+  const stepNumber = Number(isRecord(block) ? block.step : undefined);
+  return Number.isInteger(stepNumber) && stepNumber > 0 ? stepNumber : fallback;
 }
 
 function getBigIntTotal(value: unknown): bigint {
@@ -103,10 +121,20 @@ function formatWeiAsEth(wei: bigint): string {
 }
 
 function buildStepOnChainEntry(onChainCalls: Record<string, unknown>): Record<string, unknown> {
-  const { calls, ...rest } = onChainCalls;
+  const { calls, totalOnChainMs, ...rest } = onChainCalls;
+  const callBreakdown = buildOnChainCallBreakdown(calls);
+  const totalOnChainMsValue = totalOnChainMs ?? getLocalOnChainCallsTotalMs(calls);
   return {
     __forceExpanded: true,
     ...rest,
+    totalOnChainMs:
+      Object.keys(callBreakdown).length > 0
+        ? {
+            __forceExpanded: true,
+            totalOnChainMs: totalOnChainMsValue,
+            ...callBreakdown,
+          }
+        : totalOnChainMsValue,
   };
 }
 
@@ -125,6 +153,7 @@ function buildHeaderOnChainCalls(blocks: unknown[]): Record<string, unknown> | n
   let totalGasPriceWei = 0n;
   let totalGasUsed = 0n;
   let totalOnChainMs = 0;
+  let hasOnChainCalls = false;
   let displayIndex = 0;
   const hasSeparateStepBlocks = blocks.length > 1 && blocks.some((block) => isScriptDisplayRecord(block));
 
@@ -137,6 +166,7 @@ function buildHeaderOnChainCalls(blocks: unknown[]): Record<string, unknown> | n
     totalGasPriceWei += getBigIntTotal(step.onChainCalls.totalGasPriceWei);
     totalGasUsed += getBigIntTotal(step.onChainCalls.totalGasUsed);
     totalOnChainMs += totalMs;
+    hasOnChainCalls = true;
     entries[`${getStepNumber(step, fallbackIndex)} ${method || 'onChainCalls'}: ${totalMs}ms`] = buildHeaderMethodOnChainEntry(step.onChainCalls);
   };
 
@@ -156,17 +186,14 @@ function buildHeaderOnChainCalls(blocks: unknown[]): Record<string, unknown> | n
     if (isRecord(block)) addMethodOnChainEntry(block, displayIndex);
   }
 
-  return Object.keys(entries).length > 0
+  return hasOnChainCalls
     ? {
         __forceExpanded: true,
-        totalMethodOnChainCalls: {
-          __forceExpanded: true,
-          totalMethodsFeePaidEth: totalFeePaidWei > 0n ? formatWeiAsEth(totalFeePaidWei) : String(totalFeePaidEth),
-          totalMethodsFeePaidWei: totalFeePaidWei.toLocaleString('en-US'),
-          totalMethodsGasPriceWei: totalGasPriceWei.toLocaleString('en-US'),
-          totalMethodsGasUsed: totalGasUsed.toLocaleString('en-US'),
-          totalMethodsOnChainMs: `${totalOnChainMs}ms`,
-        },
+        totalMethodsFeePaidEth: totalFeePaidWei > 0n ? formatWeiAsEth(totalFeePaidWei) : String(totalFeePaidEth),
+        totalMethodsFeePaidWei: totalFeePaidWei.toLocaleString('en-US'),
+        totalMethodsGasPriceWei: totalGasPriceWei.toLocaleString('en-US'),
+        totalMethodsGasUsed: totalGasUsed.toLocaleString('en-US'),
+        totalOnChainMs: `${totalOnChainMs}ms`,
         ...entries,
       }
     : null;
@@ -184,10 +211,16 @@ function flattenStepOnChainCalls(step: unknown): unknown {
 function buildScriptHeaderBlock(
   headerRecord: Record<string, unknown>,
   path = 'script-header',
-  methodOnChainCalls?: Record<string, unknown> | null,
+  totalMethodsOnChainMs?: Record<string, unknown> | null,
 ): InspectorDisplayBlock {
   return {
-    data: methodOnChainCalls ? { ...headerRecord, methodOnChainCalls } : headerRecord,
+    data: {
+      meta: {
+        __forceExpanded: true,
+        ...headerRecord,
+      },
+      ...(totalMethodsOnChainMs ? { totalMethodsOnChainMs } : {}),
+    },
     label: 'Header:',
     path,
     rootLabel: 'Header:',
@@ -586,7 +619,7 @@ export default function OutputResultsCard({
     () =>
       Object.entries(showPayloadFields).flatMap(([key, visible]) => {
         if (visible) return [];
-        return key === 'onChainCalls' ? ['onChainCalls', 'methodOnChainCalls'] : [key];
+        return key === 'onChainCalls' ? ['onChainCalls', 'totalMethodsOnChainMs'] : [key];
       }),
     [showPayloadFields],
   );
@@ -721,7 +754,7 @@ export default function OutputResultsCard({
   }, [collapsibleFormattedBlocks, collapsibleTreeBlocks, controls.outputPanelMode]);
 
   const displayFormattedBlocks = useMemo(() => {
-    const hoistMasterSponsorRewardRate = (block: unknown) => {
+    const hoistMasterAnnualInflationRate = (block: unknown) => {
       if (!block || typeof block !== 'object' || Array.isArray(block)) return block;
 
       const record = block as Record<string, unknown>;
@@ -735,7 +768,7 @@ export default function OutputResultsCard({
       if (!Array.isArray(result)) return block;
 
       const sponsorEntries = result;
-      const topLevelSponsorRewardRate = sponsorEntries.reduce<string | null>((foundRate, entry) => {
+      const topLevelAnnualInflationRate = sponsorEntries.reduce<string | null>((foundRate, entry) => {
         if (foundRate) return foundRate;
         if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return foundRate;
         const totalSpCoins =
@@ -744,7 +777,7 @@ export default function OutputResultsCard({
           !Array.isArray((entry as Record<string, unknown>).totalSpCoins)
             ? ((entry as Record<string, unknown>).totalSpCoins as Record<string, unknown>)
             : null;
-        const rewardRate = totalSpCoins ? String(totalSpCoins.sponsorRewardRate || '').trim() : '';
+        const rewardRate = totalSpCoins ? String(totalSpCoins.annualInflationRate || '').trim() : '';
         return rewardRate || foundRate;
       }, null);
 
@@ -760,8 +793,8 @@ export default function OutputResultsCard({
             ? ({ ...(entryRecord.totalSpCoins as Record<string, unknown>) } as Record<string, unknown>)
             : null;
 
-        if (totalSpCoins && 'sponsorRewardRate' in totalSpCoins) {
-          delete totalSpCoins.sponsorRewardRate;
+        if (totalSpCoins && 'annualInflationRate' in totalSpCoins) {
+          delete totalSpCoins.annualInflationRate;
         }
 
         nextResult[String(index)] = totalSpCoins ? { ...entryRecord, totalSpCoins } : entry;
@@ -770,11 +803,11 @@ export default function OutputResultsCard({
 
       return {
         ...record,
-        result: topLevelSponsorRewardRate ? { sponsorRewardRate: topLevelSponsorRewardRate, ...normalizedResult } : normalizedResult,
+        result: topLevelAnnualInflationRate ? { annualInflationRate: topLevelAnnualInflationRate, ...normalizedResult } : normalizedResult,
       };
     };
 
-    return (collapsibleFormattedBlocks || []).map((block) => hoistMasterSponsorRewardRate(block));
+    return (collapsibleFormattedBlocks || []).map((block) => hoistMasterAnnualInflationRate(block));
   }, [collapsibleFormattedBlocks]);
 
   const formattedInspectorLooksStepBased = useMemo(() => {
@@ -1034,12 +1067,13 @@ export default function OutputResultsCard({
       setStepActionModalState((current) => (current ? { ...current, confirmingDelete: true } : current));
       return;
     }
-    scriptActions.deleteScriptStepByNumber(stepActionModalState.stepNumber);
     if (controls.formattedPanelView === 'output') {
       const nextDisplay = removeFormattedOutputBlock(content.formattedOutputDisplay, stepActionModalState.stepNumber);
       if (nextDisplay !== null) {
         controls.setFormattedOutputDisplay(nextDisplay);
       }
+    } else {
+      scriptActions.deleteScriptStepByNumber(stepActionModalState.stepNumber);
     }
     setStepActionModalState(null);
   }, [content.formattedOutputDisplay, controls, scriptActions, stepActionModalState]);

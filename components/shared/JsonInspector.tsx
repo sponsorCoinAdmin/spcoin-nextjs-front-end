@@ -134,6 +134,49 @@ function getLazyAccountRelationName(data: any, fallback: string): string {
   return `${baseRelation}[${displayCount}]`;
 }
 
+function isTotalSpCoinsRecord(data: any): boolean {
+  return Boolean(
+    data &&
+      typeof data === 'object' &&
+      !Array.isArray(data) &&
+      ((data as Record<string, unknown>).TYPE === '--TOTAL_SP_COINS--' ||
+        Object.prototype.hasOwnProperty.call(data, 'totalSpCoins')),
+  );
+}
+
+function isPendingRewardsRecord(data: any): boolean {
+  const record =
+    data && typeof data === 'object' && !Array.isArray(data) ? (data as Record<string, unknown>) : null;
+  return Boolean(
+    record &&
+      (record.TYPE === '--PENDING_REWARDS--' || record.TYPE === '--ACCOUNT_PENDING_REWARDS--') &&
+      Object.prototype.hasOwnProperty.call(record, 'pendingRewards'),
+  );
+}
+
+function isTotalSpCoinsPendingRewards(parent: any, childKey: string, childValue: any): boolean {
+  return childKey === 'pendingRewards' && isTotalSpCoinsRecord(parent) && isPendingRewardsRecord(childValue);
+}
+
+function isLazyPendingRewardsActionNode(data: any): boolean {
+  return Boolean(
+    data &&
+      typeof data === 'object' &&
+      !Array.isArray(data) &&
+      (data as Record<string, unknown>).__lazyPendingRewardsAction === true,
+  );
+}
+
+function isPendingRewardsInternalField(parent: any, childKey: string): boolean {
+  return isPendingRewardsRecord(parent) && childKey === 'pendingRewards';
+}
+
+function getPendingRewardsActionName(data: any, fallback: string): string {
+  if (!isLazyPendingRewardsActionNode(data)) return fallback;
+  const action = String((data as Record<string, unknown>).action || fallback).trim();
+  return action || fallback;
+}
+
 function shouldForceExpandNode(data: any): boolean {
   return Boolean(
     data &&
@@ -148,7 +191,7 @@ function shouldShowEmptyChildren(data: any): boolean {
     data &&
       typeof data === 'object' &&
       !Array.isArray(data) &&
-      (data as Record<string, unknown>).__showEmptyFields === true,
+      ((data as Record<string, unknown>).__showEmptyFields === true || isPendingRewardsRecord(data)),
   );
 }
 
@@ -222,6 +265,35 @@ function normalizeLegacyDateDisplay(value: any): string | null {
   const [minuteKey, secondValue] = innerEntries[0];
   if (typeof secondValue !== 'string') return null;
   return normalizeDisplayDateString(`${outerKey}:${minuteKey}:${secondValue}`);
+}
+
+function formatTimestampDateDisplay(value: unknown): string | null {
+  const raw = String(value ?? '').replace(/,/g, '').trim();
+  if (!raw || raw === '0') return 'N/A';
+  if (!/^\d+$/.test(raw)) return normalizeLegacyDateDisplay(value);
+  const seconds = Number(raw);
+  if (!Number.isFinite(seconds) || seconds <= 0) return 'N/A';
+  const date = new Date(seconds * 1000);
+  if (Number.isNaN(date.getTime())) return null;
+  const month = date.toLocaleString('en-US', { month: 'short' }).toUpperCase();
+  const day = String(date.getDate()).padStart(2, '0');
+  const year = date.getFullYear();
+  const hour24 = date.getHours();
+  const hour12 = hour24 % 12 || 12;
+  const minute = String(date.getMinutes()).padStart(2, '0');
+  const meridiem = hour24 < 12 ? 'a.m.' : 'p.m.';
+  const timeZone =
+    date
+      .toLocaleTimeString('en-US', { timeZoneName: 'short' })
+      .split(' ')
+      .pop() || '';
+  return `${month}-${day}-${year}, ${hour12}:${minute} ${meridiem}${timeZone ? ` ${timeZone}` : ''}`;
+}
+
+function isRewardUpdateTimestampKey(key: string): boolean {
+  return /^(lastSponsorUpdate|lastRecipientUpdate|lastAgentUpdate|lastSponsorUpdateTimeStamp|lastRecipientUpdateTimeStamp|lastAgentUpdateTimeStamp)$/i.test(
+    String(key || '').trim(),
+  );
 }
 
 function hasPopulatedContent(
@@ -319,6 +391,10 @@ function formatDisplayScalar(
   formatTokenAmounts: boolean,
   tokenDecimals?: number | null,
 ): string {
+  if (isRewardUpdateTimestampKey(key)) {
+    const formattedTimestamp = formatTimestampDateDisplay(value);
+    if (formattedTimestamp) return `"${formattedTimestamp}"`;
+  }
   const renderedValue = stringifyBigInt(value);
   if (formatTokenAmounts && isTokenAmountKey(key)) {
     return displayFormattedAmount(renderedValue, tokenDecimals) ?? String(renderedValue);
@@ -357,8 +433,18 @@ function getVisibleEntries(
   const sortEntries = ([leftKey]: [string, any], [rightKey]: [string, any]) => {
     if (leftKey === 'meta' && rightKey !== 'meta') return -1;
     if (rightKey === 'meta' && leftKey !== 'meta') return 1;
-    if ((leftKey === 'onChainCalls' || leftKey === 'methodOnChainCalls') && rightKey !== 'onChainCalls' && rightKey !== 'methodOnChainCalls') return 1;
-    if ((rightKey === 'onChainCalls' || rightKey === 'methodOnChainCalls') && leftKey !== 'onChainCalls' && leftKey !== 'methodOnChainCalls') return -1;
+    if (
+      (leftKey === 'onChainCalls' || leftKey === 'methodOnChainCalls' || leftKey === 'totalMethodsOnChainMs') &&
+      rightKey !== 'onChainCalls' &&
+      rightKey !== 'methodOnChainCalls' &&
+      rightKey !== 'totalMethodsOnChainMs'
+    ) return 1;
+    if (
+      (rightKey === 'onChainCalls' || rightKey === 'methodOnChainCalls' || rightKey === 'totalMethodsOnChainMs') &&
+      leftKey !== 'onChainCalls' &&
+      leftKey !== 'methodOnChainCalls' &&
+      leftKey !== 'totalMethodsOnChainMs'
+    ) return -1;
     if (leftKey === 'totalOnChainMs' && rightKey !== 'totalOnChainMs') return 1;
     if (rightKey === 'totalOnChainMs' && leftKey !== 'totalOnChainMs') return -1;
     if (leftKey === 'totalGasUsed' && rightKey !== 'totalGasUsed') return 1;
@@ -388,12 +474,15 @@ function getVisibleEntries(
           childKey !== '__lazySpCoinMetaData' &&
           childKey !== '__lazyMasterAccountKeys' &&
           childKey !== '__lazyAccountRelation' &&
+          childKey !== '__lazyPendingRewardsAction' &&
           childKey !== '__forceExpanded' &&
           childKey !== '__showEmptyFields' &&
           childKey !== 'accountKey' &&
           childKey !== 'relation' &&
           childKey !== 'count' &&
           childKey !== 'method' &&
+          childKey !== 'action' &&
+          !isPendingRewardsInternalField(value, childKey) &&
           !hideEntryKeys.includes(childKey) &&
           (showStructureType || childKey !== 'TYPE'),
       )
@@ -415,10 +504,14 @@ function getVisibleEntries(
       if (childKey === '__lazySpCoinMetaData') return false;
       if (childKey === '__lazyMasterAccountKeys') return false;
       if (childKey === '__lazyAccountRelation') return false;
+      if (childKey === '__lazyPendingRewardsAction') return false;
       if (childKey === '__forceExpanded') return false;
       if (childKey === '__showEmptyFields') return false;
       if (isLazyAccountRelationNode(value) && ['accountKey', 'relation', 'count', 'method'].includes(childKey)) return false;
+      if (isLazyPendingRewardsActionNode(value) && ['accountKey', 'action', 'method'].includes(childKey)) return false;
+      if (isPendingRewardsInternalField(value, childKey)) return false;
       if (hideEntryKeys.includes(childKey)) return false;
+      if (isTotalSpCoinsPendingRewards(value, childKey, childValue)) return true;
       if (forceShowEntryKeys.includes(childKey)) return true;
       if (!showStructureType && childKey === 'TYPE') return false;
       if (!childValue || typeof childValue !== 'object') return hasPopulatedContent(childValue, hiddenRules, showStructureType);
@@ -486,6 +579,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
   const isLazySpCoinMetaData = isLazySpCoinMetaDataNode(data);
   const isLazyMasterAccountKeys = isLazyMasterAccountKeysNode(data);
   const isLazyAccountRelation = isLazyAccountRelationNode(data);
+  const isLazyPendingRewardsAction = isLazyPendingRewardsActionNode(data);
   const lazyAccountRelationCount = getLazyAccountRelationCount(data);
   const lazyAccountRelationCanExpand = isLazyAccountRelation && lazyAccountRelationCount > 0;
   const shouldForceExpand = shouldForceExpandNode(data);
@@ -502,6 +596,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
       isLazyAddressStub ||
       isLazySpCoinMetaData ||
       isLazyMasterAccountKeys ||
+      isLazyPendingRewardsAction ||
       lazyAccountRelationCanExpand);
   const isHighlighted = highlightPathPrefixes.some(
     (prefix) => path === prefix || path.startsWith(`${prefix}.`),
@@ -522,6 +617,19 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     if (isCollapsed && isLazyMasterAccountKeys) {
       updateCollapsedKeys([...new Set(nextOpenKeys)]);
       onLeafValueClick?.('__load_master_account_keys__', currentPath, 'masterAccountKeys');
+      return;
+    }
+    if (isCollapsed && isLazyPendingRewardsAction) {
+      updateCollapsedKeys([...new Set(nextOpenKeys)]);
+      onLeafValueClick?.(
+        JSON.stringify({
+          __loadPendingRewardsAction: true,
+          accountKey: String((data as Record<string, unknown>).accountKey || ''),
+          action: String((data as Record<string, unknown>).action || ''),
+        }),
+        currentPath,
+        String((data as Record<string, unknown>).action || 'pendingRewards'),
+      );
       return;
     }
     if (isLazyAccountRelation) {
@@ -563,6 +671,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     isLazySpCoinMetaData,
     isLazyMasterAccountKeys,
     isLazyAccountRelation,
+    isLazyPendingRewardsAction,
     lazyAccountRelationCanExpand,
     lazyAccountRelationCount,
     onLeafValueClick,
@@ -588,6 +697,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
   const getDisplayLabel = (nextPath: string): string => {
     const baseLabel = getPathLabel(nextPath);
     if (isLazyAccountRelation) return getLazyAccountRelationName(data, baseLabel);
+    if (isLazyPendingRewardsAction) return getPendingRewardsActionName(data, baseLabel);
     if (!label || !data || typeof data !== 'object' || Array.isArray(data)) return baseLabel;
     const inlineSummaryValue = (data as Record<string, unknown>)[label];
     if (inlineSummaryValue !== undefined && inlineSummaryValue !== null && typeof inlineSummaryValue !== 'object') {
@@ -699,7 +809,12 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     }
 
     if (value && typeof value === 'object') {
-      if (!forceShowEntryKeys.includes(key) && !hasVisibleDescendants(value, showAll, hiddenRules, showStructureType)) {
+      const forceRenderObject = isTotalSpCoinsPendingRewards(data, key, value);
+      if (
+        !forceRenderObject &&
+        !forceShowEntryKeys.includes(key) &&
+        !hasVisibleDescendants(value, showAll, hiddenRules, showStructureType)
+      ) {
         return null;
       }
       return (
@@ -712,7 +827,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
           path={nextPath}
           rootLabel={rootLabel}
           label={effectiveKey}
-          hideEntryKeys={hideEntryKeys}
+          hideEntryKeys={key === 'totalOnChainMs' ? [...hideEntryKeys, 'totalOnChainMs'] : hideEntryKeys}
           highlightPathPrefixes={highlightPathPrefixes}
           highlightColorClass={highlightColorClass}
           showAll={showAll}

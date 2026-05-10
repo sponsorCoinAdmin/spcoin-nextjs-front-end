@@ -56,7 +56,7 @@ app/(menu)/(dynamic)/SponsorCoinLab/SponsorCoinLabController/utils.ts
 app/(menu)/(dynamic)/SponsorCoinLab/SponsorCoinLabController/hooks/useControllerContractMetadata.ts
 app/api/spCoin/run-script/route.ts
 spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinReadModule/methods/getAccountRecord.ts
-spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinReadModule/methods/getPendingAccountStakingRewards.ts
+spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinReadModule/methods/getAccountPendingRewards.ts
 spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/utils/methodTiming.ts
 spCoinAccess/scripts/test2--script-1778097397625-j0s1jx.json
 docs/handoff.md
@@ -97,7 +97,7 @@ Fix:
 File:
 
 ```text
-spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinReadModule/methods/getPendingAccountStakingRewards.ts
+spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinReadModule/methods/getAccountPendingRewards.ts
 ```
 
 Implemented/updated:
@@ -145,7 +145,7 @@ getAgentRateTransactionSetCached
 Observed call-count improvements:
 
 ```text
-getPendingAccountStakingRewards: about 14 -> 10 on-chain calls
+getAccountPendingRewards: about 14 -> 10 on-chain calls
 getAccountRecord: about 30 -> 14 on-chain calls
 ```
 

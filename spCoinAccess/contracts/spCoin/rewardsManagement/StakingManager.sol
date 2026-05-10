@@ -8,6 +8,19 @@ contract StakingManager is AgentRates{
     constructor() {
     }
 
+    function updateAccountRewardTimestamp(uint _accountType, address _accountKey, uint256 _updateTimeStamp)
+        internal
+    {
+        AccountStruct storage accountRec = accountMap[_accountKey];
+        if (_accountType == SPONSOR) {
+            accountRec.lastSponsorUpdateTimeStamp = _updateTimeStamp;
+        } else if (_accountType == RECIPIENT) {
+            accountRec.lastRecipientUpdateTimeStamp = _updateTimeStamp;
+        } else if (_accountType == AGENT) {
+            accountRec.lastAgentUpdateTimeStamp = _updateTimeStamp;
+        }
+    }
+
     // SPONSOR   ~ Deposit Sponsor Rewards means as a SPONSOR deposit rewards baser on my source(Recipient)
     //             ~ _sourceKey  = RECIPIENT ADDRESS
     //             ~ _depositKey = SPONSOR ADDRESS
@@ -92,6 +105,7 @@ contract StakingManager is AgentRates{
         totalStakingRewards += _amount;
         depositAccount.stakingRewards += _amount;
         rewardsRecord.stakingRewards += _amount;
+        updateAccountRewardTimestamp(_accountType, _depositKey, block.timestamp);
         // mapping(address => RewardAccountStruct) storage rewardsMap = rewardsRecord.rewardsMap;
 
         RewardAccountStruct storage rewardAccountRecord;

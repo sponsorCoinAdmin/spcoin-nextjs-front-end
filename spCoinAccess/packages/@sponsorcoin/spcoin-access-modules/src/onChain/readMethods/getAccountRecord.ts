@@ -4,7 +4,7 @@ import { buildHandler, getDynamicMethod } from '../../readMethodRuntime';
 import { timeOnChainCall } from '../../utils/methodTiming';
 
 const accountRecordInterface = new Interface([
-  'function getAccountRecord(address _accountKey) view returns (address accountKey, uint256 creationTime, uint256 accountBalance, uint256 stakedAccountSPCoins, uint256 accountStakingRewards, uint256 sponsorCount, uint256 recipientCount, uint256 agentCount, uint256 parentRecipientCount, bool active)',
+  'function getAccountRecord(address _accountKey) view returns (address accountKey, uint256 creationTime, uint256 accountBalance, uint256 stakedAccountSPCoins, uint256 accountStakingRewards, uint256 sponsorCount, uint256 recipientCount, uint256 agentCount, uint256 parentRecipientCount, uint256 lastSponsorUpdateTimeStamp, uint256 lastRecipientUpdateTimeStamp, uint256 lastAgentUpdateTimeStamp)',
 ]);
 
 const ACCOUNT_RECORD_FIELDS = [
@@ -17,7 +17,9 @@ const ACCOUNT_RECORD_FIELDS = [
   'recipientCount',
   'agentCount',
   'parentRecipientCount',
-  'active',
+  'lastSponsorUpdateTimeStamp',
+  'lastRecipientUpdateTimeStamp',
+  'lastAgentUpdateTimeStamp',
 ];
 
 async function callGetAccountRecord(contract, accountKey) {

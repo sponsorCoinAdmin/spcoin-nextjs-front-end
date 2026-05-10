@@ -195,14 +195,14 @@ This is meant to preserve the exact failure context without guessing.
 Related files:
 
 ```text
-spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinReadModule/methods/getPendingAccountStakingRewards.ts
+spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinReadModule/methods/getAccountPendingRewards.ts
 spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinReadModule/methods/getAccountRecord.ts
 ```
 
 Observed improvements:
 
 ```text
-getPendingAccountStakingRewards: about 14 -> 10 on-chain calls
+getAccountPendingRewards: about 14 -> 10 on-chain calls
 getAccountRecord: about 30 -> 14 on-chain calls
 updateAccountStakingRewards: normally 5 on-chain calls when offline comparison is disabled
 ```
@@ -214,7 +214,7 @@ This reduces RPC pressure, but `getAccountRecord` is still the largest read fano
 The latest successful runs showed:
 
 ```text
-getPendingAccountStakingRewards: 10 on-chain calls
+getAccountPendingRewards: 10 on-chain calls
 getAccountRecord: 14 on-chain calls
 updateAccountStakingRewards sponsor: 5 on-chain calls
 updateAccountStakingRewards recipient: 5 on-chain calls

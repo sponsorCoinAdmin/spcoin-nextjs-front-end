@@ -29,7 +29,9 @@ export class AccountStruct {
         this.recipientCount = 0;
         this.agentCount = 0;
         this.parentRecipientCount = 0;
-        this.active = false;
+        this.lastSponsorUpdateTimeStamp = 0;
+        this.lastRecipientUpdateTimeStamp = 0;
+        this.lastAgentUpdateTimeStamp = 0;
         this.recipientKeys = [];
         this.recipientRates = {};
         this.agentKeys = [];
@@ -51,6 +53,9 @@ export class PendingRewardsStruct {
     constructor() {
         this.TYPE = "--PENDING_REWARDS--";
         this.pendingRewards = 0;
+        this.lastSponsorUpdate = 0;
+        this.lastRecipientUpdate = 0;
+        this.lastAgentUpdate = 0;
         this.pendingSponsorRewards = 0;
         this.pendingRecipientRewards = 0;
         this.pendingAgentRewards = 0;

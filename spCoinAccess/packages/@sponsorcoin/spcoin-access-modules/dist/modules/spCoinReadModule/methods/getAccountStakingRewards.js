@@ -1,29 +1,22 @@
 // @ts-nocheck
-import { RewardsStruct } from "../../../dataTypes/spCoinDataTypes";
-import { AGENT, RECIPIENT, SPONSOR } from "../shared";
+import { RewardTypeStruct, RewardsStruct } from "../../../dataTypes/spCoinDataTypes";
+import { bigIntToDecString } from "../../../utils/dateTime";
+import { AGENT, getRewardType, RECIPIENT, SPONSOR } from "../shared";
+function buildRewardTypeTotal(rewardType, reward) {
+    const rewardTypeRecord = new RewardTypeStruct();
+    rewardTypeRecord.TYPE = getRewardType(rewardType);
+    rewardTypeRecord.stakingRewards = bigIntToDecString(reward ?? 0);
+    rewardTypeRecord.rewardAccountList = [];
+    return rewardTypeRecord;
+}
 export async function getAccountStakingRewards(context, _accountKey) {
     const runtime = context;
+    runtime.spCoinLogger.logFunctionHeader("getAccountStakingRewards(" + _accountKey + ")");
     const rewardsRecord = new RewardsStruct();
-    try {
-        const updateTx = await runtime.spCoinContractDeployed.updateAccountStakingRewards(_accountKey);
-        if (updateTx && typeof updateTx.wait === "function") {
-            await updateTx.wait();
-        }
-    }
-    catch (_error) {
-    }
     const accountRewardsValue = await runtime.spCoinSerialize.getAccountRewardsValue(_accountKey);
-    const accountRewardsStr = typeof accountRewardsValue === 'string'
-        ? accountRewardsValue
-        : [
-            accountRewardsValue.sponsorRewardsList?.stakingRewards ?? 0,
-            accountRewardsValue.recipientRewardsList?.stakingRewards ?? 0,
-            accountRewardsValue.agentRewardsList?.stakingRewards ?? 0,
-        ].join(",");
-    const accountRewardList = accountRewardsStr.split(",");
-    rewardsRecord.sponsorRewardsList = await runtime.getRewardTypeRecord(_accountKey, SPONSOR, accountRewardList[0]);
-    rewardsRecord.recipientRewardsList = await runtime.getRewardTypeRecord(_accountKey, RECIPIENT, accountRewardList[1]);
-    rewardsRecord.agentRewardsList = await runtime.getRewardTypeRecord(_accountKey, AGENT, accountRewardList[2]);
+    rewardsRecord.sponsorRewardsList = buildRewardTypeTotal(SPONSOR, accountRewardsValue.sponsorRewards ?? 0);
+    rewardsRecord.recipientRewardsList = buildRewardTypeTotal(RECIPIENT, accountRewardsValue.recipientRewards ?? 0);
+    rewardsRecord.agentRewardsList = buildRewardTypeTotal(AGENT, accountRewardsValue.agentRewards ?? 0);
     runtime.spCoinLogger.logExitFunction();
     return rewardsRecord;
 }

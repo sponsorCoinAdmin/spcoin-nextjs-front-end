@@ -20,10 +20,6 @@ export declare const ONCHAIN_READ_METHOD_HANDLERS: {
     totalStakedSPCoins: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
     totalStakingRewards: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
     getVersion: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
-    getAccountRewardTransactionList: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
-    getAccountRewardTransactionRecord: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
-    getAccountTransactionList: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
-    getTransactionList: import("../../readMethodRuntime").ReadMethodHandler<unknown>;
     getAccountListSize: import("../../readMethodRuntime").ReadMethodHandler<any>;
     getMasterAccountKeyCount: import("../../readMethodRuntime").ReadMethodHandler<any>;
     getMasterAccountCount: import("../../readMethodRuntime").ReadMethodHandler<any>;

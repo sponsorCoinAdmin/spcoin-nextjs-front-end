@@ -20,11 +20,7 @@ import getAccountRecordShallow from './getAccountRecordShallow';
 import getAccountRoleSummary from './getAccountRoleSummary';
 import getAccountRoles from './getAccountRoles';
 import getAccountStakingRewards from './getAccountStakingRewards';
-import getPendingAccountStakingRewards from './getPendingAccountStakingRewards';
-import getAccountRewardTransactionList from './getAccountRewardTransactionList';
-import getAccountRewardTransactionRecord from './getAccountRewardTransactionRecord';
-import getAccountTransactionList from './getAccountTransactionList';
-import getTransactionList from './getTransactionList';
+import getPendingRewards from './getPendingRewards';
 import getTransactionRecord from './getTransactionRecord';
 import getRecipientTransactionIdKeys from './getRecipientTransactionIdKeys';
 import getAgentTransactionIdKeys from './getAgentTransactionIdKeys';
@@ -103,11 +99,7 @@ export const SPCOIN_READ_METHOD_DEFS = {
   isAgent,
   getAccountStakingRewards,
   getStakingRewards: getAccountStakingRewards,
-  getPendingAccountStakingRewards,
-  getAccountRewardTransactionList,
-  getAccountRewardTransactionRecord,
-  getAccountTransactionList,
-  getTransactionList,
+  getPendingRewards,
   getTransactionRecord,
   getRecipientTransactionIdKeys,
   getAgentTransactionIdKeys,

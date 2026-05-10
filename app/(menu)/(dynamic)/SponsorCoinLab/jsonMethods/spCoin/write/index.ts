@@ -128,6 +128,9 @@ export type SpCoinWriteMethod =
   | 'deleteAccountRecord'
   | 'deleteAccountRecords'
   | 'updateAccountStakingRewards'
+  | 'updateSponsorAccountRewards'
+  | 'updateRecipientAccountRewards'
+  | 'updateAgentAccountRewards'
   | 'updateMasterStakingRewards'
   | 'setInflationRate'
   | 'setLowerRecipientRate'
@@ -162,6 +165,9 @@ export const SPCOIN_SENDER_WRITE_METHODS: SpCoinWriteMethod[] = [
   'addRecipientTransaction',
   'addAgentTransaction',
   'updateAccountStakingRewards',
+  'updateSponsorAccountRewards',
+  'updateRecipientAccountRewards',
+  'updateAgentAccountRewards',
   'deleteAccountTree',
   'deleteSponsor',
   'deleteRecipient',
@@ -1079,7 +1085,51 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       break;
     }
     case 'updateAccountStakingRewards': {
-      await submitWrite(activeDef.title, (access) => access.rewards.updateAccountStakingRewards(asString(methodArgs[0])));
+      await submitWrite(activeDef.title, (access) => {
+        const method =
+          access.rewards.updateAccountStakingRewards ||
+          getDynamicMethod(access.contract as SpCoinContractAccess & Record<string, unknown>, 'updateAccountStakingRewards');
+        if (typeof method !== 'function') {
+          throw new Error('updateAccountStakingRewards is not available on the current SpCoin access path.');
+        }
+        return Promise.resolve((method as (accountKey: string) => unknown)(asString(methodArgs[0])));
+      });
+      break;
+    }
+    case 'updateSponsorAccountRewards': {
+      await submitWrite(activeDef.title, (access) => {
+        const method =
+          access.rewards.updateSponsorAccountRewards ||
+          getDynamicMethod(access.contract as SpCoinContractAccess & Record<string, unknown>, 'updateSponsorAccountRewards');
+        if (typeof method !== 'function') {
+          throw new Error('updateSponsorAccountRewards is not available on the current SpCoin access path.');
+        }
+        return Promise.resolve((method as (accountKey: string) => unknown)(asString(methodArgs[0])));
+      });
+      break;
+    }
+    case 'updateRecipientAccountRewards': {
+      await submitWrite(activeDef.title, (access) => {
+        const method =
+          access.rewards.updateRecipientAccountRewards ||
+          getDynamicMethod(access.contract as SpCoinContractAccess & Record<string, unknown>, 'updateRecipientAccountRewards');
+        if (typeof method !== 'function') {
+          throw new Error('updateRecipientAccountRewards is not available on the current SpCoin access path.');
+        }
+        return Promise.resolve((method as (accountKey: string) => unknown)(asString(methodArgs[0])));
+      });
+      break;
+    }
+    case 'updateAgentAccountRewards': {
+      await submitWrite(activeDef.title, (access) => {
+        const method =
+          access.rewards.updateAgentAccountRewards ||
+          getDynamicMethod(access.contract as SpCoinContractAccess & Record<string, unknown>, 'updateAgentAccountRewards');
+        if (typeof method !== 'function') {
+          throw new Error('updateAgentAccountRewards is not available on the current SpCoin access path.');
+        }
+        return Promise.resolve((method as (accountKey: string) => unknown)(asString(methodArgs[0])));
+      });
       break;
     }
     case 'updateMasterStakingRewards': {

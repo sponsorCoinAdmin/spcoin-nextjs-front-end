@@ -20,10 +20,6 @@ import totalUnstakedSpCoins from './totalUnstakedSpCoins';
 import totalStakedSPCoins from './totalStakedSPCoins';
 import totalStakingRewards from './totalStakingRewards';
 import getVersion from './getVersion';
-import getAccountRewardTransactionList from './getAccountRewardTransactionList';
-import getAccountRewardTransactionRecord from './getAccountRewardTransactionRecord';
-import getAccountTransactionList from './getAccountTransactionList';
-import getTransactionList from './getTransactionList';
 import getAccountListSize from './getAccountListSize';
 import getAccountRecipientListSize from './getAccountRecipientListSize';
 import getRecipientTransactionList from './getRecipientTransactionList';
@@ -64,10 +60,6 @@ export const ONCHAIN_READ_METHOD_HANDLERS = {
     totalStakedSPCoins,
     totalStakingRewards,
     getVersion,
-    getAccountRewardTransactionList,
-    getAccountRewardTransactionRecord,
-    getAccountTransactionList,
-    getTransactionList,
     getAccountListSize,
     getMasterAccountKeyCount: getAccountListSize,
     getMasterAccountCount: getAccountListSize,

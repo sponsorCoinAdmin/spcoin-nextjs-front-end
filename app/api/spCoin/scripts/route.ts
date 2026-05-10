@@ -84,17 +84,6 @@ function sortScripts(a: LabScript, b: LabScript) {
   return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
 }
 
-function mergeScripts(userScripts: LabScript[], systemScripts: LabScript[]) {
-  const mergedById = new Map<string, LabScript>();
-  userScripts.forEach((script) => {
-    mergedById.set(script.id, script);
-  });
-  systemScripts.forEach((script) => {
-    mergedById.set(script.id, script);
-  });
-  return Array.from(mergedById.values()).sort(sortScripts);
-}
-
 function stripRuntimeScriptMetadata(script: LabScript): LabScript {
   return {
     id: script.id,
@@ -232,8 +221,11 @@ export async function GET(request: NextRequest) {
     const [scripts, systemScripts, selectedScriptId] = lazy
       ? await Promise.all([readScriptSummariesFromDisk(), readSystemScriptSummariesFromDisk(), readManifest()])
       : await Promise.all([readScriptsFromDisk(), readSystemScriptsFromDisk(), readManifest()]);
-    const mergedScripts = mergeScripts(scripts, systemScripts);
-    return NextResponse.json({ scripts: mergedScripts, selectedScriptId }, { headers: { 'Cache-Control': 'no-store' } });
+    const visibleSelectedScriptId = scripts.some((script) => script.id === selectedScriptId) ? selectedScriptId : '';
+    return NextResponse.json(
+      { scripts, systemScripts, selectedScriptId: visibleSelectedScriptId },
+      { headers: { 'Cache-Control': 'no-store' } },
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown script read error.';
     return NextResponse.json({ ok: false, message }, { status: 500 });

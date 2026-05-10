@@ -22,7 +22,7 @@ Staking rewards have two different use cases:
 
 The project already has an off-chain pending reward calculation path in:
 
-`spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinReadModule/methods/getPendingAccountStakingRewards.ts`
+`spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinReadModule/methods/getAccountPendingRewards.ts`
 
 That method calculates:
 
@@ -37,13 +37,13 @@ So the pending rewards math for reads is already outside Solidity. However, the 
 
 The current exposed method is:
 
-`getPendingAccountStakingRewards(accountKey)`
+`getAccountPendingRewards(accountKey)`
 
 It returns all reward categories in one result:
 
 ```json
 {
-  "TYPE": "--PENDING_ACCOUNT_STAKING_REWARDS--",
+  "TYPE": "--ACCOUNT_PENDING_REWARDS--",
   "accountKey": "0x...",
   "calculatedAt": "2026-...",
   "calculatedAtTimestamp": "...",
@@ -89,7 +89,7 @@ The current off-chain read calculation reduces Solidity calculation dependency f
 
 Observed examples from lab runs:
 
-- `getPendingAccountStakingRewards` often uses around `10` on-chain calls.
+- `getAccountPendingRewards` often uses around `10` on-chain calls.
 - `getAccountRecord` often uses around `14` on-chain calls because it hydrates linked recipient/agent data and pending reward summaries.
 - `updateAccountStakingRewards` improved to around `5` calls around the write, but still needs pre/post verification reads for lab diagnostics.
 
@@ -123,7 +123,7 @@ Currently the library exposes one aggregate method. We should add role-specific 
 
 Then keep:
 
-- `getPendingAccountStakingRewards(accountKey)`
+- `getAccountPendingRewards(accountKey)`
 
 as an aggregate wrapper that calls the three role-specific calculations.
 
@@ -223,7 +223,7 @@ The guiding rule:
 
 ## Proposed Implementation Order
 
-1. Refactor `getPendingAccountStakingRewards.ts` into reusable role-specific calculation functions.
+1. Refactor `getAccountPendingRewards.ts` into reusable role-specific calculation functions.
 2. Add access methods:
    - `getPendingSponsorRewards`
    - `getPendingRecipientRewards`
@@ -261,7 +261,7 @@ Then measure again:
 - first-read RPC call count
 - warmed-cache RPC call count
 - `getAccountRecord` call count
-- `getPendingAccountStakingRewards` call count
+- `getAccountPendingRewards` call count
 - write comparison accuracy
 
 Only after the off-chain path is stable should we remove Solidity read/helper code for bytecode reduction.

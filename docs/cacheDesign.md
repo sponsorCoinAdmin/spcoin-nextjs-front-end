@@ -10,7 +10,7 @@ This document describes the proposed cache architecture for the npm `spCoin-acce
 The current access flow still performs many repeated on-chain reads:
 
 ```text
-getPendingAccountStakingRewards: 10 on-chain calls
+getAccountPendingRewards: 10 on-chain calls
 getAccountRecord: 14 on-chain calls
 updateAccountStakingRewards: 5 on-chain calls
 ```
@@ -79,7 +79,7 @@ Normal library consumers should call familiar read methods:
 
 ```ts
 read.getAccountRecord(accountKey);
-read.getPendingAccountStakingRewards(accountKey);
+read.getAccountPendingRewards(accountKey);
 read.getRecipientRateList(sponsorKey, recipientKey);
 read.getAgentRateList(sponsorKey, recipientKey, recipientRateKey, agentKey);
 ```
@@ -93,7 +93,7 @@ Recommended public shape:
 ```ts
 read.getAccountRecord(accountKey, options?);
 read.getRecipientRateList(sponsorKey, recipientKey, options?);
-read.getPendingAccountStakingRewards(accountKey, options?);
+read.getAccountPendingRewards(accountKey, options?);
 ```
 
 Recommended internal/debug shape:
@@ -341,7 +341,7 @@ getAccountRecordShallow(accountKey)
 getAccountLinks(accountKey)
 getAccountRoleSummary(accountKey)
 getAccountRewardTotals(accountKey)
-getPendingAccountStakingRewards(accountKey)
+getAccountPendingRewards(accountKey)
 any totalSpCoins/account summary value for accountKey
 ```
 
@@ -495,7 +495,7 @@ cache refresh method=getAccountRecord key=...
 cache bypass method=getAccountRecord key=...
 cache set method=getAccountRecord key=... dependencies=[...]
 cache invalidate dependency=account:0xf39... count=...
-cache invalidate method=getPendingAccountStakingRewards reason=AccountRewardsUpdated
+cache invalidate method=getAccountPendingRewards reason=AccountRewardsUpdated
 ```
 
 Method result metadata can include:
@@ -577,7 +577,7 @@ Event invalidation is a second layer, not a replacement for write invalidation.
 Add block/timestamp-aware caching for:
 
 ```text
-getPendingAccountStakingRewards
+getAccountPendingRewards
 totalSpCoins pending reward fields
 ```
 
@@ -614,7 +614,7 @@ Use the current SponsorCoinLab reward script.
 Baseline from recent run:
 
 ```text
-getPendingAccountStakingRewards: 10 on-chain calls
+getAccountPendingRewards: 10 on-chain calls
 getAccountRecord: 14 on-chain calls
 updateAccountStakingRewards sponsor: 5 on-chain calls
 updateAccountStakingRewards recipient: 5 on-chain calls

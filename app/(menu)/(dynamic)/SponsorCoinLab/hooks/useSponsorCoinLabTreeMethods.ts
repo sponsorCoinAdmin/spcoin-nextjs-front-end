@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ParamDef } from '../jsonMethods/shared/types';
 import { runSpCoinReadMethod } from '../jsonMethods/spCoin/read';
+import { runSpCoinWriteMethod } from '../jsonMethods/spCoin/write';
 import { createSpCoinLibraryAccess, type SpCoinReadAccess } from '../jsonMethods/shared';
 import {
   createMethodTimingCollector,
@@ -59,6 +60,29 @@ function isAccountAddressPathKey(key: string): boolean {
   );
 }
 
+type PendingRewardsActionClick = {
+  accountKey: string;
+  action: 'claim' | 'estimate';
+};
+
+function parsePendingRewardsActionClick(
+  value: string,
+  normalizeAddressValue: (value: string) => string,
+): PendingRewardsActionClick | null {
+  try {
+    const parsed = JSON.parse(String(value || '')) as Record<string, unknown>;
+    if (!parsed || parsed.__loadPendingRewardsAction !== true) return null;
+    const action = String(parsed.action || '').trim().toLowerCase();
+    if (action !== 'claim' && action !== 'estimate') return null;
+    return {
+      accountKey: normalizeAddressValue(toDisplayString(parsed.accountKey)),
+      action,
+    };
+  } catch {
+    return null;
+  }
+}
+
 interface MethodCallEntry {
   method: string;
   parameters: { label: string; value: unknown }[];
@@ -90,6 +114,13 @@ interface Params {
   ) => void;
   requireContractAddress: () => string;
   ensureReadRunner: () => Promise<any>;
+  executeWriteConnected: (
+    label: string,
+    writeCall: (contract: any, signer: any) => Promise<any>,
+    accountKey?: string,
+  ) => Promise<any>;
+  selectedHardhatAddress?: string;
+  appendWriteTrace?: (line: string) => void;
   normalizeAddressValue: (value: string) => string;
   coerceParamValue: (raw: string, def: ParamDef) => unknown;
   stringifyResult: (result: unknown) => string;
@@ -118,6 +149,9 @@ export function useSponsorCoinLabTreeMethods({
   showValidationPopup,
   requireContractAddress,
   ensureReadRunner,
+  executeWriteConnected,
+  selectedHardhatAddress,
+  appendWriteTrace,
   normalizeAddressValue,
   coerceParamValue,
   stringifyResult,
@@ -1134,9 +1168,228 @@ export function useSponsorCoinLabTreeMethods({
     ],
   );
 
+  const expandPendingRewardsActionInline = useCallback(
+    async (
+      click: PendingRewardsActionClick,
+      pathHint?: string,
+      rawDisplayOverride?: string,
+    ): Promise<'expanded' | 'handled' | 'unhandled'> => {
+      const normalizedAccount = normalizeAddressValue(click.accountKey);
+      if (!/^0x[0-9a-f]{40}$/.test(normalizedAccount)) return 'unhandled';
+      const normalizedPathHint = String(pathHint ?? '').trim();
+      if (!normalizedPathHint) return 'unhandled';
+      const rootSegment = normalizedPathHint.split('.')[0] || '';
+      const rootPathMatch = /^(?:step|output|script|tree)-(\d+)$/i.exec(rootSegment);
+      const inTreePanel = /^tree-/i.test(rootSegment);
+      const rawDisplay = String(
+        rawDisplayOverride ?? (inTreePanel ? treeOutputDisplayRef.current : formattedOutputDisplayRef.current),
+      ).trim();
+      if (!rawDisplay || rawDisplay === '(no tree yet)' || rawDisplay === '(no output yet)') return 'unhandled';
+
+      const parsePayload = (raw: string): Record<string, unknown> | null => {
+        try {
+          const parsed = JSON.parse(raw);
+          return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+            ? (parsed as Record<string, unknown>)
+            : null;
+        } catch {
+          return null;
+        }
+      };
+      const readPathValue = (source: unknown, segments: string[]): unknown => {
+        return segments.reduce<unknown>((currentValue, segment) => {
+          if (currentValue == null) return undefined;
+          if (Array.isArray(currentValue)) {
+            const index = Number(segment);
+            return Number.isInteger(index) ? currentValue[index] : undefined;
+          }
+          if (typeof currentValue !== 'object') return undefined;
+          return (currentValue as Record<string, unknown>)[segment];
+        }, source);
+      };
+      const writePathValue = (source: unknown, segments: string[], nextValue: unknown): unknown => {
+        if (segments.length === 0) return nextValue;
+        const [head, ...tail] = segments;
+        if (Array.isArray(source)) {
+          const index = Number(head);
+          if (!Number.isInteger(index) || index < 0 || index >= source.length) return source;
+          const nextArray = [...source];
+          nextArray[index] = writePathValue(nextArray[index], tail, nextValue);
+          return nextArray;
+        }
+        if (!source || typeof source !== 'object') return source;
+        return {
+          ...(source as Record<string, unknown>),
+          [head]: writePathValue((source as Record<string, unknown>)[head], tail, nextValue),
+        };
+      };
+
+      const blocks = rawDisplay
+        .split(/\n\s*\n/)
+        .map((block) => block.trim())
+        .filter(Boolean);
+      const blockEntries =
+        blocks.length > 1
+          ? blocks.map((raw, index) => ({ raw, index, payload: parsePayload(raw) }))
+          : [{ raw: rawDisplay, index: 0, payload: parsePayload(rawDisplay) }];
+      const hintedBlockIndex = rootPathMatch ? Number(rootPathMatch[1]) : Number.NaN;
+      const candidateEntries =
+        Number.isInteger(hintedBlockIndex) && hintedBlockIndex >= 0 && hintedBlockIndex < blockEntries.length
+          ? [blockEntries[hintedBlockIndex]]
+          : blockEntries;
+      const payloadPath = normalizedPathHint.split('.').filter(Boolean).slice(1);
+      if (payloadPath.length === 0) return 'unhandled';
+
+      for (const entry of candidateEntries) {
+        const payload = entry.payload;
+        if (!payload) continue;
+        const targetNode = readPathValue(payload, payloadPath);
+        if (
+          !targetNode ||
+          typeof targetNode !== 'object' ||
+          Array.isArray(targetNode) ||
+          (targetNode as Record<string, unknown>).__lazyPendingRewardsAction !== true
+        ) {
+          continue;
+        }
+
+        try {
+          const actionLabel = click.action === 'estimate' ? 'pending rewards estimate' : 'pending rewards claim';
+          setStatus(`Loading ${actionLabel} for ${normalizedAccount}...`);
+          const loadPendingRewardsEstimate = async () => {
+            const pendingTimingCollector = createMethodTimingCollector();
+            const pendingResult = await runWithMethodTimingCollector(pendingTimingCollector, async () =>
+              runSpCoinReadMethod({
+                selectedMethod: 'getPendingRewards',
+                spReadParams: [normalizedAccount],
+                coerceParamValue,
+                stringifyResult,
+                spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
+                requireContractAddress,
+                ensureReadRunner,
+                appendLog: noop,
+                setStatus: noop,
+              }),
+            );
+            return {
+              pendingResult,
+              pendingMeta: buildExecutionMeta(pendingTimingCollector),
+            };
+          };
+
+          const claimPendingRewards = async () => {
+            const claimTimingCollector = createMethodTimingCollector();
+            const updateResult = await runSpCoinWriteMethod({
+              selectedMethod: 'updateAccountStakingRewards',
+              spWriteParams: [normalizedAccount],
+              coerceParamValue,
+              executeWriteConnected,
+              selectedHardhatAddress: selectedHardhatAddress || normalizedAccount,
+              appendLog,
+              appendWriteTrace,
+              spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
+              setStatus: noop,
+              timingCollector: claimTimingCollector,
+            });
+            treeAccountRecordCacheRef.current.delete(normalizedAccount);
+            const rewardsResult = await runWithMethodTimingCollector(claimTimingCollector, async () =>
+              runSpCoinReadMethod({
+                selectedMethod: 'getAccountStakingRewards',
+                spReadParams: [normalizedAccount],
+                coerceParamValue,
+                stringifyResult,
+                spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
+                requireContractAddress,
+                ensureReadRunner,
+                appendLog: noop,
+                setStatus: noop,
+              }),
+            );
+            return {
+              pendingResult: {
+                updateAccountStakingRewards: updateResult.receipts,
+                getAccountRewards: rewardsResult,
+              },
+              pendingMeta: buildExecutionMeta(claimTimingCollector),
+            };
+          };
+
+          const loadedPending = click.action === 'claim'
+            ? await claimPendingRewards()
+            : callAccessMethod
+              ? await callAccessMethod('getPendingRewards', () => loadPendingRewardsEstimate())
+              : await loadPendingRewardsEstimate();
+          if (!loadedPending) return 'handled';
+          const { pendingResult, pendingMeta } = loadedPending;
+          const methodName = click.action === 'claim' ? 'claimPendingRewards' : 'getPendingRewards';
+          const expandedNode = {
+            call: {
+              method: methodName,
+              parameters: {
+                'Account Key': normalizedAccount,
+                Mode: click.action === 'estimate' ? 'Off-chain estimate' : 'Claim preview',
+              },
+              ...(click.action === 'claim'
+                ? { sequence: ['updateAccountStakingRewards', 'getAccountRewards'] }
+                : {}),
+            },
+            ...(pendingMeta ? { meta: pendingMeta } : {}),
+            result: pendingResult,
+            __forceExpanded: true,
+            __showEmptyFields: true,
+          };
+          const nextRootPayload = normalizeExecutionPayload(
+            writePathValue(payload, payloadPath, expandedNode),
+          ) as Record<string, unknown>;
+          const nextPayload = formatFormattedPanelPayload(nextRootPayload);
+          if (blocks.length > 1) {
+            const nextBlocks = [...blocks];
+            nextBlocks[entry.index] = nextPayload;
+            if (inTreePanel) {
+              setTrackedTreeOutputDisplay(nextBlocks.join('\n\n'));
+            } else {
+              setFormattedOutputDisplay(nextBlocks.join('\n\n'));
+            }
+          } else if (inTreePanel) {
+            setTrackedTreeOutputDisplay(nextPayload);
+          } else {
+            setFormattedOutputDisplay(nextPayload);
+          }
+          setStatus(`Loaded ${actionLabel} for ${normalizedAccount}.`);
+          appendLog(`Inline ${actionLabel} loaded for ${normalizedAccount}`);
+          return 'expanded';
+        } catch (error) {
+          const message = getErrorMessage(error, 'Unable to load pending rewards.');
+          setStatus(`Unable to load pending rewards for ${normalizedAccount}.`);
+          appendLog(`Inline pending rewards ${click.action} failed for ${normalizedAccount}: ${message}`);
+          return 'handled';
+        }
+      }
+      return 'unhandled';
+    },
+    [
+      appendLog,
+      appendWriteTrace,
+      callAccessMethod,
+      coerceParamValue,
+      executeWriteConnected,
+      ensureReadRunner,
+      formatFormattedPanelPayload,
+      normalizeAddressValue,
+      requireContractAddress,
+      selectedHardhatAddress,
+      setFormattedOutputDisplay,
+      setStatus,
+      setTrackedTreeOutputDisplay,
+      stringifyResult,
+      useLocalSpCoinAccessPackage,
+    ],
+  );
+
   const openAccountFromAddress = useCallback(
     async (account: string, pathHint?: string, rawDisplayOverride?: string) => {
       const relationClick = parseLazyAccountRelationClick(account, normalizeAddressValue);
+      const pendingRewardsClick = parsePendingRewardsActionClick(account, normalizeAddressValue);
       if (String(account ?? '').trim() === '__load_spcoin_metadata__') {
         const metadataResult = await expandSpCoinMetaDataInline(pathHint);
         if (metadataResult === 'expanded' || metadataResult === 'handled') {
@@ -1148,6 +1401,13 @@ export function useSponsorCoinLabTreeMethods({
         const keysResult = await expandMasterAccountKeysInline(pathHint);
         if (keysResult === 'expanded' || keysResult === 'handled') {
           setOutputPanelMode('formatted');
+        }
+        return;
+      }
+      if (pendingRewardsClick) {
+        const pendingResult = await expandPendingRewardsActionInline(pendingRewardsClick, pathHint, rawDisplayOverride);
+        if (pendingResult === 'expanded' || pendingResult === 'handled') {
+          setOutputPanelMode(/^tree-/i.test(String(pathHint ?? '').trim()) ? 'tree' : 'formatted');
         }
         return;
       }
@@ -1181,6 +1441,7 @@ export function useSponsorCoinLabTreeMethods({
       expandAccountRelationInline,
       expandMasterAccountKeysInline,
       expandMasterSponsorListAccountInline,
+      expandPendingRewardsActionInline,
       expandSpCoinMetaDataInline,
       normalizeAddressValue,
       runTreeDump,

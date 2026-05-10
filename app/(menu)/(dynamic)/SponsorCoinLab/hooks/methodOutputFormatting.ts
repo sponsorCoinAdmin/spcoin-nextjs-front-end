@@ -71,40 +71,6 @@ export function deriveReadWarningPayload(
 ) {
   const selectedMethodName = String(selectedMethod ?? '').trim();
   if (
-    result &&
-    typeof result === 'object' &&
-    !Array.isArray(result) &&
-    toDisplayString((result as Record<string, unknown>).__spcoinWarningType).trim() === 'malformed_rate_reward_list'
-  ) {
-    return {
-      type: 'invalid_input',
-      message: toDisplayString(
-        (result as Record<string, unknown>).__spcoinWarningMessage,
-        `${selectedMethodName} received malformed rate reward data and returned an empty list.`,
-      ),
-      debug: {
-        panel: 'spcoin_rread',
-        source: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
-        method: selectedMethodName,
-      },
-    };
-  }
-  if (
-    selectedMethodName === 'getAccountTransactionList' &&
-    Array.isArray(result) &&
-    result.length === 0
-  ) {
-    return {
-      type: 'empty_data',
-      message: `${selectedMethodName} returned no rate reward data for the supplied list.`,
-      debug: {
-        panel: 'spcoin_rread',
-        source: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
-        method: selectedMethodName,
-      },
-    };
-  }
-  if (
     (selectedMethod === 'getAgentTransaction' || selectedMethod === 'getRecipientTransaction') &&
     result &&
     typeof result === 'object' &&
@@ -142,8 +108,7 @@ export function deriveReadWarningPayload(
       'sponsorCount' in record ||
       'recipientCount' in record ||
       'agentCount' in record ||
-      'parentRecipientCount' in record ||
-      'active' in record;
+      'parentRecipientCount' in record;
     const isEmptyAccountRecord =
       !hasCountFields &&
       ['', '0'].includes(toDisplayString(record.creationTime).trim()) &&

@@ -171,7 +171,15 @@ function parseStructuredErrorMessage(input: string): Record<string, unknown> | n
 }
 
 function formatOutputValue(value: unknown, keyPath: string[] = []): unknown {
-  const DATE_TIME_KEYS = ['creationTime', 'creationDate', 'Date Created', 'lastUpdateTime', 'updateTime', 'insertionTime'];
+  const DATE_TIME_KEYS = [
+    'creationTime',
+    'creationDate',
+    'Date Created',
+    'lastUpdateTime',
+    'updateTime',
+    'insertionTime',
+    'calculatedFormatted',
+  ];
   const DURATION_KEYS = ['methodRunTime', 'runtime', 'duration'];
   const parseScriptCreatedDate = (input: string): string | null => {
     const normalized = input.trim().replace(/_/g, ' ');
@@ -199,6 +207,17 @@ function formatOutputValue(value: unknown, keyPath: string[] = []): unknown {
     const scriptCreatedDate = parseScriptCreatedDate(trimmed);
     if (scriptCreatedDate) return scriptCreatedDate;
     const normalized = trimmed.replace(/_/g, ' ');
+    const normalizedDisplayMatch = normalized.match(
+      /^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-(\d{1,2})-(\d{4}),\s*(\d{1,2}):(\d{2})\s+(a\.m\.|p\.m\.)(?:\s+([A-Z]{2,5}))?$/i,
+    );
+    if (normalizedDisplayMatch) {
+      const [, monthText, dayText, yearText, hourText, minuteText, meridiem, timeZone] = normalizedDisplayMatch;
+      const normalizedDay = String(Number(dayText)).padStart(2, '0');
+      const normalizedMeridiem = meridiem.toLowerCase() === 'a.m.' ? 'a.m.' : 'p.m.';
+      return `${monthText.toUpperCase()}-${normalizedDay}-${yearText}, ${Number(hourText)}:${minuteText} ${normalizedMeridiem}${
+        timeZone ? ` ${timeZone.toUpperCase()}` : ''
+      }`;
+    }
     const match = normalized.match(
       /^(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2}),\s+(\d{4})\s+at\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)(?:\s+([A-Z]{2,5}))?$/i,
     );

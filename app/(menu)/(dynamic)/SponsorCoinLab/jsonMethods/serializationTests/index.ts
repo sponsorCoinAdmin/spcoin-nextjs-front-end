@@ -130,7 +130,7 @@ const accountRewardTotalsInterface = new Interface([
   'function getAccountRewardTotals(address _accountKey) view returns (uint256 sponsorRewards, uint256 recipientRewards, uint256 agentRewards)',
 ]);
 const accountRecordInterface = new Interface([
-  'function getAccountRecord(address _accountKey) view returns (address accountKey, uint256 creationTime, uint256 accountBalance, uint256 stakedAccountSPCoins, uint256 accountStakingRewards, uint256 sponsorCount, uint256 recipientCount, uint256 agentCount, uint256 parentRecipientCount, bool active)',
+  'function getAccountRecord(address _accountKey) view returns (address accountKey, uint256 creationTime, uint256 accountBalance, uint256 stakedAccountSPCoins, uint256 accountStakingRewards, uint256 sponsorCount, uint256 recipientCount, uint256 agentCount, uint256 parentRecipientCount)',
 ]);
 const accountLinksInterface = new Interface([
   'function getAccountLinks(address _accountKey) view returns (address[] sponsorKeys, address[] recipientKeys, address[] agentKeys, address[] parentRecipientKeys)',
@@ -595,7 +595,6 @@ async function buildSerializedAccountRecord(contract: any, methodArgs: any[]) {
     recipientCount,
     agentCount,
     parentRecipientCount,
-    active,
   ] = await callViewFunction(contract, accountRecordInterface, 'getAccountRecord', [methodArgs[0]]);
   let sponsorKeys: unknown[] = [];
   let recipientKeys: unknown[] = [];
@@ -614,7 +613,6 @@ async function buildSerializedAccountRecord(contract: any, methodArgs: any[]) {
     recipientCount: String(recipientCount),
     agentCount: String(agentCount),
     parentRecipientCount: String(parentRecipientCount),
-    active: Boolean(active),
     sponsorKeys: Array.from(sponsorKeys as unknown[]).map(normalizeAddress),
     recipientKeys: Array.from(recipientKeys as unknown[]).map(normalizeAddress),
     agentKeys: Array.from(agentKeys as unknown[]).map(normalizeAddress),

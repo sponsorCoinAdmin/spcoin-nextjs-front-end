@@ -350,6 +350,21 @@ contract Transactions is RewardsManager {
         _agentTransaction.agentTransactionSet.lastUpdateTransactionDate = _transactionTimeStamp;
     }
 
+    function _updateSponsorshipAccountTimestamps(
+        address _sponsorKey,
+        address _recipientKey,
+        address _agentKey,
+        uint256 _transactionTimeStamp
+    )
+        internal
+    {
+        updateAccountRewardTimestamp(SPONSOR, _sponsorKey, _transactionTimeStamp);
+        updateAccountRewardTimestamp(RECIPIENT, _recipientKey, _transactionTimeStamp);
+        if (_agentKey != burnAddress) {
+            updateAccountRewardTimestamp(AGENT, _agentKey, _transactionTimeStamp);
+        }
+    }
+
     function addSponsorship(address _recipientKey,
                                  uint _recipientRateKey,
                                  address _agentKey,
@@ -474,6 +489,13 @@ contract Transactions is RewardsManager {
                 transRec
             );
         }
+
+        _updateSponsorshipAccountTimestamps(
+            _sponsorKey,
+            _recipientKey,
+            _agentKey,
+            _transactionTimeStamp
+        );
 
         // console.log("BEFORE balanceOf     =", balanceOf[msg.sender]);
         // console.log("BEFORE _sponsorCoinQty ", sponsorAmount);

@@ -426,22 +426,22 @@ export function useSponsorCoinLabMethods({
         if (!trimmed) return '';
         return trimmed.endsWith('%') ? trimmed : `${trimmed}%`;
       };
-      const stripSponsorRewardRateFromTree = (value: unknown): unknown => {
+      const stripAnnualInflationRateFromTree = (value: unknown): unknown => {
         if (!value || typeof value !== 'object') return value;
-        if (Array.isArray(value)) return value.map((entry) => stripSponsorRewardRateFromTree(entry));
+        if (Array.isArray(value)) return value.map((entry) => stripAnnualInflationRateFromTree(entry));
 
         const record = value as Record<string, unknown>;
         const nextRecord: Record<string, unknown> = {};
         for (const [key, nestedValue] of Object.entries(record)) {
           if (key === 'totalSpCoins' && nestedValue && typeof nestedValue === 'object' && !Array.isArray(nestedValue)) {
             const totalSpCoinsRecord = { ...(nestedValue as Record<string, unknown>) };
-            delete totalSpCoinsRecord.sponsorRewardRate;
+            delete totalSpCoinsRecord.annualInflationRate;
             nextRecord[key] = Object.fromEntries(
-              Object.entries(totalSpCoinsRecord).map(([nestedKey, nestedEntry]) => [nestedKey, stripSponsorRewardRateFromTree(nestedEntry)]),
+              Object.entries(totalSpCoinsRecord).map(([nestedKey, nestedEntry]) => [nestedKey, stripAnnualInflationRateFromTree(nestedEntry)]),
             );
             continue;
           }
-          nextRecord[key] = stripSponsorRewardRateFromTree(nestedValue);
+          nextRecord[key] = stripAnnualInflationRateFromTree(nestedValue);
         }
         return nextRecord;
       };
@@ -486,7 +486,7 @@ export function useSponsorCoinLabMethods({
           }
         }
 
-        return stripSponsorRewardRateFromTree(normalizedEntry) as Record<string, unknown>;
+        return stripAnnualInflationRateFromTree(normalizedEntry) as Record<string, unknown>;
       };
       const normalizedPayloadMethod =
         nextPayload.call &&
@@ -637,6 +637,9 @@ export function useSponsorCoinLabMethods({
     showValidationPopup,
     requireContractAddress,
     ensureReadRunner,
+    executeWriteConnected,
+    selectedHardhatAddress,
+    appendWriteTrace,
     normalizeAddressValue,
     coerceParamValue,
     stringifyResult,

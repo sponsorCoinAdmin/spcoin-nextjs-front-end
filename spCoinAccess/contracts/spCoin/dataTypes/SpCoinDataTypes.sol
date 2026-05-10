@@ -89,6 +89,9 @@ contract SpCoinDataTypes {
         mapping(address => RecipientStruct) recipientMap;
         // STAKING REWARDS MAPPINGS
         uint256 stakingRewards; // Coins not owned but Recipiented
+        uint256 lastSponsorUpdateTimeStamp;
+        uint256 lastRecipientUpdateTimeStamp;
+        uint256 lastAgentUpdateTimeStamp;
         mapping(string  => RewardTypeStruct) rewardsMap;
     }
 

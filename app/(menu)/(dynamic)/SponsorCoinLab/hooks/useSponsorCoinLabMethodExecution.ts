@@ -26,8 +26,6 @@ import {
 } from '../jsonMethods/serializationTests';
 import { createSpCoinContract, createSpCoinLibraryAccess, type SpCoinContractAccess } from '../jsonMethods/shared';
 import type { ConnectionMode, MethodPanelMode } from '../scriptBuilder/types';
-import { getTransactionList as localGetTransactionList } from '../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinReadModule/methods/getTransactionList';
-import { getAccountTransactionList as localGetAccountTransactionList } from '../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinReadModule/methods/getAccountTransactionList';
 import {
   createMethodTimingCollector,
   runWithMethodTimingCollector,
@@ -36,8 +34,6 @@ import {
   attachExecutionMeta,
   attachReadDebugTrace,
   buildExecutionMeta,
-  isEmptyAccountRateListReadError,
-  isMalformedAccountRateListInput,
   type MethodExecutionMeta,
 } from './methodExecutionHelpers';
 import {
@@ -601,32 +597,7 @@ export function useSponsorCoinLabMethodExecution({
             ].includes(normalizedSelectedMethod);
           let result: unknown;
           try {
-            if (normalizedSelectedMethod === 'getAccountTransactionList') {
-              debugTrace.push('using local account-rate parser fast path');
-              const rateRewardList = parseListParam(localParams[0] || '');
-              const hasMalformedRateRewardRow = rateRewardList.some((row) => {
-                const fields = String(row || '').split(',');
-                return fields.length < 2 || !String(fields[0] || '').trim() || !String(fields[1] || '').trim();
-              });
-              if (hasMalformedRateRewardRow) {
-                debugTrace.push('detected malformed rate reward row; returning empty list with warning');
-                result = {
-                  __spcoinWarningType: 'malformed_rate_reward_list',
-                  __spcoinWarningMessage:
-                    'getAccountTransactionList received malformed rate reward data. Expected "rate,stakingRewards" rows, optionally followed by transaction lines.',
-                  items: [],
-                };
-              } else {
-                const noopLogger = { logFunctionHeader: () => undefined, logExitFunction: () => undefined };
-                result = localGetAccountTransactionList(
-                  {
-                    spCoinLogger: noopLogger,
-                    getTransactionList: (rows: string[]) => localGetTransactionList({ spCoinLogger: noopLogger }, rows),
-                  },
-                  rateRewardList,
-                );
-              }
-            } else if (shouldUseServerBackedRead) {
+            if (shouldUseServerBackedRead) {
               const serverResult = await runServerBackedSpCoinStep(
                 'spcoin_rread',
                 normalizedSelectedMethod,
@@ -655,45 +626,9 @@ export function useSponsorCoinLabMethodExecution({
               });
             }
           } catch (error) {
-            const selectedMethodName = String(selectedMethod || '').trim();
-            if (
-              selectedMethodName === 'getAccountTransactionList' &&
-              isEmptyAccountRateListReadError(error)
-            ) {
-              result = [];
-              appendLog(
-                `[warn] ${selectedMethodName} received empty or undefined rate reward data; returning an empty list.`,
-              );
-              setStatus(`${selectedMethodName} returned empty data.`);
-            } else if (
-              selectedMethodName === 'getAccountTransactionList' &&
-              isMalformedAccountRateListInput(error)
-            ) {
-              result = {
-                __spcoinWarningType: 'malformed_rate_reward_list',
-                __spcoinWarningMessage:
-                  `${selectedMethodName} received malformed rate reward data and returned an empty list.`,
-                items: [],
-              };
-              appendLog(
-                `[warn] ${selectedMethodName} received malformed rate reward data; returning an empty list.`,
-              );
-              setStatus(`${selectedMethodName} returned malformed input warning.`);
-            } else {
-              throw attachReadDebugTrace(error, debugTrace);
-            }
+            throw attachReadDebugTrace(error, debugTrace);
           }
           warning = warning ?? deriveReadWarningPayload(selectedMethod, result, useLocalSpCoinAccessPackage);
-          if (
-            result &&
-            typeof result === 'object' &&
-            !Array.isArray(result) &&
-            toDisplayString((result as Record<string, unknown>).__spcoinWarningType).trim() === 'malformed_rate_reward_list'
-          ) {
-            result = Array.isArray((result as Record<string, unknown>).items)
-              ? (result as Record<string, unknown>).items
-              : [];
-          }
           if (['getMasterAccountKeys', 'getAccountKeys'].includes(normalizedSelectedMethod)) {
             try {
               const accountKeys = Array.isArray(result) ? result : [];

@@ -9,10 +9,17 @@ import type {
 const TIME_SENSITIVE_METHODS = new Set([
   "getAccountRecord",
   "getAccountRecordShallow",
-  "getPendingAccountStakingRewards",
+  "getPendingRewards",
 ]);
 
 function applyMethodCacheDefaults(methodName: string, options: SpCoinReadCacheOptions): SpCoinReadCacheOptions {
+  if (methodName === "getPendingRewards") {
+    if (options.cache != null || options.blockTag != null || options.timestampOverride != null) return options;
+    return {
+      ...options,
+      cache: "bypass",
+    };
+  }
   if (!TIME_SENSITIVE_METHODS.has(methodName)) return options;
   if (options.ttlMs != null || options.blockTag != null || options.timestampOverride != null) return options;
   return {
@@ -29,7 +36,7 @@ export function bindReadMethods(context: SpCoinReadModuleContext): void {
       const { args: methodArgs, options } = splitReadCacheOptions(args);
       const cacheOptions = applyMethodCacheDefaults(name, options);
       const finalArgs =
-        name === "getPendingAccountStakingRewards" && cacheOptions.timestampOverride != null
+        name === "getPendingRewards" && cacheOptions.timestampOverride != null
           ? [...methodArgs, cacheOptions.timestampOverride]
           : methodArgs;
       return runCachedRead(context, name, finalArgs, cacheOptions, () => method(context, ...finalArgs));

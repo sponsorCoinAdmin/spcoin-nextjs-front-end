@@ -10,7 +10,7 @@ function toBigIntValue(value) {
         return 0n;
     }
 }
-function buildTotalSpCoinsRecord(balanceOf, stakedBalance, pendingRewardsRecord, sponsorRewardRate = "0%") {
+function buildTotalSpCoinsRecord(balanceOf, stakedBalance, pendingRewardsRecord, annualInflationRate = "0%") {
     const normalizedBalanceOf = String(balanceOf ?? "0");
     const normalizedStakedBalance = String(stakedBalance ?? "0");
     const normalizedPendingRewardsRecord = pendingRewardsRecord && typeof pendingRewardsRecord === "object"
@@ -23,7 +23,7 @@ function buildTotalSpCoinsRecord(balanceOf, stakedBalance, pendingRewardsRecord,
             toBigIntValue(normalizedPendingRewards)).toString(),
         balanceOf: normalizedBalanceOf,
         stakedBalance: normalizedStakedBalance,
-        sponsorRewardRate: String(sponsorRewardRate ?? "0%"),
+        annualInflationRate: String(annualInflationRate ?? "0%"),
         pendingRewards: normalizedPendingRewardsRecord,
     };
 }

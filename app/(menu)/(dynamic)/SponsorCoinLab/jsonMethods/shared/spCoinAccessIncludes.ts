@@ -195,11 +195,14 @@ export type SpCoinReadAccess = {
   isRecipient?: (_accountKey: string) => Promise<boolean>;
   isAgent?: (_accountKey: string) => Promise<boolean>;
   getAccountStakingRewards: (_accountKey: string) => Promise<RewardsStruct>;
-  getPendingAccountStakingRewards?: (_accountKey: string, options?: unknown) => Promise<{
-    TYPE: '--PENDING_ACCOUNT_STAKING_REWARDS--';
+  getPendingRewards?: (_accountKey: string, options?: unknown) => Promise<{
+    TYPE: '--ACCOUNT_PENDING_REWARDS--';
     accountKey: string;
-    calculatedAt: string;
-    calculatedAtTimestamp: string;
+    calculatedTimeStamp: string;
+    calculatedFormatted: string;
+    lastSponsorUpdate: string;
+    lastRecipientUpdate: string;
+    lastAgentUpdate: string;
     pendingRewards: string;
     pendingSponsorRewards: string;
     pendingRecipientRewards: string;
@@ -390,6 +393,9 @@ export type SpCoinContractAccess = Contract & {
 
 export type SpCoinRewardsAccess = {
   updateAccountStakingRewards: (accountKey: string) => Promise<ContractTransactionResponse>;
+  updateSponsorAccountRewards?: (accountKey: string) => Promise<ContractTransactionResponse>;
+  updateRecipientAccountRewards?: (accountKey: string) => Promise<ContractTransactionResponse>;
+  updateAgentAccountRewards?: (accountKey: string) => Promise<ContractTransactionResponse>;
 };
 
 export type SpCoinStakingAccess = Record<string, never>;

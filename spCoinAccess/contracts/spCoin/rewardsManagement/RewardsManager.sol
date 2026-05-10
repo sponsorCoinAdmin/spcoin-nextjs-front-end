@@ -187,59 +187,113 @@ contract RewardsManager is StakingManager{
 **/
 
     function updateAccountStakingRewards( address _sourceKey )
-    external returns (uint256 totalRewards) {
+    external returns (
+        uint256 lastSponsorUpdateTimeStamp,
+        uint256 lastRecipientUpdateTimeStamp,
+        uint256 lastAgentUpdateTimeStamp,
+        uint256 sponsorRewards,
+        uint256 recipientRewards,
+        uint256 agentRewards,
+        uint256 totalRewards
+    ) {
         // console.log("SOL 1.0 -------------------------------------------");
         // console.log("SOL 1.1 updateAccountStakingRewards(", toString(_sourceKey), ")");
-        uint256 currentTimeStamp = block.timestamp;
+        AccountStruct storage accountRec = accountMap[_sourceKey];
+        uint256 updateTimeStamp = block.timestamp;
 
-        totalRewards += updateSponsorAccountRewards( _sourceKey, currentTimeStamp);
-        totalRewards += updateAgentAccountRewards( _sourceKey,   currentTimeStamp);
-        totalRewards += updateRecipientAccountRewardsAt( _sourceKey, currentTimeStamp);
+        sponsorRewards = updateSponsorAccountRewards( _sourceKey, updateTimeStamp);
+        agentRewards = updateAgentAccountRewards( _sourceKey, updateTimeStamp);
+        recipientRewards = updateRecipientAccountRewardsAt( _sourceKey, updateTimeStamp);
+        if (accountRec.recipientKeys.length > 0) {
+            updateAccountRewardTimestamp(SPONSOR, _sourceKey, updateTimeStamp);
+        }
+        if (accountRec.sponsorKeys.length > 0) {
+            updateAccountRewardTimestamp(RECIPIENT, _sourceKey, updateTimeStamp);
+        }
+        if (accountRec.parentRecipientKeys.length > 0) {
+            updateAccountRewardTimestamp(AGENT, _sourceKey, updateTimeStamp);
+        }
+        lastSponsorUpdateTimeStamp = accountRec.lastSponsorUpdateTimeStamp;
+        lastRecipientUpdateTimeStamp = accountRec.lastRecipientUpdateTimeStamp;
+        lastAgentUpdateTimeStamp = accountRec.lastAgentUpdateTimeStamp;
+        totalRewards = sponsorRewards + recipientRewards + agentRewards;
         // console.log("SOL=>1.0 totalRewards = ",totalRewards );
         // console.log("SOL 1.4 -------------------------------------------");
-        return totalRewards;
+        return (
+            lastSponsorUpdateTimeStamp,
+            lastRecipientUpdateTimeStamp,
+            lastAgentUpdateTimeStamp,
+            sponsorRewards,
+            recipientRewards,
+            agentRewards,
+            totalRewards
+        );
     }
 
     function updateSponsorAccountRewards( address _sourceKey )
-    external returns (uint256 totalRewards) {
+    external returns (
+        uint256 lastSponsorUpdateTimeStamp,
+        uint256 sponsorRewards
+    ) {
         // console.log("SOL 1.0 -------------------------------------------");
         // console.log("SOL 1.1 updateAccountStakingRewards(", toString(_sourceKey), ")");
-        uint256 currentTimeStamp = block.timestamp;
+        AccountStruct storage accountRec = accountMap[_sourceKey];
+        uint256 updateTimeStamp = block.timestamp;
 
-        totalRewards += updateSponsorAccountRewards( _sourceKey, currentTimeStamp);
+        sponsorRewards = updateSponsorAccountRewards( _sourceKey, updateTimeStamp);
+        if (accountRec.recipientKeys.length > 0) {
+            updateAccountRewardTimestamp(SPONSOR, _sourceKey, updateTimeStamp);
+        }
+        lastSponsorUpdateTimeStamp = accountRec.lastSponsorUpdateTimeStamp;
         // totalRewards += updateAgentAccountRewards( _sourceKey,   currentTimeStamp);
         // totalRewards += updateRecipientAccountRewards( accountRec, currentTimeStamp);
         // console.log("SOL=>1.0 totalRewards = ",totalRewards );
         // console.log("SOL 1.4 -------------------------------------------");
-        return totalRewards;
+        return (lastSponsorUpdateTimeStamp, sponsorRewards);
     }
 
     function updateAgentAccountRewards( address _sourceKey )
-    external returns (uint256 totalRewards) {
+    external returns (
+        uint256 lastAgentUpdateTimeStamp,
+        uint256 agentRewards
+    ) {
         // console.log("SOL 1.0 -------------------------------------------");
         // console.log("SOL 1.1 updateAccountStakingRewards(", toString(_sourceKey), ")");
-        uint256 currentTimeStamp = block.timestamp;
+        AccountStruct storage accountRec = accountMap[_sourceKey];
+        uint256 updateTimeStamp = block.timestamp;
 
-        totalRewards += updateAgentAccountRewards( _sourceKey, currentTimeStamp);
+        agentRewards = updateAgentAccountRewards( _sourceKey, updateTimeStamp);
+        if (accountRec.parentRecipientKeys.length > 0) {
+            updateAccountRewardTimestamp(AGENT, _sourceKey, updateTimeStamp);
+        }
+        lastAgentUpdateTimeStamp = accountRec.lastAgentUpdateTimeStamp;
         // totalRewards += updateAgentAccountRewards( _sourceKey,   currentTimeStamp);
         // totalRewards += updateRecipientAccountRewards( accountRec, currentTimeStamp);
         // console.log("SOL=>1.0 totalRewards = ",totalRewards );
         // console.log("SOL 1.4 -------------------------------------------");
-        return totalRewards;
+        return (lastAgentUpdateTimeStamp, agentRewards);
     }
 
     function updateRecipientAccountRewards( address _sourceKey )
-    external returns (uint256 totalRewards) {
+    external returns (
+        uint256 lastRecipientUpdateTimeStamp,
+        uint256 recipientRewards
+    ) {
         // console.log("SOL 1.0 -------------------------------------------");
         // console.log("SOL 1.1 updateAccountStakingRewards(", toString(_sourceKey), ")");
-        uint256 currentTimeStamp = block.timestamp;
+        AccountStruct storage accountRec = accountMap[_sourceKey];
+        uint256 updateTimeStamp = block.timestamp;
 
-        totalRewards += updateRecipientAccountRewardsAt( _sourceKey, currentTimeStamp);
+        recipientRewards = updateRecipientAccountRewardsAt( _sourceKey, updateTimeStamp);
+        if (accountRec.sponsorKeys.length > 0) {
+            updateAccountRewardTimestamp(RECIPIENT, _sourceKey, updateTimeStamp);
+        }
+        lastRecipientUpdateTimeStamp = accountRec.lastRecipientUpdateTimeStamp;
         // totalRewards += updateAgentAccountRewards( _sourceKey,   currentTimeStamp);
         // totalRewards += updateRecipientAccountRewards( accountRec, currentTimeStamp);
         // console.log("SOL=>1.0 totalRewards = ",totalRewards );
         // console.log("SOL 1.4 -------------------------------------------");
-        return totalRewards;
+        return (lastRecipientUpdateTimeStamp, recipientRewards);
     }
 
 

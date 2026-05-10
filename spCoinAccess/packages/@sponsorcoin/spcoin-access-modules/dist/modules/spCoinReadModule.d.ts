@@ -10,11 +10,16 @@ export declare class SpCoinReadModule {
     getAccountRecipientListSize: (_accountKey: string) => Promise<number>;
     getAccountRecord: (_accountKey: string) => Promise<AccountStruct>;
     getAccountStakingRewards: (_accountKey: string) => Promise<RewardsStruct>;
-    getRewardTypeRecord: (_accountKey: string, _rewardType: number, _reward: string | number | bigint) => Promise<RewardTypeStruct>;
-    getAccountRewardTransactionList: (_rewardAccountList: string[]) => RewardAccountStruct[];
-    getAccountRewardTransactionRecord: (_rewardRecordStr: string) => RewardAccountStruct | undefined;
-    getAccountTransactionList: (rateRewardList: string[]) => RewardRateStruct[];
-    getTransactionList: (rewardRateRowList: string[]) => RewardTransactionStruct[];
+    getPendingRewards: (_accountKey: string, timestampOverride?: string | number | bigint) => Promise<{
+        TYPE: string;
+        accountKey: string;
+        calculatedTimeStamp: string;
+        calculatedFormatted: string;
+        pendingSponsorRewards: string;
+        pendingRecipientRewards: string;
+        pendingAgentRewards: string;
+        pendingRewards: string;
+    }>;
     getSpCoinMetaData: () => Promise<{
         owner: string;
         version: string;

@@ -12,14 +12,28 @@ function toBigIntValue(value) {
     }
 }
 
-function buildTotalSpCoinsRecord(balanceOf, stakedBalance, pendingRewardsRecord, sponsorRewardRate = "0%") {
+function buildPendingRewardsAction(accountKey, action) {
+    return {
+        __lazyPendingRewardsAction: true,
+        action,
+        accountKey: String(accountKey ?? ""),
+    };
+}
+
+function buildTotalSpCoinsRecord(balanceOf, stakedBalance, pendingRewardsRecord, annualInflationRate = "0%", accountKey = undefined) {
     const normalizedBalanceOf = String(balanceOf ?? "0");
     const normalizedStakedBalance = String(stakedBalance ?? "0");
     const normalizedPendingRewardsRecord =
         pendingRewardsRecord && typeof pendingRewardsRecord === "object"
             ? pendingRewardsRecord
-            : buildPendingRewardsRecord();
+            : buildPendingRewardsRecord(undefined, accountKey);
     const normalizedPendingRewards = String(normalizedPendingRewardsRecord.pendingRewards ?? "0");
+    const normalizedPendingSponsorRewards = String(normalizedPendingRewardsRecord.pendingSponsorRewards ?? "0");
+    const normalizedPendingRecipientRewards = String(normalizedPendingRewardsRecord.pendingRecipientRewards ?? "0");
+    const normalizedPendingAgentRewards = String(normalizedPendingRewardsRecord.pendingAgentRewards ?? "0");
+    const normalizedLastSponsorUpdate = String(normalizedPendingRewardsRecord.lastSponsorUpdate ?? "0");
+    const normalizedLastRecipientUpdate = String(normalizedPendingRewardsRecord.lastRecipientUpdate ?? "0");
+    const normalizedLastAgentUpdate = String(normalizedPendingRewardsRecord.lastAgentUpdate ?? "0");
     return {
         TYPE: "--TOTAL_SP_COINS--",
         totalSpCoins: (
@@ -29,12 +43,41 @@ function buildTotalSpCoinsRecord(balanceOf, stakedBalance, pendingRewardsRecord,
         ).toString(),
         balanceOf: normalizedBalanceOf,
         stakedBalance: normalizedStakedBalance,
-        sponsorRewardRate: String(sponsorRewardRate ?? "0%"),
-        pendingRewards: normalizedPendingRewardsRecord,
+        annualInflationRate: String(annualInflationRate ?? "0%"),
+        pendingRewards: {
+            TYPE: "--PENDING_REWARDS--",
+            pendingRewards: normalizedPendingRewards,
+            claim: buildPendingRewardsAction(accountKey, "claim"),
+            estimate: buildPendingRewardsAction(accountKey, "estimate"),
+            lastSponsorUpdate: normalizedLastSponsorUpdate,
+            lastRecipientUpdate: normalizedLastRecipientUpdate,
+            lastAgentUpdate: normalizedLastAgentUpdate,
+            pendingSponsorRewards: normalizedPendingSponsorRewards,
+            pendingRecipientRewards: normalizedPendingRecipientRewards,
+            pendingAgentRewards: normalizedPendingAgentRewards,
+        },
     };
 }
 
-function buildPendingRewardsRecord(rewardsByType = undefined) {
+function buildPendingRewardsRecord(rewardsByType = undefined, accountKey = undefined, accountRecord = undefined) {
+    const lastSponsorUpdate = String(
+        rewardsByType?.lastSponsorUpdate ??
+        accountRecord?.lastSponsorUpdate ??
+        accountRecord?.lastSponsorUpdateTimeStamp ??
+        "0"
+    );
+    const lastRecipientUpdate = String(
+        rewardsByType?.lastRecipientUpdate ??
+        accountRecord?.lastRecipientUpdate ??
+        accountRecord?.lastRecipientUpdateTimeStamp ??
+        "0"
+    );
+    const lastAgentUpdate = String(
+        rewardsByType?.lastAgentUpdate ??
+        accountRecord?.lastAgentUpdate ??
+        accountRecord?.lastAgentUpdateTimeStamp ??
+        "0"
+    );
     const pendingSponsorRewards = String(
         rewardsByType?.pendingSponsorRewards ??
         rewardsByType?.sponsorRewardsList?.stakingRewards ??
@@ -58,6 +101,11 @@ function buildPendingRewardsRecord(rewardsByType = undefined) {
                 toBigIntValue(pendingRecipientRewards) +
                 toBigIntValue(pendingAgentRewards)
             ).toString(),
+        claim: buildPendingRewardsAction(accountKey, "claim"),
+        estimate: buildPendingRewardsAction(accountKey, "estimate"),
+        lastSponsorUpdate,
+        lastRecipientUpdate,
+        lastAgentUpdate,
         pendingSponsorRewards,
         pendingRecipientRewards,
         pendingAgentRewards,
@@ -242,8 +290,8 @@ async function getPendingRewardsSummary(runtime, accountKey) {
     }
     const summaryPromise = (async () => {
         const rewardsByType =
-            typeof runtime.getPendingAccountStakingRewards === "function"
-                ? await runtime.getPendingAccountStakingRewards(accountKey)
+            typeof runtime.getPendingRewards === "function"
+                ? await runtime.getPendingRewards(accountKey)
                 : await runtime.getAccountStakingRewards(accountKey);
         const totalPending =
             toBigIntValue(rewardsByType?.pendingRewards) ||
@@ -251,7 +299,7 @@ async function getPendingRewardsSummary(runtime, accountKey) {
             toBigIntValue(rewardsByType?.recipientRewardsList?.stakingRewards) +
             toBigIntValue(rewardsByType?.agentRewardsList?.stakingRewards);
         return {
-            pendingRewardsRecord: buildPendingRewardsRecord(rewardsByType),
+            pendingRewardsRecord: buildPendingRewardsRecord(rewardsByType, accountKey),
             totalPending,
         };
     })();
@@ -468,7 +516,6 @@ function normalizeAccountRelationshipKeys(accountStruct) {
     accountStruct.recipientCount = String(accountStruct.recipientCount ?? accountStruct.recipientKeys.length ?? 0);
     accountStruct.agentCount = String(accountStruct.agentCount ?? accountStruct.agentKeys.length ?? 0);
     accountStruct.parentRecipientCount = String(accountStruct.parentRecipientCount ?? accountStruct.parentRecipientKeys.length ?? 0);
-    accountStruct.active = Boolean(accountStruct.active);
 }
 
 function isEmptyBaseAccountRecord(accountStruct) {
@@ -497,14 +544,14 @@ async function getShallowAccountRecord(runtime, accountKey, includePendingReward
     normalizeAccountRelationshipKeys(accountStruct);
     if (isEmptyBaseAccountRecord(accountStruct)) {
         accountStruct.creationTime = "";
-        accountStruct.totalSpCoins = buildTotalSpCoinsRecord("0", "0", buildPendingRewardsRecord(), "0%");
+        accountStruct.totalSpCoins = buildTotalSpCoinsRecord("0", "0", buildPendingRewardsRecord(undefined, accountKey, accountStruct), "0%", accountKey);
         accountStruct.agentRates = {};
         accountStruct.recipientRates = {};
         return accountStruct;
     }
     const pendingSummary = includePendingRewards
         ? await getPendingRewardsSummary(runtime, accountKey)
-        : { pendingRewardsRecord: buildPendingRewardsRecord(), totalPending: 0n };
+        : { pendingRewardsRecord: buildPendingRewardsRecord(undefined, accountKey, accountStruct), totalPending: 0n };
     const inflationRate = includePendingRewards
         ? await getInflationRateCached(runtime)
         : 0;
@@ -513,6 +560,7 @@ async function getShallowAccountRecord(runtime, accountKey, includePendingReward
         accountStruct.stakedBalance,
         pendingSummary.pendingRewardsRecord,
         `${String(inflationRate ?? 0)}%`,
+        accountKey,
     );
     delete accountStruct.balanceOf;
     delete accountStruct.stakedBalance;
@@ -561,7 +609,7 @@ async function buildAccountRecord(runtime, accountKey, depthRemaining, visitedKe
         : [];
     const pendingSummary = includePendingRewards
         ? await getPendingRewardsSummary(runtime, accountKey)
-        : { pendingRewardsRecord: buildPendingRewardsRecord(), totalPending: 0n };
+        : { pendingRewardsRecord: buildPendingRewardsRecord(undefined, accountKey, accountStruct), totalPending: 0n };
     const inflationRate = includePendingRewards
         ? await getInflationRateCached(runtime)
         : 0;
@@ -570,6 +618,7 @@ async function buildAccountRecord(runtime, accountKey, depthRemaining, visitedKe
         accountStruct.stakedBalance,
         pendingSummary.pendingRewardsRecord,
         `${String(inflationRate ?? 0)}%`,
+        accountKey,
     );
     delete accountStruct.balanceOf;
     delete accountStruct.stakedBalance;
