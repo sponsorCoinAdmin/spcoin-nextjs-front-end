@@ -32,37 +32,11 @@ export async function getRecipientTransaction(context, _sponsorKey, _recipientKe
             recordStr = ["0", "0", "0"];
         }
     }
-    let agentKeys = [];
-    try {
-        agentKeys = await runtime.getRecipientRateAgentList(_sponsorKey, _recipientKey, _recipientRateKey);
-    }
-    catch (_error) {
-        agentKeys = [];
-    }
     recipientTransaction.recipientRate = _recipientRateKey;
     recipientTransaction.inserted = inserted;
     recipientTransaction.creationTime = inserted ? bigIntToDateTimeString(recordStr[0]) : "";
     recipientTransaction.lastUpdateTime = inserted ? bigIntToDateTimeString(recordStr[1]) : "";
     recipientTransaction.stakedSPCoins = bigIntToDecString(recordStr[2]);
-    if (inserted) {
-        try {
-            recipientTransaction.transactions = await runtime.getRecipientTransactionEntries(_sponsorKey, _recipientKey, _recipientRateKey);
-        }
-        catch (_error) {
-            recipientTransaction.transactions = [];
-        }
-    }
-    else {
-        recipientTransaction.transactions = [];
-    }
-    try {
-        recipientTransaction.agentKeys = agentKeys;
-        recipientTransaction.agentRecordList = await runtime.getAgentRecordList(_sponsorKey, _recipientKey, _recipientRateKey, agentKeys);
-    }
-    catch (_error) {
-        recipientTransaction.agentKeys = [];
-        recipientTransaction.agentRecordList = [];
-    }
     runtime.spCoinLogger.logExitFunction();
     return recipientTransaction;
 }

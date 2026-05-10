@@ -827,7 +827,15 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
           path={nextPath}
           rootLabel={rootLabel}
           label={effectiveKey}
-          hideEntryKeys={key === 'totalOnChainMs' ? [...hideEntryKeys, 'totalOnChainMs'] : hideEntryKeys}
+          hideEntryKeys={
+            key === 'totalOnChainMs'
+              ? [...hideEntryKeys, 'totalOnChainMs']
+              : key === 'totalMethodsOnChainMs'
+                ? [...hideEntryKeys, 'totalMethodsOnChainMs']
+                : key === 'methodOnChainCalls'
+                  ? [...hideEntryKeys, 'methodOnChainCalls']
+                : hideEntryKeys
+          }
           highlightPathPrefixes={highlightPathPrefixes}
           highlightColorClass={highlightColorClass}
           showAll={showAll}

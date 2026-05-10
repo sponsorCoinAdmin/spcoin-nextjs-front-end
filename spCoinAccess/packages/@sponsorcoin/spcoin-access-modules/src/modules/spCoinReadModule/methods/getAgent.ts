@@ -7,7 +7,6 @@ export async function getAgent(context, _sponsorKey, _recipientKey, _recipientRa
     const agentRecord = new AgentStruct();
     agentRecord.agentKey = _agentKey;
     agentRecord.stakedSPCoins = bigIntToDecString(await runtime.spCoinContractDeployed.getAgentTotalRecipient(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey));
-    agentRecord.agentRateKeys = await runtime.getAgentTransactionList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey);
     runtime.spCoinLogger.logExitFunction();
     return agentRecord;
 }

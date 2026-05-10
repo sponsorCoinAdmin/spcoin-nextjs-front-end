@@ -16,12 +16,6 @@ export async function getAgentTransaction(context, _sponsorKey, _recipientKey, _
     agentTransaction.creationTime = bigIntToDateTimeString(recordStr[0]);
     agentTransaction.lastUpdateTime = bigIntToDateTimeString(recordStr[1]);
     agentTransaction.stakedSPCoins = bigIntToDecString(recordStr[2]);
-    try {
-        agentTransaction.transactions = await runtime.getAgentTransactionEntries(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey);
-    }
-    catch (_error) {
-        agentTransaction.transactions = [];
-    }
     runtime.spCoinLogger.logExitFunction();
     return agentTransaction;
 }

@@ -1,6 +1,5 @@
 // @ts-nocheck
 import {
-    getAccountRecordObjectCached,
     getRelationshipReadCache,
     normalizeAccountRecordCacheKey,
 } from './getAccountRecord';
@@ -49,19 +48,35 @@ function buildAccountRoleSummary(accountKey, accountRecord, source) {
     };
 }
 
+async function readAccountRoleRecord(runtime, accountKey) {
+    const readAccountRecord = runtime?.spCoinContractDeployed?.getAccountRecord;
+    if (typeof readAccountRecord !== 'function') {
+        throw new Error('getAccountRoleSummary requires getAccountRecord().');
+    }
+    const record = await readAccountRecord(accountKey);
+    return {
+        accountKey: record?.accountKey ?? record?.[0] ?? accountKey,
+        sponsorKeys: Array(Number(record?.sponsorCount ?? record?.[5] ?? 0)).fill(null),
+        recipientKeys: Array(Number(record?.recipientCount ?? record?.[6] ?? 0)).fill(null),
+        agentKeys: Array(Number(record?.agentCount ?? record?.[7] ?? 0)).fill(null),
+        parentRecipientKeys: Array(Number(record?.parentRecipientCount ?? record?.[8] ?? 0)).fill(null),
+        recipientRateTransactionSetKeys: [],
+        agentRateTransactionSetKeys: [],
+    };
+}
+
 async function getCachedAccountRoleSummary(runtime, accountKey) {
     const cache = getRelationshipReadCache(runtime);
     const key = normalizeAccountRecordCacheKey(accountKey);
-    const hadAccountRecord = cache.accountRecordObject.has(key);
     if (!cache.accountRoleSummary.has(key)) {
         cache.accountRoleSummary.set(
             key,
             (async () => {
-                const accountRecord = await getAccountRecordObjectCached(runtime, accountKey);
+                const accountRecord = await readAccountRoleRecord(runtime, accountKey);
                 return buildAccountRoleSummary(
                     accountKey,
                     accountRecord,
-                    hadAccountRecord ? 'accountRecordCache' : 'getAccountRecord',
+                    'getAccountRecord',
                 );
             })(),
         );

@@ -189,12 +189,16 @@ function buildHeaderOnChainCalls(blocks: unknown[]): Record<string, unknown> | n
   return hasOnChainCalls
     ? {
         __forceExpanded: true,
+        methodOnChainCalls: `${totalOnChainMs}ms`,
         totalMethodsFeePaidEth: totalFeePaidWei > 0n ? formatWeiAsEth(totalFeePaidWei) : String(totalFeePaidEth),
         totalMethodsFeePaidWei: totalFeePaidWei.toLocaleString('en-US'),
         totalMethodsGasPriceWei: totalGasPriceWei.toLocaleString('en-US'),
         totalMethodsGasUsed: totalGasUsed.toLocaleString('en-US'),
-        totalOnChainMs: `${totalOnChainMs}ms`,
-        ...entries,
+        totalMethodsOnChainMs: {
+          __forceExpanded: true,
+          totalMethodsOnChainMs: `${totalOnChainMs}ms`,
+          ...entries,
+        },
       }
     : null;
 }
@@ -211,7 +215,7 @@ function flattenStepOnChainCalls(step: unknown): unknown {
 function buildScriptHeaderBlock(
   headerRecord: Record<string, unknown>,
   path = 'script-header',
-  totalMethodsOnChainMs?: Record<string, unknown> | null,
+  methodOnChainCalls?: Record<string, unknown> | null,
 ): InspectorDisplayBlock {
   return {
     data: {
@@ -219,7 +223,7 @@ function buildScriptHeaderBlock(
         __forceExpanded: true,
         ...headerRecord,
       },
-      ...(totalMethodsOnChainMs ? { totalMethodsOnChainMs } : {}),
+      ...(methodOnChainCalls ? { methodOnChainCalls } : {}),
     },
     label: 'Header:',
     path,
@@ -619,7 +623,7 @@ export default function OutputResultsCard({
     () =>
       Object.entries(showPayloadFields).flatMap(([key, visible]) => {
         if (visible) return [];
-        return key === 'onChainCalls' ? ['onChainCalls', 'totalMethodsOnChainMs'] : [key];
+        return key === 'onChainCalls' ? ['onChainCalls', 'methodOnChainCalls'] : [key];
       }),
     [showPayloadFields],
   );

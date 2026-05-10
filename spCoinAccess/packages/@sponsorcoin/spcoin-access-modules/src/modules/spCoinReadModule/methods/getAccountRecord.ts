@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { bigIntToDateTimeString, bigIntToDecString } from "../../../utils/dateTime";
 
 function toBigIntValue(value) {
     const normalized = String(value ?? "0").replace(/,/g, "").trim();
@@ -518,6 +519,56 @@ function normalizeAccountRelationshipKeys(accountStruct) {
     accountStruct.parentRecipientCount = String(accountStruct.parentRecipientCount ?? accountStruct.parentRecipientKeys.length ?? 0);
 }
 
+async function getBaseAccountRecord(runtime, accountKey) {
+    const readAccountRecord = runtime?.spCoinContractDeployed?.getAccountRecord;
+    if (typeof readAccountRecord !== "function") {
+        return getShallowAccountRecord(runtime, accountKey, false);
+    }
+    const record = await readAccountRecord(accountKey);
+    const normalizedAccountKey = record?.accountKey ?? record?.[0] ?? accountKey;
+    const creationTime = record?.creationTime ?? record?.[1] ?? 0;
+    const accountBalance = record?.accountBalance ?? record?.balanceOf ?? record?.[2] ?? 0;
+    const stakedAccountSPCoins = record?.stakedAccountSPCoins ?? record?.stakedBalance ?? record?.[3] ?? 0;
+    const accountStakingRewards = record?.accountStakingRewards ?? record?.stakingRewards ?? record?.[4] ?? 0;
+    const sponsorCount = record?.sponsorCount ?? record?.[5] ?? 0;
+    const recipientCount = record?.recipientCount ?? record?.[6] ?? 0;
+    const agentCount = record?.agentCount ?? record?.[7] ?? 0;
+    const parentRecipientCount = record?.parentRecipientCount ?? record?.[8] ?? 0;
+    const lastSponsorUpdateTimeStamp = record?.lastSponsorUpdateTimeStamp ?? record?.[9] ?? 0;
+    const lastRecipientUpdateTimeStamp = record?.lastRecipientUpdateTimeStamp ?? record?.[10] ?? 0;
+    const lastAgentUpdateTimeStamp = record?.lastAgentUpdateTimeStamp ?? record?.[11] ?? 0;
+    return {
+        TYPE: "--ACCOUNT--",
+        accountKey: normalizeDisplayAddress(normalizedAccountKey),
+        creationTime: String(creationTime).trim() === "0" ? "" : bigIntToDateTimeString(creationTime),
+        totalSpCoins: buildTotalSpCoinsRecord(
+            bigIntToDecString(accountBalance),
+            bigIntToDecString(stakedAccountSPCoins),
+            buildPendingRewardsRecord(undefined, accountKey, {
+                lastSponsorUpdateTimeStamp,
+                lastRecipientUpdateTimeStamp,
+                lastAgentUpdateTimeStamp,
+            }),
+            "0%",
+            accountKey,
+        ),
+        sponsorCount: String(sponsorCount),
+        recipientCount: String(recipientCount),
+        agentCount: String(agentCount),
+        parentRecipientCount: String(parentRecipientCount),
+        lastSponsorUpdateTimeStamp: String(lastSponsorUpdateTimeStamp ?? "0"),
+        lastRecipientUpdateTimeStamp: String(lastRecipientUpdateTimeStamp ?? "0"),
+        lastAgentUpdateTimeStamp: String(lastAgentUpdateTimeStamp ?? "0"),
+        recipientKeys: [],
+        recipientRates: {},
+        agentKeys: [],
+        agentRates: {},
+        sponsorKeys: [],
+        parentRecipientKeys: [],
+        stakingRewards: bigIntToDecString(accountStakingRewards),
+    };
+}
+
 function isEmptyBaseAccountRecord(accountStruct) {
     if (!accountStruct || typeof accountStruct !== "object") return true;
     const normalizedAccountKey = normalizeDisplayAddress(accountStruct.accountKey);
@@ -709,9 +760,7 @@ async function buildAgentAccountListForRecipient(runtime, sponsorAccountKeys, re
 
 export async function getAccountRecord(context, _accountKey) {
     const runtime = context;
-    const debugState = createRelationshipBuildDebug(runtime, _accountKey);
-    const accountStruct = await buildAccountRecord(runtime, _accountKey, 0, new Set(), debugState);
-    debugState.logSummary("getAccountRecord");
+    const accountStruct = await getBaseAccountRecord(runtime, _accountKey);
     runtime.spCoinLogger.logExitFunction();
     return accountStruct;
 }
