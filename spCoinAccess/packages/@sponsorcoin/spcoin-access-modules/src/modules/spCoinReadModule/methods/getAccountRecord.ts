@@ -28,13 +28,26 @@ function buildTotalSpCoinsRecord(balanceOf, stakedBalance, pendingRewardsRecord,
         pendingRewardsRecord && typeof pendingRewardsRecord === "object"
             ? pendingRewardsRecord
             : buildPendingRewardsRecord(undefined, accountKey);
-    const normalizedPendingRewards = String(normalizedPendingRewardsRecord.pendingRewards ?? "0");
-    const normalizedPendingSponsorRewards = String(normalizedPendingRewardsRecord.pendingSponsorRewards ?? "0");
-    const normalizedPendingRecipientRewards = String(normalizedPendingRewardsRecord.pendingRecipientRewards ?? "0");
-    const normalizedPendingAgentRewards = String(normalizedPendingRewardsRecord.pendingAgentRewards ?? "0");
-    const normalizedLastSponsorUpdate = String(normalizedPendingRewardsRecord.lastSponsorUpdate ?? "0");
-    const normalizedLastRecipientUpdate = String(normalizedPendingRewardsRecord.lastRecipientUpdate ?? "0");
-    const normalizedLastAgentUpdate = String(normalizedPendingRewardsRecord.lastAgentUpdate ?? "0");
+    const hasPendingRewards = Object.prototype.hasOwnProperty.call(normalizedPendingRewardsRecord, "pendingRewards");
+    const hasPendingSponsorRewards = Object.prototype.hasOwnProperty.call(normalizedPendingRewardsRecord, "pendingSponsorRewards");
+    const hasPendingRecipientRewards = Object.prototype.hasOwnProperty.call(normalizedPendingRewardsRecord, "pendingRecipientRewards");
+    const hasPendingAgentRewards = Object.prototype.hasOwnProperty.call(normalizedPendingRewardsRecord, "pendingAgentRewards");
+    const hasLastSponsorUpdate = Object.prototype.hasOwnProperty.call(normalizedPendingRewardsRecord, "lastSponsorUpdate");
+    const hasLastRecipientUpdate = Object.prototype.hasOwnProperty.call(normalizedPendingRewardsRecord, "lastRecipientUpdate");
+    const hasLastAgentUpdate = Object.prototype.hasOwnProperty.call(normalizedPendingRewardsRecord, "lastAgentUpdate");
+    const normalizedPendingRewards = hasPendingRewards ? String(normalizedPendingRewardsRecord.pendingRewards ?? "0") : "0";
+    const pendingRewardsDisplay = {
+        TYPE: "--PENDING_REWARDS--",
+        claim: buildPendingRewardsAction(accountKey, "claim"),
+        estimate: buildPendingRewardsAction(accountKey, "estimate"),
+        ...(hasPendingRewards ? { pendingRewards: normalizedPendingRewards } : {}),
+        ...(hasLastSponsorUpdate ? { lastSponsorUpdate: String(normalizedPendingRewardsRecord.lastSponsorUpdate ?? "0") } : {}),
+        ...(hasLastRecipientUpdate ? { lastRecipientUpdate: String(normalizedPendingRewardsRecord.lastRecipientUpdate ?? "0") } : {}),
+        ...(hasLastAgentUpdate ? { lastAgentUpdate: String(normalizedPendingRewardsRecord.lastAgentUpdate ?? "0") } : {}),
+        ...(hasPendingSponsorRewards ? { pendingSponsorRewards: String(normalizedPendingRewardsRecord.pendingSponsorRewards ?? "0") } : {}),
+        ...(hasPendingRecipientRewards ? { pendingRecipientRewards: String(normalizedPendingRewardsRecord.pendingRecipientRewards ?? "0") } : {}),
+        ...(hasPendingAgentRewards ? { pendingAgentRewards: String(normalizedPendingRewardsRecord.pendingAgentRewards ?? "0") } : {}),
+    };
     return {
         TYPE: "--TOTAL_SP_COINS--",
         totalSpCoins: (
@@ -45,18 +58,7 @@ function buildTotalSpCoinsRecord(balanceOf, stakedBalance, pendingRewardsRecord,
         balanceOf: normalizedBalanceOf,
         stakedBalance: normalizedStakedBalance,
         annualInflationRate: String(annualInflationRate ?? "0%"),
-        pendingRewards: {
-            TYPE: "--PENDING_REWARDS--",
-            pendingRewards: normalizedPendingRewards,
-            claim: buildPendingRewardsAction(accountKey, "claim"),
-            estimate: buildPendingRewardsAction(accountKey, "estimate"),
-            lastSponsorUpdate: normalizedLastSponsorUpdate,
-            lastRecipientUpdate: normalizedLastRecipientUpdate,
-            lastAgentUpdate: normalizedLastAgentUpdate,
-            pendingSponsorRewards: normalizedPendingSponsorRewards,
-            pendingRecipientRewards: normalizedPendingRecipientRewards,
-            pendingAgentRewards: normalizedPendingAgentRewards,
-        },
+        pendingRewards: pendingRewardsDisplay,
     };
 }
 
@@ -79,6 +81,17 @@ function buildPendingRewardsRecord(rewardsByType = undefined, accountKey = undef
         accountRecord?.lastAgentUpdateTimeStamp ??
         "0"
     );
+    const hasRewardValues = Boolean(rewardsByType && typeof rewardsByType === "object");
+    if (!hasRewardValues) {
+        return {
+            TYPE: "--PENDING_REWARDS--",
+            claim: buildPendingRewardsAction(accountKey, "claim"),
+            estimate: buildPendingRewardsAction(accountKey, "estimate"),
+            lastSponsorUpdate,
+            lastRecipientUpdate,
+            lastAgentUpdate,
+        };
+    }
     const pendingSponsorRewards = String(
         rewardsByType?.pendingSponsorRewards ??
         rewardsByType?.sponsorRewardsList?.stakingRewards ??

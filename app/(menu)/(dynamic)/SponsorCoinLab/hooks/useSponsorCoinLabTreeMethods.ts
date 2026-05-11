@@ -65,6 +65,26 @@ type PendingRewardsActionClick = {
   action: 'claim' | 'estimate';
 };
 
+const PENDING_REWARDS_INLINE_REFRESH_MS = 10_000;
+
+function parsePendingRewardsModeToggle(
+  value: string,
+  normalizeAddressValue: (value: string) => string,
+): PendingRewardsActionClick | null {
+  try {
+    const parsed = JSON.parse(String(value || '')) as Record<string, unknown>;
+    if (!parsed || parsed.__togglePendingRewardsMode !== true) return null;
+    const action = String(parsed.action || '').trim().toLowerCase();
+    if (action !== 'claim' && action !== 'estimate') return null;
+    return {
+      accountKey: normalizeAddressValue(toDisplayString(parsed.accountKey)),
+      action,
+    };
+  } catch {
+    return null;
+  }
+}
+
 function parsePendingRewardsActionClick(
   value: string,
   normalizeAddressValue: (value: string) => string,
@@ -81,6 +101,117 @@ function parsePendingRewardsActionClick(
   } catch {
     return null;
   }
+}
+
+function hasLazyPendingRewardsAction(value: unknown) {
+  return Boolean(
+    value &&
+      typeof value === 'object' &&
+      !Array.isArray(value) &&
+      (value as Record<string, unknown>).__lazyPendingRewardsAction === true,
+  );
+}
+
+function hasPendingRewardsRefreshAction(value: unknown) {
+  if (
+    value &&
+    typeof value === 'object' &&
+    !Array.isArray(value) &&
+    (value as Record<string, unknown>).__pendingRewardsRefreshAction === true
+  ) {
+    return true;
+  }
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const estimate = (value as Record<string, unknown>).estimate;
+  if (!estimate || typeof estimate !== 'object' || Array.isArray(estimate)) return false;
+  const result = (estimate as Record<string, unknown>).result;
+  return Boolean(
+    result &&
+      typeof result === 'object' &&
+      !Array.isArray(result) &&
+      (result as Record<string, unknown>).__pendingRewardsRefreshAction === true,
+  );
+}
+
+function readPendingRewardsAmount(value: unknown) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const amount = (value as Record<string, unknown>).pendingRewards;
+  if (amount === undefined || amount === null) return null;
+  return String(amount);
+}
+
+function buildLazyRunPendingRewardsMode(
+  accountKey: string,
+  action: PendingRewardsActionClick['action'],
+  displayValue: string,
+) {
+  return {
+    __lazyPendingRewardsAction: true,
+    accountKey,
+    action,
+    __pendingRewardsModeLabel: action === 'estimate' ? 'estimate - off-chain' : 'claim - on-chain',
+    __pendingRewardsModeValue: displayValue,
+  };
+}
+
+function getModeDisplayValue(accountKey: string, action: PendingRewardsActionClick['action']) {
+  return action === 'estimate' ? 'selected' : accountKey;
+}
+
+function normalizePendingRewardsEstimateResult(value: unknown) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
+  const record = value as Record<string, unknown>;
+  return {
+    ...record,
+    totalRewards: String(record.pendingRewards ?? record.totalRewards ?? '0'),
+  };
+}
+
+function toRewardAmount(value: unknown) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return '0';
+  const record = value as Record<string, unknown>;
+  return String(record.stakingRewards ?? record.pendingRewards ?? '0');
+}
+
+function toRewardsBigInt(value: unknown) {
+  const normalized = String(value ?? '0').replace(/,/g, '').trim();
+  if (!normalized) return 0n;
+  try {
+    return BigInt(normalized);
+  } catch {
+    return 0n;
+  }
+}
+
+function buildClaimedRewardsSummary(estimateBeforeClaim: unknown, refreshedRewards: unknown) {
+  const estimate =
+    estimateBeforeClaim && typeof estimateBeforeClaim === 'object' && !Array.isArray(estimateBeforeClaim)
+      ? (estimateBeforeClaim as Record<string, unknown>)
+      : null;
+  const refreshed =
+    refreshedRewards && typeof refreshedRewards === 'object' && !Array.isArray(refreshedRewards)
+      ? (refreshedRewards as Record<string, unknown>)
+      : null;
+  const sponsorRewardsClaimed = String(
+    estimate?.pendingSponsorRewards ?? toRewardAmount(refreshed?.sponsorRewardsList),
+  );
+  const recipientRewardsClaimed = String(
+    estimate?.pendingRecipientRewards ?? toRewardAmount(refreshed?.recipientRewardsList),
+  );
+  const agentRewardsClaimed = String(
+    estimate?.pendingAgentRewards ?? toRewardAmount(refreshed?.agentRewardsList),
+  );
+  const totalRewardsClaimed = String(
+    estimate?.pendingRewards ??
+      (toRewardsBigInt(sponsorRewardsClaimed) + toRewardsBigInt(recipientRewardsClaimed) + toRewardsBigInt(agentRewardsClaimed)),
+  );
+
+  return {
+    totalRewardsClaimed,
+    sponsorRewardsClaimed,
+    recipientRewardsClaimed,
+    agentRewardsClaimed,
+  };
 }
 
 interface MethodCallEntry {
@@ -1223,6 +1354,17 @@ export function useSponsorCoinLabTreeMethods({
           [head]: writePathValue((source as Record<string, unknown>)[head], tail, nextValue),
         };
       };
+      const readDisplayPathValue = (source: unknown, segments: string[]): unknown => {
+        const directValue = readPathValue(source, segments);
+        if (directValue !== undefined) return directValue;
+        const parametersIndex = segments.findIndex((segment) => segment === 'parameters');
+        if (parametersIndex < 1) return directValue;
+        return readPathValue(source, [
+          ...segments.slice(0, parametersIndex),
+          'call',
+          ...segments.slice(parametersIndex),
+        ]);
+      };
 
       const blocks = rawDisplay
         .split(/\n\s*\n/)
@@ -1243,12 +1385,39 @@ export function useSponsorCoinLabTreeMethods({
       for (const entry of candidateEntries) {
         const payload = entry.payload;
         if (!payload) continue;
-        const targetNode = readPathValue(payload, payloadPath);
+        const modeSegmentIndex = payloadPath.findIndex(
+          (segment, index) => segment === 'mode' && payloadPath[index - 1] === 'parameters',
+        );
+        const parameterActionSegmentIndex = payloadPath.findIndex(
+          (segment, index) =>
+            (segment === 'claim' || segment === 'estimate') && payloadPath[index - 1] === 'parameters',
+        );
+        const actionModeSegmentIndex = modeSegmentIndex > 0 ? modeSegmentIndex : parameterActionSegmentIndex;
+        const runPendingRewardsPath =
+          actionModeSegmentIndex > 1 ? payloadPath.slice(0, actionModeSegmentIndex - 1) : payloadPath;
+        const targetNode = readDisplayPathValue(payload, payloadPath);
+        const targetPath =
+          hasPendingRewardsRefreshAction(targetNode) && payloadPath.at(-1) === 'result'
+            ? payloadPath.slice(0, -1)
+            : hasPendingRewardsRefreshAction(targetNode) && payloadPath.at(-1) === 'pendingRewards'
+              ? [...payloadPath, 'runPendingRewards']
+            : actionModeSegmentIndex > 0
+              ? runPendingRewardsPath
+              : payloadPath;
+        const actionNode = readPathValue(payload, targetPath);
+        const pendingRewardsNode =
+          targetPath.at(-1) === 'runPendingRewards' ? readPathValue(payload, targetPath.slice(0, -1)) : null;
+        const pendingRewardsRecord =
+          pendingRewardsNode && typeof pendingRewardsNode === 'object' && !Array.isArray(pendingRewardsNode)
+            ? (pendingRewardsNode as Record<string, unknown>)
+            : null;
+        const fallbackActionNode = pendingRewardsRecord
+          ? pendingRewardsRecord[click.action] ?? pendingRewardsRecord.estimate ?? pendingRewardsRecord.claim
+          : null;
         if (
-          !targetNode ||
-          typeof targetNode !== 'object' ||
-          Array.isArray(targetNode) ||
-          (targetNode as Record<string, unknown>).__lazyPendingRewardsAction !== true
+          !hasLazyPendingRewardsAction(actionNode) &&
+          !hasLazyPendingRewardsAction(fallbackActionNode) &&
+          !hasPendingRewardsRefreshAction(targetNode)
         ) {
           continue;
         }
@@ -1279,6 +1448,19 @@ export function useSponsorCoinLabTreeMethods({
 
           const claimPendingRewards = async () => {
             const claimTimingCollector = createMethodTimingCollector();
+            const estimateBeforeClaim = await runWithMethodTimingCollector(claimTimingCollector, async () =>
+              runSpCoinReadMethod({
+                selectedMethod: 'getPendingRewards',
+                spReadParams: [normalizedAccount],
+                coerceParamValue,
+                stringifyResult,
+                spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
+                requireContractAddress,
+                ensureReadRunner,
+                appendLog: noop,
+                setStatus: noop,
+              }),
+            );
             const updateResult = await runSpCoinWriteMethod({
               selectedMethod: 'updateAccountStakingRewards',
               spWriteParams: [normalizedAccount],
@@ -1307,8 +1489,9 @@ export function useSponsorCoinLabTreeMethods({
             );
             return {
               pendingResult: {
-                updateAccountStakingRewards: updateResult.receipts,
-                getAccountRewards: rewardsResult,
+                ...buildClaimedRewardsSummary(estimateBeforeClaim, rewardsResult),
+                receipts: updateResult.receipts,
+                refreshedRewards: rewardsResult,
               },
               pendingMeta: buildExecutionMeta(claimTimingCollector),
             };
@@ -1322,24 +1505,58 @@ export function useSponsorCoinLabTreeMethods({
           if (!loadedPending) return 'handled';
           const { pendingResult, pendingMeta } = loadedPending;
           const methodName = click.action === 'claim' ? 'claimPendingRewards' : 'getPendingRewards';
+          const refreshablePendingResult =
+            click.action === 'estimate' && pendingResult && typeof pendingResult === 'object' && !Array.isArray(pendingResult)
+              ? {
+                  ...(normalizePendingRewardsEstimateResult(pendingResult) as Record<string, unknown>),
+                  __pendingRewardsRefreshAction: true,
+                  __pendingRewardsRefreshAtMs: Date.now() + PENDING_REWARDS_INLINE_REFRESH_MS,
+                  __pendingRewardsRefreshActionName: 'estimate',
+                }
+              : pendingResult;
           const expandedNode = {
             call: {
-              method: methodName,
+              method: 'runPendingRewards',
               parameters: {
                 'Account Key': normalizedAccount,
-                Mode: click.action === 'estimate' ? 'Off-chain estimate' : 'Claim preview',
+                mode:
+                  click.action === 'estimate'
+                    ? buildLazyRunPendingRewardsMode(normalizedAccount, 'claim', getModeDisplayValue(normalizedAccount, 'claim'))
+                    : buildLazyRunPendingRewardsMode(normalizedAccount, 'estimate', getModeDisplayValue(normalizedAccount, 'estimate')),
               },
+              selectedMethod: methodName,
               ...(click.action === 'claim'
-                ? { sequence: ['updateAccountStakingRewards', 'getAccountRewards'] }
+                ? { sequence: ['getPendingRewards', 'updateAccountStakingRewards', 'getAccountStakingRewards'] }
                 : {}),
             },
             ...(pendingMeta ? { meta: pendingMeta } : {}),
-            result: pendingResult,
+            result: refreshablePendingResult,
             __forceExpanded: true,
             __showEmptyFields: true,
           };
+          const pendingRewardsAmount = readPendingRewardsAmount(pendingResult);
+          const pendingRewardsPath =
+            targetPath.at(-1) === 'estimate' || targetPath.at(-1) === 'claim' || targetPath.at(-1) === 'runPendingRewards'
+              ? targetPath.slice(0, -1)
+              : [];
+          const payloadWithExpandedNode = writePathValue(payload, targetPath, expandedNode);
+          const existingPendingRewardsNode = readPathValue(payloadWithExpandedNode, pendingRewardsPath);
+          const payloadWithPendingRewardsSummary =
+            pendingRewardsAmount !== null &&
+            pendingRewardsPath.length > 0 &&
+            existingPendingRewardsNode &&
+            typeof existingPendingRewardsNode === 'object' &&
+            !Array.isArray(existingPendingRewardsNode)
+              ? writePathValue(payloadWithExpandedNode, pendingRewardsPath, {
+                  ...(existingPendingRewardsNode as Record<string, unknown>),
+                  pendingRewards: pendingRewardsAmount,
+                  __pendingRewardsRefreshAction: true,
+                  __pendingRewardsRefreshAtMs: Date.now() + PENDING_REWARDS_INLINE_REFRESH_MS,
+                  __pendingRewardsRefreshActionName: 'estimate',
+                })
+              : payloadWithExpandedNode;
           const nextRootPayload = normalizeExecutionPayload(
-            writePathValue(payload, payloadPath, expandedNode),
+            payloadWithPendingRewardsSummary,
           ) as Record<string, unknown>;
           const nextPayload = formatFormattedPanelPayload(nextRootPayload);
           if (blocks.length > 1) {
@@ -1386,9 +1603,146 @@ export function useSponsorCoinLabTreeMethods({
     ],
   );
 
+  const togglePendingRewardsModeInline = useCallback(
+    async (
+      click: PendingRewardsActionClick,
+      pathHint?: string,
+      rawDisplayOverride?: string,
+    ): Promise<'expanded' | 'handled' | 'unhandled'> => {
+      const normalizedAccount = normalizeAddressValue(click.accountKey);
+      if (!/^0x[0-9a-f]{40}$/.test(normalizedAccount)) return 'unhandled';
+      const normalizedPathHint = String(pathHint ?? '').trim();
+      if (!normalizedPathHint) return 'unhandled';
+      const rootSegment = normalizedPathHint.split('.')[0] || '';
+      const rootPathMatch = /^(?:step|output|script|tree)-(\d+)$/i.exec(rootSegment);
+      const inTreePanel = /^tree-/i.test(rootSegment);
+      const rawDisplay = String(
+        rawDisplayOverride ?? (inTreePanel ? treeOutputDisplayRef.current : formattedOutputDisplayRef.current),
+      ).trim();
+      if (!rawDisplay || rawDisplay === '(no tree yet)' || rawDisplay === '(no output yet)') return 'unhandled';
+
+      const parsePayload = (raw: string): Record<string, unknown> | null => {
+        try {
+          const parsed = JSON.parse(raw);
+          return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+            ? (parsed as Record<string, unknown>)
+            : null;
+        } catch {
+          return null;
+        }
+      };
+      const writePathValue = (source: unknown, segments: string[], nextValue: unknown): unknown => {
+        if (segments.length === 0) return nextValue;
+        const [head, ...tail] = segments;
+        if (Array.isArray(source)) {
+          const index = Number(head);
+          if (!Number.isInteger(index) || index < 0 || index >= source.length) return source;
+          const nextArray = [...source];
+          nextArray[index] = writePathValue(nextArray[index], tail, nextValue);
+          return nextArray;
+        }
+        if (!source || typeof source !== 'object') return source;
+        return {
+          ...(source as Record<string, unknown>),
+          [head]: writePathValue((source as Record<string, unknown>)[head], tail, nextValue),
+        };
+      };
+      const blocks = rawDisplay
+        .split(/\n\s*\n/)
+        .map((block) => block.trim())
+        .filter(Boolean);
+      const blockEntries =
+        blocks.length > 1
+          ? blocks.map((raw, index) => ({ raw, index, payload: parsePayload(raw) }))
+          : [{ raw: rawDisplay, index: 0, payload: parsePayload(rawDisplay) }];
+      const hintedBlockIndex = rootPathMatch ? Number(rootPathMatch[1]) : Number.NaN;
+      const candidateEntries =
+        Number.isInteger(hintedBlockIndex) && hintedBlockIndex >= 0 && hintedBlockIndex < blockEntries.length
+          ? [blockEntries[hintedBlockIndex]]
+          : blockEntries;
+      const payloadPath = normalizedPathHint.split('.').filter(Boolean).slice(1);
+      const parametersIndex = payloadPath.findIndex((segment) => segment === 'parameters');
+      const readTogglePathValue = (source: unknown, segments: string[]): unknown =>
+        segments.reduce<unknown>((cur, seg) => {
+          if (cur == null) return undefined;
+          if (Array.isArray(cur)) { const i = Number(seg); return Number.isInteger(i) ? cur[i] : undefined; }
+          if (typeof cur !== 'object') return undefined;
+          return (cur as Record<string, unknown>)[seg];
+        }, source);
+      // Handle claim toggle at totalSpCoins level (path ends with 'claim', no 'parameters' segment)
+      if (parametersIndex < 1) {
+        const lastSegment = payloadPath.at(-1);
+        if (lastSegment !== 'claim' && lastSegment !== 'estimate') return 'unhandled';
+        for (const entry of candidateEntries) {
+          const payload = entry.payload;
+          if (!payload) continue;
+          const claimNode = readTogglePathValue(payload, payloadPath);
+          if (!claimNode || typeof claimNode !== 'object' || Array.isArray(claimNode)) continue;
+          const currentLabel = String((claimNode as Record<string, unknown>).__pendingRewardsModeLabel ?? '');
+          const nextLabel = currentLabel === 'Update' ? 'Claim' : 'Update';
+          const nextClaimNode = { ...(claimNode as Record<string, unknown>), __pendingRewardsModeLabel: nextLabel };
+          const nextPayloadRecord = writePathValue(payload, payloadPath, nextClaimNode);
+          const nextRootPayload = normalizeExecutionPayload(nextPayloadRecord) as Record<string, unknown>;
+          const nextPayload = formatFormattedPanelPayload(nextRootPayload);
+          if (blocks.length > 1) {
+            const nextBlocks = [...blocks];
+            nextBlocks[entry.index] = nextPayload;
+            if (inTreePanel) { setTrackedTreeOutputDisplay(nextBlocks.join('\n\n')); }
+            else { setFormattedOutputDisplay(nextBlocks.join('\n\n')); }
+          } else if (inTreePanel) { setTrackedTreeOutputDisplay(nextPayload); }
+          else { setFormattedOutputDisplay(nextPayload); }
+          setStatus('mode: ' + nextLabel);
+          return 'expanded';
+        }
+        return 'unhandled';
+      }
+      const parametersPath = payloadPath.slice(0, parametersIndex + 1);
+      const nextMode = buildLazyRunPendingRewardsMode(
+        normalizedAccount,
+        click.action,
+        getModeDisplayValue(normalizedAccount, click.action),
+      );
+
+      for (const entry of candidateEntries) {
+        const payload = entry.payload;
+        if (!payload) continue;
+        const nextPayloadRecord = writePathValue(payload, parametersPath, {
+          'Account Key': normalizedAccount,
+          mode: nextMode,
+        });
+        const nextRootPayload = normalizeExecutionPayload(nextPayloadRecord) as Record<string, unknown>;
+        const nextPayload = formatFormattedPanelPayload(nextRootPayload);
+        if (blocks.length > 1) {
+          const nextBlocks = [...blocks];
+          nextBlocks[entry.index] = nextPayload;
+          if (inTreePanel) {
+            setTrackedTreeOutputDisplay(nextBlocks.join('\n\n'));
+          } else {
+            setFormattedOutputDisplay(nextBlocks.join('\n\n'));
+          }
+        } else if (inTreePanel) {
+          setTrackedTreeOutputDisplay(nextPayload);
+        } else {
+          setFormattedOutputDisplay(nextPayload);
+        }
+        setStatus(`Selected ${click.action === 'claim' ? 'claim - on-chain' : 'estimate - off-chain'} mode.`);
+        return 'expanded';
+      }
+      return 'unhandled';
+    },
+    [
+      formatFormattedPanelPayload,
+      normalizeAddressValue,
+      setFormattedOutputDisplay,
+      setStatus,
+      setTrackedTreeOutputDisplay,
+    ],
+  );
+
   const openAccountFromAddress = useCallback(
     async (account: string, pathHint?: string, rawDisplayOverride?: string) => {
       const relationClick = parseLazyAccountRelationClick(account, normalizeAddressValue);
+      const pendingRewardsModeToggle = parsePendingRewardsModeToggle(account, normalizeAddressValue);
       const pendingRewardsClick = parsePendingRewardsActionClick(account, normalizeAddressValue);
       if (String(account ?? '').trim() === '__load_spcoin_metadata__') {
         const metadataResult = await expandSpCoinMetaDataInline(pathHint);
@@ -1401,6 +1755,13 @@ export function useSponsorCoinLabTreeMethods({
         const keysResult = await expandMasterAccountKeysInline(pathHint);
         if (keysResult === 'expanded' || keysResult === 'handled') {
           setOutputPanelMode('formatted');
+        }
+        return;
+      }
+      if (pendingRewardsModeToggle) {
+        const toggleResult = await togglePendingRewardsModeInline(pendingRewardsModeToggle, pathHint, rawDisplayOverride);
+        if (toggleResult === 'expanded' || toggleResult === 'handled') {
+          setOutputPanelMode(/^tree-/i.test(String(pathHint ?? '').trim()) ? 'tree' : 'formatted');
         }
         return;
       }
@@ -1446,6 +1807,7 @@ export function useSponsorCoinLabTreeMethods({
       normalizeAddressValue,
       runTreeDump,
       setOutputPanelMode,
+      togglePendingRewardsModeInline,
     ],
   );
 

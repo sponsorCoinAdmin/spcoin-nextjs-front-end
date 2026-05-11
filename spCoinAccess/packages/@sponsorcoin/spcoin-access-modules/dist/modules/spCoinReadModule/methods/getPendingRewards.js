@@ -12,6 +12,8 @@ import {
 const YEAR_SECONDS = 31556925n;
 const DECIMAL_MULTIPLIER = 10n ** 18n;
 const PERCENT_DIVISER = DECIMAL_MULTIPLIER / 100n;
+const MIN_PENDING_REWARDS_CACHE_MS = 10000;
+const DEFAULT_PENDING_REWARDS_CACHE_MS = 10000;
 
 function toBigIntValue(value) {
     const normalized = String(value ?? "0").replace(/,/g, "").trim();
@@ -35,6 +37,49 @@ function toRateList(value) {
 
 function addPending(target, key, value) {
     target[key] = (toBigIntValue(target[key]) + toBigIntValue(value)).toString();
+}
+function normalizePendingRewardsOptions(optionsOrTimestampOverride = undefined, timestampOverride = undefined) {
+    const options = optionsOrTimestampOverride &&
+        typeof optionsOrTimestampOverride === "object" &&
+        !Array.isArray(optionsOrTimestampOverride)
+        ? optionsOrTimestampOverride
+        : {};
+    const rawTimestampOverride = timestampOverride ??
+        options.timestampOverride ??
+        options.currentTimeStamp ??
+        options.currentTimestamp ??
+        (options === optionsOrTimestampOverride ? undefined : optionsOrTimestampOverride);
+    const requestedCacheMs = Number(options.pendingRewardsCacheMs ??
+        options.cacheMs ??
+        options.ttlMs ??
+        options.cacheTtlMs ??
+        DEFAULT_PENDING_REWARDS_CACHE_MS);
+    const cacheMs = Math.max(MIN_PENDING_REWARDS_CACHE_MS, Number.isFinite(requestedCacheMs) ? requestedCacheMs : DEFAULT_PENDING_REWARDS_CACHE_MS);
+    return {
+        timestampOverride: rawTimestampOverride,
+        cacheMs,
+    };
+}
+function getPendingRewardsCache(runtime) {
+    if (!runtime.__pendingRewardsCache || typeof runtime.__pendingRewardsCache !== "object") {
+        runtime.__pendingRewardsCache = new Map();
+    }
+    return runtime.__pendingRewardsCache;
+}
+function getPendingRewardsCacheKey(accountKey, timestampOverride) {
+    const normalizedAccount = String(accountKey ?? "").trim().toLowerCase();
+    const normalizedTimestamp = toBigIntValue(timestampOverride);
+    return `${normalizedAccount}|${normalizedTimestamp > 0n ? normalizedTimestamp.toString() : "now"}`;
+}
+function clonePendingRewardsResult(value) {
+    if (!value || typeof value !== "object")
+        return value;
+    try {
+        return JSON.parse(JSON.stringify(value));
+    }
+    catch (_error) {
+        return value;
+    }
 }
 function formatLocalTimestamp(secondsValue) {
     const seconds = Number(toBigIntValue(secondsValue));
@@ -218,31 +263,54 @@ async function addAgentPathPending(runtime, pending, accountKey, currentTimeStam
     }
 }
 
-export async function getPendingRewards(context, accountKey, timestampOverride = undefined) {
+export async function getPendingRewards(context, accountKey, optionsOrTimestampOverride = undefined, timestampOverride = undefined) {
     const runtime = context;
-    delete runtime.__relationshipReadCache;
+    const options = normalizePendingRewardsOptions(optionsOrTimestampOverride, timestampOverride);
+    const cache = getPendingRewardsCache(runtime);
+    const cacheKey = getPendingRewardsCacheKey(accountKey, options.timestampOverride);
+    const nowMs = Date.now();
+    const cached = cache.get(cacheKey);
+    if (cached && cached.expiresAtMs > nowMs) {
+        return clonePendingRewardsResult(await cached.promise);
+    }
     runtime.spCoinLogger.logFunctionHeader("getPendingRewards(" + accountKey + ")");
-    const currentTimeStamp = await getCurrentBlockTimestamp(runtime, timestampOverride);
-    const annualInflation = await getAnnualInflation(runtime);
-    const pending = {
-        TYPE: "--ACCOUNT_PENDING_REWARDS--",
-        accountKey: String(accountKey ?? ""),
-        calculatedTimeStamp: currentTimeStamp.toString(),
-        calculatedFormatted: formatLocalTimestamp(currentTimeStamp),
-        pendingRewards: "0",
-        pendingSponsorRewards: "0",
-        pendingRecipientRewards: "0",
-        pendingAgentRewards: "0",
-    };
+    const pendingPromise = (async () => {
+        delete runtime.__relationshipReadCache;
+        const currentTimeStamp = await getCurrentBlockTimestamp(runtime, options.timestampOverride);
+        const annualInflation = await getAnnualInflation(runtime);
+        const accountRecord = await getAccountRecordObjectCached(runtime, accountKey);
+        const pending = {
+            TYPE: "--ACCOUNT_PENDING_REWARDS--",
+            accountKey: String(accountKey ?? ""),
+            calculatedTimeStamp: currentTimeStamp.toString(),
+            calculatedFormatted: formatLocalTimestamp(currentTimeStamp),
+            lastSponsorUpdate: String(accountRecord?.lastSponsorUpdateTimeStamp ?? "0"),
+            lastRecipientUpdate: String(accountRecord?.lastRecipientUpdateTimeStamp ?? "0"),
+            lastAgentUpdate: String(accountRecord?.lastAgentUpdateTimeStamp ?? "0"),
+            pendingRewards: "0",
+            pendingSponsorRewards: "0",
+            pendingRecipientRewards: "0",
+            pendingAgentRewards: "0",
+        };
 
-    await addSponsorPathPending(runtime, pending, accountKey, currentTimeStamp, annualInflation);
-    await addRecipientPathPending(runtime, pending, accountKey, currentTimeStamp);
-    await addAgentPathPending(runtime, pending, accountKey, currentTimeStamp);
-    pending.pendingRewards = (
-        toBigIntValue(pending.pendingSponsorRewards) +
-        toBigIntValue(pending.pendingRecipientRewards) +
-        toBigIntValue(pending.pendingAgentRewards)
-    ).toString();
-    runtime.spCoinLogger.logExitFunction();
-    return pending;
+        await addSponsorPathPending(runtime, pending, accountKey, currentTimeStamp, annualInflation);
+        await addRecipientPathPending(runtime, pending, accountKey, currentTimeStamp);
+        await addAgentPathPending(runtime, pending, accountKey, currentTimeStamp);
+        pending.pendingRewards = (toBigIntValue(pending.pendingSponsorRewards) +
+            toBigIntValue(pending.pendingRecipientRewards) +
+            toBigIntValue(pending.pendingAgentRewards)).toString();
+        runtime.spCoinLogger.logExitFunction();
+        return pending;
+    })();
+    cache.set(cacheKey, {
+        expiresAtMs: nowMs + options.cacheMs,
+        promise: pendingPromise,
+    });
+    try {
+        return clonePendingRewardsResult(await pendingPromise);
+    }
+    catch (error) {
+        cache.delete(cacheKey);
+        throw error;
+    }
 }
