@@ -150,10 +150,24 @@ function isTotalSpCoinsRecord(data: any): boolean {
 function isPendingRewardsRecord(data: any): boolean {
   const record =
     data && typeof data === 'object' && !Array.isArray(data) ? (data as Record<string, unknown>) : null;
+  if (!record || isTotalSpCoinsRecord(record)) return false;
+  const hasPendingRewardsValue = Boolean(record && Object.prototype.hasOwnProperty.call(record, 'pendingRewards'));
+  const hasPendingRewardsShape = Boolean(
+    record &&
+      hasPendingRewardsValue &&
+      (record.TYPE === '--PENDING_REWARDS--' ||
+        record.TYPE === '--ACCOUNT_PENDING_REWARDS--' ||
+        Object.prototype.hasOwnProperty.call(record, 'claim') ||
+        Object.prototype.hasOwnProperty.call(record, 'estimate') ||
+        Object.prototype.hasOwnProperty.call(record, 'mode') ||
+        Object.prototype.hasOwnProperty.call(record, 'runPendingRewards') ||
+        Object.prototype.hasOwnProperty.call(record, 'lastSponsorUpdate') ||
+        Object.prototype.hasOwnProperty.call(record, 'lastSponsorUpdateTimeStamp') ||
+        Object.prototype.hasOwnProperty.call(record, 'stakingRewards')),
+  );
   return Boolean(
     record &&
-      (record.TYPE === '--PENDING_REWARDS--' || record.TYPE === '--ACCOUNT_PENDING_REWARDS--') &&
-      Object.prototype.hasOwnProperty.call(record, 'pendingRewards'),
+      hasPendingRewardsShape,
   );
 }
 
@@ -182,7 +196,9 @@ function getPendingRewardsRunAction(data: any): Record<string, unknown> | null {
   const estimate = record.estimate;
   if (isLazyPendingRewardsActionNode(estimate)) return estimate as Record<string, unknown>;
   const claim = record.claim;
-  return isLazyPendingRewardsActionNode(claim) ? (claim as Record<string, unknown>) : null;
+  if (isLazyPendingRewardsActionNode(claim)) return claim as Record<string, unknown>;
+  const mode = getPendingRewardsModeAction(record.mode);
+  return mode && isLazyPendingRewardsActionNode(mode) ? mode : null;
 }
 
 function getPendingRewardsRefreshAtMs(data: any): number {
@@ -216,8 +232,17 @@ function getPendingRewardsRefreshAtMs(data: any): number {
 function getPendingRewardsRefreshAccountKey(data: any): string {
   if (!data || typeof data !== 'object' || Array.isArray(data)) return '';
   const record = data as Record<string, unknown>;
-  const directAccount = String(record.accountKey || '').trim();
+  const directAccount = typeof record.accountKey === 'string' ? record.accountKey.trim() : '';
   if (directAccount) return directAccount;
+  const call = record.call;
+  if (call && typeof call === 'object' && !Array.isArray(call)) {
+    const parameters = (call as Record<string, unknown>).parameters;
+    if (parameters && typeof parameters === 'object' && !Array.isArray(parameters)) {
+      const parameterAccountValue = (parameters as Record<string, unknown>)['Account Key'];
+      const parameterAccount = typeof parameterAccountValue === 'string' ? parameterAccountValue.trim() : '';
+      if (parameterAccount) return parameterAccount;
+    }
+  }
   const estimate = record.estimate;
   if (estimate && typeof estimate === 'object' && !Array.isArray(estimate)) {
     const estimateAccount = String((estimate as Record<string, unknown>).accountKey || '').trim();
@@ -243,8 +268,24 @@ function getPendingRewardsRefreshAccountKey(data: any): string {
 function getPendingRewardsRefreshActionName(data: any): string {
   if (!data || typeof data !== 'object' || Array.isArray(data)) return 'estimate';
   const record = data as Record<string, unknown>;
-  const directAction = String(record.__pendingRewardsRefreshActionName || '').trim();
+  const directAction =
+    typeof record.__pendingRewardsRefreshActionName === 'string'
+      ? record.__pendingRewardsRefreshActionName.trim()
+      : '';
   if (directAction) return directAction;
+  const call = record.call;
+  if (call && typeof call === 'object' && !Array.isArray(call)) {
+    const parameters = (call as Record<string, unknown>).parameters;
+    const mode =
+      parameters && typeof parameters === 'object' && !Array.isArray(parameters)
+        ? (parameters as Record<string, unknown>).mode
+        : null;
+    if (mode && typeof mode === 'object' && !Array.isArray(mode)) {
+      const modeActionValue = (mode as Record<string, unknown>).action;
+      const modeAction = typeof modeActionValue === 'string' ? modeActionValue.trim() : '';
+      if (modeAction === 'claim' || modeAction === 'estimate') return modeAction;
+    }
+  }
   const estimate = record.estimate;
   if (estimate && typeof estimate === 'object' && !Array.isArray(estimate)) {
     const estimateAction = String((estimate as Record<string, unknown>).action || '').trim();
@@ -279,13 +320,14 @@ function getPendingRewardsActionName(data: any, fallback: string): string {
   if (!isLazyPendingRewardsActionNode(data)) return fallback;
   const fallbackLabel = String(fallback || '').trim();
   const record = data as Record<string, unknown>;
+  if (fallbackLabel === 'runPendingRewards') return 'runPendingRewards';
   if (fallbackLabel === 'mode' || fallbackLabel === 'claim' || fallbackLabel === 'estimate' || fallbackLabel === 'claimPendingRewards' || fallbackLabel === 'updatePendingRewards') {
     const overrideLabel = String(record.__pendingRewardsModeLabel ?? '').trim();
     if (overrideLabel) return `mode: ${overrideLabel}`;
     const action = String(record.action ?? fallbackLabel).trim();
     if (fallbackLabel === 'claimPendingRewards') return 'claimPendingRewards';
     if (fallbackLabel === 'updatePendingRewards') return 'updatePendingRewards';
-    return `mode: ${action}`;
+    return `mode: ${action === 'claim' ? 'Claim' : 'Update'}`;
   }
   if (/\b(off-chain|on-chain)\b/i.test(fallbackLabel)) return fallback;
   const action = String(record.action || fallback).trim();
@@ -304,7 +346,7 @@ function getPendingRewardsModeAction(value: any): Record<string, unknown> | null
       __lazyPendingRewardsAction: true,
       __pendingRewardsModeLabel:
         String(record.__pendingRewardsModeLabel ?? '').trim() ||
-        (directAction === 'claim' ? 'claim - on-chain' : 'estimate - off-chain'),
+        (directAction === 'claim' ? 'Claim' : 'Update'),
       __pendingRewardsModeValue:
         String(record.__pendingRewardsModeValue ?? '').trim() ||
         (directAction === 'claim' ? directAccountKey : 'selected'),
@@ -320,6 +362,17 @@ function getPendingRewardsModeAction(value: any): Record<string, unknown> | null
     __pendingRewardsModeLabel: String(record.__pendingRewardsModeLabel ?? modeLabel).trim(),
     __pendingRewardsModeValue: String(record.__pendingRewardsModeValue ?? record.accountKey ?? '').trim(),
   };
+}
+
+function isRunPendingRewardsNode(_label: string | undefined, data: any): boolean {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return false;
+  const call = (data as Record<string, unknown>).call;
+  return Boolean(
+    call &&
+      typeof call === 'object' &&
+      !Array.isArray(call) &&
+      (call as Record<string, unknown>).method === 'runPendingRewards',
+  );
 }
 
 function normalizePendingRewardsModeEntries(entries: Array<[string, any]>): Array<[string, any]> {
@@ -654,6 +707,7 @@ function getVisibleEntries(
           childKey !== 'count' &&
           childKey !== 'method' &&
           childKey !== 'action' &&
+          !(isTotalSpCoinsRecord(value) && (childKey === 'claim' || childKey === 'update' || childKey === 'mode')) &&
           !(isPendingRewardsRecord(value) && (childKey === 'claim' || childKey === 'estimate')) &&
           !isPendingRewardsInternalField(value, childKey) &&
           !hideEntryKeys.includes(childKey) &&
@@ -693,6 +747,7 @@ function getVisibleEntries(
       if (childKey === 'parameters' && value && typeof value === 'object' && !Array.isArray(value) && typeof (value as Record<string, unknown>).call === 'object') return false;
       if (isLazyAccountRelationNode(value) && ['accountKey', 'relation', 'count', 'method'].includes(childKey)) return false;
       if (isLazyPendingRewardsActionNode(value) && ['accountKey', 'action', 'method'].includes(childKey)) return false;
+      if (isTotalSpCoinsRecord(value) && (childKey === 'claim' || childKey === 'update' || childKey === 'mode')) return false;
       if (isPendingRewardsRecord(value) && (childKey === 'claim' || childKey === 'estimate')) return false;
       if (isPendingRewardsInternalField(value, childKey)) return false;
       if (hideEntryKeys.includes(childKey)) return false;
@@ -764,6 +819,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
   const isAddressNode = /^0x[0-9a-fA-F]{40}$/.test(addressNode);
   const hasLoadedAccountRecord = isAddressNode && hasInlineAccountRecord(data);
   const isLazyPendingRewardsAction = isLazyPendingRewardsActionNode(data);
+  const isRunPendingRewardsActionNode = isRunPendingRewardsNode(label, data);
   const isLazyAddressStub = isAddressNode && !hasLoadedAccountRecord && visibleEntries.length === 0 && !isLazyPendingRewardsAction;
   const isLazySpCoinMetaData = isLazySpCoinMetaDataNode(data);
   const isLazyMasterAccountKeys = isLazyMasterAccountKeysNode(data);
@@ -938,6 +994,29 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     updateCollapsedKeys,
   ]);
 
+  const rerunOpenRunPendingRewards = useCallback(
+    (event: React.MouseEvent<HTMLElement>) => {
+      if (!isRunPendingRewardsActionNode || isCollapsed) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const accountKey = getPendingRewardsRefreshAccountKey(data);
+      const action = getPendingRewardsRefreshActionName(data);
+      onTrace?.(
+        `[JSON_INSPECTOR_TRACE] pendingRewards runPendingRewards right-click rerun path=${currentPath} accountKey=${accountKey} action=${action}`,
+      );
+      onLeafValueClick?.(
+        JSON.stringify({
+          __loadPendingRewardsAction: true,
+          accountKey,
+          action,
+        }),
+        currentPath,
+        'runPendingRewards',
+      );
+    },
+    [currentPath, data, isCollapsed, isRunPendingRewardsActionNode, onLeafValueClick, onTrace],
+  );
+
   const getValueColor = (value: any): string => {
     if (value === false || value === undefined || value === null) return 'text-red-500';
     if (typeof value === 'boolean') return 'text-yellow-300';
@@ -956,6 +1035,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
   const getDisplayLabel = (nextPath: string): string => {
     const baseLabel = getPathLabel(nextPath);
     if (isLazyAccountRelation) return getLazyAccountRelationName(data, baseLabel);
+    if (isRunPendingRewardsActionNode) return 'runPendingRewards';
     if (isLazyPendingRewardsAction) return getPendingRewardsActionName(data, baseLabel);
     if (!label || !data || typeof data !== 'object' || Array.isArray(data)) return baseLabel;
     const inlineSummaryValue = (data as Record<string, unknown>)[label];
@@ -997,6 +1077,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     stepCallRecord && typeof stepCallRecord.method === 'string'
       ? String(stepCallRecord.method).trim()
       : '';
+  const visibleInlineStepMethod = inlineStepMethod === 'runPendingRewards' ? '' : inlineStepMethod;
   const promotedStepEntries =
     stepCallRecord && !Array.isArray(stepCallRecord)
       ? [
@@ -1275,7 +1356,13 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
         className={`whitespace-nowrap rounded-sm ${isDraggableScriptStep ? 'cursor-pointer select-none' : ''}`}
       >
         <div className={`mb-[2px] h-[2px] rounded-full ${activeDropPlacement === 'before' ? 'bg-[#8FA8FF]' : 'bg-transparent'}`} />
-        <button type="button" className="inline-flex items-center bg-transparent p-0" onClick={toggle}>
+        <button
+          type="button"
+          className="inline-flex items-center bg-transparent p-0"
+          onClick={toggle}
+          onContextMenu={rerunOpenRunPendingRewards}
+          title={isRunPendingRewardsActionNode && !isCollapsed ? 'Right click to rerun' : undefined}
+        >
           <span className={isHighlighted ? highlightColorClass : isCollapsed ? 'text-green-400' : 'text-red-400'}>{isCollapsed ? '[+]' : '[-]'}</span>
         </button>{' '}
         {isLazyAccountRelation ? (
@@ -1358,9 +1445,9 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
             {visibleStepLabel}
           </span>
         )}
-        {inlineStepMethod ? (
+        {visibleInlineStepMethod ? (
           <span className={`ml-3 ${isHighlighted ? highlightColorClass : 'text-green-400'}`}>
-            {formatDisplayScalar('method', inlineStepMethod, false, tokenDecimals)}
+            {formatDisplayScalar('method', visibleInlineStepMethod, false, tokenDecimals)}
           </span>
         ) : null}
         <div className={`mt-[2px] h-[2px] rounded-full ${activeDropPlacement === 'after' ? 'bg-[#8FA8FF]' : 'bg-transparent'}`} />

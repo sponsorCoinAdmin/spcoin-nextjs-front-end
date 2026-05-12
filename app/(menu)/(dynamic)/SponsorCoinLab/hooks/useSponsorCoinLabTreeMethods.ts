@@ -133,6 +133,17 @@ function hasPendingRewardsRefreshAction(value: unknown) {
   );
 }
 
+function hasRunPendingRewardsCall(value: unknown) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const call = (value as Record<string, unknown>).call;
+  return Boolean(
+    call &&
+      typeof call === 'object' &&
+      !Array.isArray(call) &&
+      (call as Record<string, unknown>).method === 'runPendingRewards',
+  );
+}
+
 function readPendingRewardsAmount(value: unknown) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const amount = (value as Record<string, unknown>).pendingRewards;
@@ -149,7 +160,7 @@ function buildLazyRunPendingRewardsMode(
     __lazyPendingRewardsAction: true,
     accountKey,
     action,
-    __pendingRewardsModeLabel: action === 'estimate' ? 'estimate - off-chain' : 'claim - on-chain',
+    __pendingRewardsModeLabel: action === 'estimate' ? 'Update' : 'Claim',
     __pendingRewardsModeValue: displayValue,
   };
 }
@@ -1419,7 +1430,8 @@ export function useSponsorCoinLabTreeMethods({
         if (
           !hasLazyPendingRewardsAction(actionNode) &&
           !hasLazyPendingRewardsAction(fallbackActionNode) &&
-          !hasPendingRewardsRefreshAction(targetNode)
+          !hasPendingRewardsRefreshAction(targetNode) &&
+          !hasRunPendingRewardsCall(targetNode)
         ) {
           continue;
         }
@@ -1680,9 +1692,14 @@ export function useSponsorCoinLabTreeMethods({
           if (!payload) continue;
           const claimNode = readTogglePathValue(payload, payloadPath);
           if (!claimNode || typeof claimNode !== 'object' || Array.isArray(claimNode)) continue;
-          const currentLabel = String((claimNode as Record<string, unknown>).__pendingRewardsModeLabel ?? '');
+          const rawCurrentLabel = (claimNode as Record<string, unknown>).__pendingRewardsModeLabel;
+          const currentLabel = typeof rawCurrentLabel === 'string' ? rawCurrentLabel : '';
           const nextLabel = currentLabel === 'Update' ? 'Claim' : 'Update';
-          const nextClaimNode = { ...(claimNode as Record<string, unknown>), __pendingRewardsModeLabel: nextLabel };
+          const nextClaimNode = {
+            ...(claimNode as Record<string, unknown>),
+            action: nextLabel === 'Claim' ? 'claim' : 'estimate',
+            __pendingRewardsModeLabel: nextLabel,
+          };
           const nextPayloadRecord = writePathValue(payload, payloadPath, nextClaimNode);
           const nextRootPayload = normalizeExecutionPayload(nextPayloadRecord) as Record<string, unknown>;
           const nextPayload = formatFormattedPanelPayload(nextRootPayload);
@@ -1727,7 +1744,7 @@ export function useSponsorCoinLabTreeMethods({
         } else {
           setFormattedOutputDisplay(nextPayload);
         }
-        setStatus(`Selected ${click.action === 'claim' ? 'claim - on-chain' : 'estimate - off-chain'} mode.`);
+        setStatus(`Selected ${click.action === 'claim' ? 'Claim' : 'Update'} mode.`);
         return 'expanded';
       }
       return 'unhandled';
