@@ -48,6 +48,7 @@ function buildTotalSpCoinsRecord(balanceOf, stakedBalance, pendingRewardsRecord,
         ...(hasPendingRecipientRewards ? { pendingRecipientRewards: String(normalizedPendingRewardsRecord.pendingRecipientRewards ?? "0") } : {}),
         ...(hasPendingAgentRewards ? { pendingAgentRewards: String(normalizedPendingRewardsRecord.pendingAgentRewards ?? "0") } : {}),
     };
+    const accountKeyStr = String(accountKey ?? "");
     return {
         TYPE: "--TOTAL_SP_COINS--",
         totalSpCoins: (
@@ -58,6 +59,9 @@ function buildTotalSpCoinsRecord(balanceOf, stakedBalance, pendingRewardsRecord,
         balanceOf: normalizedBalanceOf,
         stakedBalance: normalizedStakedBalance,
         annualInflationRate: String(annualInflationRate ?? "0%"),
+        mode: 'Claim',
+        claim: buildPendingRewardsAction(accountKeyStr, "claim"),
+        update: buildPendingRewardsAction(accountKeyStr, "estimate"),
         pendingRewards: pendingRewardsDisplay,
     };
 }

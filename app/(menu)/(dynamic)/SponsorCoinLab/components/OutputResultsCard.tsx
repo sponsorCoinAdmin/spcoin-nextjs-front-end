@@ -651,7 +651,13 @@ export default function OutputResultsCard({
         ];
       });
     };
-    const collapsePaths = blocks.flatMap((block, index) => collectDefaultCollapsedPaths(block, `${rootLabel}-${index}`));
+    const collapsePaths = blocks.flatMap((block, index) => {
+      const basePath = `${rootLabel}-${index}`;
+      const childPaths = collectDefaultCollapsedPaths(block, basePath);
+      const isHeaderBlock = isScriptHeaderDisplayRecord(block);
+      const headerPath = isHeaderBlock ? `script-header-${index}` : null;
+      return headerPath ? [headerPath, ...childPaths] : childPaths;
+    });
     if (collapsePaths.length === 0) return;
     seededDefaultCollapseSignatureRef.current = signature;
     if (collapsePaths.every((path) => collapsedKeys.includes(path))) return;

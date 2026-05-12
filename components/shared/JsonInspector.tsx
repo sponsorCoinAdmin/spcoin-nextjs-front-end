@@ -170,17 +170,8 @@ function isLazyPendingRewardsActionNode(data: any): boolean {
   );
 }
 
-function getTotalSpCoinsPendingRewardsAction(data: any): Record<string, unknown> | null {
-  if (!isTotalSpCoinsRecord(data)) return null;
-  const pendingRewards =
-    data && typeof data === 'object' && !Array.isArray(data)
-      ? (data as Record<string, unknown>).pendingRewards
-      : null;
-  if (!pendingRewards || typeof pendingRewards !== 'object' || Array.isArray(pendingRewards)) return null;
-  const runPendingRewards = (pendingRewards as Record<string, unknown>).runPendingRewards;
-  if (runPendingRewards && typeof runPendingRewards === 'object' && !Array.isArray(runPendingRewards)) return null;
-  const claim = (pendingRewards as Record<string, unknown>).claim;
-  return isLazyPendingRewardsActionNode(claim) ? (claim as Record<string, unknown>) : null;
+function getTotalSpCoinsPendingRewardsAction(_data: any): Record<string, unknown> | null {
+  return null;
 }
 
 function getPendingRewardsRunAction(data: any): Record<string, unknown> | null {
@@ -288,12 +279,12 @@ function getPendingRewardsActionName(data: any, fallback: string): string {
   if (!isLazyPendingRewardsActionNode(data)) return fallback;
   const fallbackLabel = String(fallback || '').trim();
   const record = data as Record<string, unknown>;
-  if (fallbackLabel === 'mode' || fallbackLabel === 'claim' || fallbackLabel === 'estimate') {
+  if (fallbackLabel === 'mode' || fallbackLabel === 'claim' || fallbackLabel === 'estimate' || fallbackLabel === 'claimPendingRewards' || fallbackLabel === 'updatePendingRewards') {
     const overrideLabel = String(record.__pendingRewardsModeLabel ?? '').trim();
     if (overrideLabel) return `mode: ${overrideLabel}`;
     const action = String(record.action ?? fallbackLabel).trim();
-    if (action === 'claim') return 'mode: Claim';
-    if (action === 'estimate') return 'mode: Estimate';
+    if (fallbackLabel === 'claimPendingRewards') return 'claimPendingRewards';
+    if (fallbackLabel === 'updatePendingRewards') return 'updatePendingRewards';
     return `mode: ${action}`;
   }
   if (/\b(off-chain|on-chain)\b/i.test(fallbackLabel)) return fallback;
@@ -616,6 +607,12 @@ function getVisibleEntries(
     if (rightKey === 'totalOnChainMs' && leftKey !== 'totalOnChainMs') return -1;
     if (leftKey === 'annualInflationRate' && rightKey === 'pendingRewards') return -1;
     if (rightKey === 'annualInflationRate' && leftKey === 'pendingRewards') return 1;
+    if (leftKey === 'annualInflationRate' && (rightKey === 'claim' || rightKey === 'update')) return -1;
+    if ((leftKey === 'claim' || leftKey === 'update') && rightKey === 'annualInflationRate') return 1;
+    if (leftKey === 'claim' && rightKey === 'update') return -1;
+    if (leftKey === 'update' && rightKey === 'claim') return 1;
+    if ((leftKey === 'claim' || leftKey === 'update') && rightKey === 'pendingRewards') return -1;
+    if (rightKey === 'pendingRewards' && (leftKey === 'claim' || leftKey === 'update')) return 1;
     if (leftKey === 'totalGasUsed' && rightKey !== 'totalGasUsed') return 1;
     if (rightKey === 'totalGasUsed' && leftKey !== 'totalGasUsed') return -1;
     if (leftKey === 'totalGasPriceWei' && rightKey !== 'totalGasPriceWei') return 1;
@@ -666,20 +663,7 @@ function getVisibleEntries(
     const normalizedEntries = normalizePendingRewardsModeEntries(entries);
     const runAction = getPendingRewardsRunAction(value);
     if (runAction) return [['runPendingRewards', runAction], ...normalizedEntries] as Array<[string, any]>;
-  const runAction = getPendingRewardsRunAction(value);
-  if (runAction) return [['runPendingRewards', runAction], ...normalizedEntries] as Array<[string, any]>;
-      if (isTotalSpCoinsRecord(value)) {
-      const pr = (value as Record<string, unknown>).pendingRewards;
-      const claim = pr && typeof pr === 'object' && !Array.isArray(pr) ? (pr as Record<string, unknown>).claim : null;
-      if (isLazyPendingRewardsActionNode(claim)) {
-        const runPendingRewards = pr && typeof pr === 'object' && !Array.isArray(pr) ? (pr as Record<string, unknown>).runPendingRewards : null;
-        const hasResult = runPendingRewards && typeof runPendingRewards === 'object' && !Array.isArray(runPendingRewards) && (runPendingRewards as Record<string, unknown>).result !== undefined;
-        const claimNode = { ...(claim as Record<string, unknown>), __pendingRewardsModeLabel: hasResult ? 'Update' : 'Claim' };
-        const idx = normalizedEntries.findIndex(([k]) => k === 'annualInflationRate');
-        const insertAt = idx >= 0 ? idx + 1 : normalizedEntries.length;
-        return [...normalizedEntries.slice(0, insertAt), ['claim', claimNode], ...normalizedEntries.slice(insertAt)] as Array<[string, any]>;
-      }
-    }
+
     return normalizedEntries;
   }
 
@@ -720,18 +704,6 @@ function getVisibleEntries(
     })
     .sort(sortEntries);
   const normalizedEntries = normalizePendingRewardsModeEntries(entries);
-  if (isTotalSpCoinsRecord(value)) {
-    const pr = (value as Record<string, unknown>).pendingRewards;
-    const claim = pr && typeof pr === 'object' && !Array.isArray(pr) ? (pr as Record<string, unknown>).claim : null;
-    if (isLazyPendingRewardsActionNode(claim)) {
-      const runPendingRewards = pr && typeof pr === 'object' && !Array.isArray(pr) ? (pr as Record<string, unknown>).runPendingRewards : null;
-      const hasResult = runPendingRewards && typeof runPendingRewards === 'object' && !Array.isArray(runPendingRewards) && (runPendingRewards as Record<string, unknown>).result !== undefined;
-      const claimNode = { ...(claim as Record<string, unknown>), __pendingRewardsModeLabel: hasResult ? 'Update' : 'Claim' };
-      const idx = normalizedEntries.findIndex(([k]) => k === 'annualInflationRate');
-      const insertAt = idx >= 0 ? idx + 1 : normalizedEntries.length;
-      return [...normalizedEntries.slice(0, insertAt), ['claim', claimNode], ...normalizedEntries.slice(insertAt)] as Array<[string, any]>;
-    }
-  }
   return normalizedEntries;
 }
 
@@ -811,7 +783,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
   const forceExpandedIsActive =
     shouldForceExpand && !isPendingRewardsRefreshReady && !collapsedKeys.includes(forceExpandedDismissedKey);
   const isExplicitlyExpanded = forceExpandedIsActive || collapsedKeys.includes(expandedPathKey);
-  const isDefaultCollapsed = level > 0 && !isExplicitlyExpanded && !isLazyAccountRelation;
+  const isDefaultCollapsed = (level > 0 || /^script-header-\d+$/.test(currentPath)) && !isExplicitlyExpanded && !isLazyAccountRelation;
   const isCollapsed =
     !forceExpandedIsActive &&
     (collapsedKeys.includes(currentPath) ||
@@ -845,6 +817,13 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
       return;
     }
     if (isCollapsed && isLazyPendingRewardsAction) {
+      const isDirectActionButton =
+        String(label || '').trim() === 'claimPendingRewards' ||
+        String(label || '').trim() === 'updatePendingRewards';
+      if (isDirectActionButton) {
+        updateCollapsedKeys([...new Set(nextOpenKeys)]);
+        return;
+      }
       const isModeParameter =
         currentPath.includes('.parameters.') ||
         String(label || '').trim() === 'mode' ||
@@ -1047,6 +1026,40 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
 
   const renderValue = (value: any, key: string) => {
     const nextPath = `${path}.${key}`;
+    const isTotalSpCoinsActionButton =
+      (key === 'claim' || key === 'update') &&
+      isLazyPendingRewardsActionNode(value) &&
+      !String(path || '').endsWith('.parameters');
+    if (isTotalSpCoinsActionButton) {
+      const actionLabel = key === 'claim' ? 'Claim' : 'Update';
+      const rowHighlighted = highlightPathPrefixes.some(
+        (prefix) => nextPath === prefix || nextPath.startsWith(`${prefix}.`),
+      );
+      return (
+        <div key={nextPath} className="ml-4 whitespace-nowrap">
+          <button
+            type="button"
+            className={`inline-flex items-center gap-1 bg-transparent p-0 font-semibold ${
+              rowHighlighted ? highlightColorClass : 'text-white'
+            }`}
+            onClick={() => {
+              onLeafValueClick?.(
+                JSON.stringify({
+                  __loadPendingRewardsAction: true,
+                  accountKey: String((value as Record<string, unknown>).accountKey || ''),
+                  action: String((value as Record<string, unknown>).action || ''),
+                }),
+                nextPath,
+                key,
+              );
+            }}
+            title={`Run ${actionLabel} pending rewards`}
+          >
+            <span className="text-green-400">[+]</span> {actionLabel}
+          </button>
+        </div>
+      );
+    }
     const pendingRewardsModeAction =
       String(path || '').endsWith('.parameters') && (key === 'mode' || key === 'claim' || key === 'estimate')
         ? getPendingRewardsModeAction(value)

@@ -1401,10 +1401,12 @@ export function useSponsorCoinLabTreeMethods({
             ? payloadPath.slice(0, -1)
             : hasPendingRewardsRefreshAction(targetNode) && payloadPath.at(-1) === 'pendingRewards'
               ? [...payloadPath, 'runPendingRewards']
+            : (payloadPath.at(-1) === 'claim' || payloadPath.at(-1) === 'update') && payloadPath.at(-2) !== 'pendingRewards'
+              ? [...payloadPath.slice(0, -1), 'pendingRewards', 'runPendingRewards']
             : actionModeSegmentIndex > 0
               ? runPendingRewardsPath
               : payloadPath;
-        const actionNode = readPathValue(payload, targetPath);
+        const actionNode = readPathValue(payload, targetPath) ?? readPathValue(payload, payloadPath);
         const pendingRewardsNode =
           targetPath.at(-1) === 'runPendingRewards' ? readPathValue(payload, targetPath.slice(0, -1)) : null;
         const pendingRewardsRecord =
