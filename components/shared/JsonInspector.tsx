@@ -151,19 +151,25 @@ function isPendingRewardsRecord(data: any): boolean {
   const record =
     data && typeof data === 'object' && !Array.isArray(data) ? (data as Record<string, unknown>) : null;
   if (!record || isTotalSpCoinsRecord(record)) return false;
-  const hasPendingRewardsValue = Boolean(record && Object.prototype.hasOwnProperty.call(record, 'pendingRewards'));
+  const hasPendingRewardsValue = Object.prototype.hasOwnProperty.call(record, 'pendingRewards');
+  const hasPendingRewardsAction =
+    Object.prototype.hasOwnProperty.call(record, 'claim') ||
+    Object.prototype.hasOwnProperty.call(record, 'estimate') ||
+    Object.prototype.hasOwnProperty.call(record, 'mode') ||
+    Object.prototype.hasOwnProperty.call(record, 'runPendingRewards');
+  const hasPendingRewardsTotals =
+    Object.prototype.hasOwnProperty.call(record, 'stakingRewards') ||
+    Object.prototype.hasOwnProperty.call(record, 'lastSponsorUpdate') ||
+    Object.prototype.hasOwnProperty.call(record, 'lastSponsorUpdateTimeStamp') ||
+    Object.prototype.hasOwnProperty.call(record, 'lastRecipientUpdate') ||
+    Object.prototype.hasOwnProperty.call(record, 'lastRecipientUpdateTimeStamp') ||
+    Object.prototype.hasOwnProperty.call(record, 'lastAgentUpdate') ||
+    Object.prototype.hasOwnProperty.call(record, 'lastAgentUpdateTimeStamp');
   const hasPendingRewardsShape = Boolean(
     record &&
-      hasPendingRewardsValue &&
       (record.TYPE === '--PENDING_REWARDS--' ||
         record.TYPE === '--ACCOUNT_PENDING_REWARDS--' ||
-        Object.prototype.hasOwnProperty.call(record, 'claim') ||
-        Object.prototype.hasOwnProperty.call(record, 'estimate') ||
-        Object.prototype.hasOwnProperty.call(record, 'mode') ||
-        Object.prototype.hasOwnProperty.call(record, 'runPendingRewards') ||
-        Object.prototype.hasOwnProperty.call(record, 'lastSponsorUpdate') ||
-        Object.prototype.hasOwnProperty.call(record, 'lastSponsorUpdateTimeStamp') ||
-        Object.prototype.hasOwnProperty.call(record, 'stakingRewards')),
+        (hasPendingRewardsAction && (hasPendingRewardsValue || hasPendingRewardsTotals))),
   );
   return Boolean(
     record &&
@@ -193,12 +199,13 @@ function getPendingRewardsRunAction(data: any): Record<string, unknown> | null {
   const record = data as Record<string, unknown>;
   const runPendingRewards = record.runPendingRewards;
   if (runPendingRewards && typeof runPendingRewards === 'object' && !Array.isArray(runPendingRewards)) return null;
+  const mode = getPendingRewardsModeAction(record.mode);
+  if (mode && isLazyPendingRewardsActionNode(mode)) return mode;
   const estimate = record.estimate;
   if (isLazyPendingRewardsActionNode(estimate)) return estimate as Record<string, unknown>;
   const claim = record.claim;
   if (isLazyPendingRewardsActionNode(claim)) return claim as Record<string, unknown>;
-  const mode = getPendingRewardsModeAction(record.mode);
-  return mode && isLazyPendingRewardsActionNode(mode) ? mode : null;
+  return null;
 }
 
 function getPendingRewardsRefreshAtMs(data: any): number {
@@ -381,6 +388,31 @@ function normalizePendingRewardsModeEntries(entries: Array<[string, any]>): Arra
     const modeAction = getPendingRewardsModeAction(value);
     return modeAction ? [key, modeAction] : [key, value];
   });
+}
+
+function buildSyntheticPendingRewardsMode(runAction: Record<string, unknown>): Record<string, unknown> {
+  const accountKey = typeof runAction.accountKey === 'string' ? runAction.accountKey : '';
+  return {
+    ...runAction,
+    __lazyPendingRewardsAction: true,
+    accountKey,
+    action: 'estimate',
+    __pendingRewardsModeLabel: 'Update',
+    __pendingRewardsModeValue: 'selected',
+  };
+}
+
+function promotePendingRewardsRunAction(entries: Array<[string, any]>, runAction: Record<string, unknown> | null): Array<[string, any]> {
+  if (!runAction) return entries;
+  const modeEntryIndex = entries.findIndex(([key]) => key === 'mode');
+  const nextEntries =
+    modeEntryIndex < 0
+      ? ([['mode', buildSyntheticPendingRewardsMode(runAction)], ...entries] as Array<[string, any]>)
+      : [...entries];
+  const nextModeEntryIndex = modeEntryIndex < 0 ? 0 : modeEntryIndex;
+  const modeAction = getPendingRewardsModeAction(nextEntries[nextModeEntryIndex]?.[1]);
+  nextEntries.splice(nextModeEntryIndex + 1, 0, ['runPendingRewards', modeAction ?? runAction]);
+  return nextEntries;
 }
 
 function shouldForceExpandNode(data: any): boolean {
@@ -716,9 +748,7 @@ function getVisibleEntries(
       .sort(sortEntries);
     const normalizedEntries = normalizePendingRewardsModeEntries(entries);
     const runAction = getPendingRewardsRunAction(value);
-    if (runAction) return [['runPendingRewards', runAction], ...normalizedEntries] as Array<[string, any]>;
-
-    return normalizedEntries;
+    return promotePendingRewardsRunAction(normalizedEntries, runAction);
   }
 
   if (Array.isArray(value)) {
@@ -759,7 +789,8 @@ function getVisibleEntries(
     })
     .sort(sortEntries);
   const normalizedEntries = normalizePendingRewardsModeEntries(entries);
-  return normalizedEntries;
+  const runAction = getPendingRewardsRunAction(value);
+  return promotePendingRewardsRunAction(normalizedEntries, runAction);
 }
 
 const JsonInspector: React.FC<JsonInspectorProps> = ({
@@ -1142,7 +1173,8 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
       );
     }
     const pendingRewardsModeAction =
-      String(path || '').endsWith('.parameters') && (key === 'mode' || key === 'claim' || key === 'estimate')
+      (String(path || '').endsWith('.parameters') || isPendingRewardsRecord(data)) &&
+      (key === 'mode' || key === 'claim' || key === 'estimate')
         ? getPendingRewardsModeAction(value)
         : null;
     if (pendingRewardsModeAction && !lockPendingRewardsMode) {

@@ -4,7 +4,7 @@
  * the account cache for all affected accounts (sponsor, recipient, agent).
  */
 import { invalidateCachedAccountRecord } from './accountCache';
-import { invalidateReadCacheForAccount } from './readCache';
+import { invalidateReadCacheByDependency, invalidateReadCacheForAccount } from './readCache';
 
 const activeListeners = new Map<string, () => void>();
 
@@ -14,6 +14,24 @@ function normalizeAddress(value: unknown): string {
 
 function buildListenerKey(contractAddress: string): string {
   return normalizeAddress(contractAddress);
+}
+
+function invalidateRelationshipReadMethods(): void {
+  for (const methodName of [
+    'getAccountLinks',
+    'getAccountRecord',
+    'getAccountRecordBase',
+    'getAccountRecordShallow',
+    'getRecipientRateList',
+    'getRecipientRateAgentList',
+    'getAgentRateList',
+    'getRecipientRateTransactionSetKey',
+    'getAgentRateTransactionSetKey',
+    'getRateTransactionSet',
+    'getPendingRewards',
+  ]) {
+    invalidateReadCacheByDependency(`method:${methodName}`);
+  }
 }
 
 export function startAccountCacheEventListener(
@@ -48,6 +66,7 @@ export function startAccountCacheEventListener(
       invalidateCachedAccountRecord(contractAddress, agentKey);
       invalidateReadCacheForAccount(agentKey);
     }
+    invalidateRelationshipReadMethods();
   };
 
   typedContract.on('TransactionAdded', handler);

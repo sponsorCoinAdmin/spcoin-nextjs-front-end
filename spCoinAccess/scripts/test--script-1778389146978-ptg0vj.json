@@ -107,6 +107,44 @@
       ],
       "breakpoint": false,
       "hasMissingRequiredParams": false
+    },
+    {
+      "step": 6,
+      "name": "runPendingRewards",
+      "panel": "spcoin_write",
+      "method": "runPendingRewards",
+      "msg.sender": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8",
+      "params": [
+        {
+          "key": "Account Key",
+          "value": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8"
+        },
+        {
+          "key": "mode",
+          "value": "Update"
+        }
+      ],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 7,
+      "name": "runPendingRewards",
+      "panel": "spcoin_write",
+      "method": "runPendingRewards",
+      "msg.sender": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+      "params": [
+        {
+          "key": "Account Key",
+          "value": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc"
+        },
+        {
+          "key": "mode",
+          "value": "Update"
+        }
+      ],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
     }
   ]
 }

@@ -14,7 +14,9 @@ const TIME_SENSITIVE_METHODS = new Set([
 
 function applyMethodCacheDefaults(methodName: string, options: SpCoinReadCacheOptions): SpCoinReadCacheOptions {
   if (methodName === "getPendingRewards") {
-    if (options.cache != null || options.blockTag != null || options.timestampOverride != null) return options;
+    // If user explicitly set cache mode, respect it
+    if (options.cache != null) return options;
+    // Otherwise default to bypass for this time-sensitive method
     return {
       ...options,
       cache: "bypass",

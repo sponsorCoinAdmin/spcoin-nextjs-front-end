@@ -25,9 +25,11 @@ export {
 export { getAccountStakingRewards } from './getAccountStakingRewards';
 export { getPendingRewards } from './getPendingRewards';
 export { getTransactionRecord } from './getTransactionRecord';
+export { getAccountLinks } from './getAccountLinks';
 export { getRecipientTransactionIdKeys } from './getRecipientTransactionIdKeys';
 export { getAgentTransactionIdKeys } from './getAgentTransactionIdKeys';
 export { getSpCoinMetaData } from './getSpCoinMetaData';
+export { getInflationRate } from './getInflationRate';
 export { getAgentRateKeys, getAgentRateList } from './getAgentRateList';
 export { getAgentRateRange } from './getAgentRateRange';
 export { getAgentTransaction } from './getAgentTransaction';
@@ -43,4 +45,8 @@ export { getRecipient } from './getRecipient';
 export { getRecipientRecordList } from './getRecipientRecordList';
 export { getRecipientRateKeys, getRecipientRateList, getSponsorRecipientRates, getSponsorRecipientRateKeys } from './getRecipientRateList';
 export { getRecipientTransactionEntries } from './getRecipientTransactionEntries';
+export { getRateTransactionSet } from './getRateTransactionSet';
+export { getRecipientRateTransactionSetKey } from './getRecipientRateTransactionSetKey';
+export { getAgentRateTransactionSetKey } from './getAgentRateTransactionSetKey';
+export { getAccountRecordBase } from './getAccountRecordBase';
 

@@ -781,7 +781,7 @@ export function useSponsorCoinLabMethodExecution({
           return { call, result: normalizeWriteResultForDisplay(result), meta: utilityMetaRest as MethodExecutionPayloadMeta, ...(utilityOc ? { onChainCalls: utilityOc as MethodExecutionMeta['onChainCalls'] } : {}) };
         }
 
-        const shouldUseServerBackedWrite = allowServerBackedWrite && effectiveMode === 'hardhat';
+        const shouldUseServerBackedWrite = allowServerBackedWrite && effectiveMode === 'hardhat' && selectedMethod !== 'runPendingRewards';
         const result = shouldUseServerBackedWrite
           ? await runServerBackedSpCoinStep(
               'spcoin_write',
@@ -794,19 +794,21 @@ export function useSponsorCoinLabMethodExecution({
               effectiveMode,
               executionSignal,
             )
-          : await runSpCoinWriteMethod({
-              selectedMethod,
-              spWriteParams: localParams,
-              coerceParamValue,
-              executeWriteConnected: (label, writeCall, accountKey) =>
-                executeWriteConnected(label, writeCall, accountKey, effectiveMode),
-              selectedHardhatAddress: signer,
-              appendLog,
-              appendWriteTrace,
-              spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
-              setStatus,
-              timingCollector: executionTimingCollector,
-            });
+           : await runSpCoinWriteMethod({
+               selectedMethod,
+               spWriteParams: localParams,
+               coerceParamValue,
+               executeWriteConnected: (label, writeCall, accountKey) =>
+                 executeWriteConnected(label, writeCall, accountKey, effectiveMode),
+               selectedHardhatAddress: signer,
+               appendLog,
+               appendWriteTrace,
+               spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
+               setStatus,
+               timingCollector: executionTimingCollector,
+               useReadCache,
+               readCacheNamespace,
+             });
         if (shouldUseServerBackedWrite) {
           const serverResult = result as ServerBackedStepResult;
           const displayResult = addSpCoinWriteResultDetail(

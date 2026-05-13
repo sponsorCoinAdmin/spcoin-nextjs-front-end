@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-12T19:53:24.329Z",
+  "updatedAt": "2026-05-13T03:46:39.609Z",
   "lists": {
     "serialization": {
       "Basic": {
@@ -580,6 +580,7 @@
         "deleteRecipientSponsorship": true,
         "deleteAccountRecord": true,
         "deleteAccountRecords": false,
+        "runPendingRewards": true,
         "updateAccountStakingRewards": true,
         "updateSponsorAccountRewards": true,
         "updateRecipientAccountRewards": true,
@@ -618,6 +619,7 @@
         "deleteRecipientSponsorship": true,
         "deleteAccountRecord": true,
         "deleteAccountRecords": false,
+        "runPendingRewards": true,
         "updateAccountStakingRewards": true,
         "updateSponsorAccountRewards": true,
         "updateRecipientAccountRewards": true,
@@ -656,6 +658,7 @@
         "deleteRecipientSponsorship": false,
         "deleteAccountRecord": false,
         "deleteAccountRecords": true,
+        "runPendingRewards": false,
         "updateAccountStakingRewards": false,
         "updateSponsorAccountRewards": false,
         "updateRecipientAccountRewards": false,
@@ -694,6 +697,7 @@
         "deleteRecipientSponsorship": false,
         "deleteAccountRecord": false,
         "deleteAccountRecords": true,
+        "runPendingRewards": false,
         "updateAccountStakingRewards": false,
         "updateSponsorAccountRewards": false,
         "updateRecipientAccountRewards": false,
@@ -732,6 +736,7 @@
         "deleteRecipientSponsorship": false,
         "deleteAccountRecord": false,
         "deleteAccountRecords": false,
+        "runPendingRewards": false,
         "updateAccountStakingRewards": false,
         "updateSponsorAccountRewards": false,
         "updateRecipientAccountRewards": false,
@@ -934,6 +939,7 @@
     "spCoinWrite:deleteRecipientSponsorship": "spcoin_write",
     "spCoinWrite:deleteAccountRecord": "spcoin_write",
     "spCoinWrite:deleteAccountRecords": "todos",
+    "spCoinWrite:runPendingRewards": "spcoin_write",
     "spCoinWrite:updateAccountStakingRewards": "spcoin_write",
     "spCoinWrite:updateSponsorAccountRewards": "spcoin_write",
     "spCoinWrite:updateRecipientAccountRewards": "spcoin_write",

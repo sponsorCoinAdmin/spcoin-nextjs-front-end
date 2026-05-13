@@ -19,6 +19,7 @@ import {
   isRecipient as localIsRecipient,
   isSponsor as localIsSponsor,
 } from '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinReadModule/methods/getAccountRoleSummary';
+import { startAccountCacheEventListener } from '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/utils/accountCacheEventListener';
 import type {
   AccountStruct,
   AgentRateStruct,
@@ -174,7 +175,7 @@ export type SpCoinReadAccess = {
   getActiveAccountListSize?: () => Promise<number>;
   getActiveAccountKeyAt?: (index: string | number) => Promise<string>;
   getActiveAccountElement?: (index: string | number) => Promise<string>;
-  getSponsorKeys?: (_accountKey?: string) => Promise<string[]>;
+  getSponsorKeys?: (_accountKey?: string, options?: unknown) => Promise<string[]>;
   getRecipientKeys?: (_accountKey: string) => Promise<string[]>;
   getParentRecipientKeys?: (_accountKey: string) => Promise<string[]>;
   getRecipientList?: (_accountKey: string) => Promise<string[]>;
@@ -194,6 +195,13 @@ export type SpCoinReadAccess = {
   isSponsor?: (_accountKey: string) => Promise<boolean>;
   isRecipient?: (_accountKey: string) => Promise<boolean>;
   isAgent?: (_accountKey: string) => Promise<boolean>;
+  getInflationRate?: (options?: unknown) => Promise<string | number | bigint>;
+  getAccountLinks?: (_accountKey: string, options?: unknown) => Promise<{
+    sponsorKeys: string[];
+    recipientKeys: string[];
+    agentKeys: string[];
+    parentRecipientKeys: string[];
+  }>;
   getAccountStakingRewards: (_accountKey: string) => Promise<RewardsStruct>;
   getPendingRewards?: (_accountKey: string, options?: unknown) => Promise<{
     TYPE: '--ACCOUNT_PENDING_REWARDS--';
@@ -212,9 +220,9 @@ export type SpCoinReadAccess = {
   getSponsorRecipientRates?: (_sponsorKey: string, _recipientKey: string) => Promise<(string | number | bigint)[]>;
   getSponsorRecipientRateKeys?: (_sponsorKey: string, _recipientKey: string) => Promise<(string | number | bigint)[]>;
   getRecipientRateKeys: (_sponsorKey: string, _recipientKey: string) => Promise<(string | number | bigint)[]>;
-  getRecipientRateList: (_sponsorKey: string, _recipientKey: string) => Promise<(string | number | bigint)[]>;
+  getRecipientRateList: (_sponsorKey: string, _recipientKey: string, options?: unknown) => Promise<(string | number | bigint)[]>;
   getRecipientRateAgentKeys: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number) => Promise<string[]>;
-  getRecipientRateAgentList: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number) => Promise<string[]>;
+  getRecipientRateAgentList: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number, options?: unknown) => Promise<string[]>;
   getRecipient: (_sponsorKey: string, _recipientKey: string) => Promise<RecipientStruct>;
   getRecipientTransaction: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number) => Promise<RecipientRateStruct>;
   getTransactionRecord?: (_transactionId: string | number) => Promise<unknown>;
@@ -236,6 +244,13 @@ export type SpCoinReadAccess = {
     _recipientRateKey: string | number,
     _agentKey: string,
   ) => Promise<(string | number | bigint)[]>;
+  getAgentRateList: (
+    _sponsorKey: string,
+    _recipientKey: string,
+    _recipientRateKey: string | number,
+    _agentKey: string,
+    options?: unknown,
+  ) => Promise<(string | number | bigint)[]>;
   getAgentTransaction: (
     _sponsorKey: string,
     _recipientKey: string,
@@ -249,13 +264,34 @@ export type SpCoinReadAccess = {
     _recipientRateKey: string | number,
     _agentKey: string,
   ) => Promise<AgentRateStruct[]>;
-  getAgent: (
-    _sponsorKey: string,
-    _recipientKey: string,
-    _recipientRateKey: string | number,
-    _agentKey: string,
-  ) => Promise<unknown>;
-};
+   getAgent: (
+     _sponsorKey: string,
+     _recipientKey: string,
+     _recipientRateKey: string | number,
+     _agentKey: string,
+   ) => Promise<unknown>;
+   // Methods for direct pending rewards computation (bypass getPendingRewards)
+    getAccountRecordBase: (_accountKey: string, options?: unknown) => Promise<{
+      accountKey: string;
+      sponsorKeys: string[];
+      recipientKeys: string[];
+      parentRecipientKeys: string[];
+      lastSponsorUpdateTimeStamp: string;
+      lastRecipientUpdateTimeStamp: string;
+      lastAgentUpdateTimeStamp: string;
+    }>;
+    getRecipientRateTransactionSetKey: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number, options?: unknown) => Promise<string | number | bigint>;
+    getAgentRateTransactionSetKey: (_sponsorKey: string, _recipientKey: string, _recipientRateKey: string | number, _agentKey: string, _agentRateKey: string | number, options?: unknown) => Promise<string | number | bigint>;
+    getRateTransactionSet: (_setKey: string | number | bigint, options?: unknown) => Promise<{
+      setKey: string;
+      rate: string;
+      creationTimeStamp: string;
+      lastUpdateTimeStamp: string;
+      totalStaked: string;
+      transactionCount: string;
+      inserted: boolean;
+    }>;
+ };
 
 export type SpCoinContractAccess = Contract & {
   [key: string]: ((...args: unknown[]) => unknown) | unknown;
@@ -327,11 +363,22 @@ export type SpCoinContractAccess = Contract & {
   getRecipientRateKeys?: (sponsorKey: unknown, recipientKey: unknown) => Promise<Array<string | bigint>>;
   getSponsorRecipientRates?: (sponsorKey: unknown, recipientKey: unknown) => Promise<Array<string | bigint>>;
   getSponsorRecipientRateKeys?: (sponsorKey: unknown, recipientKey: unknown) => Promise<Array<string | bigint>>;
-  getAgentRateList?: (
+  getAccountLinks?: (accountKey: unknown) => Promise<{
+    sponsorKeys?: unknown;
+    recipientKeys?: unknown;
+    agentKeys?: unknown;
+    parentRecipientKeys?: unknown;
+    0?: unknown;
+    1?: unknown;
+    2?: unknown;
+    3?: unknown;
+  } | unknown[]>;
+  getAgentRateList: (
     sponsorKey: unknown,
     recipientKey: unknown,
     recipientRateKey: unknown,
     agentKey: unknown,
+    options?: unknown,
   ) => Promise<Array<string | bigint> | unknown>;
   getAgentRateKeys?: (
     sponsorKey: unknown,
@@ -805,6 +852,14 @@ export function createSpCoinModuleAccess(
   source: SpCoinAccessSource = 'node_modules',
   trace?: (line: string) => void,
 ): SpCoinModuleAccess {
+  const contractAddress = String(
+    (contract as Contract & { target?: unknown; address?: unknown }).target ||
+      (contract as Contract & { target?: unknown; address?: unknown }).address ||
+      '',
+  ).trim();
+  if (contractAddress) {
+    startAccountCacheEventListener(contract, contractAddress);
+  }
   const includes = getSpCoinAccessIncludes(source);
   const add = new includes.SpCoinAddModule(contract) as SpCoinAddAccess;
   const del = new includes.SpCoinDeleteModule(contract) as SpCoinDeleteAccess;

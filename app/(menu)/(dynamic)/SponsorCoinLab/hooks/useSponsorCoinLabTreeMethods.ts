@@ -1683,24 +1683,39 @@ export function useSponsorCoinLabTreeMethods({
           if (typeof cur !== 'object') return undefined;
           return (cur as Record<string, unknown>)[seg];
         }, source);
-      // Handle claim toggle at totalSpCoins level (path ends with 'claim', no 'parameters' segment)
+      // Handle pending rewards mode toggles outside method parameters.
       if (parametersIndex < 1) {
         const lastSegment = payloadPath.at(-1);
-        if (lastSegment !== 'claim' && lastSegment !== 'estimate') return 'unhandled';
+        if (lastSegment !== 'claim' && lastSegment !== 'estimate' && lastSegment !== 'mode') return 'unhandled';
         for (const entry of candidateEntries) {
           const payload = entry.payload;
           if (!payload) continue;
-          const claimNode = readTogglePathValue(payload, payloadPath);
-          if (!claimNode || typeof claimNode !== 'object' || Array.isArray(claimNode)) continue;
-          const rawCurrentLabel = (claimNode as Record<string, unknown>).__pendingRewardsModeLabel;
+          const modePath = lastSegment === 'mode' ? payloadPath : payloadPath;
+          const modeParentPath = lastSegment === 'mode' ? payloadPath.slice(0, -1) : payloadPath.slice(0, -1);
+          const modeNode = readTogglePathValue(payload, modePath);
+          const modeParentNode = readTogglePathValue(payload, modeParentPath);
+          const fallbackNode =
+            modeNode && typeof modeNode === 'object' && !Array.isArray(modeNode)
+              ? modeNode
+              : modeParentNode && typeof modeParentNode === 'object' && !Array.isArray(modeParentNode)
+                ? ((modeParentNode as Record<string, unknown>).mode ??
+                  (modeParentNode as Record<string, unknown>).estimate ??
+                  (modeParentNode as Record<string, unknown>).claim)
+                : null;
+          if (!fallbackNode || typeof fallbackNode !== 'object' || Array.isArray(fallbackNode)) continue;
+          const rawCurrentLabel = (fallbackNode as Record<string, unknown>).__pendingRewardsModeLabel;
           const currentLabel = typeof rawCurrentLabel === 'string' ? rawCurrentLabel : '';
           const nextLabel = currentLabel === 'Update' ? 'Claim' : 'Update';
-          const nextClaimNode = {
-            ...(claimNode as Record<string, unknown>),
-            action: nextLabel === 'Claim' ? 'claim' : 'estimate',
-            __pendingRewardsModeLabel: nextLabel,
-          };
-          const nextPayloadRecord = writePathValue(payload, payloadPath, nextClaimNode);
+          const nextModeNode = buildLazyRunPendingRewardsMode(
+            normalizedAccount,
+            nextLabel === 'Claim' ? 'claim' : 'estimate',
+            getModeDisplayValue(normalizedAccount, nextLabel === 'Claim' ? 'claim' : 'estimate'),
+          );
+          const nextPayloadRecord = writePathValue(
+            payload,
+            lastSegment === 'mode' ? payloadPath : payloadPath,
+            lastSegment === 'mode' ? nextModeNode : { ...(fallbackNode as Record<string, unknown>), ...nextModeNode },
+          );
           const nextRootPayload = normalizeExecutionPayload(nextPayloadRecord) as Record<string, unknown>;
           const nextPayload = formatFormattedPanelPayload(nextRootPayload);
           if (blocks.length > 1) {

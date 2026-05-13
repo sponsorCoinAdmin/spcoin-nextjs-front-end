@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import { RotateCcw } from 'lucide-react';
+import AccountSelection from './AccountSelection';
 import LabCardHeader from './LabCardHeader';
 import { NativeSelectChevron, SelectChevron } from './SelectChevron';
 import JsonInspector from '@/components/shared/JsonInspector';
@@ -39,6 +40,9 @@ type DisplayedOutputCall = {
   method: string;
   parameters: Array<{ label: string; value: string }>;
 };
+
+type HardhatAccountLike = { address: string; privateKey?: string };
+type HardhatAccountMetadataLike = Record<string, { name?: string; symbol?: string; logoURL: string }>;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value && typeof value === 'object' && !Array.isArray(value));
@@ -415,6 +419,8 @@ type Props = {
         }>
       | null;
     hiddenScrollbarClass: string;
+    hardhatAccounts: HardhatAccountLike[];
+    hardhatAccountMetadata: HardhatAccountMetadataLike;
   };
   treeActions: {
     runHeaderRead: () => Promise<void>;
@@ -512,6 +518,11 @@ export default function OutputResultsCard({
   const [saveScriptNameInput, setSaveScriptNameInput] = useState('');
   const [isSaveButtonHovered, setIsSaveButtonHovered] = useState(false);
   const [isSaveConfirmHovered, setIsSaveConfirmHovered] = useState(false);
+  const [inspectorAccountPopup, setInspectorAccountPopup] = useState<{
+    address: string;
+    label: string;
+    path: string;
+  } | null>(null);
   const [stepActionModalState, setStepActionModalState] = useState<{
     stepNumber: number;
     methodName: string;
@@ -674,7 +685,7 @@ export default function OutputResultsCard({
     updateCollapsedKeys,
   ]);
   const handleOpenAccountFromInspector = React.useCallback(
-    async (value: string, path: string) => {
+    async (value: string, path: string, key?: string) => {
       const address = String(value || '').trim();
       const isLazyRelationLoadValue = (() => {
         if (address === '__load_account_relation__') return true;
@@ -704,7 +715,18 @@ export default function OutputResultsCard({
         return;
       }
 
-      await treeActions.openAccountFromAddress(address, path);
+      const normalizedAddress = address.toLowerCase();
+      const label =
+        String(key || '').trim() ||
+        String(path || '')
+          .split('.')
+          .filter(Boolean)
+          .at(-1) ||
+        'Account';
+      appendOutputTrace(
+        `[ACCOUNT_POPUP_TRACE] inspector account popup open label=${label} address=${normalizedAddress} path=${String(path || '')}`,
+      );
+      setInspectorAccountPopup({ address: normalizedAddress, label, path });
     },
     [
       appendOutputTrace,
@@ -725,6 +747,14 @@ export default function OutputResultsCard({
     content.selectedScriptStepHasMissingRequiredParams || content.selectedScriptStepHasExecutionError
       ? 'text-red-400'
       : 'text-green-400';
+  const inspectorPopupAccount = inspectorAccountPopup
+    ? content.hardhatAccounts.find(
+        (account) => String(account.address || '').trim().toLowerCase() === inspectorAccountPopup.address,
+      )
+    : undefined;
+  const inspectorPopupMetadata = inspectorAccountPopup
+    ? content.hardhatAccountMetadata[inspectorAccountPopup.address]
+    : undefined;
   const activeTokenDecimals = useMemo(() => {
     const extractDecimals = (value: unknown): number | null => {
       if (!value || typeof value !== 'object') return null;
@@ -1517,8 +1547,8 @@ export default function OutputResultsCard({
                     showStructureType={showStructureType}
                     label={block.label}
                     rootLabel={block.rootLabel}
-                    onLeafValueClick={(value, path) => void handleOpenAccountFromInspector(value, path)}
-                    onAddressNodeClick={(value, path) => void handleOpenAccountFromInspector(value, path)}
+                    onLeafValueClick={(value, path, key) => void handleOpenAccountFromInspector(value, path, key)}
+                    onAddressNodeClick={(value, path, key) => void handleOpenAccountFromInspector(value, path, key)}
                     onTrace={appendOutputTrace}
                     scriptStepDragState={{
                       enabled: isScriptInspectorReorderEnabled,
@@ -1561,8 +1591,8 @@ export default function OutputResultsCard({
                     formatTokenAmounts={hiddenInspectorRules.formattedAmounts}
                     tokenDecimals={activeTokenDecimals}
                     showStructureType={showStructureType}
-                    onLeafValueClick={(value, path) => void handleOpenAccountFromInspector(value, path)}
-                    onAddressNodeClick={(value, path) => void handleOpenAccountFromInspector(value, path)}
+                    onLeafValueClick={(value, path, key) => void handleOpenAccountFromInspector(value, path, key)}
+                    onAddressNodeClick={(value, path, key) => void handleOpenAccountFromInspector(value, path, key)}
                     onTrace={appendOutputTrace}
                     scriptStepDragState={{
                       enabled: false,
@@ -1658,6 +1688,42 @@ export default function OutputResultsCard({
             title="Script name"
           />
         </div>
+      </BaseModal>
+      <BaseModal
+        isOpen={Boolean(inspectorAccountPopup)}
+        title={inspectorAccountPopup?.label || 'Account'}
+        maxWidthClassName="max-w-4xl"
+        panelClassName="rounded-2xl border border-[#31416F] bg-[#11162A] p-5 shadow-[0_12px_40px_rgba(0,0,0,0.35)]"
+        titleClassName="text-xl font-semibold text-[#8FA8FF]"
+        footer={
+          <button type="button" className={actionButtonClassName} onClick={() => setInspectorAccountPopup(null)}>
+            Close
+          </button>
+        }
+      >
+        {inspectorAccountPopup ? (
+          <AccountSelection
+            label={inspectorAccountPopup.label}
+            title={`Toggle ${inspectorAccountPopup.label} details`}
+            isOpen
+            onToggle={() => setInspectorAccountPopup(null)}
+            traceLabel="inspector.account"
+            onTrace={appendOutputTrace}
+            control={
+              <div className="relative">
+                <input readOnly value={inspectorAccountPopup.address} className={`${inputStyle} pr-10`} />
+                <SelectChevron className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#8FA8FF]" />
+              </div>
+            }
+            metadata={inspectorPopupMetadata}
+            extraDetails={
+              <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+                <span className="text-sm font-semibold text-[#8FA8FF]">Private Key</span>
+                <input readOnly value={inspectorPopupAccount?.privateKey || ''} className={inputStyle} />
+              </div>
+            }
+          />
+        ) : null}
       </BaseModal>
       <BaseModal
         isOpen={Boolean(stepActionModalState)}

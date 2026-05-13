@@ -21,6 +21,7 @@ import backDateAgentTransaction from './backDateAgentTransaction';
 import deleteRecipientSponsorship from './deleteRecipientSponsorship';
 import deleteAccountRecord from './deleteAccountRecord';
 import deleteAccountRecords from './deleteAccountRecords';
+import runPendingRewards from './runPendingRewards';
 import updateAccountStakingRewards from './updateAccountStakingRewards';
 import updateSponsorAccountRewards from './updateSponsorAccountRewards';
 import updateRecipientAccountRewards from './updateRecipientAccountRewards';
@@ -59,6 +60,7 @@ export const SPCOIN_WRITE_METHOD_DEFS = {
   deleteRecipientSponsorship,
   deleteAccountRecord,
   deleteAccountRecords,
+  runPendingRewards,
   updateAccountStakingRewards,
   updateSponsorAccountRewards,
   updateRecipientAccountRewards,

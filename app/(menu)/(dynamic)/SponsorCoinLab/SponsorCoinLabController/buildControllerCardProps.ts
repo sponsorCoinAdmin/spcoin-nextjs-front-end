@@ -253,6 +253,8 @@ export function buildControllerCardProps(args: BuildControllerCardPropsArgs) {
           ? args.highlightedFormattedOutputLines
           : args.highlightedFormattedResultLines,
       hiddenScrollbarClass: args.hiddenScrollbarClass,
+      hardhatAccounts: args.hardhatAccounts,
+      hardhatAccountMetadata: args.hardhatAccountMetadata,
     },
     treeActions: {
       runHeaderRead: args.runHeaderRead,
