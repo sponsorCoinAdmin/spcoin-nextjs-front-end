@@ -92,6 +92,7 @@ export function useSponsorCoinLabRateKeyOptions({
             runner,
             undefined,
             useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
+            { enableAccountCacheEventListener: false },
           );
           const rates =
             (await (
@@ -149,6 +150,7 @@ export function useSponsorCoinLabRateKeyOptions({
           runner,
           undefined,
           useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
+          { enableAccountCacheEventListener: false },
         );
         const rates = (await (access.contract as SpCoinContractAccess).getAgentRateList?.(
           sponsorKey,

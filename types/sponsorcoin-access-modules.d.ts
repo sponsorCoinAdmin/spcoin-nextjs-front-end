@@ -40,13 +40,20 @@ declare module '@sponsorcoin/spcoin-access-modules/modules/spCoinERC20Module.js'
 declare module '@sponsorcoin/spcoin-access-modules/modules/spCoinReadModule.js' {
   export class SpCoinReadModule {
     constructor(spCoinContractDeployed: any);
+    estimateOffChainTotalRewards(accountKey: string): Promise<any>;
+    estimateOffChainSponsorRewards(accountKey: string): Promise<any>;
+    estimateOffChainRecipientRewards(accountKey: string): Promise<any>;
+    estimateOffChainAgentRewards(accountKey: string): Promise<any>;
   }
 }
 
 declare module '@sponsorcoin/spcoin-access-modules/modules/spCoinRewardsModule.js' {
   export class SpCoinRewardsModule {
     constructor(spCoinContractDeployed: any);
-    updateAccountStakingRewards(accountKey: string): Promise<void>;
+    claimOnChainTotalRewards(accountKey: string): Promise<void>;
+    claimOnChainSponsorRewards(accountKey: string): Promise<void>;
+    claimOnChainRecipientRewards(accountKey: string): Promise<void>;
+    claimOnChainAgentRewards(accountKey: string): Promise<void>;
   }
 }
 

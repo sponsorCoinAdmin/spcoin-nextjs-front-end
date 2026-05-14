@@ -21,6 +21,14 @@ function buildPendingRewardsAction(accountKey, action) {
     };
 }
 
+function buildPendingRewardsMethod(accountKey, method) {
+    return {
+        __lazyPendingRewardsMethod: true,
+        method,
+        accountKey: String(accountKey ?? ""),
+    };
+}
+
 function buildTotalSpCoinsRecord(balanceOf, stakedBalance, pendingRewardsRecord, annualInflationRate = "0%", accountKey = undefined) {
     const normalizedBalanceOf = String(balanceOf ?? "0");
     const normalizedStakedBalance = String(stakedBalance ?? "0");
@@ -38,6 +46,16 @@ function buildTotalSpCoinsRecord(balanceOf, stakedBalance, pendingRewardsRecord,
     const normalizedPendingRewards = hasPendingRewards ? String(normalizedPendingRewardsRecord.pendingRewards ?? "0") : "0";
     const pendingRewardsDisplay = {
         TYPE: "--PENDING_REWARDS--",
+        mode: buildPendingRewardsAction(accountKey, "estimate"),
+        runPendingRewards: buildPendingRewardsAction(accountKey, "estimate"),
+        estimateOffChainTotalRewards: buildPendingRewardsMethod(accountKey, "estimateOffChainTotalRewards"),
+        claimOnChainTotalRewards: buildPendingRewardsMethod(accountKey, "claimOnChainTotalRewards"),
+        estimateOffChainSponsorRewards: buildPendingRewardsMethod(accountKey, "estimateOffChainSponsorRewards"),
+        claimOnChainSponsorRewards: buildPendingRewardsMethod(accountKey, "claimOnChainSponsorRewards"),
+        estimateOffChainRecipientRewards: buildPendingRewardsMethod(accountKey, "estimateOffChainRecipientRewards"),
+        claimOnChainRecipientRewards: buildPendingRewardsMethod(accountKey, "claimOnChainRecipientRewards"),
+        estimateOffChainAgentRewards: buildPendingRewardsMethod(accountKey, "estimateOffChainAgentRewards"),
+        claimOnChainAgentRewards: buildPendingRewardsMethod(accountKey, "claimOnChainAgentRewards"),
         claim: buildPendingRewardsAction(accountKey, "claim"),
         estimate: buildPendingRewardsAction(accountKey, "estimate"),
         ...(hasPendingRewards ? { pendingRewards: normalizedPendingRewards } : {}),
@@ -89,6 +107,16 @@ function buildPendingRewardsRecord(rewardsByType = undefined, accountKey = undef
     if (!hasRewardValues) {
         return {
             TYPE: "--PENDING_REWARDS--",
+            mode: buildPendingRewardsAction(accountKey, "estimate"),
+            runPendingRewards: buildPendingRewardsAction(accountKey, "estimate"),
+            estimateOffChainTotalRewards: buildPendingRewardsMethod(accountKey, "estimateOffChainTotalRewards"),
+            claimOnChainTotalRewards: buildPendingRewardsMethod(accountKey, "claimOnChainTotalRewards"),
+            estimateOffChainSponsorRewards: buildPendingRewardsMethod(accountKey, "estimateOffChainSponsorRewards"),
+            claimOnChainSponsorRewards: buildPendingRewardsMethod(accountKey, "claimOnChainSponsorRewards"),
+            estimateOffChainRecipientRewards: buildPendingRewardsMethod(accountKey, "estimateOffChainRecipientRewards"),
+            claimOnChainRecipientRewards: buildPendingRewardsMethod(accountKey, "claimOnChainRecipientRewards"),
+            estimateOffChainAgentRewards: buildPendingRewardsMethod(accountKey, "estimateOffChainAgentRewards"),
+            claimOnChainAgentRewards: buildPendingRewardsMethod(accountKey, "claimOnChainAgentRewards"),
             claim: buildPendingRewardsAction(accountKey, "claim"),
             estimate: buildPendingRewardsAction(accountKey, "estimate"),
             lastSponsorUpdate,
@@ -113,6 +141,16 @@ function buildPendingRewardsRecord(rewardsByType = undefined, accountKey = undef
     );
     return {
         TYPE: "--PENDING_REWARDS--",
+        mode: buildPendingRewardsAction(accountKey, "estimate"),
+        runPendingRewards: buildPendingRewardsAction(accountKey, "estimate"),
+        estimateOffChainTotalRewards: buildPendingRewardsMethod(accountKey, "estimateOffChainTotalRewards"),
+        claimOnChainTotalRewards: buildPendingRewardsMethod(accountKey, "claimOnChainTotalRewards"),
+        estimateOffChainSponsorRewards: buildPendingRewardsMethod(accountKey, "estimateOffChainSponsorRewards"),
+        claimOnChainSponsorRewards: buildPendingRewardsMethod(accountKey, "claimOnChainSponsorRewards"),
+        estimateOffChainRecipientRewards: buildPendingRewardsMethod(accountKey, "estimateOffChainRecipientRewards"),
+        claimOnChainRecipientRewards: buildPendingRewardsMethod(accountKey, "claimOnChainRecipientRewards"),
+        estimateOffChainAgentRewards: buildPendingRewardsMethod(accountKey, "estimateOffChainAgentRewards"),
+        claimOnChainAgentRewards: buildPendingRewardsMethod(accountKey, "claimOnChainAgentRewards"),
         pendingRewards:
             (
                 toBigIntValue(pendingSponsorRewards) +
@@ -308,8 +346,8 @@ async function getPendingRewardsSummary(runtime, accountKey) {
     }
     const summaryPromise = (async () => {
         const rewardsByType =
-            typeof runtime.getPendingRewards === "function"
-                ? await runtime.getPendingRewards(accountKey)
+            typeof runtime.estimateOffChainTotalRewards === "function"
+                ? await runtime.estimateOffChainTotalRewards(accountKey)
                 : await runtime.getAccountStakingRewards(accountKey);
         const totalPending =
             toBigIntValue(rewardsByType?.pendingRewards) ||

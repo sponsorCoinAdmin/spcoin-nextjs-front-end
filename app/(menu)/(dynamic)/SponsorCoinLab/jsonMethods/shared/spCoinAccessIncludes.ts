@@ -19,7 +19,10 @@ import {
   isRecipient as localIsRecipient,
   isSponsor as localIsSponsor,
 } from '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinReadModule/methods/getAccountRoleSummary';
-import { startAccountCacheEventListener } from '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/utils/accountCacheEventListener';
+import {
+  startAccountCacheEventListener,
+  stopAllAccountCacheEventListeners,
+} from '../../../../../../spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/utils/accountCacheEventListener';
 import type {
   AccountStruct,
   AgentRateStruct,
@@ -203,19 +206,10 @@ export type SpCoinReadAccess = {
     parentRecipientKeys: string[];
   }>;
   getAccountStakingRewards: (_accountKey: string) => Promise<RewardsStruct>;
-  getPendingRewards?: (_accountKey: string, options?: unknown) => Promise<{
-    TYPE: '--ACCOUNT_PENDING_REWARDS--';
-    accountKey: string;
-    calculatedTimeStamp: string;
-    calculatedFormatted: string;
-    lastSponsorUpdate: string;
-    lastRecipientUpdate: string;
-    lastAgentUpdate: string;
-    pendingRewards: string;
-    pendingSponsorRewards: string;
-    pendingRecipientRewards: string;
-    pendingAgentRewards: string;
-  }>;
+  estimateOffChainTotalRewards?: (_accountKey: string, options?: unknown) => Promise<unknown>;
+  estimateOffChainSponsorRewards?: (_accountKey: string, options?: unknown) => Promise<unknown>;
+  estimateOffChainRecipientRewards?: (_accountKey: string, options?: unknown) => Promise<unknown>;
+  estimateOffChainAgentRewards?: (_accountKey: string, options?: unknown) => Promise<unknown>;
   getSpCoinMetaData: () => Promise<unknown>;
   getSponsorRecipientRates?: (_sponsorKey: string, _recipientKey: string) => Promise<(string | number | bigint)[]>;
   getSponsorRecipientRateKeys?: (_sponsorKey: string, _recipientKey: string) => Promise<(string | number | bigint)[]>;
@@ -270,7 +264,7 @@ export type SpCoinReadAccess = {
      _recipientRateKey: string | number,
      _agentKey: string,
    ) => Promise<unknown>;
-   // Methods for direct pending rewards computation (bypass getPendingRewards)
+   // Methods for direct pending rewards computation.
     getAccountRecordBase: (_accountKey: string, options?: unknown) => Promise<{
       accountKey: string;
       sponsorKeys: string[];
@@ -439,10 +433,10 @@ export type SpCoinContractAccess = Contract & {
 };
 
 export type SpCoinRewardsAccess = {
-  updateAccountStakingRewards: (accountKey: string) => Promise<ContractTransactionResponse>;
-  updateSponsorAccountRewards?: (accountKey: string) => Promise<ContractTransactionResponse>;
-  updateRecipientAccountRewards?: (accountKey: string) => Promise<ContractTransactionResponse>;
-  updateAgentAccountRewards?: (accountKey: string) => Promise<ContractTransactionResponse>;
+  claimOnChainTotalRewards: (accountKey: string) => Promise<ContractTransactionResponse>;
+  claimOnChainSponsorRewards?: (accountKey: string) => Promise<ContractTransactionResponse>;
+  claimOnChainRecipientRewards?: (accountKey: string) => Promise<ContractTransactionResponse>;
+  claimOnChainAgentRewards?: (accountKey: string) => Promise<ContractTransactionResponse>;
 };
 
 export type SpCoinStakingAccess = Record<string, never>;
@@ -466,6 +460,10 @@ export type SpCoinModuleAccess = {
   staking: SpCoinStakingAccess;
   contract: SpCoinContractAccess;
   signer?: Signer;
+};
+
+export type SpCoinModuleAccessOptions = {
+  enableAccountCacheEventListener?: boolean;
 };
 
 const localIncludes: SpCoinAccessIncludes = {
@@ -851,13 +849,18 @@ export function createSpCoinModuleAccess(
   signer?: Signer,
   source: SpCoinAccessSource = 'node_modules',
   trace?: (line: string) => void,
+  options: SpCoinModuleAccessOptions = {},
 ): SpCoinModuleAccess {
   const contractAddress = String(
     (contract as Contract & { target?: unknown; address?: unknown }).target ||
       (contract as Contract & { target?: unknown; address?: unknown }).address ||
       '',
   ).trim();
-  if (contractAddress) {
+  const isBrowserRuntime = typeof window !== 'undefined';
+  if (isBrowserRuntime) {
+    stopAllAccountCacheEventListeners();
+  }
+  if (contractAddress && !isBrowserRuntime && options.enableAccountCacheEventListener !== false) {
     startAccountCacheEventListener(contract, contractAddress);
   }
   const includes = getSpCoinAccessIncludes(source);

@@ -4,9 +4,19 @@
  * the account cache for all affected accounts (sponsor, recipient, agent).
  */
 import { invalidateCachedAccountRecord } from './accountCache';
-import { invalidateReadCacheByDependency, invalidateReadCacheForAccount } from './readCache';
+import { invalidateReadCacheForAccount } from './readCache';
 
-const activeListeners = new Map<string, () => void>();
+const ACTIVE_LISTENERS_KEY = '__spCoinAccountCacheEventListeners';
+
+function getActiveListeners(): Map<string, () => void> {
+  const host = globalThis as typeof globalThis & {
+    [ACTIVE_LISTENERS_KEY]?: Map<string, () => void>;
+  };
+  if (!host[ACTIVE_LISTENERS_KEY]) {
+    host[ACTIVE_LISTENERS_KEY] = new Map<string, () => void>();
+  }
+  return host[ACTIVE_LISTENERS_KEY]!;
+}
 
 function normalizeAddress(value: unknown): string {
   return String(value || '').trim().toLowerCase();
@@ -16,28 +26,16 @@ function buildListenerKey(contractAddress: string): string {
   return normalizeAddress(contractAddress);
 }
 
-function invalidateRelationshipReadMethods(): void {
-  for (const methodName of [
-    'getAccountLinks',
-    'getAccountRecord',
-    'getAccountRecordBase',
-    'getAccountRecordShallow',
-    'getRecipientRateList',
-    'getRecipientRateAgentList',
-    'getAgentRateList',
-    'getRecipientRateTransactionSetKey',
-    'getAgentRateTransactionSetKey',
-    'getRateTransactionSet',
-    'getPendingRewards',
-  ]) {
-    invalidateReadCacheByDependency(`method:${methodName}`);
-  }
-}
-
 export function startAccountCacheEventListener(
   contract: unknown,
   contractAddress: string,
 ): void {
+  if (typeof window !== 'undefined') {
+    stopAllAccountCacheEventListeners();
+    return;
+  }
+
+  const activeListeners = getActiveListeners();
   const key = buildListenerKey(contractAddress);
   if (activeListeners.has(key)) return; // already listening
 
@@ -66,7 +64,6 @@ export function startAccountCacheEventListener(
       invalidateCachedAccountRecord(contractAddress, agentKey);
       invalidateReadCacheForAccount(agentKey);
     }
-    invalidateRelationshipReadMethods();
   };
 
   typedContract.on('TransactionAdded', handler);
@@ -77,6 +74,7 @@ export function startAccountCacheEventListener(
 }
 
 export function stopAccountCacheEventListener(contractAddress: string): void {
+  const activeListeners = getActiveListeners();
   const key = buildListenerKey(contractAddress);
   const cleanup = activeListeners.get(key);
   if (cleanup) {
@@ -86,6 +84,7 @@ export function stopAccountCacheEventListener(contractAddress: string): void {
 }
 
 export function stopAllAccountCacheEventListeners(): void {
+  const activeListeners = getActiveListeners();
   for (const cleanup of activeListeners.values()) cleanup();
   activeListeners.clear();
 }

@@ -69,14 +69,14 @@ function normalizePendingRewardsOptions(optionsOrTimestampOverride = undefined, 
     };
 }
 
-function getPendingRewardsCache(runtime) {
+function getOffChainRewardsEstimateCache(runtime) {
     if (!runtime.__pendingRewardsCache || typeof runtime.__pendingRewardsCache !== "object") {
         runtime.__pendingRewardsCache = new Map();
     }
     return runtime.__pendingRewardsCache;
 }
 
-function getPendingRewardsCacheKey(accountKey, timestampOverride) {
+function getOffChainRewardsEstimateCacheKey(accountKey, timestampOverride) {
     const normalizedAccount = String(accountKey ?? "").trim().toLowerCase();
     const normalizedTimestamp = toBigIntValue(timestampOverride);
     return `${normalizedAccount}|${normalizedTimestamp > 0n ? normalizedTimestamp.toString() : "now"}`;
@@ -280,17 +280,17 @@ async function addAgentPathPending(runtime, pending, accountKey, currentTimeStam
     }
 }
 
-export async function getPendingRewards(context, accountKey, optionsOrTimestampOverride = undefined, timestampOverride = undefined) {
+export async function computeOffChainRewardsEstimate(context, accountKey, optionsOrTimestampOverride = undefined, timestampOverride = undefined) {
     const runtime = context;
     const options = normalizePendingRewardsOptions(optionsOrTimestampOverride, timestampOverride);
-    const cache = getPendingRewardsCache(runtime);
-    const cacheKey = getPendingRewardsCacheKey(accountKey, options.timestampOverride);
+    const cache = getOffChainRewardsEstimateCache(runtime);
+    const cacheKey = getOffChainRewardsEstimateCacheKey(accountKey, options.timestampOverride);
     const nowMs = Date.now();
     const cached = cache.get(cacheKey);
     if (cached && cached.expiresAtMs > nowMs) {
         return clonePendingRewardsResult(await cached.promise);
     }
-    runtime.spCoinLogger.logFunctionHeader("getPendingRewards(" + accountKey + ")");
+    runtime.spCoinLogger.logFunctionHeader("computeOffChainRewardsEstimate(" + accountKey + ")");
     const pendingPromise = (async () => {
         delete runtime.__relationshipReadCache;
         const currentTimeStamp = await getCurrentBlockTimestamp(runtime, options.timestampOverride);

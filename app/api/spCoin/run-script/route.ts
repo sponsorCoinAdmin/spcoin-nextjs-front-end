@@ -1,9 +1,11 @@
 import { promises as fs } from 'fs';
 import path from 'path';
-import { JsonRpcProvider, Wallet, Contract, Interface, Transaction } from 'ethers';
+import { Wallet, Contract, Interface, Transaction } from 'ethers';
+import type { JsonRpcProvider } from 'ethers';
 import { NextRequest, NextResponse } from 'next/server';
 import { createSpCoinModuleAccess, type SpCoinAccessSource } from '@/app/(menu)/(dynamic)/SponsorCoinLab/jsonMethods/shared/spCoinAccessIncludes';
 import { getSpCoinLabAbi } from '@/app/(menu)/(dynamic)/SponsorCoinLab/jsonMethods/shared/spCoinAbi';
+import { createTracedHardhatJsonRpcProvider } from '@/app/(menu)/(dynamic)/SponsorCoinLab/jsonMethods/shared/spCoinRpcTrace';
 import {
   attachReceiptGasToOnChainCall,
   buildMethodTimingMeta,
@@ -75,6 +77,9 @@ type StepPayload =
       };
       result?: unknown;
       warning?: unknown;
+      debug?: {
+        trace: string[];
+      };
       meta?: Partial<MethodTimingMeta> & Record<string, unknown>;
       onChainCalls?: MethodTimingMeta['onChainCalls'];
     }
@@ -129,10 +134,12 @@ const TEST_ACCOUNTS_PATH = path.join(
   'testAccounts.json',
 );
 
-function createServerHardhatProvider(rpcUrl: string) {
-  return new JsonRpcProvider(rpcUrl, CHAIN_ID.HARDHAT_BASE, {
-    batchMaxCount: 1,
-    staticNetwork: true,
+function createServerHardhatProvider(rpcUrl: string, trace?: string[]) {
+  return createTracedHardhatJsonRpcProvider({
+    rpcUrl,
+    chainId: CHAIN_ID.HARDHAT_BASE,
+    environment: 'server',
+    sink: (line) => trace?.push(line),
   });
 }
 
@@ -328,6 +335,45 @@ function classifyScriptError(error: unknown, trace: string[]): 'token_state' | '
   }
 
   return 'server';
+}
+
+function isTransientRpcTransportError(error: unknown) {
+  const text = getNestedErrorText(error).toLowerCase();
+  return (
+    text.includes('503 service temporarily unavailable') ||
+    text.includes('server response 503') ||
+    text.includes('failed to fetch') ||
+    text.includes('socket hang up') ||
+    text.includes('timeout') ||
+    text.includes('missing response') ||
+    text.includes('could not coalesce error')
+  );
+}
+
+function waitMs(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function runWithRpcTransportRetry<T>(
+  label: string,
+  appendTrace: (line: string) => void,
+  callback: () => Promise<T>,
+  maxAttempts = 3,
+): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      appendTrace(`${label} rpc attempt ${attempt}/${maxAttempts}`);
+      return await callback();
+    } catch (error) {
+      lastError = error;
+      const transient = isTransientRpcTransportError(error);
+      appendTrace(`${label} rpc attempt ${attempt}/${maxAttempts} failed transient=${String(transient)} error=${getNestedErrorText(error) || String(error)}`);
+      if (!transient || attempt >= maxAttempts) break;
+      await waitMs(250 * attempt);
+    }
+  }
+  throw lastError;
 }
 
 function getRpcEndpointIdentity(rpcUrl: string) {
@@ -545,6 +591,14 @@ function buildLazyPendingRewardsAction(accountKey: string, action: 'claim' | 'es
   };
 }
 
+function buildLazyPendingRewardsMethod(accountKey: string, method: string) {
+  return {
+    __lazyPendingRewardsMethod: true,
+    accountKey,
+    method,
+  };
+}
+
 function hasAccountRecordCounts(result: unknown) {
   return Boolean(
     result &&
@@ -555,6 +609,27 @@ function hasAccountRecordCounts(result: unknown) {
         'agentCount' in result ||
         'parentRecipientCount' in result),
   );
+}
+
+function withLazyAccountRelationBuckets(result: unknown, requestedAccountKey: unknown) {
+  if (!hasAccountRecordCounts(result) || !result || typeof result !== 'object' || Array.isArray(result)) {
+    return result;
+  }
+  const record = result as Record<string, unknown>;
+  const accountKey = normalizeAddressDisplay(record.accountKey || requestedAccountKey);
+  const relationOrLazy = (relation: string, countValue: unknown) => {
+    const existing = record[relation];
+    if (Array.isArray(existing) && existing.length > 0) return existing;
+    return buildLazyAccountRelation(accountKey, relation, countValue);
+  };
+  return {
+    ...record,
+    accountKey,
+    sponsorKeys: relationOrLazy('sponsorKeys', record.sponsorCount),
+    recipientKeys: relationOrLazy('recipientKeys', record.recipientCount),
+    agentKeys: relationOrLazy('agentKeys', record.agentCount),
+    parentRecipientKeys: relationOrLazy('parentRecipientKeys', record.parentRecipientCount),
+  };
 }
 
 function normalizeOnChainAccountRecordResult(result: unknown, requestedAccountKey: unknown) {
@@ -592,6 +667,16 @@ function normalizeOnChainAccountRecordResult(result: unknown, requestedAccountKe
       pendingRewards: {
         TYPE: '--PENDING_REWARDS--',
         pendingRewards: '0',
+        mode: buildLazyPendingRewardsAction(normalizedAccountKey, 'estimate'),
+        runPendingRewards: buildLazyPendingRewardsAction(normalizedAccountKey, 'estimate'),
+        estimateOffChainTotalRewards: buildLazyPendingRewardsMethod(normalizedAccountKey, 'estimateOffChainTotalRewards'),
+        claimOnChainTotalRewards: buildLazyPendingRewardsMethod(normalizedAccountKey, 'claimOnChainTotalRewards'),
+        estimateOffChainSponsorRewards: buildLazyPendingRewardsMethod(normalizedAccountKey, 'estimateOffChainSponsorRewards'),
+        claimOnChainSponsorRewards: buildLazyPendingRewardsMethod(normalizedAccountKey, 'claimOnChainSponsorRewards'),
+        estimateOffChainRecipientRewards: buildLazyPendingRewardsMethod(normalizedAccountKey, 'estimateOffChainRecipientRewards'),
+        claimOnChainRecipientRewards: buildLazyPendingRewardsMethod(normalizedAccountKey, 'claimOnChainRecipientRewards'),
+        estimateOffChainAgentRewards: buildLazyPendingRewardsMethod(normalizedAccountKey, 'estimateOffChainAgentRewards'),
+        claimOnChainAgentRewards: buildLazyPendingRewardsMethod(normalizedAccountKey, 'claimOnChainAgentRewards'),
         claim: buildLazyPendingRewardsAction(normalizedAccountKey, 'claim'),
         estimate: buildLazyPendingRewardsAction(normalizedAccountKey, 'estimate'),
         lastSponsorUpdate: String(lastSponsorUpdateTimeStamp ?? '0'),
@@ -810,13 +895,13 @@ type AccountRewardSnapshot = {
 };
 
 type RewardUpdateWriteMethod =
-  | 'updateAccountStakingRewards'
-  | 'updateSponsorAccountRewards'
-  | 'updateRecipientAccountRewards'
-  | 'updateAgentAccountRewards';
+  | 'claimOnChainTotalRewards'
+  | 'claimOnChainSponsorRewards'
+  | 'claimOnChainRecipientRewards'
+  | 'claimOnChainAgentRewards';
 
 type PendingAccountRewardsReader = {
-  getPendingRewards?: (
+  estimateOffChainTotalRewards?: (
     accountKey: string,
     optionsOrTimestampOverride?: unknown,
     timestampOverride?: string | number | bigint,
@@ -831,19 +916,6 @@ function toBigIntAmount(value: unknown) {
   } catch {
     return 0n;
   }
-}
-
-const PENDING_REWARDS_YEAR_SECONDS = 31556925n;
-
-function calculatePendingStakingRewards(
-  stakedAmount: unknown,
-  lastUpdateTimeStamp: unknown,
-  currentTimeStamp: bigint,
-  rate: unknown,
-) {
-  const lastUpdate = toBigIntAmount(lastUpdateTimeStamp);
-  if (lastUpdate <= 0n || currentTimeStamp <= lastUpdate) return 0n;
-  return ((currentTimeStamp - lastUpdate) * toBigIntAmount(stakedAmount) * toBigIntAmount(rate)) / 100n / PENDING_REWARDS_YEAR_SECONDS;
 }
 
 function diffRewardSnapshot(after: AccountRewardSnapshot, before: AccountRewardSnapshot): AccountRewardSnapshot {
@@ -871,19 +943,19 @@ function buildRewardUpdateCallReturns(
   after: AccountRewardSnapshot,
   delta: AccountRewardSnapshot,
 ) {
-  if (method === 'updateSponsorAccountRewards') {
+  if (method === 'claimOnChainSponsorRewards') {
     return {
       lastSponsorUpdateTimeStamp: after.lastSponsorUpdateTimeStamp,
       sponsorRewards: delta.sponsorRewards,
     };
   }
-  if (method === 'updateRecipientAccountRewards') {
+  if (method === 'claimOnChainRecipientRewards') {
     return {
       lastRecipientUpdateTimeStamp: after.lastRecipientUpdateTimeStamp,
       recipientRewards: delta.recipientRewards,
     };
   }
-  if (method === 'updateAgentAccountRewards') {
+  if (method === 'claimOnChainAgentRewards') {
     return {
       lastAgentUpdateTimeStamp: after.lastAgentUpdateTimeStamp,
       agentRewards: delta.agentRewards,
@@ -942,129 +1014,6 @@ function normalizePendingRewardsResult(value: unknown): unknown {
     pendingAgentRewards: toBigIntAmount(record.pendingAgentRewards).toString(),
     __showEmptyFields: true,
   };
-}
-
-function formatLocalTimestamp(secondsValue: unknown) {
-  const seconds = Number(toBigIntAmount(secondsValue));
-  if (!Number.isFinite(seconds) || seconds <= 0) return 'N/A';
-  const date = new Date(seconds * 1000);
-  if (Number.isNaN(date.getTime())) return 'N/A';
-  const month = date.toLocaleString('en-US', { month: 'short' }).toUpperCase();
-  const day = String(date.getDate()).padStart(2, '0');
-  const year = date.getFullYear();
-  const hour24 = date.getHours();
-  const hour12 = hour24 % 12 || 12;
-  const minute = String(date.getMinutes()).padStart(2, '0');
-  const meridiem = hour24 < 12 ? 'a.m.' : 'p.m.';
-  const timeZone =
-    date
-      .toLocaleTimeString('en-US', { timeZoneName: 'short' })
-      .split(' ')
-      .pop() || '';
-  return `${month}-${day}-${year}, ${hour12}:${minute} ${meridiem}${timeZone ? ` ${timeZone}` : ''}`;
-}
-
-function findAccountRecordInPayload(value: unknown, accountKey: string, visited = new Set<unknown>()): Record<string, unknown> | null {
-  if (!value || typeof value !== 'object') return null;
-  if (visited.has(value)) return null;
-  visited.add(value);
-
-  if (Array.isArray(value)) {
-    for (const entry of value) {
-      const found = findAccountRecordInPayload(entry, accountKey, visited);
-      if (found) return found;
-    }
-    return null;
-  }
-
-  const record = value as Record<string, unknown>;
-  if (
-    normalizeAddress(String(record.accountKey || '')) === normalizeAddress(accountKey) &&
-    record.totalSpCoins &&
-    typeof record.totalSpCoins === 'object' &&
-    !Array.isArray(record.totalSpCoins)
-  ) {
-    return record;
-  }
-
-  for (const childValue of Object.values(record)) {
-    const found = findAccountRecordInPayload(childValue, accountKey, visited);
-    if (found) return found;
-  }
-  return null;
-}
-
-function calculateAgentRewardsFromSnapshot(accountRecord: Record<string, unknown>, currentTimeStamp: bigint, fallbackLastAgentUpdate: unknown) {
-  const agentRates =
-    accountRecord.agentRates && typeof accountRecord.agentRates === 'object' && !Array.isArray(accountRecord.agentRates)
-      ? (accountRecord.agentRates as Record<string, unknown>)
-      : null;
-  if (!agentRates) return 0n;
-
-  const recordLastAgentUpdate = toBigIntAmount(accountRecord.lastAgentUpdateTimeStamp ?? accountRecord.lastAgentUpdate ?? fallbackLastAgentUpdate);
-  let total = 0n;
-  for (const value of Object.values(agentRates)) {
-    if (!value || typeof value !== 'object' || Array.isArray(value)) continue;
-    const rateRecord = value as Record<string, unknown>;
-    const explicitLastUpdate = toBigIntAmount(rateRecord.lastUpdateTime);
-    const lastUpdate = explicitLastUpdate > 0n ? explicitLastUpdate : recordLastAgentUpdate;
-    total += calculatePendingStakingRewards(
-      rateRecord.stakedAmount,
-      lastUpdate,
-      currentTimeStamp,
-      rateRecord.agentRate ?? rateRecord.agentRateKey,
-    );
-  }
-  return total;
-}
-
-function buildPendingRewardsFromAccountRecordSnapshot(accountRecord: Record<string, unknown>, accountKey: string): unknown | null {
-  const totalSpCoins =
-    accountRecord.totalSpCoins && typeof accountRecord.totalSpCoins === 'object' && !Array.isArray(accountRecord.totalSpCoins)
-      ? (accountRecord.totalSpCoins as Record<string, unknown>)
-      : null;
-  const pendingRewards =
-    totalSpCoins?.pendingRewards && typeof totalSpCoins.pendingRewards === 'object' && !Array.isArray(totalSpCoins.pendingRewards)
-      ? (totalSpCoins.pendingRewards as Record<string, unknown>)
-      : null;
-  if (!pendingRewards) return null;
-
-  const currentTimeStamp = BigInt(Math.floor(Date.now() / 1000));
-  const lastSponsorUpdate = pendingRewards.lastSponsorUpdate ?? accountRecord.lastSponsorUpdateTimeStamp ?? '0';
-  const lastRecipientUpdate = pendingRewards.lastRecipientUpdate ?? accountRecord.lastRecipientUpdateTimeStamp ?? '0';
-  const lastAgentUpdate = pendingRewards.lastAgentUpdate ?? accountRecord.lastAgentUpdateTimeStamp ?? '0';
-  const pendingSponsorRewards = toBigIntAmount(pendingRewards.pendingSponsorRewards);
-  const pendingRecipientRewards = toBigIntAmount(pendingRewards.pendingRecipientRewards);
-  const storedAgentRewards = toBigIntAmount(pendingRewards.pendingAgentRewards);
-  const derivedAgentRewards = calculateAgentRewardsFromSnapshot(accountRecord, currentTimeStamp, lastAgentUpdate);
-  const pendingAgentRewards = storedAgentRewards > 0n ? storedAgentRewards : derivedAgentRewards;
-  const pendingRewardsTotal = pendingSponsorRewards + pendingRecipientRewards + pendingAgentRewards;
-
-  return normalizePendingRewardsResult({
-    TYPE: '--ACCOUNT_PENDING_REWARDS--',
-    accountKey: normalizeAddress(String(accountRecord.accountKey || accountKey)),
-    calculatedTimeStamp: currentTimeStamp.toString(),
-    calculatedFormatted: formatLocalTimestamp(currentTimeStamp),
-    lastSponsorUpdate: String(lastSponsorUpdate),
-    lastRecipientUpdate: String(lastRecipientUpdate),
-    lastAgentUpdate: String(lastAgentUpdate),
-    pendingRewards: pendingRewardsTotal.toString(),
-    pendingSponsorRewards: pendingSponsorRewards.toString(),
-    pendingRecipientRewards: pendingRecipientRewards.toString(),
-    pendingAgentRewards: pendingAgentRewards.toString(),
-  });
-}
-
-function findPendingRewardsSnapshot(results: StepResult[], accountKey: string): unknown | null {
-  for (let index = results.length - 1; index >= 0; index -= 1) {
-    const entry = results[index];
-    if (!entry?.success || !('result' in entry.payload)) continue;
-    const accountRecord = findAccountRecordInPayload(entry.payload.result, accountKey);
-    if (!accountRecord) continue;
-    const pendingRewards = buildPendingRewardsFromAccountRecordSnapshot(accountRecord, accountKey);
-    if (pendingRewards) return pendingRewards;
-  }
-  return null;
 }
 
 async function getReceiptBlockTimestamp(provider: JsonRpcProvider, receipt: { blockNumber?: bigint | number | null }) {
@@ -1141,13 +1090,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: false, message: 'A valid contract address is required.' }, { status: 400 });
     }
 
-    const provider = createServerHardhatProvider(rpcUrl);
-    const writeProvider = writeRpcUrl === rpcUrl ? provider : createServerHardhatProvider(writeRpcUrl);
-
-    const hardhatAccounts = await readHardhatAccounts();
     const traceBase = [
       `server run-script start; rpc=${rpcUrl}; writeRpc=${writeRpcUrl}; contract=${contractAddress}; script=${script.name || script.id}`,
     ];
+    const provider = createServerHardhatProvider(rpcUrl, traceBase);
+    const writeProvider = writeRpcUrl === rpcUrl ? provider : createServerHardhatProvider(writeRpcUrl, traceBase);
+
+    const hardhatAccounts = await readHardhatAccounts();
     const abi = getSpCoinLabAbi();
     const results: StepResult[] = [];
 
@@ -1296,21 +1245,27 @@ export async function POST(request: NextRequest) {
               appendTrace(`getAccountRecord path start; accountKey=${findParam('Account Key')}`);
               if (typeof (access.read as Record<string, unknown>).getAccountRecord === 'function') {
                 appendTrace('getAccountRecord using access.read.getAccountRecord');
-                stepResult = await access.read.getAccountRecord(findParam('Account Key'), readCacheOptions);
+                stepResult = withLazyAccountRelationBuckets(
+                  await access.read.getAccountRecord(findParam('Account Key'), readCacheOptions),
+                  findParam('Account Key'),
+                );
               } else if (typeof (contract as Record<string, unknown>).getAccountRecord === 'function') {
                 const cachedRecord = getCachedAccountRecord(contractAddress, findParam('Account Key'));
                 if (cachedRecord !== null && hasAccountRecordCounts(cachedRecord)) {
                   appendTrace('getAccountRecord using cached normalized contract record');
-                  stepResult = cachedRecord;
+                  stepResult = withLazyAccountRelationBuckets(cachedRecord, findParam('Account Key'));
                 } else {
                   if (cachedRecord !== null) {
                     appendTrace('getAccountRecord invalidating incomplete cached record');
                     invalidateCachedAccountRecord(contractAddress, findParam('Account Key'));
                   }
                   appendTrace('getAccountRecord using direct contract fallback');
-                  stepResult = normalizeOnChainAccountRecordResult(await (
-                    contract as unknown as { getAccountRecord: (accountKey: string) => Promise<unknown> }
-                  ).getAccountRecord(findParam('Account Key')), findParam('Account Key'));
+                  stepResult = withLazyAccountRelationBuckets(
+                    normalizeOnChainAccountRecordResult(await (
+                      contract as unknown as { getAccountRecord: (accountKey: string) => Promise<unknown> }
+                    ).getAccountRecord(findParam('Account Key')), findParam('Account Key')),
+                    findParam('Account Key'),
+                  );
                   setCachedAccountRecord(contractAddress, findParam('Account Key'), stepResult);
                 }
               } else {
@@ -1325,20 +1280,17 @@ export async function POST(request: NextRequest) {
                 access.read as unknown as { getAccountRecordShallow: (accountKey: string, options?: unknown) => Promise<unknown> }
               ).getAccountRecordShallow(findParam('Account Key'), readCacheOptions);
               break;
-            case 'getPendingRewards': {
+            case 'estimateOffChainTotalRewards':
+            case 'estimateOffChainSponsorRewards':
+            case 'estimateOffChainRecipientRewards':
+            case 'estimateOffChainAgentRewards': {
               const accountKey = findParam('Account Key');
-              const snapshotResult = findPendingRewardsSnapshot(results, accountKey);
-              if (snapshotResult) {
-                appendTrace(`getPendingRewards using previous getAccountRecord snapshot; accountKey=${accountKey}`);
-                stepResult = snapshotResult;
-                break;
-              }
               const readHost = access.read as Record<string, unknown>;
-              const pendingRewardsMethod = readHost.getPendingRewards;
+              const pendingRewardsMethod = readHost[String(step.method)];
               if (typeof pendingRewardsMethod !== 'function') {
-                throw new Error('getPendingRewards is not available on the current SpCoin access path.');
+                throw new Error(`${String(step.method)} is not available on the current SpCoin access path.`);
               }
-              appendTrace(`getPendingRewards no previous snapshot; using access.read.getPendingRewards; accountKey=${accountKey}`);
+              appendTrace(`${String(step.method)} using access.read.${String(step.method)}; accountKey=${accountKey}`);
               stepResult = normalizePendingRewardsResult(
                 await (pendingRewardsMethod as (accountKey: string, options?: unknown) => Promise<unknown>)(
                   accountKey,
@@ -1879,17 +1831,77 @@ export async function POST(request: NextRequest) {
               invalidateCachedAccountRecord(contractAddress, agentKey);
               break;
             }
-            case 'updateAccountStakingRewards':
-            case 'updateSponsorAccountRewards':
-            case 'updateRecipientAccountRewards':
-            case 'updateAgentAccountRewards': {
+            case 'runPendingRewards': {
+              const accountKey = findParam('Account Key') || senderAddress;
+              const rawMode = findParam('mode').trim().toLowerCase();
+              const pendingMode = rawMode === 'claim' ? 'Claim' : 'Update';
+              appendTrace(`runPendingRewards server path; accountKey=${accountKey}; mode=${pendingMode}`);
+              if (pendingMode === 'Update') {
+                const readHost = access.read as PendingAccountRewardsReader;
+              if (typeof readHost.estimateOffChainTotalRewards !== 'function') {
+                throw new Error('estimateOffChainTotalRewards is not available on the current SpCoin access path.');
+              }
+              const pendingResult = normalizePendingRewardsResult(
+                await runWithRpcTransportRetry(
+                  `runPendingRewards(${accountKey}, Update)`,
+                  appendTrace,
+                  () => readHost.estimateOffChainTotalRewards!(accountKey, readCacheOptions),
+                ),
+              );
+                stepResult =
+                  pendingResult && typeof pendingResult === 'object' && !Array.isArray(pendingResult)
+                    ? {
+                        label: `runPendingRewards(${accountKey}, Update)`,
+                        status: 'off-chain',
+                        ...(pendingResult as Record<string, unknown>),
+                      }
+                    : {
+                        label: `runPendingRewards(${accountKey}, Update)`,
+                        status: 'off-chain',
+                        result: pendingResult,
+                      };
+                break;
+              }
+
+              const beforeRewards = await readAccountRewardSnapshot(contract, accountKey);
+              const tx = await sendSignedContractTransaction({
+                label: 'runPendingRewards',
+                contract: writeContract,
+                signer: writeSigner,
+                provider: writeProvider,
+                method: 'claimOnChainTotalRewards',
+                args: [accountKey],
+                timingCollector,
+              });
+              const receipt = (await tx.wait()) as { hash?: string; blockNumber?: bigint | number | null; status?: number | bigint | null };
+              invalidateCachedAccountRecord(contractAddress, accountKey);
+              const afterRewards = await readAccountRewardSnapshot(contract, accountKey);
+              const delta = diffRewardSnapshot(afterRewards, beforeRewards);
+              stepResult = [
+                ...formatReceiptResult('runPendingRewards', tx, receipt, timingCollector),
+                {
+                  label: `runPendingRewards(${accountKey}, Claim) rewards`,
+                  accountKey,
+                  callReturns: buildRewardUpdateCallReturns('claimOnChainTotalRewards', afterRewards, delta),
+                  before: beforeRewards,
+                  after: afterRewards,
+                  delta,
+                },
+              ];
+              break;
+            }
+            case 'claimOnChainTotalRewards':
+            case 'claimOnChainSponsorRewards':
+            case 'claimOnChainRecipientRewards':
+            case 'claimOnChainAgentRewards': {
               const methodName = step.method as RewardUpdateWriteMethod;
               const accountKey = findParam('Account Key') || senderAddress;
               const pendingRewardsReader = access.read as PendingAccountRewardsReader;
-              const includeOfflineComparison = methodName === 'updateAccountStakingRewards' && compareOfflineRewards;
+              const includeOfflineComparison =
+                methodName === 'claimOnChainTotalRewards' && compareOfflineRewards;
               const latestBlockOfflinePreview =
-                includeOfflineComparison && typeof pendingRewardsReader.getPendingRewards === 'function'
-                  ? await pendingRewardsReader.getPendingRewards(accountKey)
+                includeOfflineComparison && typeof pendingRewardsReader.estimateOffChainTotalRewards === 'function'
+                  ? await pendingRewardsReader.estimateOffChainTotalRewards(accountKey)
                   : null;
               const beforeRewards = await readAccountRewardSnapshot(contract, accountKey);
               const tx = await sendSignedContractTransaction({
@@ -1904,8 +1916,8 @@ export async function POST(request: NextRequest) {
               const receipt = (await tx.wait()) as { hash?: string; blockNumber?: bigint | number | null; status?: number | bigint | null };
               const settlementTimestamp = await getReceiptBlockTimestamp(provider, receipt);
               const settlementOfflinePreview =
-                includeOfflineComparison && settlementTimestamp && typeof pendingRewardsReader.getPendingRewards === 'function'
-                  ? await pendingRewardsReader.getPendingRewards(accountKey, settlementTimestamp)
+                includeOfflineComparison && settlementTimestamp && typeof pendingRewardsReader.estimateOffChainTotalRewards === 'function'
+                  ? await pendingRewardsReader.estimateOffChainTotalRewards(accountKey, settlementTimestamp)
                   : null;
               invalidateCachedAccountRecord(contractAddress, accountKey);
               const afterRewards = await readAccountRewardSnapshot(contract, accountKey);
@@ -1974,6 +1986,9 @@ export async function POST(request: NextRequest) {
               call,
               result: sanitizedResult,
               ...(warning ? { warning } : {}),
+              debug: {
+                trace: stepTrace,
+              },
               meta,
             };
 

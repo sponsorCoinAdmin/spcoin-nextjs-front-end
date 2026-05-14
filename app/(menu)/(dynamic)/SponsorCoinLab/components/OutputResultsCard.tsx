@@ -27,7 +27,7 @@ type OutputPanelMode = 'execution' | 'formatted' | 'tree' | 'raw_status' | 'debu
 type FormattedPanelView = 'script' | 'output';
 type DragPlacement = 'before' | 'after';
 const DEBUG_TRACE_PATTERN =
-  /\[TRACE\]|\[EXPAND\]|\[ACCOUNT_EXPAND_TRACE\]|\[ACCOUNT_POPUP_TRACE\]|\[JSON_INSPECTOR_TRACE\]|Lazy-loaded|Inline account record/i;
+  /\[TRACE\]|\[EXPAND\]|\[ACCOUNT_EXPAND_TRACE\]|\[ACCOUNT_POPUP_TRACE\]|\[JSON_INSPECTOR_TRACE\]|\[PENDING_REWARDS_TRACE\]|\[SPCOIN_RPC_TRACE\]|Lazy-loaded|Inline account record|Inline pending rewards/i;
 
 type InspectorDisplayBlock = {
   data: unknown;
@@ -687,27 +687,40 @@ export default function OutputResultsCard({
   const handleOpenAccountFromInspector = React.useCallback(
     async (value: string, path: string, key?: string) => {
       const address = String(value || '').trim();
-      const isLazyRelationLoadValue = (() => {
-        if (address === '__load_account_relation__') return true;
+      const parsedInspectorPayload = (() => {
         try {
-          const parsed = JSON.parse(address) as Record<string, unknown>;
-          return parsed?.__loadAccountRelation === true;
+          const parsed = JSON.parse(address);
+          return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+            ? (parsed as Record<string, unknown>)
+            : null;
         } catch {
-          return false;
+          return null;
         }
       })();
+      const isLazyRelationLoadValue = (() => {
+        if (address === '__load_account_relation__') return true;
+        return parsedInspectorPayload?.__loadAccountRelation === true;
+      })();
+      const isPendingRewardsLoadValue =
+        parsedInspectorPayload?.__loadPendingRewardsAction === true ||
+        parsedInspectorPayload?.__loadPendingRewardsMethod === true ||
+        parsedInspectorPayload?.__togglePendingRewardsMode === true;
       const isScriptLazyRelationClick =
         controls.outputPanelMode === 'formatted' &&
         controls.formattedPanelView === 'script' &&
         isLazyRelationLoadValue;
+      const shouldUseCurrentFormattedDisplay =
+        controls.outputPanelMode === 'formatted' &&
+        !controls.formattedJsonViewEnabled &&
+        (isScriptLazyRelationClick || isPendingRewardsLoadValue);
       appendOutputTrace(
-        `[ACCOUNT_EXPAND_TRACE] inspector dispatch mode=${controls.outputPanelMode} view=${controls.formattedPanelView} json=${String(controls.formattedJsonViewEnabled)} value=${address ? address : String(value ?? '')} path=${String(path || '')}`,
+        `[ACCOUNT_EXPAND_TRACE] inspector dispatch mode=${controls.outputPanelMode} view=${controls.formattedPanelView} json=${String(controls.formattedJsonViewEnabled)} key=${String(key || '')} pendingRewards=${String(isPendingRewardsLoadValue)} relation=${String(isLazyRelationLoadValue)} rawOverride=${String(shouldUseCurrentFormattedDisplay)} value=${address ? address : String(value ?? '')} path=${String(path || '')}`,
       );
       if (!/^0x[0-9a-fA-F]{40}$/.test(address)) {
         await treeActions.openAccountFromAddress(
           value,
           path,
-          isScriptLazyRelationClick ? currentFormattedDisplay : undefined,
+          shouldUseCurrentFormattedDisplay ? currentFormattedDisplay : undefined,
         );
         if (isScriptLazyRelationClick) {
           controls.setFormattedPanelView('output');
@@ -737,6 +750,20 @@ export default function OutputResultsCard({
       currentFormattedDisplay,
       treeActions,
     ],
+  );
+  const handleExpandAccountFromInspector = React.useCallback(
+    async (value: string, path: string, key?: string) => {
+      const address = String(value || '').trim();
+      if (/^0x[0-9a-fA-F]{40}$/.test(address)) {
+        appendOutputTrace(
+          `[ACCOUNT_EXPAND_TRACE] inspector account record open key=${String(key || '')} address=${address.toLowerCase()} path=${String(path || '')}`,
+        );
+        await treeActions.openAccountFromAddress(address, path);
+        return;
+      }
+      await handleOpenAccountFromInspector(value, path, key);
+    },
+    [appendOutputTrace, handleOpenAccountFromInspector, treeActions],
   );
   const highlightedInspectorPathPrefixes = useMemo(() => {
     if (controls.outputPanelMode !== 'formatted' || controls.formattedPanelView !== 'script') return [];
@@ -1547,7 +1574,7 @@ export default function OutputResultsCard({
                     showStructureType={showStructureType}
                     label={block.label}
                     rootLabel={block.rootLabel}
-                    onLeafValueClick={(value, path, key) => void handleOpenAccountFromInspector(value, path, key)}
+                    onLeafValueClick={(value, path, key) => void handleExpandAccountFromInspector(value, path, key)}
                     onAddressNodeClick={(value, path, key) => void handleOpenAccountFromInspector(value, path, key)}
                     onTrace={appendOutputTrace}
                     scriptStepDragState={{
@@ -1591,7 +1618,7 @@ export default function OutputResultsCard({
                     formatTokenAmounts={hiddenInspectorRules.formattedAmounts}
                     tokenDecimals={activeTokenDecimals}
                     showStructureType={showStructureType}
-                    onLeafValueClick={(value, path, key) => void handleOpenAccountFromInspector(value, path, key)}
+                    onLeafValueClick={(value, path, key) => void handleExpandAccountFromInspector(value, path, key)}
                     onAddressNodeClick={(value, path, key) => void handleOpenAccountFromInspector(value, path, key)}
                     onTrace={appendOutputTrace}
                     scriptStepDragState={{

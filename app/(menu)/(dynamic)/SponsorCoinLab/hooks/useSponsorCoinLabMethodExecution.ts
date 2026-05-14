@@ -294,6 +294,9 @@ export function useSponsorCoinLabMethodExecution({
       executionSignal?: AbortSignal,
     ): Promise<ServerBackedStepResult> => {
       const target = requireContractAddress();
+      appendWriteTrace(
+        `[SPCOIN_RPC_TRACE] server-backed step dispatch panel=${panel} method=${method} mode=${modeOverride} sender=${String(sender || '')}`,
+      );
       const response = await fetch('/api/spCoin/run-script', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -781,7 +784,7 @@ export function useSponsorCoinLabMethodExecution({
           return { call, result: normalizeWriteResultForDisplay(result), meta: utilityMetaRest as MethodExecutionPayloadMeta, ...(utilityOc ? { onChainCalls: utilityOc as MethodExecutionMeta['onChainCalls'] } : {}) };
         }
 
-        const shouldUseServerBackedWrite = allowServerBackedWrite && effectiveMode === 'hardhat' && selectedMethod !== 'runPendingRewards';
+        const shouldUseServerBackedWrite = allowServerBackedWrite && effectiveMode === 'hardhat';
         const result = shouldUseServerBackedWrite
           ? await runServerBackedSpCoinStep(
               'spcoin_write',
@@ -836,7 +839,7 @@ export function useSponsorCoinLabMethodExecution({
       try {
         const payload = executionTimingCollector
           ? await runWithMethodTimingCollector(executionTimingCollector, async () => executeBody(true))
-          : await executeBody(false);
+          : await executeBody(true);
         return normalizeExecutionPayload(payload);
       } catch (error) {
         throw attachExecutionMeta(error, finalizeMeta());

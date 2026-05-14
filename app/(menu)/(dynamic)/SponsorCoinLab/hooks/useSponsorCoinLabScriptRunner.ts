@@ -305,11 +305,11 @@ export function useSponsorCoinLabScriptRunner({
           appendWriteTrace(`sender=${descriptor.sender}`);
         }
         appendWriteTrace(`params=${JSON.stringify(descriptor.params)}`);
-        if (descriptor.panel === 'spcoin_rread' && descriptor.method === 'getPendingRewards') {
+        if (descriptor.panel === 'spcoin_rread' && descriptor.method === 'estimateOffChainTotalRewards') {
           const accountKey = descriptor.params.find((entry) => entry.key === 'Account Key')?.value || '';
           const snapshotResult = findPendingRewardsSnapshotInOutput(formattedOutputBase, accountKey);
           if (snapshotResult) {
-            appendWriteTrace(`getPendingRewards using previous getAccountRecord snapshot; accountKey=${accountKey}`);
+            appendWriteTrace(`estimateOffChainTotalRewards using previous getAccountRecord snapshot; accountKey=${accountKey}`);
             const now = new Date().toISOString();
             return commitResult(
               {
@@ -327,7 +327,7 @@ export function useSponsorCoinLabScriptRunner({
               true,
             );
           }
-          appendWriteTrace(`getPendingRewards no previous snapshot; running method; accountKey=${accountKey}`);
+          appendWriteTrace(`estimateOffChainTotalRewards no previous snapshot; running method; accountKey=${accountKey}`);
         }
         const { call, result, warning, meta, onChainCalls } = await executeMethodDescriptor(descriptor, { executionSignal: options?.executionSignal });
         return commitResult({ call, meta, ...(onChainCalls ? { onChainCalls } : {}), result, ...(warning ? { warning } : {}) }, true);

@@ -3,7 +3,7 @@ export const ACCOUNT_POPUP_TRACE_ENDPOINT = '/api/spCoin/lab/account-popup-trace
 export const ACCOUNT_POPUP_TRACE_STORAGE_KEY = 'SponsorCoinLab:accountPopupTrace';
 
 const ACCOUNT_TRACE_PATTERN =
-  /\[EXPAND\]|\[ACCOUNT_EXPAND_TRACE\]|\[ACCOUNT_POPUP_TRACE\]|\[JSON_INSPECTOR_TRACE\]|Lazy-loaded|Inline account record/i;
+  /\[EXPAND\]|\[ACCOUNT_EXPAND_TRACE\]|\[ACCOUNT_POPUP_TRACE\]|\[JSON_INSPECTOR_TRACE\]|\[PENDING_REWARDS_TRACE\]|\[SPCOIN_RPC_TRACE\]|Lazy-loaded|Inline account record|Inline pending rewards/i;
 const MAX_LOCAL_TRACE_LINES = 250;
 
 export function isSponsorCoinLabAccountTraceLine(line: unknown) {

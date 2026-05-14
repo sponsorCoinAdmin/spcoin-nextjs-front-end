@@ -41,6 +41,20 @@
     },
     {
       "step": 2,
+      "name": "getAccountRecord",
+      "panel": "spcoin_rread",
+      "method": "getAccountRecord",
+      "params": [
+        {
+          "key": "Account Key",
+          "value": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
+        }
+      ],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
+    },
+    {
+      "step": 3,
       "name": "addRecipientTransaction",
       "panel": "spcoin_write",
       "method": "addRecipientTransaction",
@@ -67,7 +81,7 @@
       "hasMissingRequiredParams": false
     },
     {
-      "step": 3,
+      "step": 4,
       "name": "getAccountRecord",
       "panel": "spcoin_rread",
       "method": "getAccountRecord",
@@ -81,7 +95,7 @@
       "hasMissingRequiredParams": false
     },
     {
-      "step": 4,
+      "step": 5,
       "name": "getAccountRecord",
       "panel": "spcoin_rread",
       "method": "getAccountRecord",
@@ -95,7 +109,7 @@
       "hasMissingRequiredParams": false
     },
     {
-      "step": 5,
+      "step": 6,
       "name": "getAccountRecord",
       "panel": "spcoin_rread",
       "method": "getAccountRecord",
@@ -109,7 +123,7 @@
       "hasMissingRequiredParams": false
     },
     {
-      "step": 6,
+      "step": 7,
       "name": "runPendingRewards",
       "panel": "spcoin_write",
       "method": "runPendingRewards",
@@ -128,7 +142,7 @@
       "hasMissingRequiredParams": false
     },
     {
-      "step": 7,
+      "step": 8,
       "name": "runPendingRewards",
       "panel": "spcoin_write",
       "method": "runPendingRewards",

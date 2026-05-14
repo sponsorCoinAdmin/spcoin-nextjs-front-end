@@ -6,5 +6,5 @@ export const depositAgentStakingRewards = async (context, _sponsorAccount, _reci
         _agentRate + ", " +
         _amount + ")");
     context.spCoinLogger.logExitFunction();
-    throw new Error("depositStakingRewards is internal-only on the current SpCoin contract. Use updateAccountStakingRewards instead.");
+    throw new Error("depositStakingRewards is internal-only on the current SpCoin contract. Use claimOnChainTotalRewards instead.");
 };

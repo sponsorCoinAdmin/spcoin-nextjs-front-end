@@ -1,6 +1,6 @@
 // @ts-nocheck
-export { updateAccountStakingRewards } from "./updateAccountStakingRewards";
-export { updateSponsorAccountRewards } from "./updateSponsorAccountRewards";
-export { updateRecipientAccountRewards } from "./updateRecipientAccountRewards";
-export { updateAgentAccountRewards } from "./updateAgentAccountRewards";
+export { claimOnChainTotalRewards } from "./claimOnChainTotalRewards";
+export { claimOnChainSponsorRewards } from "./claimOnChainSponsorRewards";
+export { claimOnChainRecipientRewards } from "./claimOnChainRecipientRewards";
+export { claimOnChainAgentRewards } from "./claimOnChainAgentRewards";
 

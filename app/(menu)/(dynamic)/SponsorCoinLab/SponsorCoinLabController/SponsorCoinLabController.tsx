@@ -115,7 +115,7 @@ interface SponsorCoinLabControllerProps {
 }
 
 const TRACE_LOG_PATTERN =
-  /\[TRACE\]|\[EXPAND\]|\[ACCOUNT_EXPAND_TRACE\]|\[ACCOUNT_POPUP_TRACE\]|\[JSON_INSPECTOR_TRACE\]|Lazy-loaded|Inline account record/i;
+  /\[TRACE\]|\[EXPAND\]|\[ACCOUNT_EXPAND_TRACE\]|\[ACCOUNT_POPUP_TRACE\]|\[JSON_INSPECTOR_TRACE\]|\[PENDING_REWARDS_TRACE\]|\[SPCOIN_RPC_TRACE\]|Lazy-loaded|Inline account record|Inline pending rewards/i;
 
 export default function SponsorCoinLabPage({
   initialContractDirectoryOptions = [],
@@ -306,6 +306,26 @@ export default function SponsorCoinLabPage({
     },
     [appendLog, writeTraceEnabled],
   );
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const traceWindow = window as typeof window & {
+      __spCoinRpcFetchTraceBuffer?: string[];
+    };
+    if (writeTraceEnabled) {
+      const bufferedLines = traceWindow.__spCoinRpcFetchTraceBuffer ?? [];
+      bufferedLines.slice(-50).forEach((line) => appendLog(`[TRACE] ${line}`));
+    }
+    const handleRpcTrace = (event: Event) => {
+      const line = String((event as CustomEvent<{ line?: unknown }>).detail?.line || '');
+      if (!line) return;
+      recentWriteTraceRef.current = [...recentWriteTraceRef.current.slice(-49), line];
+      if (writeTraceEnabled) appendLog(`[TRACE] ${line}`);
+    };
+    window.addEventListener('spcoin-rpc-trace', handleRpcTrace);
+    return () => {
+      window.removeEventListener('spcoin-rpc-trace', handleRpcTrace);
+    };
+  }, [appendLog, writeTraceEnabled]);
   const resetWriteTrace = useCallback(() => {
     recentWriteTraceRef.current = [];
     setLogs((prev) => prev.filter((line) => !TRACE_LOG_PATTERN.test(line)));

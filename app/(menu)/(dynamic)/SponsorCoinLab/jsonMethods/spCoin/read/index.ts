@@ -46,7 +46,10 @@ export type SpCoinReadMethod =
   | 'isAgent'
   | 'getAccountStakingRewards'
   | 'getStakingRewards'
-  | 'getPendingRewards'
+  | 'estimateOffChainTotalRewards'
+  | 'estimateOffChainSponsorRewards'
+  | 'estimateOffChainRecipientRewards'
+  | 'estimateOffChainAgentRewards'
   | 'getTransactionRecord'
   | 'getRecipientTransactionIdKeys'
   | 'getAgentTransactionIdKeys'
@@ -130,7 +133,10 @@ const LEGACY_READ_METHOD_RENAMES: Partial<Record<string, SpCoinReadMethod>> = {
 export const SPCOIN_OFFCHAIN_READ_METHODS: SpCoinReadMethod[] = [
   'getAccountStakingRewards',
   'getStakingRewards',
-  'getPendingRewards',
+  'estimateOffChainTotalRewards',
+  'estimateOffChainSponsorRewards',
+  'estimateOffChainRecipientRewards',
+  'estimateOffChainAgentRewards',
   'getAccountRecordShallow',
   'getRecipientTransaction',
   'getAgentTransaction',
@@ -729,7 +735,12 @@ export async function runSpCoinReadMethod(args: RunArgs): Promise<unknown> {
     throw error;
   }
 
-  if (canonicalMethod === 'getPendingRewards') {
+  if (
+    canonicalMethod === 'estimateOffChainTotalRewards' ||
+    canonicalMethod === 'estimateOffChainSponsorRewards' ||
+    canonicalMethod === 'estimateOffChainRecipientRewards' ||
+    canonicalMethod === 'estimateOffChainAgentRewards'
+  ) {
     result = normalizePendingRewardsResult(result);
   }
 

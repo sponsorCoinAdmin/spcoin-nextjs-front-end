@@ -22,10 +22,10 @@ import deleteRecipientSponsorship from './deleteRecipientSponsorship';
 import deleteAccountRecord from './deleteAccountRecord';
 import deleteAccountRecords from './deleteAccountRecords';
 import runPendingRewards from './runPendingRewards';
-import updateAccountStakingRewards from './updateAccountStakingRewards';
-import updateSponsorAccountRewards from './updateSponsorAccountRewards';
-import updateRecipientAccountRewards from './updateRecipientAccountRewards';
-import updateAgentAccountRewards from './updateAgentAccountRewards';
+import claimOnChainTotalRewards from './claimOnChainTotalRewards';
+import claimOnChainSponsorRewards from './claimOnChainSponsorRewards';
+import claimOnChainRecipientRewards from './claimOnChainRecipientRewards';
+import claimOnChainAgentRewards from './claimOnChainAgentRewards';
 import updateMasterStakingRewards from './updateMasterStakingRewards';
 import setInflationRate from './setInflationRate';
 import setLowerRecipientRate from './setLowerRecipientRate';
@@ -61,10 +61,10 @@ export const SPCOIN_WRITE_METHOD_DEFS = {
   deleteAccountRecord,
   deleteAccountRecords,
   runPendingRewards,
-  updateAccountStakingRewards,
-  updateSponsorAccountRewards,
-  updateRecipientAccountRewards,
-  updateAgentAccountRewards,
+  claimOnChainTotalRewards,
+  claimOnChainSponsorRewards,
+  claimOnChainRecipientRewards,
+  claimOnChainAgentRewards,
   updateMasterStakingRewards,
   setInflationRate,
   setLowerRecipientRate,

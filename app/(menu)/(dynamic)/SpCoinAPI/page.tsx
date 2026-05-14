@@ -585,7 +585,7 @@ export default function WhitePaper() {
 
                         <li>
                           <details className="my-0">
-                            <summary className="cursor-pointer leading-[1.05] font-bold">2. updateAccountStakingRewards(_accountKey)</summary>
+                            <summary className="cursor-pointer leading-[1.05] font-bold">2. claimOnChainTotalRewards(_accountKey)</summary>
                             <ul className="list-disc pl-7 ml-[0.5ch] mt-0.5">
                               <li className="leading-[1.05]"><b>Description:</b> Updates staking rewards for a specified account.</li>
                               <li className="leading-[1.05]">
