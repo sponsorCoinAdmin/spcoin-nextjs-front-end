@@ -1305,7 +1305,13 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     stepCallRecord && typeof stepCallRecord.method === 'string'
       ? String(stepCallRecord.method).trim()
       : '';
-  const visibleInlineStepMethod = inlineStepMethod === 'runPendingRewards' ? '' : inlineStepMethod;
+  const displayPathLabel = getDisplayLabel(path ?? '');
+  const visibleInlineStepMethod =
+    inlineStepMethod === 'runPendingRewards' ||
+    inlineStepMethod === visibleStepLabel ||
+    inlineStepMethod === displayPathLabel
+      ? ''
+      : inlineStepMethod;
   const promotedStepEntries =
     stepCallRecord && !Array.isArray(stepCallRecord)
       ? [
@@ -1378,9 +1384,20 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
       const rowHighlighted = highlightPathPrefixes.some(
         (prefix) => nextPath === prefix || nextPath.startsWith(`${prefix}.`),
       );
+      const runExpandedPathKey = getExpandedPathKey(nextPath);
+      const runIsExpanded = collapsedKeys.includes(runExpandedPathKey) && !collapsedKeys.includes(nextPath);
       const runAction = value as Record<string, unknown>;
       const runAccountKey = getPendingRewardsRefreshAccountKey(runAction);
       const runActionName = getPendingRewardsRefreshActionName(runAction);
+      const runChildEntries = getVisibleEntries(
+        value,
+        showAll,
+        hiddenRules,
+        effectiveHideEntryKeys,
+        forceShowEntryKeys,
+        showStructureType,
+        effectiveAccountRoleCounts,
+      ).filter(([childKey]) => childKey !== 'runPendingRewards');
       const rerunRunPendingRewards = () => {
         onTrace?.(
           `[JSON_INSPECTOR_TRACE] pendingRewards runPendingRewards row rerun path=${nextPath} accountKey=${runAccountKey} action=${runActionName}`,
@@ -1396,45 +1413,52 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
         );
       };
       return (
-        <div key={nextPath} className="ml-4 whitespace-nowrap">
-          <button
-            type="button"
-            className="inline-flex items-center bg-transparent p-0"
-            onClick={(event) => {
-              event.stopPropagation();
-              updateCollapsedKeys([
-                ...new Set([
-                  ...collapsedKeys.filter((collapsedKey) => collapsedKey !== nextPath),
-                  getExpandedPathKey(nextPath),
-                ]),
-              ]);
-              onLeafValueClick?.(
-                JSON.stringify({
-                  __loadPendingRewardsAction: true,
-                  accountKey: runAccountKey,
-                  action: runActionName,
-                }),
-                nextPath,
-                'runPendingRewards',
-              );
-            }}
-            title="Open runPendingRewards"
-          >
-            <span className="text-green-400">[+]</span>
-          </button>{' '}
-          <button
-            type="button"
-            className={`inline-flex bg-transparent p-0 text-left font-semibold underline decoration-dotted underline-offset-2 transition-colors hover:text-white focus:outline-none ${
-              rowHighlighted ? highlightColorClass : 'text-white'
-            }`}
-            onClick={(event) => {
-              event.stopPropagation();
-              rerunRunPendingRewards();
-            }}
-            title="Rerun runPendingRewards"
-          >
-            runPendingRewards
-          </button>
+        <div key={nextPath} className="ml-4">
+          <div className="whitespace-nowrap">
+            <button
+              type="button"
+              className="inline-flex items-center bg-transparent p-0"
+              onClick={(event) => {
+                event.stopPropagation();
+                updateCollapsedKeys(
+                  !runIsExpanded
+                    ? [
+                        ...new Set([
+                          ...collapsedKeys.filter((collapsedKey) => collapsedKey !== nextPath),
+                          runExpandedPathKey,
+                        ]),
+                      ]
+                    : [
+                        ...new Set([
+                          ...collapsedKeys.filter((collapsedKey) => collapsedKey !== runExpandedPathKey),
+                          nextPath,
+                        ]),
+                      ],
+                );
+              }}
+              title="Expand runPendingRewards"
+            >
+              <span className={runIsExpanded ? 'text-red-400' : 'text-green-400'}>
+                {runIsExpanded ? '[-]' : '[+]'}
+              </span>
+            </button>{' '}
+            <button
+              type="button"
+              className={`inline-flex bg-transparent p-0 text-left font-semibold underline decoration-dotted underline-offset-2 transition-colors hover:text-white focus:outline-none ${
+                rowHighlighted ? highlightColorClass : 'text-white'
+              }`}
+              onClick={(event) => {
+                event.stopPropagation();
+                rerunRunPendingRewards();
+              }}
+              title="Rerun runPendingRewards"
+            >
+              runPendingRewards
+            </button>
+          </div>
+          {runIsExpanded && runChildEntries.length > 0 ? (
+            <div className="ml-4">{runChildEntries.map(([childKey, childValue]) => renderValue(childValue, childKey))}</div>
+          ) : null}
         </div>
       );
     }
