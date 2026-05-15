@@ -81,6 +81,7 @@ function formatDurationParts(milliseconds: bigint): string {
 export function hasPendingRewardsFields(value: unknown): value is Record<string, unknown> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
   const record = value as Record<string, unknown>;
+  if (record.TYPE === '--PENDING_REWARDS--') return false;
   return (
     (Object.prototype.hasOwnProperty.call(record, 'pendingRewards') && isScalarRewardValue(record.pendingRewards)) ||
     (Object.prototype.hasOwnProperty.call(record, 'pendingTotalRewards') && isScalarRewardValue(record.pendingTotalRewards)) ||

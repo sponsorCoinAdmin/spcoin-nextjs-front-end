@@ -404,6 +404,47 @@ function isPendingRewardsInternalField(parent: any, childKey: string): boolean {
   return isPendingRewardsRecord(parent) && childKey === 'pendingRewards';
 }
 
+function isPendingRewardsContainerSummaryField(parent: any, childKey: string): boolean {
+  if (
+    !parent ||
+    typeof parent !== 'object' ||
+    Array.isArray(parent) ||
+    (parent as Record<string, unknown>).TYPE !== '--PENDING_REWARDS--'
+  ) {
+    return false;
+  }
+
+  return [
+    'lastSponsorTimeStamp',
+    'lastRecipientTimeStamp',
+    'lastAgentTimeStamp',
+    'lastSponsorUpdate',
+    'lastRecipientUpdate',
+    'lastAgentUpdate',
+    'timeDifference',
+    'timeDifferenceMS',
+    'formattedDifference',
+    'pendingSponsorRewards',
+    'pendingRecipientRewards',
+    'pendingAgentRewards',
+    'pendingTotalRewards',
+    'totalRewards',
+  ].includes(childKey);
+}
+
+function isAccountRoleCountDisplayField(parent: any, childKey: string): boolean {
+  if (
+    !parent ||
+    typeof parent !== 'object' ||
+    Array.isArray(parent) ||
+    (parent as Record<string, unknown>).TYPE !== '--ACCOUNT--'
+  ) {
+    return false;
+  }
+
+  return childKey === 'sponsorCount' || childKey === 'recipientCount' || childKey === 'agentCount';
+}
+
 function getPendingRewardsMethodName(label: string | undefined, data: any): string {
   if (isPendingRewardsIncludedMethodNode(data)) {
     return String((data as Record<string, unknown>).method || label || '').trim();
@@ -451,6 +492,13 @@ function filterPendingRewardsRoleEntries(
 }
 
 function shouldForceExpandNode(data: any): boolean {
+  const call =
+    data && typeof data === 'object' && !Array.isArray(data) && (data as Record<string, unknown>).call;
+  const callMethod =
+    call && typeof call === 'object' && !Array.isArray(call)
+      ? String((call as Record<string, unknown>).method || '').trim()
+      : '';
+  if (PENDING_REWARDS_METHOD_NAMES.has(callMethod) && /^claimOnChain.*Rewards$/.test(callMethod)) return false;
   return Boolean(
     data &&
       typeof data === 'object' &&
@@ -726,6 +774,37 @@ function shouldHideByDropdownRules(
   return !hasPopulatedContent(value, hiddenRules, showStructureType);
 }
 
+function getAccountRecordEntryOrder(key: string): number {
+  const order: Record<string, number> = {
+    sponsorCount: 10,
+    recipientCount: 11,
+    agentCount: 12,
+    parentRecipientCount: 13,
+    lastSponsorUpdateTimeStamp: 20,
+    lastRecipientUpdateTimeStamp: 21,
+    lastAgentUpdateTimeStamp: 22,
+    stakingRewards: 30,
+    totalSpCoins: 40,
+    recipientKeys: 50,
+    agentKeys: 51,
+    sponsorKeys: 52,
+    parentRecipientKeys: 53,
+    recipientRates: 60,
+    agentRates: 61,
+  };
+  return order[key] ?? 100;
+}
+
+function getTotalSpCoinsEntryOrder(key: string): number {
+  const order: Record<string, number> = {
+    totalSpCoins: 10,
+    balanceOf: 11,
+    stakedBalance: 12,
+    pendingRewards: 20,
+  };
+  return order[key] ?? 100;
+}
+
 function getVisibleEntries(
   value: any,
   showAll: boolean,
@@ -736,6 +815,21 @@ function getVisibleEntries(
   accountRoleCounts: AccountRoleCounts | null = null,
 ): Array<[string, any]> {
   const sortEntries = ([leftKey]: [string, any], [rightKey]: [string, any]) => {
+    const displayRecord =
+      value && typeof value === 'object' && !Array.isArray(value)
+        ? (value as Record<string, unknown>)
+        : null;
+    const isAccountRecord = displayRecord?.TYPE === '--ACCOUNT--';
+    if (isAccountRecord) {
+      const leftOrder = getAccountRecordEntryOrder(leftKey);
+      const rightOrder = getAccountRecordEntryOrder(rightKey);
+      if (leftOrder !== rightOrder) return leftOrder - rightOrder;
+    }
+    if (isTotalSpCoinsRecord(value)) {
+      const leftOrder = getTotalSpCoinsEntryOrder(leftKey);
+      const rightOrder = getTotalSpCoinsEntryOrder(rightKey);
+      if (leftOrder !== rightOrder) return leftOrder - rightOrder;
+    }
     if (leftKey === 'meta' && rightKey !== 'meta') return -1;
     if (rightKey === 'meta' && leftKey !== 'meta') return 1;
     if (
@@ -805,6 +899,8 @@ function getVisibleEntries(
           childKey !== 'count' &&
           childKey !== 'method' &&
           childKey !== 'action' &&
+          !isPendingRewardsContainerSummaryField(displayValue, childKey) &&
+          !isAccountRoleCountDisplayField(displayValue, childKey) &&
           !(isTotalSpCoinsRecord(displayValue) && (childKey === 'claim' || childKey === 'update' || childKey === 'mode')) &&
           !(isPendingRewardsRecord(displayValue) && (childKey === 'claim' || childKey === 'estimate' || childKey === 'mode')) &&
           !isPendingRewardsInternalField(displayValue, childKey) &&
@@ -847,6 +943,8 @@ function getVisibleEntries(
       if (childKey === 'annualInflationRate') return false;
       if (childKey === 'parameters' && displayValue && typeof displayValue === 'object' && !Array.isArray(displayValue) && typeof (displayValue as Record<string, unknown>).call === 'object') return false;
       if (isLazyAccountRelationNode(displayValue) && ['accountKey', 'relation', 'count', 'method'].includes(childKey)) return false;
+      if (isPendingRewardsContainerSummaryField(displayValue, childKey)) return false;
+      if (isAccountRoleCountDisplayField(displayValue, childKey)) return false;
       if (isTotalSpCoinsRecord(displayValue) && (childKey === 'claim' || childKey === 'update' || childKey === 'mode')) return false;
       if (isPendingRewardsRecord(displayValue) && (childKey === 'claim' || childKey === 'estimate' || childKey === 'mode')) return false;
       if (isPendingRewardsInternalField(displayValue, childKey)) return false;
