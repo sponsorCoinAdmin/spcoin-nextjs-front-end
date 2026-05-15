@@ -291,6 +291,16 @@ function buildClaimedRewardsSummary(estimateBeforeClaim: unknown, refreshedRewar
   );
 
   return {
+    calculatedTimeStamp: String(estimate?.calculatedTimeStamp ?? estimate?.calculatedAtTimestamp ?? '0'),
+    calculatedFormatted: String(estimate?.calculatedFormatted ?? ''),
+    lastSponsorUpdate: String(estimate?.lastSponsorUpdate ?? '0'),
+    lastRecipientUpdate: String(estimate?.lastRecipientUpdate ?? '0'),
+    lastAgentUpdate: String(estimate?.lastAgentUpdate ?? '0'),
+    pendingRewards: totalRewardsClaimed,
+    pendingSponsorRewards: sponsorRewardsClaimed,
+    pendingRecipientRewards: recipientRewardsClaimed,
+    pendingAgentRewards: agentRewardsClaimed,
+    pendingTotalRewards: totalRewardsClaimed,
     totalRewardsClaimed,
     sponsorRewardsClaimed,
     recipientRewardsClaimed,

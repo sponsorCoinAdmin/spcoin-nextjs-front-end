@@ -94,6 +94,13 @@ export function hasPendingRewardsFields(value: unknown): value is Record<string,
 export function normalizePendingRewardsDisplayResult(value: unknown): unknown {
   if (!hasPendingRewardsFields(value)) return value;
   const record = value;
+  const isClaimSummary =
+    Object.prototype.hasOwnProperty.call(record, 'totalRewardsClaimed') ||
+    Object.prototype.hasOwnProperty.call(record, 'sponsorRewardsClaimed') ||
+    Object.prototype.hasOwnProperty.call(record, 'recipientRewardsClaimed') ||
+    Object.prototype.hasOwnProperty.call(record, 'agentRewardsClaimed') ||
+    Object.prototype.hasOwnProperty.call(record, 'receipts') ||
+    Object.prototype.hasOwnProperty.call(record, 'refreshedRewards');
   const pendingSponsorRewards = toPendingRewardsBigInt(record.pendingSponsorRewards).toString();
   const pendingRecipientRewards = toPendingRewardsBigInt(record.pendingRecipientRewards).toString();
   const pendingAgentRewards = toPendingRewardsBigInt(record.pendingAgentRewards).toString();
@@ -111,8 +118,10 @@ export function normalizePendingRewardsDisplayResult(value: unknown): unknown {
   const lastRoleTimeStampKey = `last${role}TimeStamp`;
   const lastRoleUpdateKey = `last${role}Update`;
   const lastRoleTimeStamp = getRoleTimestamp(record, role);
-  const timeDifference = (toPendingRewardsBigInt(lastRoleTimeStamp) - toPendingRewardsBigInt(calculatedTimeStamp)).toString();
-  const formattedDifference = formatDurationParts(toPendingRewardsBigInt(timeDifference) * 1000n);
+  const timeDifferenceMS = (
+    toPendingRewardsBigInt(calculatedTimeStamp) - toPendingRewardsBigInt(lastRoleTimeStamp)
+  ).toString();
+  const formattedDifference = formatDurationParts(toPendingRewardsBigInt(timeDifferenceMS) * 1000n);
   const calculatedFormatted =
     String(record.calculatedFormatted ?? record.calculatedAt ?? '').trim() ||
     calculateFormattedDT(calculatedTimeStamp);
@@ -123,9 +132,17 @@ export function normalizePendingRewardsDisplayResult(value: unknown): unknown {
     calculatedTimeStamp: _calculatedTimeStamp,
     calculatedFormatted: _calculatedFormatted,
     pendingRewards: _pendingRewards,
+    pendingTotalRewards: _pendingTotalRewards,
+    totalRewards: _totalRewards,
     pendingSponsorRewards: _pendingSponsorRewards,
     pendingRecipientRewards: _pendingRecipientRewards,
     pendingAgentRewards: _pendingAgentRewards,
+    totalRewardsClaimed,
+    sponsorRewardsClaimed,
+    recipientRewardsClaimed,
+    agentRewardsClaimed,
+    receipts,
+    refreshedRewards,
     lastSponsorUpdate,
     lastRecipientUpdate,
     lastAgentUpdate,
@@ -143,9 +160,17 @@ export function normalizePendingRewardsDisplayResult(value: unknown): unknown {
   void _calculatedTimeStamp;
   void _calculatedFormatted;
   void _pendingRewards;
+  void _pendingTotalRewards;
+  void _totalRewards;
   void _pendingSponsorRewards;
   void _pendingRecipientRewards;
   void _pendingAgentRewards;
+  void totalRewardsClaimed;
+  void sponsorRewardsClaimed;
+  void recipientRewardsClaimed;
+  void agentRewardsClaimed;
+  void receipts;
+  void refreshedRewards;
   void lastSponsorUpdate;
   void lastRecipientUpdate;
   void lastAgentUpdate;
@@ -155,13 +180,29 @@ export function normalizePendingRewardsDisplayResult(value: unknown): unknown {
   void lastSponsorUpdateTimeStamp;
   void lastRecipientUpdateTimeStamp;
   void lastAgentUpdateTimeStamp;
+  if (isClaimSummary) {
+    return {
+      ...restRecord,
+      TYPE: restRecord.TYPE ?? '--ACCOUNT_PENDING_REWARDS--',
+      accountKey: String(restRecord.accountKey ?? ''),
+      [lastRoleUpdateKey]: calculateFormattedDT(lastRoleTimeStamp),
+      calculatedFormatted,
+      formattedDifference,
+      ...(pendingSponsorRewards !== '0' ? { pendingSponsorRewards } : {}),
+      ...(pendingRecipientRewards !== '0' ? { pendingRecipientRewards } : {}),
+      ...(pendingAgentRewards !== '0' ? { pendingAgentRewards } : {}),
+      pendingTotalRewards: pendingRewards,
+      __showEmptyFields: true,
+    };
+  }
+
   return {
     ...restRecord,
     TYPE: restRecord.TYPE ?? '--ACCOUNT_PENDING_REWARDS--',
     accountKey: String(restRecord.accountKey ?? ''),
     calculatedTimeStamp,
     [lastRoleTimeStampKey]: lastRoleTimeStamp,
-    timeDifference,
+    timeDifferenceMS,
     calculatedFormatted,
     [lastRoleUpdateKey]: calculateFormattedDT(lastRoleTimeStamp),
     formattedDifference,
