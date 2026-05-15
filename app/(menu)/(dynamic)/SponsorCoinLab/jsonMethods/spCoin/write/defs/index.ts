@@ -21,7 +21,6 @@ import backDateAgentTransaction from './backDateAgentTransaction';
 import deleteRecipientSponsorship from './deleteRecipientSponsorship';
 import deleteAccountRecord from './deleteAccountRecord';
 import deleteAccountRecords from './deleteAccountRecords';
-import runPendingRewards from './runPendingRewards';
 import claimOnChainTotalRewards from './claimOnChainTotalRewards';
 import claimOnChainSponsorRewards from './claimOnChainSponsorRewards';
 import claimOnChainRecipientRewards from './claimOnChainRecipientRewards';
@@ -60,7 +59,6 @@ export const SPCOIN_WRITE_METHOD_DEFS = {
   deleteRecipientSponsorship,
   deleteAccountRecord,
   deleteAccountRecords,
-  runPendingRewards,
   claimOnChainTotalRewards,
   claimOnChainSponsorRewards,
   claimOnChainRecipientRewards,

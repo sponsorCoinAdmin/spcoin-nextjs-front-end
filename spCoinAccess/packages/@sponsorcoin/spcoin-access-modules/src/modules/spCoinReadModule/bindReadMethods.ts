@@ -46,8 +46,8 @@ export function bindReadMethods(context: SpCoinReadModuleContext): void {
       const { args: methodArgs, options } = splitReadCacheOptions(args);
       const cacheOptions = applyMethodCacheDefaults(name, options);
       const finalArgs =
-        ESTIMATE_REWARD_METHODS.has(name) && cacheOptions.timestampOverride != null
-          ? [...methodArgs, cacheOptions.timestampOverride]
+        ESTIMATE_REWARD_METHODS.has(name)
+          ? [...methodArgs, cacheOptions]
           : methodArgs;
       return runCachedRead(context, name, finalArgs, cacheOptions, () => method(context, ...finalArgs));
     }) as SpCoinReadBoundMethod;

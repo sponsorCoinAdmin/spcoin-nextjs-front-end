@@ -23,6 +23,36 @@ const LEGACY_REMOTE_HARDHAT_RPC_URL = 'https://rpc.sponsorcoin.org/f5b4d4b4a2614
 const DEFAULT_HARDHAT_RPC_URL =
   String(hardhatDefaultSettings?.networkHeader?.rpcUrl || '').trim() ||
   LEGACY_REMOTE_HARDHAT_RPC_URL;
+const REMOVED_PENDING_REWARDS_ALIAS = ['run', 'Pending', 'Rewards'].join('');
+
+function stripRemovedPendingRewardsAliases(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(stripRemovedPendingRewardsAliases);
+  if (!value || typeof value !== 'object') return value;
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>)
+      .filter(([key]) => key !== REMOVED_PENDING_REWARDS_ALIAS)
+      .map(([key, entryValue]) => [key, stripRemovedPendingRewardsAliases(entryValue)]),
+  );
+}
+
+function sanitizePersistedOutputDisplay(value: string) {
+  if (!value.includes(REMOVED_PENDING_REWARDS_ALIAS)) return value;
+  return value
+    .split(/\n\s*\n/)
+    .map((block) => {
+      const trimmed = block.trim();
+      if (!trimmed) return block;
+      try {
+        return JSON.stringify(stripRemovedPendingRewardsAliases(JSON.parse(trimmed)), null, 2);
+      } catch {
+        return block
+          .split(/\r?\n/)
+          .filter((line) => !line.includes(REMOVED_PENDING_REWARDS_ALIAS))
+          .join('\n');
+      }
+    })
+    .join('\n\n');
+}
 
 function normalizePersistedRpcUrl(savedMode: unknown, savedRpcUrl: unknown) {
   if (typeof savedRpcUrl !== 'string') return undefined;
@@ -434,7 +464,9 @@ export function useSponsorCoinLabPersistence({
           }
           if (typeof saved.status === 'string') setStatus(saved.status);
           if (Array.isArray(saved.logs)) setLogs(saved.logs.map((v) => String(v ?? '')));
-          if (typeof saved.formattedOutputDisplay === 'string') setFormattedOutputDisplay(saved.formattedOutputDisplay);
+          if (typeof saved.formattedOutputDisplay === 'string') {
+            setFormattedOutputDisplay(sanitizePersistedOutputDisplay(saved.formattedOutputDisplay));
+          }
           if (
             saved.outputPanelMode === 'execution' ||
             saved.outputPanelMode === 'formatted' ||
@@ -453,7 +485,9 @@ export function useSponsorCoinLabPersistence({
           if (typeof saved.writeTraceEnabled === 'boolean') {
             setWriteTraceEnabled(saved.writeTraceEnabled);
           }
-          if (typeof saved.treeOutputDisplay === 'string') setTreeOutputDisplay(saved.treeOutputDisplay);
+          if (typeof saved.treeOutputDisplay === 'string') {
+            setTreeOutputDisplay(sanitizePersistedOutputDisplay(saved.treeOutputDisplay));
+          }
           if (typeof saved.showTreeAccountDetails === 'boolean') setShowTreeAccountDetails(saved.showTreeAccountDetails);
           if (typeof saved.showAllTreeRecords === 'boolean') setShowAllTreeRecords(saved.showAllTreeRecords);
           if (
@@ -569,12 +603,12 @@ export function useSponsorCoinLabPersistence({
       selectedWriteSenderAddress,
       status,
       logs,
-      formattedOutputDisplay,
+      formattedOutputDisplay: sanitizePersistedOutputDisplay(formattedOutputDisplay),
       outputPanelMode,
       formattedPanelView,
       formattedJsonViewEnabled,
       writeTraceEnabled,
-      treeOutputDisplay,
+      treeOutputDisplay: sanitizePersistedOutputDisplay(treeOutputDisplay),
       showTreeAccountDetails,
       showAllTreeRecords,
       expandedCard,

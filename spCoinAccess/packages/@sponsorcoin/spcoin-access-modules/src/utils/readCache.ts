@@ -1,6 +1,7 @@
 // @ts-nocheck
 
 export type SpCoinReadCacheMode = "default" | "refresh" | "bypass" | "only";
+const DEFAULT_READ_CACHE_TTL_MS = 10_000;
 
 export type SpCoinReadCacheOptions = {
   cache?: SpCoinReadCacheMode;
@@ -146,8 +147,8 @@ function setCacheEntry(key: string, value: unknown, dependencies: Set<string>) {
 }
 
 function isEntryFresh(entry: CacheEntry, options: SpCoinReadCacheOptions) {
-  const ttlMs = Number(options.ttlMs ?? 0);
-  if (!Number.isFinite(ttlMs) || ttlMs <= 0) return true;
+  const ttlMs = Number(options.ttlMs ?? DEFAULT_READ_CACHE_TTL_MS);
+  if (!Number.isFinite(ttlMs) || ttlMs <= 0) return false;
   return Date.now() - entry.cachedAt <= ttlMs;
 }
 

@@ -12,6 +12,7 @@ function selectRewards(result, role) {
             TYPE: "--ACCOUNT_PENDING_SPONSOR_REWARDS--",
             accountKey: String(pending.accountKey ?? ""),
             calculatedTimeStamp: String(pending.calculatedTimeStamp ?? "0"),
+            calculatedFormatted: String(pending.calculatedFormatted ?? ""),
             lastSponsorUpdate: String(pending.lastSponsorUpdate ?? "0"),
             pendingSponsorRewards: String(pending.pendingSponsorRewards ?? "0"),
         };
@@ -21,6 +22,7 @@ function selectRewards(result, role) {
             TYPE: "--ACCOUNT_PENDING_RECIPIENT_REWARDS--",
             accountKey: String(pending.accountKey ?? ""),
             calculatedTimeStamp: String(pending.calculatedTimeStamp ?? "0"),
+            calculatedFormatted: String(pending.calculatedFormatted ?? ""),
             lastRecipientUpdate: String(pending.lastRecipientUpdate ?? "0"),
             pendingRecipientRewards: String(pending.pendingRecipientRewards ?? "0"),
         };
@@ -30,6 +32,7 @@ function selectRewards(result, role) {
             TYPE: "--ACCOUNT_PENDING_AGENT_REWARDS--",
             accountKey: String(pending.accountKey ?? ""),
             calculatedTimeStamp: String(pending.calculatedTimeStamp ?? "0"),
+            calculatedFormatted: String(pending.calculatedFormatted ?? ""),
             lastAgentUpdate: String(pending.lastAgentUpdate ?? "0"),
             pendingAgentRewards: String(pending.pendingAgentRewards ?? "0"),
         };

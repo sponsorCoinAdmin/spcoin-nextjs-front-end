@@ -82,8 +82,8 @@ export type BuildMethodsPanelCardPropsArgs = {
   beginNewMethodDraft: (afterReset?: () => void) => void;
   writeTraceEnabled: boolean;
   setWriteTraceEnabled: StateSetter<boolean>;
-  useReadCache: boolean;
-  setUseReadCache: StateSetter<boolean>;
+  useReadCache: boolean | undefined;
+  setUseReadCache: StateSetter<boolean | undefined>;
   appendLog: (line: string) => void;
   showOnChainMethods: boolean;
   setShowOnChainMethods: StateSetter<boolean>;

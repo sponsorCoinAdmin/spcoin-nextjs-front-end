@@ -322,6 +322,14 @@ function duplicateFormattedOutputBlock(rawDisplay: string, stepNumber: number): 
   return nextBlocks.join('\n\n');
 }
 
+function getTriStateControlClasses(value: boolean | undefined) {
+  return value === true
+    ? 'border-green-500 bg-green-500 text-[#071016]'
+    : value === false
+      ? 'border-red-500 bg-red-600 text-white'
+      : 'border-[#5981F3] bg-black text-transparent';
+}
+
 function parseDisplayedOutputCalls(rawDisplay: string): DisplayedOutputCall[] {
   return String(rawDisplay || '')
     .split(/\n\s*\n/)
@@ -398,6 +406,8 @@ type Props = {
     setFormattedJsonViewEnabled: (value: boolean) => void;
     writeTraceEnabled: boolean;
     toggleWriteTrace: () => void;
+    useReadCache: boolean | undefined;
+    setUseReadCache: (value: boolean | undefined) => void;
     showTreeAccountDetails: boolean;
     setShowTreeAccountDetails: (value: boolean) => void;
     showAllTreeRecords: boolean;
@@ -461,7 +471,7 @@ export default function OutputResultsCard({
 }: Props) {
   const hiddenRuleOptions = [
     ['zeroValues', '0 values'],
-    ['emptyValues', 'empty / null'],
+    ['emptyValues', 'Empty / Null / "N/A"'],
     ['falseValues', 'false values'],
     ['todoValues', 'todo markers'],
     ['emptyCollections', 'empty arrays / objects'],
@@ -703,8 +713,7 @@ export default function OutputResultsCard({
       })();
       const isPendingRewardsLoadValue =
         parsedInspectorPayload?.__loadPendingRewardsAction === true ||
-        parsedInspectorPayload?.__loadPendingRewardsMethod === true ||
-        parsedInspectorPayload?.__togglePendingRewardsMode === true;
+        parsedInspectorPayload?.__loadPendingRewardsMethod === true;
       const isScriptLazyRelationClick =
         controls.outputPanelMode === 'formatted' &&
         controls.formattedPanelView === 'script' &&
@@ -821,60 +830,7 @@ export default function OutputResultsCard({
   }, [collapsibleFormattedBlocks, collapsibleTreeBlocks, controls.outputPanelMode]);
 
   const displayFormattedBlocks = useMemo(() => {
-    const hoistMasterAnnualInflationRate = (block: unknown) => {
-      if (!block || typeof block !== 'object' || Array.isArray(block)) return block;
-
-      const record = block as Record<string, unknown>;
-      const call = record.call;
-      const method =
-        call && typeof call === 'object' && !Array.isArray(call) ? String((call as Record<string, unknown>).method || '').trim() : '';
-
-      if (!['getMasterSponsorList'].includes(method)) return block;
-
-      const result = record.result;
-      if (!Array.isArray(result)) return block;
-
-      const sponsorEntries = result;
-      const topLevelAnnualInflationRate = sponsorEntries.reduce<string | null>((foundRate, entry) => {
-        if (foundRate) return foundRate;
-        if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return foundRate;
-        const totalSpCoins =
-          (entry as Record<string, unknown>).totalSpCoins &&
-          typeof (entry as Record<string, unknown>).totalSpCoins === 'object' &&
-          !Array.isArray((entry as Record<string, unknown>).totalSpCoins)
-            ? ((entry as Record<string, unknown>).totalSpCoins as Record<string, unknown>)
-            : null;
-        const rewardRate = totalSpCoins ? String(totalSpCoins.annualInflationRate || '').trim() : '';
-        return rewardRate || foundRate;
-      }, null);
-
-      const normalizedResult = sponsorEntries.reduce<Record<string, unknown>>((nextResult, entry, index) => {
-        if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
-          nextResult[String(index)] = entry;
-          return nextResult;
-        }
-
-        const entryRecord = entry as Record<string, unknown>;
-        const totalSpCoins =
-          entryRecord.totalSpCoins && typeof entryRecord.totalSpCoins === 'object' && !Array.isArray(entryRecord.totalSpCoins)
-            ? ({ ...(entryRecord.totalSpCoins as Record<string, unknown>) } as Record<string, unknown>)
-            : null;
-
-        if (totalSpCoins && 'annualInflationRate' in totalSpCoins) {
-          delete totalSpCoins.annualInflationRate;
-        }
-
-        nextResult[String(index)] = totalSpCoins ? { ...entryRecord, totalSpCoins } : entry;
-        return nextResult;
-      }, {});
-
-      return {
-        ...record,
-        result: topLevelAnnualInflationRate ? { annualInflationRate: topLevelAnnualInflationRate, ...normalizedResult } : normalizedResult,
-      };
-    };
-
-    return (collapsibleFormattedBlocks || []).map((block) => hoistMasterAnnualInflationRate(block));
+    return collapsibleFormattedBlocks || [];
   }, [collapsibleFormattedBlocks]);
 
   const formattedInspectorLooksStepBased = useMemo(() => {
@@ -1508,6 +1464,43 @@ export default function OutputResultsCard({
                 </div>
               ) : null}
               <label className="inline-flex items-center gap-1">
+                <button
+                  type="button"
+                  aria-label="Cycle cache mode"
+                  aria-pressed={controls.useReadCache === true}
+                  className={`inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded border text-[9px] font-black leading-none ${getTriStateControlClasses(controls.useReadCache)}`}
+                  onClick={() => {
+                    controls.setUseReadCache(
+                      controls.useReadCache === undefined
+                        ? false
+                        : controls.useReadCache === false
+                          ? true
+                          : undefined,
+                    );
+                  }}
+                  title={
+                    controls.useReadCache === true
+                      ? 'Cache on'
+                      : controls.useReadCache === false
+                        ? 'Cache off'
+                        : 'Cache default'
+                  }
+                >
+                  {controls.useReadCache === true ? '\u2713' : controls.useReadCache === false ? 'X' : ''}
+                </button>
+                <span
+                  className={
+                    controls.useReadCache === true
+                      ? 'text-green-400'
+                      : controls.useReadCache === false
+                        ? 'text-red-400'
+                        : 'text-slate-200'
+                  }
+                >
+                  Cache
+                </span>
+              </label>
+              <label className="inline-flex items-center gap-1">
                 <input
                   type="checkbox"
                   className="h-3.5 w-3.5 rounded border border-[#334155] bg-[#0E111B] accent-green-500"
@@ -1548,7 +1541,7 @@ export default function OutputResultsCard({
           {controls.outputPanelMode === 'formatted' &&
           !controls.formattedJsonViewEnabled &&
           collapsibleFormattedBlocks ? (
-            <div className={`h-full min-h-0 overflow-auto p-3 pr-36 text-xs text-slate-200 ${content.hiddenScrollbarClass}`}>
+            <div className={`h-full min-h-0 overflow-auto p-3 pr-48 text-xs text-slate-200 ${content.hiddenScrollbarClass}`}>
               <div className="space-y-0">
                 {inspectorFormattedBlocks.map((block) => (
                   <JsonInspector
@@ -1593,7 +1586,7 @@ export default function OutputResultsCard({
           ) : controls.outputPanelMode === 'tree' &&
             !controls.formattedJsonViewEnabled &&
             collapsibleTreeBlocks ? (
-            <div className={`h-full min-h-0 overflow-auto p-3 pr-36 text-xs text-slate-200 ${content.hiddenScrollbarClass}`}>
+            <div className={`h-full min-h-0 overflow-auto p-3 pr-48 text-xs text-slate-200 ${content.hiddenScrollbarClass}`}>
               <div className="space-y-3">
                 {collapsibleTreeBlocks.map((block, index) => (
                   <JsonInspector
@@ -1636,7 +1629,7 @@ export default function OutputResultsCard({
             </div>
           ) : (
             <pre
-              className={`h-full min-h-0 overflow-auto p-3 text-xs text-slate-200 ${controls.outputPanelMode === 'formatted' || controls.outputPanelMode === 'tree' ? 'pr-36' : ''} ${content.hiddenScrollbarClass}`}
+              className={`h-full min-h-0 overflow-auto p-3 text-xs text-slate-200 ${controls.outputPanelMode === 'formatted' || controls.outputPanelMode === 'tree' ? 'pr-48' : ''} ${content.hiddenScrollbarClass}`}
             >
               {controls.outputPanelMode === 'formatted' &&
               content.highlightedFormattedOutputLines

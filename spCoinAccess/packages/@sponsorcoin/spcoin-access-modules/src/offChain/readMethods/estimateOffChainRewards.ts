@@ -6,7 +6,7 @@ async function estimate(context, role) {
     const methodName = `estimateOffChain${role}Rewards`;
     const directMethod = context.read[methodName];
     if (typeof directMethod === 'function') {
-        return directMethod(accountKey);
+        return directMethod(accountKey, context.readCacheOptions);
     }
     throw new Error(`${methodName} is not available on the current SpCoin read access path.`);
 }

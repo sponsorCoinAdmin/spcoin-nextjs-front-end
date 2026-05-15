@@ -4,11 +4,11 @@ Date: 2026-05-14
 
 ## Summary
 
-We were debugging repeated browser RPC/CORS/503 noise in `SponsorCoinLab`, especially around `pendingRewards` and `runPendingRewards`.
+We were debugging repeated browser RPC/CORS/503 noise in `SponsorCoinLab`, especially around pending-reward expansion.
 
 The important discovery is that there are two different execution paths:
 
-1. The standalone JSON method `runPendingRewards` can work correctly through the server-backed route.
+1. The old standalone pending-reward alias could work correctly through the server-backed route.
 2. The inline Console Display tree interaction for `pendingRewards` was creating a browser Hardhat `JsonRpcProvider` and issuing browser `eth_call` requests.
 
 The browser requests can hit CORS errors because the browser directly posts to:
@@ -21,9 +21,9 @@ The server-backed route does not have the browser CORS problem and is the prefer
 
 ## What Was Proven
 
-### Standalone `runPendingRewards` works
+### Standalone pending-reward alias worked
 
-Running `runPendingRewards` directly returned a valid result for:
+Running the old pending-reward alias directly returned a valid result for:
 
 ```json
 {
@@ -58,7 +58,7 @@ First run made on-chain calls such as:
 
 ### Cache re-read works
 
-Immediately re-running the same `runPendingRewards(Update)` returned in about `6ms` with:
+Immediately re-running the same pending-reward update returned in about `6ms` with:
 
 ```json
 {
@@ -242,7 +242,7 @@ It dispatches:
 In Hardhat mode it is now used for:
 
 - `pendingRewards` estimate expansion
-- `runPendingRewards`
+- the old pending-reward alias
 - claim flows
 - post-claim `getAccountStakingRewards`
 
@@ -252,7 +252,7 @@ After a hard browser refresh:
 
 ### Standalone method
 
-Running standalone `runPendingRewards` should still work.
+The standalone pending-reward alias was later removed in favor of explicit estimate/claim methods.
 
 ### Re-read
 
@@ -280,12 +280,12 @@ create browser Hardhat JsonRpcProvider
 
 If it still creates a browser provider, there is another inline path bypassing `runServerBackedTreeSpCoinMethod`.
 
-### Clicking Console Display `runPendingRewards`
+### Clicking Console Display pending-reward alias
 
 Expected trace:
 
 ```text
-[SPCOIN_RPC_TRACE] tree server-backed dispatch panel=spcoin_write method=runPendingRewards ...
+[SPCOIN_RPC_TRACE] tree server-backed dispatch panel=spcoin_write method=<old pending-reward alias> ...
 server [SPCOIN_RPC_TRACE] server RPC request ...
 server [SPCOIN_RPC_TRACE] server RPC response ...
 ```
@@ -293,15 +293,15 @@ server [SPCOIN_RPC_TRACE] server RPC response ...
 It should not show:
 
 ```text
-executeHardhatConnected start; label=runPendingRewards...
+executeHardhatConnected start; label=<old pending-reward alias>...
 ```
 
 ## Next Debug Steps
 
 1. Hard refresh browser to clear old Fast Refresh bundles.
 2. Enable Trace.
-3. Run standalone `runPendingRewards`.
-4. Re-run standalone `runPendingRewards` to confirm cache hit.
+3. Run the explicit pending-reward estimate method.
+4. Re-run the explicit pending-reward estimate method to confirm cache hit.
 5. Click `pendingRewards` in the Console Display.
 6. Check whether Trace shows:
 

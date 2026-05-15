@@ -334,7 +334,7 @@ type StoredMethodsPanelUiState = {
   selectedDisplayGroup?: MethodDisplayFilter;
   selectedAlterMode?: AlterModeOption;
   writeTraceEnabled?: boolean;
-  useReadCache?: boolean;
+  useReadCache?: boolean | null;
   showOnChainMethods?: boolean;
   showOffChainMethods?: boolean;
   selectedMethodId?: string;
@@ -362,7 +362,7 @@ function readStoredMethodsPanelUiState(): StoredMethodsPanelUiState | null {
     if (typeof saved.writeTraceEnabled === 'boolean') {
       next.writeTraceEnabled = saved.writeTraceEnabled;
     }
-    if (typeof saved.useReadCache === 'boolean') {
+    if (typeof saved.useReadCache === 'boolean' || saved.useReadCache === null) {
       next.useReadCache = saved.useReadCache;
     }
     if (typeof saved.showOnChainMethods === 'boolean') {
@@ -398,6 +398,24 @@ function getAlterModeLabel(option: AlterModeOption) {
   return option === 'Todo' ? 'Depreciated' : option;
 }
 
+function getTriStateControlClasses(value: boolean | undefined) {
+  return value === true
+    ? 'border-green-500 bg-green-500 text-[#071016]'
+    : value === false
+      ? 'border-red-500 bg-red-600 text-white'
+      : 'border-[#5981F3] bg-black text-transparent';
+}
+
+function getChainDisplayMode(showOnChainMethods: boolean, showOffChainMethods: boolean): boolean | undefined {
+  if (showOnChainMethods && !showOffChainMethods) return true;
+  if (!showOnChainMethods && showOffChainMethods) return false;
+  return undefined;
+}
+
+function getChainDisplayLabel(value: boolean | undefined) {
+  return value === true ? 'On-Chain' : value === false ? 'Off-Chain' : 'Default-Chain';
+}
+
 type Props = {
   articleClassName: string;
   methodsCardRef: MutableRefObject<HTMLElement | null>;
@@ -414,8 +432,8 @@ type Props = {
   beginNewMethodDraft: (afterReset?: () => void) => void;
   writeTraceEnabled: boolean;
   toggleWriteTrace: () => void;
-  useReadCache: boolean;
-  setUseReadCache: (value: boolean) => void;
+  useReadCache: boolean | undefined;
+  setUseReadCache: (value: boolean | undefined) => void;
   showOnChainMethods: boolean;
   setShowOnChainMethods: (value: boolean) => void;
   showOffChainMethods: boolean;
@@ -572,10 +590,10 @@ export default function MethodsPanelCard({
       toggleWriteTrace();
     }
     if (
-      typeof storedMethodsPanelUiState?.useReadCache === 'boolean' &&
-      storedMethodsPanelUiState.useReadCache !== useReadCache
+      (typeof storedMethodsPanelUiState?.useReadCache === 'boolean' || storedMethodsPanelUiState?.useReadCache === null) &&
+      (storedMethodsPanelUiState.useReadCache ?? undefined) !== useReadCache
     ) {
-      setUseReadCache(storedMethodsPanelUiState.useReadCache);
+      setUseReadCache(storedMethodsPanelUiState.useReadCache ?? undefined);
     }
     didHydratePanelUiRef.current = true;
     setIsPanelUiPersistenceReady(true);
@@ -1200,7 +1218,7 @@ export default function MethodsPanelCard({
         selectedDisplayGroup,
         selectedAlterMode,
         writeTraceEnabled,
-        useReadCache,
+        useReadCache: useReadCache ?? null,
         showOnChainMethods,
         showOffChainMethods,
         selectedMethodId: currentMethodIdentity?.id || '',
@@ -1673,6 +1691,27 @@ export default function MethodsPanelCard({
     visibleCurrentMethodIdentity,
     visibleGroupedMethods,
   ]);
+  const chainDisplayMode = getChainDisplayMode(showOnChainMethods, showOffChainMethods);
+  const cycleChainDisplayMode = React.useCallback(() => {
+    const nextMode =
+      chainDisplayMode === undefined
+        ? false
+        : chainDisplayMode === false
+          ? true
+          : undefined;
+    if (nextMode === true) {
+      setShowOnChainMethods(true);
+      setShowOffChainMethods(false);
+      return;
+    }
+    if (nextMode === false) {
+      setShowOnChainMethods(false);
+      setShowOffChainMethods(true);
+      return;
+    }
+    setShowOnChainMethods(true);
+    setShowOffChainMethods(true);
+  }, [chainDisplayMode, setShowOffChainMethods, setShowOnChainMethods]);
 
   return (
     <article ref={methodsCardRef} className={articleClassName}>
@@ -1703,31 +1742,26 @@ export default function MethodsPanelCard({
                 <span className={scriptEditorKind === 'javascript' ? 'text-green-400' : 'text-[#8FA8FF]'}>Typescript</span>
               </label>
               <label className="inline-flex items-center justify-end gap-2 text-right">
-              <input
-                type="checkbox"
-                className="h-4 w-4 rounded border border-[#5981F3] bg-transparent accent-green-500 checked:border-green-500 checked:bg-green-500"
-                checked={showOnChainMethods}
-                onChange={(event) => setShowOnChainMethods(event.target.checked)}
-              />
-              <span className={showOnChainMethods ? 'text-green-400' : 'text-[#8FA8FF]'}>On-Chain</span>
-              </label>
-              <label className="inline-flex items-center justify-end gap-2 text-right">
-              <input
-                type="checkbox"
-                className="h-4 w-4 rounded border border-[#5981F3] bg-transparent accent-green-500 checked:border-green-500 checked:bg-green-500"
-                checked={showOffChainMethods}
-                onChange={(event) => setShowOffChainMethods(event.target.checked)}
-              />
-              <span className={showOffChainMethods ? 'text-green-400' : 'text-[#8FA8FF]'}>Off-Chain</span>
-              </label>
-              <label className="inline-flex items-center justify-end gap-2 text-right">
-                <input
-                  type="checkbox"
-                  className="h-4 w-4 rounded border border-[#5981F3] bg-transparent accent-green-500 checked:border-green-500 checked:bg-green-500"
-                  checked={useReadCache}
-                  onChange={(event) => setUseReadCache(event.target.checked)}
-                />
-                <span className={useReadCache ? 'text-green-400' : 'text-[#8FA8FF]'}>Cache</span>
+                <button
+                  type="button"
+                  aria-label="Cycle chain display mode"
+                  className={`inline-flex h-4 w-4 shrink-0 items-center justify-center rounded border text-[10px] font-black leading-none ${getTriStateControlClasses(chainDisplayMode)}`}
+                  onClick={cycleChainDisplayMode}
+                  title={getChainDisplayLabel(chainDisplayMode)}
+                >
+                  {chainDisplayMode === true ? '\u2713' : chainDisplayMode === false ? 'X' : ''}
+                </button>
+                <span
+                  className={
+                    chainDisplayMode === true
+                      ? 'text-green-400'
+                      : chainDisplayMode === false
+                        ? 'text-red-400'
+                        : 'text-[#8FA8FF]'
+                  }
+                >
+                  {getChainDisplayLabel(chainDisplayMode)}
+                </span>
               </label>
               <label className="inline-flex items-center justify-end gap-2 text-right">
                 <input

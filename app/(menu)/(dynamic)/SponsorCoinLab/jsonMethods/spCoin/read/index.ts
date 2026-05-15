@@ -5,6 +5,7 @@ import { createSpCoinLibraryAccess, type SpCoinAccessSource, type SpCoinContract
 import type { ParamDef } from '../../shared/types';
 import { normalizeStringListResult } from '../../shared/normalizeListResult';
 import { buildExternalserializedRResult, type SerializationBaseMethod } from '../../serializationTests';
+import { normalizePendingRewardsDisplayResult } from '@/lib/spCoinLab/pendingRewards';
 
 export type SpCoinReadMethod =
   | 'getInflationRate'
@@ -280,37 +281,7 @@ function isBadDataError(error: unknown) {
 }
 
 function normalizePendingRewardsResult(value: unknown): unknown {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
-  const record = value as Record<string, unknown>;
-  if (
-    !Object.prototype.hasOwnProperty.call(record, 'pendingRewards') &&
-    !Object.prototype.hasOwnProperty.call(record, 'pendingSponsorRewards') &&
-    !Object.prototype.hasOwnProperty.call(record, 'pendingRecipientRewards') &&
-    !Object.prototype.hasOwnProperty.call(record, 'pendingAgentRewards')
-  ) {
-    return value;
-  }
-  const pendingSponsorRewards = String(record.pendingSponsorRewards ?? '0');
-  const pendingRecipientRewards = String(record.pendingRecipientRewards ?? '0');
-  const pendingAgentRewards = String(record.pendingAgentRewards ?? '0');
-  const calculatedTimeStamp = String(record.calculatedTimeStamp ?? record.calculatedmestamp ?? record.calculatedAtTimestamp ?? '0');
-  const calculatedFormatted = String(record.calculatedFormatted ?? record.calculatedAt ?? '');
-  const { calculatedAt, calculatedAtTimestamp, calculatedmestamp, ...restRecord } = record;
-  void calculatedAt;
-  void calculatedAtTimestamp;
-  void calculatedmestamp;
-  return {
-    TYPE: restRecord.TYPE ?? '--ACCOUNT_PENDING_REWARDS--',
-    accountKey: String(restRecord.accountKey ?? ''),
-    calculatedTimeStamp,
-    calculatedFormatted,
-    ...restRecord,
-    pendingRewards: String(record.pendingRewards ?? '0'),
-    pendingSponsorRewards,
-    pendingRecipientRewards,
-    pendingAgentRewards,
-    __showEmptyFields: true,
-  };
+  return normalizePendingRewardsDisplayResult(value);
 }
 
 async function buildReadDecodeError(params: {
@@ -504,6 +475,8 @@ type RunArgs = {
   ensureReadRunner: () => Promise<any>;
   appendLog: (line: string) => void;
   setStatus: (value: string) => void;
+  useReadCache?: boolean;
+  readCacheNamespace?: string;
 };
 
 function getReadMethodHandlers() {
@@ -531,6 +504,8 @@ export async function runSpCoinReadMethod(args: RunArgs): Promise<unknown> {
     ensureReadRunner,
     appendLog,
     setStatus,
+    useReadCache,
+    readCacheNamespace,
   } = args;
 
   const canonicalMethod = normalizeSpCoinReadMethod(selectedMethod);
@@ -567,6 +542,12 @@ export async function runSpCoinReadMethod(args: RunArgs): Promise<unknown> {
   const staking = access.staking as SpCoinStakingAccess & Record<string, unknown>;
   const contract = access.contract as SpCoinContractAccess;
   const methodArgs = activeDef.params.map((def, idx) => coerceParamValue(spReadParams[idx], def));
+  const effectiveReadCache = useReadCache ?? (spCoinAccessSource === 'local' ? false : undefined);
+  const readCacheOptions = {
+    ...(effectiveReadCache === undefined ? {} : { cache: effectiveReadCache ? 'default' : 'bypass' }),
+    ...(readCacheNamespace ? { cacheNamespace: readCacheNamespace } : {}),
+    traceCache: true,
+  };
   if (canonicalMethod === 'getMasterAccountKeyCount') {
     appendLog(
       `[debug:getMasterAccountKeyCount] access read=${String(Boolean(access?.read))} contract=${String(Boolean(access?.contract))}`,
@@ -649,6 +630,7 @@ export async function runSpCoinReadMethod(args: RunArgs): Promise<unknown> {
       read: read as Record<string, unknown>,
       staking,
       contract: contract as Record<string, unknown>,
+      readCacheOptions,
       normalizeStringListResult,
       toStringOrNumber,
       formatCreationTimeResult,

@@ -16,18 +16,10 @@
     "31337": {
       "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80": {
         "0": {
-          "0XEE45484C15358B6412074BCD9204B2E975504D3D": {
+          "0X81D02C4AD93E85040A5CDABA55A5443FC5069C65": {
             "deployer": "0XF39FD6E51AAD88F6F4CE6AB8827279CFFFB92266",
             "name": "spCoin V0",
             "symbol": "SPCOIN_V0",
-            "decimals": 18
-          }
-        },
-        "9": {
-          "0XC66E2444FB35FF3974A69E3AFC51579E6CEE9CBA": {
-            "deployer": "0XF39FD6E51AAD88F6F4CE6AB8827279CFFFB92266",
-            "name": "spCoin V9",
-            "symbol": "SPCOIN_V9",
             "decimals": 18
           }
         }

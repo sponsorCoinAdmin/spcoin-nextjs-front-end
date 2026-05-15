@@ -6,6 +6,7 @@ import {
   type MethodExecutionMeta,
 } from './methodExecutionHelpers';
 import { mergeFormattedOutput } from './methodOutputFormatting';
+import { normalizePendingRewardsDisplayResult } from '@/lib/spCoinLab/pendingRewards';
 
 interface MethodParamEntry {
   key: string;
@@ -144,14 +145,10 @@ function findAccountRecordInPayload(value: unknown, accountKey: string, visited 
 }
 
 function normalizePendingRewardsSnapshot(value: Record<string, unknown>) {
-  return {
-    ...value,
-    pendingRewards: toBigIntAmount(value.pendingRewards).toString(),
-    pendingSponsorRewards: toBigIntAmount(value.pendingSponsorRewards).toString(),
-    pendingRecipientRewards: toBigIntAmount(value.pendingRecipientRewards).toString(),
-    pendingAgentRewards: toBigIntAmount(value.pendingAgentRewards).toString(),
-    __showEmptyFields: true,
-  };
+  const normalized = normalizePendingRewardsDisplayResult(value);
+  return normalized && typeof normalized === 'object' && !Array.isArray(normalized)
+    ? (normalized as Record<string, unknown>)
+    : value;
 }
 
 function calculateAgentRewardsFromSnapshot(accountRecord: Record<string, unknown>, currentTimeStamp: bigint, fallbackLastAgentUpdate: unknown) {

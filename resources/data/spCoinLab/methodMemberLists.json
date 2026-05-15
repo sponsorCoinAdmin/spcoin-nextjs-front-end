@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-14T18:19:45.689Z",
+  "updatedAt": "2026-05-15T06:44:43.130Z",
   "lists": {
     "serialization": {
       "Basic": {
@@ -590,7 +590,6 @@
         "deleteRecipientSponsorship": true,
         "deleteAccountRecord": true,
         "deleteAccountRecords": false,
-        "runPendingRewards": true,
         "claimOnChainTotalRewards": true,
         "claimOnChainSponsorRewards": true,
         "claimOnChainRecipientRewards": true,
@@ -629,7 +628,6 @@
         "deleteRecipientSponsorship": true,
         "deleteAccountRecord": true,
         "deleteAccountRecords": false,
-        "runPendingRewards": true,
         "claimOnChainTotalRewards": true,
         "claimOnChainSponsorRewards": true,
         "claimOnChainRecipientRewards": true,
@@ -668,7 +666,6 @@
         "deleteRecipientSponsorship": false,
         "deleteAccountRecord": false,
         "deleteAccountRecords": true,
-        "runPendingRewards": false,
         "claimOnChainTotalRewards": false,
         "claimOnChainSponsorRewards": false,
         "claimOnChainRecipientRewards": false,
@@ -707,7 +704,6 @@
         "deleteRecipientSponsorship": false,
         "deleteAccountRecord": false,
         "deleteAccountRecords": true,
-        "runPendingRewards": false,
         "claimOnChainTotalRewards": false,
         "claimOnChainSponsorRewards": false,
         "claimOnChainRecipientRewards": false,
@@ -746,7 +742,6 @@
         "deleteRecipientSponsorship": false,
         "deleteAccountRecord": false,
         "deleteAccountRecords": false,
-        "runPendingRewards": false,
         "claimOnChainTotalRewards": false,
         "claimOnChainSponsorRewards": false,
         "claimOnChainRecipientRewards": false,
@@ -952,7 +947,6 @@
     "spCoinWrite:deleteRecipientSponsorship": "spcoin_write",
     "spCoinWrite:deleteAccountRecord": "spcoin_write",
     "spCoinWrite:deleteAccountRecords": "todos",
-    "spCoinWrite:runPendingRewards": "spcoin_write",
     "spCoinWrite:claimOnChainTotalRewards": "spcoin_write",
     "spCoinWrite:claimOnChainSponsorRewards": "spcoin_write",
     "spCoinWrite:claimOnChainRecipientRewards": "spcoin_write",

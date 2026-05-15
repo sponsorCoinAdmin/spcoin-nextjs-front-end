@@ -183,7 +183,7 @@ interface Params {
   ownerAddress?: string;
   hardhatAccounts: { address: string; privateKey?: string }[];
   useLocalSpCoinAccessPackage: boolean;
-  useReadCache: boolean;
+  useReadCache: boolean | undefined;
   readCacheNamespace?: string;
   traceEnabled: boolean;
   appendLog: (line: string) => void;
@@ -305,7 +305,7 @@ export function useSponsorCoinLabMethodExecution({
           contractAddress: target,
           rpcUrl,
           spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
-          useCache: useReadCache,
+          ...(useReadCache === undefined ? {} : { useCache: useReadCache }),
           cacheNamespace: readCacheNamespace,
           script: {
             id: `spcoin-rread-${method}-${Date.now()}`,
@@ -626,6 +626,8 @@ export function useSponsorCoinLabMethodExecution({
                 ensureReadRunner: () => ensureReadRunner(effectiveMode),
                 appendLog,
                 setStatus,
+                useReadCache,
+                readCacheNamespace,
               });
             }
           } catch (error) {

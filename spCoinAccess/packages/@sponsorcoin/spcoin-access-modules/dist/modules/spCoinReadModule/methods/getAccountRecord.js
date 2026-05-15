@@ -11,14 +11,7 @@ function toBigIntValue(value) {
         return 0n;
     }
 }
-function buildPendingRewardsAction(accountKey, action) {
-    return {
-        __lazyPendingRewardsAction: true,
-        action,
-        accountKey: String(accountKey ?? ""),
-    };
-}
-function buildTotalSpCoinsRecord(balanceOf, stakedBalance, pendingRewardsRecord, annualInflationRate = "0%", accountKey = undefined) {
+function buildTotalSpCoinsRecord(balanceOf, stakedBalance, pendingRewardsRecord, accountKey = undefined) {
     const normalizedBalanceOf = String(balanceOf ?? "0");
     const normalizedStakedBalance = String(stakedBalance ?? "0");
     const normalizedPendingRewardsRecord = pendingRewardsRecord && typeof pendingRewardsRecord === "object"
@@ -34,8 +27,6 @@ function buildTotalSpCoinsRecord(balanceOf, stakedBalance, pendingRewardsRecord,
     const normalizedPendingRewards = hasPendingRewards ? String(normalizedPendingRewardsRecord.pendingRewards ?? "0") : "0";
     const pendingRewardsDisplay = {
         TYPE: "--PENDING_REWARDS--",
-        claim: buildPendingRewardsAction(accountKey, "claim"),
-        estimate: buildPendingRewardsAction(accountKey, "estimate"),
         ...(hasPendingRewards ? { pendingRewards: normalizedPendingRewards } : {}),
         ...(hasLastSponsorUpdate ? { lastSponsorUpdate: String(normalizedPendingRewardsRecord.lastSponsorUpdate ?? "0") } : {}),
         ...(hasLastRecipientUpdate ? { lastRecipientUpdate: String(normalizedPendingRewardsRecord.lastRecipientUpdate ?? "0") } : {}),
@@ -51,7 +42,6 @@ function buildTotalSpCoinsRecord(balanceOf, stakedBalance, pendingRewardsRecord,
             toBigIntValue(normalizedPendingRewards)).toString(),
         balanceOf: normalizedBalanceOf,
         stakedBalance: normalizedStakedBalance,
-        annualInflationRate: String(annualInflationRate ?? "0%"),
         pendingRewards: pendingRewardsDisplay,
     };
 }
@@ -72,8 +62,6 @@ function buildPendingRewardsRecord(rewardsByType = undefined, accountKey = undef
     if (!hasRewardValues) {
         return {
             TYPE: "--PENDING_REWARDS--",
-            claim: buildPendingRewardsAction(accountKey, "claim"),
-            estimate: buildPendingRewardsAction(accountKey, "estimate"),
             lastSponsorUpdate,
             lastRecipientUpdate,
             lastAgentUpdate,
@@ -93,8 +81,6 @@ function buildPendingRewardsRecord(rewardsByType = undefined, accountKey = undef
         pendingRewards: (toBigIntValue(pendingSponsorRewards) +
             toBigIntValue(pendingRecipientRewards) +
             toBigIntValue(pendingAgentRewards)).toString(),
-        claim: buildPendingRewardsAction(accountKey, "claim"),
-        estimate: buildPendingRewardsAction(accountKey, "estimate"),
         lastSponsorUpdate,
         lastRecipientUpdate,
         lastAgentUpdate,
@@ -163,7 +149,7 @@ async function getBaseAccountRecord(runtime, accountKey) {
             lastSponsorUpdateTimeStamp,
             lastRecipientUpdateTimeStamp,
             lastAgentUpdateTimeStamp,
-        }), "0%", accountKey),
+        }), accountKey),
         sponsorCount: String(sponsorCount),
         recipientCount: String(recipientCount),
         agentCount: String(agentCount),
@@ -313,7 +299,7 @@ async function getShallowAccountRecord(runtime, accountKey) {
     accountStruct.accountKey = accountKey;
     const pendingSummary = await getPendingRewardsSummary(runtime, accountKey);
     const spCoinMetaData = await getSpCoinMetaDataCached(runtime);
-    accountStruct.totalSpCoins = buildTotalSpCoinsRecord(accountStruct.balanceOf, accountStruct.stakedBalance, pendingSummary.pendingRewardsRecord, `${String(spCoinMetaData?.inflationRate ?? 0)}%`, accountKey);
+    accountStruct.totalSpCoins = buildTotalSpCoinsRecord(accountStruct.balanceOf, accountStruct.stakedBalance, pendingSummary.pendingRewardsRecord, accountKey);
     delete accountStruct.balanceOf;
     delete accountStruct.stakedBalance;
     accountStruct.agentRateKeys = {};
@@ -355,7 +341,7 @@ async function buildAccountRecord(runtime, accountKey, depthRemaining, visitedKe
     delete accountStruct.agentParentRecipientAccountList;
     const pendingSummary = await getPendingRewardsSummary(runtime, accountKey);
     const spCoinMetaData = await getSpCoinMetaDataCached(runtime);
-    accountStruct.totalSpCoins = buildTotalSpCoinsRecord(accountStruct.balanceOf, accountStruct.stakedBalance, pendingSummary.pendingRewardsRecord, `${String(spCoinMetaData?.inflationRate ?? 0)}%`, accountKey);
+    accountStruct.totalSpCoins = buildTotalSpCoinsRecord(accountStruct.balanceOf, accountStruct.stakedBalance, pendingSummary.pendingRewardsRecord, accountKey);
     delete accountStruct.balanceOf;
     delete accountStruct.stakedBalance;
     return accountStruct;

@@ -13,14 +13,6 @@ function toBigIntValue(value) {
     }
 }
 
-function buildPendingRewardsAction(accountKey, action) {
-    return {
-        __lazyPendingRewardsAction: true,
-        action,
-        accountKey: String(accountKey ?? ""),
-    };
-}
-
 function buildPendingRewardsMethod(accountKey, method) {
     return {
         __lazyPendingRewardsMethod: true,
@@ -29,7 +21,7 @@ function buildPendingRewardsMethod(accountKey, method) {
     };
 }
 
-function buildTotalSpCoinsRecord(balanceOf, stakedBalance, pendingRewardsRecord, annualInflationRate = "0%", accountKey = undefined) {
+function buildTotalSpCoinsRecord(balanceOf, stakedBalance, pendingRewardsRecord, accountKey = undefined) {
     const normalizedBalanceOf = String(balanceOf ?? "0");
     const normalizedStakedBalance = String(stakedBalance ?? "0");
     const normalizedPendingRewardsRecord =
@@ -46,8 +38,6 @@ function buildTotalSpCoinsRecord(balanceOf, stakedBalance, pendingRewardsRecord,
     const normalizedPendingRewards = hasPendingRewards ? String(normalizedPendingRewardsRecord.pendingRewards ?? "0") : "0";
     const pendingRewardsDisplay = {
         TYPE: "--PENDING_REWARDS--",
-        mode: buildPendingRewardsAction(accountKey, "estimate"),
-        runPendingRewards: buildPendingRewardsAction(accountKey, "estimate"),
         estimateOffChainTotalRewards: buildPendingRewardsMethod(accountKey, "estimateOffChainTotalRewards"),
         claimOnChainTotalRewards: buildPendingRewardsMethod(accountKey, "claimOnChainTotalRewards"),
         estimateOffChainSponsorRewards: buildPendingRewardsMethod(accountKey, "estimateOffChainSponsorRewards"),
@@ -56,8 +46,6 @@ function buildTotalSpCoinsRecord(balanceOf, stakedBalance, pendingRewardsRecord,
         claimOnChainRecipientRewards: buildPendingRewardsMethod(accountKey, "claimOnChainRecipientRewards"),
         estimateOffChainAgentRewards: buildPendingRewardsMethod(accountKey, "estimateOffChainAgentRewards"),
         claimOnChainAgentRewards: buildPendingRewardsMethod(accountKey, "claimOnChainAgentRewards"),
-        claim: buildPendingRewardsAction(accountKey, "claim"),
-        estimate: buildPendingRewardsAction(accountKey, "estimate"),
         ...(hasPendingRewards ? { pendingRewards: normalizedPendingRewards } : {}),
         ...(hasLastSponsorUpdate ? { lastSponsorUpdate: String(normalizedPendingRewardsRecord.lastSponsorUpdate ?? "0") } : {}),
         ...(hasLastRecipientUpdate ? { lastRecipientUpdate: String(normalizedPendingRewardsRecord.lastRecipientUpdate ?? "0") } : {}),
@@ -66,7 +54,6 @@ function buildTotalSpCoinsRecord(balanceOf, stakedBalance, pendingRewardsRecord,
         ...(hasPendingRecipientRewards ? { pendingRecipientRewards: String(normalizedPendingRewardsRecord.pendingRecipientRewards ?? "0") } : {}),
         ...(hasPendingAgentRewards ? { pendingAgentRewards: String(normalizedPendingRewardsRecord.pendingAgentRewards ?? "0") } : {}),
     };
-    const accountKeyStr = String(accountKey ?? "");
     return {
         TYPE: "--TOTAL_SP_COINS--",
         totalSpCoins: (
@@ -76,10 +63,6 @@ function buildTotalSpCoinsRecord(balanceOf, stakedBalance, pendingRewardsRecord,
         ).toString(),
         balanceOf: normalizedBalanceOf,
         stakedBalance: normalizedStakedBalance,
-        annualInflationRate: String(annualInflationRate ?? "0%"),
-        mode: 'Claim',
-        claim: buildPendingRewardsAction(accountKeyStr, "claim"),
-        update: buildPendingRewardsAction(accountKeyStr, "estimate"),
         pendingRewards: pendingRewardsDisplay,
     };
 }
@@ -107,8 +90,6 @@ function buildPendingRewardsRecord(rewardsByType = undefined, accountKey = undef
     if (!hasRewardValues) {
         return {
             TYPE: "--PENDING_REWARDS--",
-            mode: buildPendingRewardsAction(accountKey, "estimate"),
-            runPendingRewards: buildPendingRewardsAction(accountKey, "estimate"),
             estimateOffChainTotalRewards: buildPendingRewardsMethod(accountKey, "estimateOffChainTotalRewards"),
             claimOnChainTotalRewards: buildPendingRewardsMethod(accountKey, "claimOnChainTotalRewards"),
             estimateOffChainSponsorRewards: buildPendingRewardsMethod(accountKey, "estimateOffChainSponsorRewards"),
@@ -117,8 +98,6 @@ function buildPendingRewardsRecord(rewardsByType = undefined, accountKey = undef
             claimOnChainRecipientRewards: buildPendingRewardsMethod(accountKey, "claimOnChainRecipientRewards"),
             estimateOffChainAgentRewards: buildPendingRewardsMethod(accountKey, "estimateOffChainAgentRewards"),
             claimOnChainAgentRewards: buildPendingRewardsMethod(accountKey, "claimOnChainAgentRewards"),
-            claim: buildPendingRewardsAction(accountKey, "claim"),
-            estimate: buildPendingRewardsAction(accountKey, "estimate"),
             lastSponsorUpdate,
             lastRecipientUpdate,
             lastAgentUpdate,
@@ -141,8 +120,6 @@ function buildPendingRewardsRecord(rewardsByType = undefined, accountKey = undef
     );
     return {
         TYPE: "--PENDING_REWARDS--",
-        mode: buildPendingRewardsAction(accountKey, "estimate"),
-        runPendingRewards: buildPendingRewardsAction(accountKey, "estimate"),
         estimateOffChainTotalRewards: buildPendingRewardsMethod(accountKey, "estimateOffChainTotalRewards"),
         claimOnChainTotalRewards: buildPendingRewardsMethod(accountKey, "claimOnChainTotalRewards"),
         estimateOffChainSponsorRewards: buildPendingRewardsMethod(accountKey, "estimateOffChainSponsorRewards"),
@@ -157,8 +134,6 @@ function buildPendingRewardsRecord(rewardsByType = undefined, accountKey = undef
                 toBigIntValue(pendingRecipientRewards) +
                 toBigIntValue(pendingAgentRewards)
             ).toString(),
-        claim: buildPendingRewardsAction(accountKey, "claim"),
-        estimate: buildPendingRewardsAction(accountKey, "estimate"),
         lastSponsorUpdate,
         lastRecipientUpdate,
         lastAgentUpdate,
@@ -604,7 +579,6 @@ async function getBaseAccountRecord(runtime, accountKey) {
                 lastRecipientUpdateTimeStamp,
                 lastAgentUpdateTimeStamp,
             }),
-            "0%",
             accountKey,
         ),
         sponsorCount: String(sponsorCount),
@@ -650,7 +624,7 @@ async function getShallowAccountRecord(runtime, accountKey, includePendingReward
     normalizeAccountRelationshipKeys(accountStruct);
     if (isEmptyBaseAccountRecord(accountStruct)) {
         accountStruct.creationTime = "";
-        accountStruct.totalSpCoins = buildTotalSpCoinsRecord("0", "0", buildPendingRewardsRecord(undefined, accountKey, accountStruct), "0%", accountKey);
+        accountStruct.totalSpCoins = buildTotalSpCoinsRecord("0", "0", buildPendingRewardsRecord(undefined, accountKey, accountStruct), accountKey);
         accountStruct.agentRates = {};
         accountStruct.recipientRates = {};
         return accountStruct;
@@ -658,14 +632,10 @@ async function getShallowAccountRecord(runtime, accountKey, includePendingReward
     const pendingSummary = includePendingRewards
         ? await getPendingRewardsSummary(runtime, accountKey)
         : { pendingRewardsRecord: buildPendingRewardsRecord(undefined, accountKey, accountStruct), totalPending: 0n };
-    const inflationRate = includePendingRewards
-        ? await getInflationRateCached(runtime)
-        : 0;
     accountStruct.totalSpCoins = buildTotalSpCoinsRecord(
         accountStruct.balanceOf,
         accountStruct.stakedBalance,
         pendingSummary.pendingRewardsRecord,
-        `${String(inflationRate ?? 0)}%`,
         accountKey,
     );
     delete accountStruct.balanceOf;
@@ -716,14 +686,10 @@ async function buildAccountRecord(runtime, accountKey, depthRemaining, visitedKe
     const pendingSummary = includePendingRewards
         ? await getPendingRewardsSummary(runtime, accountKey)
         : { pendingRewardsRecord: buildPendingRewardsRecord(undefined, accountKey, accountStruct), totalPending: 0n };
-    const inflationRate = includePendingRewards
-        ? await getInflationRateCached(runtime)
-        : 0;
     accountStruct.totalSpCoins = buildTotalSpCoinsRecord(
         accountStruct.balanceOf,
         accountStruct.stakedBalance,
         pendingSummary.pendingRewardsRecord,
-        `${String(inflationRate ?? 0)}%`,
         accountKey,
     );
     delete accountStruct.balanceOf;

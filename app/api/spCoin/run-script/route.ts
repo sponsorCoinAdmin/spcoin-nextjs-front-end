@@ -1,6 +1,6 @@
 import { promises as fs } from 'fs';
 import path from 'path';
-import { Wallet, Contract, Interface, Transaction } from 'ethers';
+import { Wallet, Contract, Interface, Transaction, isAddress } from 'ethers';
 import type { JsonRpcProvider } from 'ethers';
 import { NextRequest, NextResponse } from 'next/server';
 import { createSpCoinModuleAccess, type SpCoinAccessSource } from '@/app/(menu)/(dynamic)/SponsorCoinLab/jsonMethods/shared/spCoinAccessIncludes';
@@ -16,6 +16,7 @@ import {
   type MethodTimingMeta,
 } from '@/spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/utils/methodTiming';
 import { CHAIN_ID } from '@/lib/structure';
+import { normalizePendingRewardsDisplayResult } from '@/lib/spCoinLab/pendingRewards';
 import { getDefaultNetworkSettings } from '@/lib/utils/network/defaultSettings';
 import {
   getCachedAccountRecord,
@@ -337,45 +338,6 @@ function classifyScriptError(error: unknown, trace: string[]): 'token_state' | '
   return 'server';
 }
 
-function isTransientRpcTransportError(error: unknown) {
-  const text = getNestedErrorText(error).toLowerCase();
-  return (
-    text.includes('503 service temporarily unavailable') ||
-    text.includes('server response 503') ||
-    text.includes('failed to fetch') ||
-    text.includes('socket hang up') ||
-    text.includes('timeout') ||
-    text.includes('missing response') ||
-    text.includes('could not coalesce error')
-  );
-}
-
-function waitMs(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function runWithRpcTransportRetry<T>(
-  label: string,
-  appendTrace: (line: string) => void,
-  callback: () => Promise<T>,
-  maxAttempts = 3,
-): Promise<T> {
-  let lastError: unknown;
-  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-    try {
-      appendTrace(`${label} rpc attempt ${attempt}/${maxAttempts}`);
-      return await callback();
-    } catch (error) {
-      lastError = error;
-      const transient = isTransientRpcTransportError(error);
-      appendTrace(`${label} rpc attempt ${attempt}/${maxAttempts} failed transient=${String(transient)} error=${getNestedErrorText(error) || String(error)}`);
-      if (!transient || attempt >= maxAttempts) break;
-      await waitMs(250 * attempt);
-    }
-  }
-  throw lastError;
-}
-
 function getRpcEndpointIdentity(rpcUrl: string) {
   try {
     const parsed = new URL(rpcUrl);
@@ -583,14 +545,6 @@ function buildLazyAccountRelation(accountKey: string, relation: string, countVal
   };
 }
 
-function buildLazyPendingRewardsAction(accountKey: string, action: 'claim' | 'estimate') {
-  return {
-    __lazyPendingRewardsAction: true,
-    accountKey,
-    action,
-  };
-}
-
 function buildLazyPendingRewardsMethod(accountKey: string, method: string) {
   return {
     __lazyPendingRewardsMethod: true,
@@ -663,12 +617,9 @@ function normalizeOnChainAccountRecordResult(result: unknown, requestedAccountKe
       totalSpCoins: (BigInt(normalizedBalance || '0') + BigInt(normalizedStaked || '0')).toString(),
       balanceOf: normalizedBalance,
       stakedBalance: normalizedStaked,
-      annualInflationRate: '0%',
       pendingRewards: {
         TYPE: '--PENDING_REWARDS--',
         pendingRewards: '0',
-        mode: buildLazyPendingRewardsAction(normalizedAccountKey, 'estimate'),
-        runPendingRewards: buildLazyPendingRewardsAction(normalizedAccountKey, 'estimate'),
         estimateOffChainTotalRewards: buildLazyPendingRewardsMethod(normalizedAccountKey, 'estimateOffChainTotalRewards'),
         claimOnChainTotalRewards: buildLazyPendingRewardsMethod(normalizedAccountKey, 'claimOnChainTotalRewards'),
         estimateOffChainSponsorRewards: buildLazyPendingRewardsMethod(normalizedAccountKey, 'estimateOffChainSponsorRewards'),
@@ -677,8 +628,6 @@ function normalizeOnChainAccountRecordResult(result: unknown, requestedAccountKe
         claimOnChainRecipientRewards: buildLazyPendingRewardsMethod(normalizedAccountKey, 'claimOnChainRecipientRewards'),
         estimateOffChainAgentRewards: buildLazyPendingRewardsMethod(normalizedAccountKey, 'estimateOffChainAgentRewards'),
         claimOnChainAgentRewards: buildLazyPendingRewardsMethod(normalizedAccountKey, 'claimOnChainAgentRewards'),
-        claim: buildLazyPendingRewardsAction(normalizedAccountKey, 'claim'),
-        estimate: buildLazyPendingRewardsAction(normalizedAccountKey, 'estimate'),
         lastSponsorUpdate: String(lastSponsorUpdateTimeStamp ?? '0'),
         lastRecipientUpdate: String(lastRecipientUpdateTimeStamp ?? '0'),
         lastAgentUpdate: String(lastAgentUpdateTimeStamp ?? '0'),
@@ -973,7 +922,10 @@ function buildRewardUpdateCallReturns(
 }
 
 function pendingRewardsToSnapshot(value: unknown): AccountRewardSnapshot {
-  const record = value && typeof value === 'object' ? (value as Record<string, unknown>) : {};
+  const normalized = normalizePendingRewardsDisplayResult(value);
+  const record = normalized && typeof normalized === 'object' && !Array.isArray(normalized)
+    ? (normalized as Record<string, unknown>)
+    : {};
   return {
     accountStakingRewards: toBigIntAmount(record.pendingRewards).toString(),
     sponsorRewards: toBigIntAmount(record.pendingSponsorRewards).toString(),
@@ -986,34 +938,7 @@ function pendingRewardsToSnapshot(value: unknown): AccountRewardSnapshot {
 }
 
 function normalizePendingRewardsResult(value: unknown): unknown {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
-  const record = value as Record<string, unknown>;
-  if (
-    !Object.prototype.hasOwnProperty.call(record, 'pendingRewards') &&
-    !Object.prototype.hasOwnProperty.call(record, 'pendingSponsorRewards') &&
-    !Object.prototype.hasOwnProperty.call(record, 'pendingRecipientRewards') &&
-    !Object.prototype.hasOwnProperty.call(record, 'pendingAgentRewards')
-  ) {
-    return value;
-  }
-  const calculatedTimeStamp = String(record.calculatedTimeStamp ?? record.calculatedmestamp ?? record.calculatedAtTimestamp ?? '0');
-  const calculatedFormatted = String(record.calculatedFormatted ?? record.calculatedAt ?? '');
-  const { calculatedAt, calculatedAtTimestamp, calculatedmestamp, ...restRecord } = record;
-  void calculatedAt;
-  void calculatedAtTimestamp;
-  void calculatedmestamp;
-  return {
-    TYPE: restRecord.TYPE ?? '--ACCOUNT_PENDING_REWARDS--',
-    accountKey: String(restRecord.accountKey ?? ''),
-    calculatedTimeStamp,
-    calculatedFormatted,
-    ...restRecord,
-    pendingRewards: toBigIntAmount(record.pendingRewards).toString(),
-    pendingSponsorRewards: toBigIntAmount(record.pendingSponsorRewards).toString(),
-    pendingRecipientRewards: toBigIntAmount(record.pendingRecipientRewards).toString(),
-    pendingAgentRewards: toBigIntAmount(record.pendingAgentRewards).toString(),
-    __showEmptyFields: true,
-  };
+  return normalizePendingRewardsDisplayResult(value);
 }
 
 async function getReceiptBlockTimestamp(provider: JsonRpcProvider, receipt: { blockNumber?: bigint | number | null }) {
@@ -1075,7 +1000,11 @@ export async function POST(request: NextRequest) {
       body?.cacheMode === 'refresh' || body?.cacheMode === 'bypass' || body?.cacheMode === 'only'
         ? body.cacheMode
         : body?.useCache === false
-          ? 'refresh'
+          ? 'bypass'
+          : body?.useCache === true
+            ? 'default'
+            : source === 'local'
+              ? 'bypass'
           : 'default';
     const readCacheOptions = {
       cache: cacheMode,
@@ -1137,6 +1066,7 @@ export async function POST(request: NextRequest) {
         };
         appendTrace(`resolved hardhat sender=${senderAddress}`);
         appendTrace(`spCoinAccessSource=${source}`);
+        appendTrace(`readCacheMode=${cacheMode}; readCacheNamespace=${readCacheOptions.cacheNamespace || ''}`);
         const access = createSpCoinModuleAccess(contract, signer, source, appendTrace);
         if (source === 'local') {
           const readWithRelationshipCache = access.read as Record<string, unknown>;
@@ -1145,6 +1075,16 @@ export async function POST(request: NextRequest) {
         }
         const findParam = (label: string) =>
           String(paramEntries.find((entry) => entry.key === label)?.value || '').trim();
+        const requireAddressParam = (label: string, methodName: string) => {
+          const value = findParam(label);
+          if (!value) {
+            throw new Error(`${methodName} requires ${label}.`);
+          }
+          if (!isAddress(value)) {
+            throw new Error(`${methodName} requires ${label} to be a valid address.`);
+          }
+          return value;
+        };
         const call = buildCall(step, senderAddress, paramEntries);
         let contractOwnerAddress: string | null | undefined;
         const getContractOwnerAddress = async () => {
@@ -1242,37 +1182,45 @@ export async function POST(request: NextRequest) {
               }
               break;
             case 'getAccountRecord':
-              appendTrace(`getAccountRecord path start; accountKey=${findParam('Account Key')}`);
-              if (typeof (access.read as Record<string, unknown>).getAccountRecord === 'function') {
-                appendTrace('getAccountRecord using access.read.getAccountRecord');
-                stepResult = withLazyAccountRelationBuckets(
-                  await access.read.getAccountRecord(findParam('Account Key'), readCacheOptions),
-                  findParam('Account Key'),
-                );
-              } else if (typeof (contract as Record<string, unknown>).getAccountRecord === 'function') {
-                const cachedRecord = getCachedAccountRecord(contractAddress, findParam('Account Key'));
-                if (cachedRecord !== null && hasAccountRecordCounts(cachedRecord)) {
-                  appendTrace('getAccountRecord using cached normalized contract record');
-                  stepResult = withLazyAccountRelationBuckets(cachedRecord, findParam('Account Key'));
-                } else {
-                  if (cachedRecord !== null) {
-                    appendTrace('getAccountRecord invalidating incomplete cached record');
-                    invalidateCachedAccountRecord(contractAddress, findParam('Account Key'));
-                  }
-                  appendTrace('getAccountRecord using direct contract fallback');
+              {
+                const accountKey = requireAddressParam('Account Key', 'getAccountRecord');
+                appendTrace(`getAccountRecord path start; accountKey=${accountKey}`);
+                if (typeof (access.read as Record<string, unknown>).getAccountRecord === 'function') {
+                  appendTrace('getAccountRecord using access.read.getAccountRecord');
                   stepResult = withLazyAccountRelationBuckets(
-                    normalizeOnChainAccountRecordResult(await (
-                      contract as unknown as { getAccountRecord: (accountKey: string) => Promise<unknown> }
-                    ).getAccountRecord(findParam('Account Key')), findParam('Account Key')),
-                    findParam('Account Key'),
+                    await access.read.getAccountRecord(accountKey, readCacheOptions),
+                    accountKey,
                   );
-                  setCachedAccountRecord(contractAddress, findParam('Account Key'), stepResult);
+                } else if (typeof (contract as Record<string, unknown>).getAccountRecord === 'function') {
+                  const cachedRecord = cacheMode === 'bypass' ? null : getCachedAccountRecord(contractAddress, accountKey);
+                  if (cachedRecord !== null && hasAccountRecordCounts(cachedRecord)) {
+                    appendTrace('getAccountRecord using cached normalized contract record');
+                    stepResult = withLazyAccountRelationBuckets(cachedRecord, accountKey);
+                  } else {
+                    if (cachedRecord !== null) {
+                      appendTrace('getAccountRecord invalidating incomplete cached record');
+                      invalidateCachedAccountRecord(contractAddress, accountKey);
+                    } else if (cacheMode === 'bypass') {
+                      appendTrace('getAccountRecord persistent normalized contract cache bypassed');
+                    }
+                    appendTrace('getAccountRecord using direct contract fallback');
+                    stepResult = withLazyAccountRelationBuckets(
+                      normalizeOnChainAccountRecordResult(await (
+                        contract as unknown as { getAccountRecord: (accountKey: string) => Promise<unknown> }
+                      ).getAccountRecord(accountKey), accountKey),
+                      accountKey,
+                    );
+                    if (cacheMode !== 'bypass') {
+                      setCachedAccountRecord(contractAddress, accountKey, stepResult);
+                    }
+                  }
+                } else {
+                  throw new Error('getAccountRecord is not available on the current SpCoin access path.');
                 }
-              } else {
-                throw new Error('getAccountRecord is not available on the current SpCoin access path.');
               }
               break;
             case 'getAccountRecordShallow':
+              requireAddressParam('Account Key', 'getAccountRecordShallow');
               if (typeof (access.read as Record<string, unknown>).getAccountRecordShallow !== 'function') {
                 throw new Error('getAccountRecordShallow is not available on the current SpCoin access path.');
               }
@@ -1284,7 +1232,7 @@ export async function POST(request: NextRequest) {
             case 'estimateOffChainSponsorRewards':
             case 'estimateOffChainRecipientRewards':
             case 'estimateOffChainAgentRewards': {
-              const accountKey = findParam('Account Key');
+              const accountKey = requireAddressParam('Account Key', String(step.method));
               const readHost = access.read as Record<string, unknown>;
               const pendingRewardsMethod = readHost[String(step.method)];
               if (typeof pendingRewardsMethod !== 'function') {
@@ -1303,7 +1251,7 @@ export async function POST(request: NextRequest) {
             case 'getRecipientKeys':
             case 'getAgentKeys':
             case 'getParentRecipientKeys': {
-              const accountKey = findParam('Account Key');
+              const accountKey = requireAddressParam('Account Key', String(step.method));
               const methodName = String(step.method);
               const contractMethod = (contract as Record<string, unknown>)[methodName];
               if (typeof contractMethod === 'function') {
@@ -1829,65 +1777,6 @@ export async function POST(request: NextRequest) {
               invalidateCachedAccountRecord(contractAddress, sponsorKey);
               invalidateCachedAccountRecord(contractAddress, recipientKey);
               invalidateCachedAccountRecord(contractAddress, agentKey);
-              break;
-            }
-            case 'runPendingRewards': {
-              const accountKey = findParam('Account Key') || senderAddress;
-              const rawMode = findParam('mode').trim().toLowerCase();
-              const pendingMode = rawMode === 'claim' ? 'Claim' : 'Update';
-              appendTrace(`runPendingRewards server path; accountKey=${accountKey}; mode=${pendingMode}`);
-              if (pendingMode === 'Update') {
-                const readHost = access.read as PendingAccountRewardsReader;
-              if (typeof readHost.estimateOffChainTotalRewards !== 'function') {
-                throw new Error('estimateOffChainTotalRewards is not available on the current SpCoin access path.');
-              }
-              const pendingResult = normalizePendingRewardsResult(
-                await runWithRpcTransportRetry(
-                  `runPendingRewards(${accountKey}, Update)`,
-                  appendTrace,
-                  () => readHost.estimateOffChainTotalRewards!(accountKey, readCacheOptions),
-                ),
-              );
-                stepResult =
-                  pendingResult && typeof pendingResult === 'object' && !Array.isArray(pendingResult)
-                    ? {
-                        label: `runPendingRewards(${accountKey}, Update)`,
-                        status: 'off-chain',
-                        ...(pendingResult as Record<string, unknown>),
-                      }
-                    : {
-                        label: `runPendingRewards(${accountKey}, Update)`,
-                        status: 'off-chain',
-                        result: pendingResult,
-                      };
-                break;
-              }
-
-              const beforeRewards = await readAccountRewardSnapshot(contract, accountKey);
-              const tx = await sendSignedContractTransaction({
-                label: 'runPendingRewards',
-                contract: writeContract,
-                signer: writeSigner,
-                provider: writeProvider,
-                method: 'claimOnChainTotalRewards',
-                args: [accountKey],
-                timingCollector,
-              });
-              const receipt = (await tx.wait()) as { hash?: string; blockNumber?: bigint | number | null; status?: number | bigint | null };
-              invalidateCachedAccountRecord(contractAddress, accountKey);
-              const afterRewards = await readAccountRewardSnapshot(contract, accountKey);
-              const delta = diffRewardSnapshot(afterRewards, beforeRewards);
-              stepResult = [
-                ...formatReceiptResult('runPendingRewards', tx, receipt, timingCollector),
-                {
-                  label: `runPendingRewards(${accountKey}, Claim) rewards`,
-                  accountKey,
-                  callReturns: buildRewardUpdateCallReturns('claimOnChainTotalRewards', afterRewards, delta),
-                  before: beforeRewards,
-                  after: afterRewards,
-                  delta,
-                },
-              ];
               break;
             }
             case 'claimOnChainTotalRewards':

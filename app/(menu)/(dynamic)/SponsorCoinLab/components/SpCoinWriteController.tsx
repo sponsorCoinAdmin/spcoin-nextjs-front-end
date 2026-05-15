@@ -254,20 +254,6 @@ export default function SpCoinWriteController(props: Props) {
       })),
     [hardhatAccounts],
   );
-  const runPendingRewardsModeParamIndex =
-    selectedSpCoinWriteMethod === 'runPendingRewards'
-      ? activeSpCoinWriteDef.params.findIndex((param) => param.label === 'mode')
-      : -1;
-  const runPendingRewardsModeValue =
-    runPendingRewardsModeParamIndex >= 0 && String(spWriteParams[runPendingRewardsModeParamIndex]).trim() === 'Claim'
-      ? 'Claim'
-      : 'Update';
-  React.useEffect(() => {
-    if (runPendingRewardsModeParamIndex < 0) return;
-    const currentMode = String(spWriteParams[runPendingRewardsModeParamIndex] || '').trim();
-    if (currentMode === 'Update' || currentMode === 'Claim') return;
-    updateSpWriteParamAtIndex(runPendingRewardsModeParamIndex, 'Update');
-  }, [runPendingRewardsModeParamIndex, spWriteParams, updateSpWriteParamAtIndex]);
   React.useEffect(() => {
     setOpenAddressFields({});
   }, [selectedSpCoinWriteMethod]);
@@ -466,32 +452,6 @@ export default function SpCoinWriteController(props: Props) {
       </div> : null}
       <div id="JSON_METHOD" className="grid grid-cols-1 gap-3 rounded-lg border border-[#31416F] p-3">
       {!hasVisibleWriteMethods ? <div className="text-sm text-slate-400">(no SpCoin write methods match the current filter)</div> : null}
-      {hasVisibleWriteMethods && runPendingRewardsModeParamIndex >= 0 ? (
-        <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-          <span className="text-sm font-semibold text-[#8FA8FF]">mode</span>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-0 text-sm text-[#8FA8FF]">
-            {(['Update', 'Claim'] as const).map((modeOption) => (
-              <label key={modeOption} className="inline-flex flex-row items-center gap-2">
-                <input
-                  type="radio"
-                  name="spcoin-write-run-pending-rewards-mode"
-                  value={modeOption}
-                  checked={runPendingRewardsModeValue === modeOption}
-                  onChange={() => {
-                    markEditorAsUserEdited();
-                    clearInvalidField(`spcoin-write-param-${runPendingRewardsModeParamIndex}`);
-                    updateSpWriteParamAtIndex(runPendingRewardsModeParamIndex, modeOption);
-                  }}
-                  className="order-first h-3.5 w-3.5 shrink-0 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
-                />
-                <span className={runPendingRewardsModeValue === modeOption ? 'text-green-400' : 'text-[#8FA8FF]'}>
-                  {modeOption}
-                </span>
-              </label>
-            ))}
-          </div>
-        </div>
-      ) : null}
       {hasVisibleWriteMethods ? <AccountSelection
         label="msg.sender"
         title="Toggle msg.sender Private Key"
@@ -548,7 +508,6 @@ export default function SpCoinWriteController(props: Props) {
         }
       /> : null}
       {hasVisibleWriteMethods ? activeSpCoinWriteDef.params.map((param, idx) => (
-        selectedSpCoinWriteMethod === 'runPendingRewards' && param.label === 'mode' ? null :
         <div key={`sp-write-param-${param.label}-${idx}`} className="grid grid-cols-1 gap-3">
           {param.type === 'address' ? (
             <AccountSelection

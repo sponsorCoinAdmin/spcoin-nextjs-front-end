@@ -94,6 +94,8 @@ export type BuildControllerCardPropsArgs = {
   setFormattedJsonViewEnabled: StateSetter<boolean>;
   writeTraceEnabled: boolean;
   setWriteTraceEnabled: StateSetter<boolean>;
+  useReadCache: boolean | undefined;
+  setUseReadCache: StateSetter<boolean | undefined>;
   showTreeAccountDetails: boolean;
   setShowTreeAccountDetails: StateSetter<boolean>;
   showAllTreeRecords: boolean;
@@ -232,6 +234,8 @@ export function buildControllerCardProps(args: BuildControllerCardPropsArgs) {
       setFormattedJsonViewEnabled: args.setFormattedJsonViewEnabled,
       writeTraceEnabled: args.writeTraceEnabled,
       toggleWriteTrace: () => args.setWriteTraceEnabled((prev) => !prev),
+      useReadCache: args.useReadCache,
+      setUseReadCache: args.setUseReadCache,
       showTreeAccountDetails: args.showTreeAccountDetails,
       setShowTreeAccountDetails: args.setShowTreeAccountDetails,
       showAllTreeRecords: args.showAllTreeRecords,

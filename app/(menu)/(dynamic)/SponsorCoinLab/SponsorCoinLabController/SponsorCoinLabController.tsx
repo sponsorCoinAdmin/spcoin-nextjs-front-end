@@ -145,7 +145,7 @@ export default function SponsorCoinLabPage({
   const [showAllTreeRecords, setShowAllTreeRecords] = useState(false);
   const [isScriptDebugRunning, setIsScriptDebugRunning] = useState(false);
   const [writeTraceEnabled, setWriteTraceEnabled] = useState(false);
-  const [useReadCache, setUseReadCache] = useState(true);
+  const [useReadCache, setUseReadCache] = useState<boolean | undefined>(undefined);
   const recentWriteTraceRef = useRef<string[]>([]);
   const {
     invalidFieldIds,

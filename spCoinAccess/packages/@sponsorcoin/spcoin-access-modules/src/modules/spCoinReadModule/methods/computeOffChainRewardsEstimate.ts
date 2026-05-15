@@ -59,12 +59,18 @@ function normalizePendingRewardsOptions(optionsOrTimestampOverride = undefined, 
         options.cacheTtlMs ??
         DEFAULT_PENDING_REWARDS_CACHE_MS
     );
+    const bypassCache =
+        options.cache === "bypass" ||
+        options.cache === false ||
+        options.useCache === false ||
+        options.cacheEnabled === false;
     const cacheMs = Math.max(
         MIN_PENDING_REWARDS_CACHE_MS,
         Number.isFinite(requestedCacheMs) ? requestedCacheMs : DEFAULT_PENDING_REWARDS_CACHE_MS,
     );
     return {
         timestampOverride: rawTimestampOverride,
+        bypassCache,
         cacheMs,
     };
 }
@@ -286,7 +292,7 @@ export async function computeOffChainRewardsEstimate(context, accountKey, option
     const cache = getOffChainRewardsEstimateCache(runtime);
     const cacheKey = getOffChainRewardsEstimateCacheKey(accountKey, options.timestampOverride);
     const nowMs = Date.now();
-    const cached = cache.get(cacheKey);
+    const cached = options.bypassCache ? null : cache.get(cacheKey);
     if (cached && cached.expiresAtMs > nowMs) {
         return clonePendingRewardsResult(await cached.promise);
     }
@@ -321,10 +327,12 @@ export async function computeOffChainRewardsEstimate(context, accountKey, option
         runtime.spCoinLogger.logExitFunction();
         return pending;
     })();
-    cache.set(cacheKey, {
-        expiresAtMs: nowMs + options.cacheMs,
-        promise: pendingPromise,
-    });
+    if (!options.bypassCache) {
+        cache.set(cacheKey, {
+            expiresAtMs: nowMs + options.cacheMs,
+            promise: pendingPromise,
+        });
+    }
     try {
         return clonePendingRewardsResult(await pendingPromise);
     }

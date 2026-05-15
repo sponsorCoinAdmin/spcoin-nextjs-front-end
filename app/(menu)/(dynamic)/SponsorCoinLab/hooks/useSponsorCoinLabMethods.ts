@@ -89,7 +89,7 @@ interface Params {
   effectiveConnectedAddress: string;
   ownerAddress?: string;
   useLocalSpCoinAccessPackage: boolean;
-  useReadCache: boolean;
+  useReadCache: boolean | undefined;
   appendLog: (line: string) => void;
   appendWriteTrace: (line: string) => void;
   resetWriteTrace: () => void;
@@ -629,6 +629,7 @@ export function useSponsorCoinLabMethods({
     traceEnabled,
     formattedOutputDisplay,
     useLocalSpCoinAccessPackage,
+    useReadCache,
     appendLog,
     setStatus,
     setFormattedOutputDisplay,
