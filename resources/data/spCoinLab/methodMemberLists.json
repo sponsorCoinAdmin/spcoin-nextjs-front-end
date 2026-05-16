@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-15T08:10:28.252Z",
+  "updatedAt": "2026-05-16T06:20:54.492Z",
   "lists": {
     "serialization": {
       "Basic": {
@@ -664,7 +664,7 @@
         "backDateRecipientTransaction": true,
         "backDateAgentTransaction": true,
         "deleteRecipientSponsorship": false,
-        "deleteAccountRecord": false,
+        "deleteAccountRecord": true,
         "deleteAccountRecords": true,
         "claimOnChainTotalRewards": false,
         "claimOnChainSponsorRewards": false,
@@ -740,7 +740,7 @@
         "backDateRecipientTransaction": false,
         "backDateAgentTransaction": false,
         "deleteRecipientSponsorship": false,
-        "deleteAccountRecord": false,
+        "deleteAccountRecord": true,
         "deleteAccountRecords": false,
         "claimOnChainTotalRewards": false,
         "claimOnChainSponsorRewards": false,

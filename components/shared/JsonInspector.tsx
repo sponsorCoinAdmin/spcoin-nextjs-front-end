@@ -20,14 +20,14 @@ const PENDING_REWARDS_METHOD_NAMES = new Set([
 ]);
 
 const PENDING_REWARDS_METHOD_DISPLAY_NAMES: Record<string, string> = {
-  estimateOffChainTotalRewards: 'renOffChainTotalRewardsEstimate',
-  claimOnChainTotalRewards: 'runOnChainTotalRewardsClaim',
+  estimateOffChainTotalRewards: 'estimateOffChainTotalRewards',
+  claimOnChainTotalRewards: 'claimOnChainTotalRewards',
   estimateOffChainSponsorRewards: 'runOffChainSponsorRewardsEstimate',
   claimOnChainSponsorRewards: 'runOnChainSponsorRewardsClaim',
-  estimateOffChainRecipientRewards: 'runOffChainRecipientRewardsEstimate',
-  claimOnChainRecipientRewards: 'runOnChainRecipientRewardsClaim',
-  estimateOffChainAgentRewards: 'runOffChainAgentRewardsEstimate',
-  claimOnChainAgentRewards: 'runOnChainAgentRewardsClaim',
+  estimateOffChainRecipientRewards: 'estimateOffChainRecipientRewards',
+  claimOnChainRecipientRewards: 'claimOnChainRecipientRewards',
+  estimateOffChainAgentRewards: 'estimateOffChainAgentRewards',
+  claimOnChainAgentRewards: 'claimOnChainAgentRewards',
 };
 
 function getPendingRewardsMethodDisplayName(methodName: string): string {
@@ -404,6 +404,13 @@ function isPendingRewardsInternalField(parent: any, childKey: string): boolean {
   return isPendingRewardsRecord(parent) && childKey === 'pendingRewards';
 }
 
+function isPendingRewardsTotalActionField(parent: any, childKey: string): boolean {
+  return (
+    isPendingRewardsRecord(parent) &&
+    (childKey === 'estimateOffChainTotalRewards' || childKey === 'claimOnChainTotalRewards')
+  );
+}
+
 function isPendingRewardsContainerSummaryField(parent: any, childKey: string): boolean {
   if (
     !parent ||
@@ -442,7 +449,12 @@ function isAccountRoleCountDisplayField(parent: any, childKey: string): boolean 
     return false;
   }
 
-  return childKey === 'sponsorCount' || childKey === 'recipientCount' || childKey === 'agentCount';
+  return (
+    childKey === 'sponsorCount' ||
+    childKey === 'recipientCount' ||
+    childKey === 'agentCount' ||
+    childKey === 'parentRecipientCount'
+  );
 }
 
 function getPendingRewardsMethodName(label: string | undefined, data: any): string {
@@ -462,8 +474,6 @@ function getPendingRewardsMethodName(label: string | undefined, data: any): stri
 
 function ensurePendingRewardsMethodEntries(entries: Array<[string, any]>): Array<[string, any]> {
   const expectedMethods = [
-    'estimateOffChainTotalRewards',
-    'claimOnChainTotalRewards',
     'estimateOffChainSponsorRewards',
     'claimOnChainSponsorRewards',
     'estimateOffChainRecipientRewards',
@@ -617,6 +627,192 @@ function isRewardUpdateTimestampKey(key: string): boolean {
   );
 }
 
+const ACCOUNT_UPDATE_TIMESTAMP_KEYS = [
+  'lastSponsorUpdateTimeStamp',
+  'lastRecipientUpdateTimeStamp',
+  'lastAgentUpdateTimeStamp',
+];
+
+function hasAccountUpdateTimestampEntries(record: Record<string, unknown>): boolean {
+  return ACCOUNT_UPDATE_TIMESTAMP_KEYS.some((key) => Object.prototype.hasOwnProperty.call(record, key));
+}
+
+function insertAccountUpdateTimestampsInMeta(
+  meta: Record<string, unknown>,
+  accountRecord: Record<string, unknown>,
+): Record<string, unknown> {
+  const timestampEntries = ACCOUNT_UPDATE_TIMESTAMP_KEYS
+    .filter((key) => Object.prototype.hasOwnProperty.call(accountRecord, key))
+    .map((key): [string, unknown] => [key, accountRecord[key]]);
+  if (timestampEntries.length === 0) return meta;
+
+  const entries = Object.entries(meta);
+  const nextEntries: Array<[string, unknown]> = [];
+  let inserted = false;
+
+  for (const entry of entries) {
+    nextEntries.push(entry);
+    if (entry[0] === 'completedAt') {
+      nextEntries.push(...timestampEntries);
+      inserted = true;
+    }
+  }
+
+  if (!inserted) nextEntries.push(...timestampEntries);
+  return Object.fromEntries(nextEntries);
+}
+
+function moveAccountUpdateTimestampsToMeta(value: any): any {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
+  const record = value as Record<string, unknown>;
+  const meta = record.meta;
+  const result = record.result;
+  if (
+    !meta ||
+    typeof meta !== 'object' ||
+    Array.isArray(meta) ||
+    !result ||
+    typeof result !== 'object' ||
+    Array.isArray(result) ||
+    !hasAccountUpdateTimestampEntries(result as Record<string, unknown>)
+  ) {
+    return value;
+  }
+
+  const resultRecord = result as Record<string, unknown>;
+  const resultWithoutUpdateTimestamps = Object.fromEntries(
+    Object.entries(resultRecord).filter(([key]) => !ACCOUNT_UPDATE_TIMESTAMP_KEYS.includes(key)),
+  );
+
+  return {
+    ...record,
+    meta: insertAccountUpdateTimestampsInMeta(meta as Record<string, unknown>, resultRecord),
+    result: resultWithoutUpdateTimestamps,
+  };
+}
+
+function normalizeAccountRecordDisplayShape(value: any): any {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
+  const record = value as Record<string, unknown>;
+  if (record.TYPE !== '--ACCOUNT--') return value;
+
+  const totalSpCoinsRecord =
+    record.totalSpCoins && typeof record.totalSpCoins === 'object' && !Array.isArray(record.totalSpCoins)
+      ? (record.totalSpCoins as Record<string, unknown>)
+      : null;
+  const nestedPendingRewards = totalSpCoinsRecord?.pendingRewards;
+  const hasStakingRewards = Object.prototype.hasOwnProperty.call(record, 'stakingRewards');
+  const needsTotalSpCoinsPrune =
+    totalSpCoinsRecord &&
+    Object.prototype.hasOwnProperty.call(totalSpCoinsRecord, 'pendingRewards');
+  const needsPendingRewardsLift =
+    nestedPendingRewards !== undefined && !Object.prototype.hasOwnProperty.call(record, 'pendingRewards');
+
+  if (!hasStakingRewards && !needsTotalSpCoinsPrune && !needsPendingRewardsLift) return value;
+
+  const nextEntries: Array<[string, unknown]> = [];
+  for (const [key, entryValue] of Object.entries(record)) {
+    if (key === 'stakingRewards') {
+      nextEntries.push(['rewardsEarned', entryValue]);
+      continue;
+    }
+
+    if (key === 'totalSpCoins' && totalSpCoinsRecord) {
+      nextEntries.push([
+        key,
+        Object.fromEntries(
+          Object.entries(totalSpCoinsRecord).filter(
+            ([childKey]) => childKey !== 'pendingRewards',
+          ),
+        ),
+      ]);
+      if (needsPendingRewardsLift) {
+        nextEntries.push(['pendingRewards', nestedPendingRewards]);
+      }
+      continue;
+    }
+
+    nextEntries.push([key, entryValue]);
+  }
+
+  return Object.fromEntries(nextEntries);
+}
+
+function toOnChainMsNumber(value: unknown): number {
+  const parsed = Number(String(value ?? '0').replace(/,/g, '').trim());
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+}
+
+function getOnChainCallsTotalMs(value: unknown): number {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return 0;
+  return toOnChainMsNumber((value as Record<string, unknown>).totalOnChainMs);
+}
+
+function getDirectOnChainCallsMs(value: unknown): number {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return 0;
+  const calls = (value as Record<string, unknown>).calls;
+  if (!Array.isArray(calls)) return 0;
+  return calls.reduce((sum, entry) => {
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return sum;
+    return sum + toOnChainMsNumber((entry as Record<string, unknown>).onChainRunTimeMs);
+  }, 0);
+}
+
+function withPendingRewardsTiming(record: Record<string, unknown>, pendingRewardsMs: number): Record<string, unknown> {
+  if (pendingRewardsMs <= 0) return record;
+  const pendingRewards = record.pendingRewards;
+  if (!pendingRewards || typeof pendingRewards !== 'object' || Array.isArray(pendingRewards)) return record;
+  if (Object.prototype.hasOwnProperty.call(pendingRewards, 'totalOnChainMs')) return record;
+  return {
+    ...record,
+    pendingRewards: {
+      ...(pendingRewards as Record<string, unknown>),
+      totalOnChainMs: pendingRewardsMs,
+    },
+  };
+}
+
+function addPendingRewardsTimingToStepResult(value: any): any {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
+  const record = value as Record<string, unknown>;
+  const result =
+    record.result && typeof record.result === 'object' && !Array.isArray(record.result)
+      ? (record.result as Record<string, unknown>)
+      : null;
+  const onChainCalls =
+    record.onChainCalls && typeof record.onChainCalls === 'object' && !Array.isArray(record.onChainCalls)
+      ? (record.onChainCalls as Record<string, unknown>)
+      : null;
+  if (!result || result.TYPE !== '--ACCOUNT--' || !onChainCalls) return value;
+
+  const pendingRewardsMs = getOnChainCallsTotalMs(onChainCalls) - getDirectOnChainCallsMs(onChainCalls);
+  if (pendingRewardsMs <= 0) return value;
+
+  return {
+    ...record,
+    result: withPendingRewardsTiming(result, pendingRewardsMs),
+  };
+}
+
+function isLiftedAccountPendingRewardsDisplayEntry(parent: any, key: string, value: any): boolean {
+  if (key !== 'pendingRewards') return false;
+  if (!parent || typeof parent !== 'object' || Array.isArray(parent)) return false;
+  const record = parent as Record<string, unknown>;
+  if (record.TYPE !== '--ACCOUNT--' || Object.prototype.hasOwnProperty.call(record, 'pendingRewards')) return false;
+  const totalSpCoinsRecord =
+    record.totalSpCoins && typeof record.totalSpCoins === 'object' && !Array.isArray(record.totalSpCoins)
+      ? (record.totalSpCoins as Record<string, unknown>)
+      : null;
+  return Boolean(totalSpCoinsRecord && totalSpCoinsRecord.pendingRewards === value);
+}
+
+function getDisplayEntryPath(parentPath: string, parent: any, key: string, value: any): string {
+  if (isLiftedAccountPendingRewardsDisplayEntry(parent, key, value)) {
+    return `${parentPath}.totalSpCoins.pendingRewards`;
+  }
+  return `${parentPath}.${key}`;
+}
+
 function hasPopulatedContent(
   value: any,
   hiddenRules: NonNullable<JsonInspectorProps['hiddenRules']>,
@@ -671,6 +867,7 @@ function isTokenAmountKey(key: string): boolean {
     'balanceOf',
     'stakedBalance',
     'stakedAmount',
+    'rewardsEarned',
     'stakingRewards',
     'pendingRewards',
     'pendingSponsorRewards',
@@ -783,8 +980,10 @@ function getAccountRecordEntryOrder(key: string): number {
     lastSponsorUpdateTimeStamp: 20,
     lastRecipientUpdateTimeStamp: 21,
     lastAgentUpdateTimeStamp: 22,
-    stakingRewards: 30,
+    rewardsEarned: 30,
+    stakingRewards: 31,
     totalSpCoins: 40,
+    pendingRewards: 41,
     recipientKeys: 50,
     agentKeys: 51,
     sponsorKeys: 52,
@@ -797,10 +996,8 @@ function getAccountRecordEntryOrder(key: string): number {
 
 function getTotalSpCoinsEntryOrder(key: string): number {
   const order: Record<string, number> = {
-    totalSpCoins: 10,
-    balanceOf: 11,
-    stakedBalance: 12,
-    pendingRewards: 20,
+    balanceOf: 10,
+    stakedBalance: 11,
   };
   return order[key] ?? 100;
 }
@@ -867,10 +1064,11 @@ function getVisibleEntries(
   if (!value || typeof value !== 'object') return [];
   if (isPendingRewardsIncludedMethodNode(value)) return [];
   const normalizedValue = normalizePendingRewardsDisplayResult(value);
-  const displayValue =
+  const displayValueBeforeAccountShape =
     normalizedValue && typeof normalizedValue === 'object' && !Array.isArray(normalizedValue)
-      ? normalizedValue
-      : value;
+      ? addPendingRewardsTimingToStepResult(moveAccountUpdateTimestampsToMeta(normalizedValue))
+      : addPendingRewardsTimingToStepResult(value);
+  const displayValue = normalizeAccountRecordDisplayShape(displayValueBeforeAccountShape);
   const forceShowChildren = shouldShowEmptyChildren(displayValue);
   if (showAll || forceShowChildren) {
     if (Array.isArray(displayValue)) {
@@ -902,7 +1100,13 @@ function getVisibleEntries(
           !isPendingRewardsContainerSummaryField(displayValue, childKey) &&
           !isAccountRoleCountDisplayField(displayValue, childKey) &&
           !(isTotalSpCoinsRecord(displayValue) && (childKey === 'claim' || childKey === 'update' || childKey === 'mode')) &&
+          !(
+            isTotalSpCoinsRecord(displayValue) &&
+            (displayValue as Record<string, unknown>).TYPE !== '--ACCOUNT--' &&
+            childKey === 'totalSpCoins'
+          ) &&
           !(isPendingRewardsRecord(displayValue) && (childKey === 'claim' || childKey === 'estimate' || childKey === 'mode')) &&
+          !isPendingRewardsTotalActionField(displayValue, childKey) &&
           !isPendingRewardsInternalField(displayValue, childKey) &&
           !hideEntryKeys.includes(childKey) &&
           (showStructureType || childKey !== 'TYPE'),
@@ -946,7 +1150,13 @@ function getVisibleEntries(
       if (isPendingRewardsContainerSummaryField(displayValue, childKey)) return false;
       if (isAccountRoleCountDisplayField(displayValue, childKey)) return false;
       if (isTotalSpCoinsRecord(displayValue) && (childKey === 'claim' || childKey === 'update' || childKey === 'mode')) return false;
+      if (
+        isTotalSpCoinsRecord(displayValue) &&
+        (displayValue as Record<string, unknown>).TYPE !== '--ACCOUNT--' &&
+        childKey === 'totalSpCoins'
+      ) return false;
       if (isPendingRewardsRecord(displayValue) && (childKey === 'claim' || childKey === 'estimate' || childKey === 'mode')) return false;
+      if (isPendingRewardsTotalActionField(displayValue, childKey)) return false;
       if (isPendingRewardsInternalField(displayValue, childKey)) return false;
       if (hideEntryKeys.includes(childKey)) return false;
       if (isTotalSpCoinsPendingRewards(displayValue, childKey, childValue)) return true;
@@ -1275,9 +1485,11 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     stepCallRecord && typeof stepCallRecord.method === 'string'
       ? String(stepCallRecord.method).trim()
       : '';
+  const isAccountRelationInlineMethod = Boolean(getAccountRelationMethodLabel(inlineStepMethod));
   const inlineStepMethodDisplayName = getPendingRewardsMethodDisplayName(inlineStepMethod);
   const displayPathLabel = getDisplayLabel(path ?? '');
   const visibleInlineStepMethod =
+    isAccountRelationInlineMethod ||
     inlineStepMethod === visibleStepLabel ||
     inlineStepMethod === displayPathLabel ||
     inlineStepMethodDisplayName === visibleStepLabel ||
@@ -1312,7 +1524,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
   }, [draggableScriptStepNumber, inlineStepMethod, isDraggableScriptStep, scriptStepDragState]);
 
   const renderValue = (value: any, key: string) => {
-    const nextPath = `${path}.${key}`;
+    const nextPath = getDisplayEntryPath(path ?? '', data, key, value);
     const effectiveKey =
       key === 'calls' && String(path || '').endsWith('.onChainCalls') && Array.isArray(value)
         ? (() => {
@@ -1357,6 +1569,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     if (value && typeof value === 'object') {
       const forceRenderObject =
         isTotalSpCoinsPendingRewards(data, key, value) ||
+        (key === 'totalSpCoins' && isTotalSpCoinsRecord(value)) ||
         isPendingRewardsIncludedMethodNode(value);
       if (
         !forceRenderObject &&

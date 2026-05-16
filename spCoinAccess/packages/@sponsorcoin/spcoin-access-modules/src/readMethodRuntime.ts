@@ -2,6 +2,8 @@ import type {
   SpCoinDynamicMethod,
   SpCoinDynamicMethodHost,
 } from "./modules/shared/runtimeTypes";
+import { runCachedRead, type SpCoinReadCacheOptions } from "./utils/readCache";
+import { applyMethodCacheDefaults } from "./utils/readCacheTtl";
 
 export interface ReadMethodHandlerContext {
   canonicalMethod: string;
@@ -11,6 +13,7 @@ export interface ReadMethodHandlerContext {
   read: SpCoinDynamicMethodHost;
   staking: SpCoinDynamicMethodHost;
   contract: SpCoinDynamicMethodHost;
+  readCacheOptions?: SpCoinReadCacheOptions;
   requireExternalSerializedValue: (method: string, args: unknown[]) => unknown;
 }
 
@@ -46,7 +49,7 @@ export async function runDynamicMethod(
 ): Promise<unknown> {
   const readMethod = getDynamicMethod(context.read, method);
   if (readMethod) {
-    return readMethod(...context.methodArgs);
+    return readMethod(...context.methodArgs, applyMethodCacheDefaults(method, context.readCacheOptions ?? {}));
   }
 
   const stakingMethod = getDynamicMethod(context.staking, method);
@@ -59,7 +62,14 @@ export async function runDynamicMethod(
     throw new Error(`SpCoin read method ${context.selectedMethod} is not available on access modules or contract.`);
   }
 
-  return contractMethod(...context.methodArgs);
+  const cacheOptions = applyMethodCacheDefaults(method, context.readCacheOptions ?? {});
+  const cacheContext = {
+    spCoinContractDeployed: context.contract,
+    spCoinLogger:
+      (context.read as { spCoinLogger?: unknown } | undefined)?.spCoinLogger ??
+      (context.contract as { spCoinLogger?: unknown } | undefined)?.spCoinLogger,
+  };
+  return runCachedRead(cacheContext, method, context.methodArgs, cacheOptions, () => contractMethod(...context.methodArgs));
 }
 
 export function createDynamicHandler<Result = unknown>(

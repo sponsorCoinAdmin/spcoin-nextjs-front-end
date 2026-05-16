@@ -1,7 +1,7 @@
 // @ts-nocheck
 
 export type SpCoinReadCacheMode = "default" | "refresh" | "bypass" | "only";
-const DEFAULT_READ_CACHE_TTL_MS = 10_000;
+export const FALLBACK_READ_CACHE_TTL_MS = 10_000;
 
 export type SpCoinReadCacheOptions = {
   cache?: SpCoinReadCacheMode;
@@ -20,6 +20,19 @@ type CacheEntry = {
 
 const cache = new Map<string, CacheEntry>();
 const dependencyIndex = new Map<string, Set<string>>();
+
+function parsePositiveMs(value: unknown): number | null {
+  const parsed = Number(String(value ?? "").replace(/,/g, "").trim());
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+export function getDefaultReadCacheTtlMs(): number {
+  const publicTtlMs = parsePositiveMs(process.env.NEXT_PUBLIC_SPCOIN_READ_CACHE_TTL_MS);
+  if (publicTtlMs !== null) return publicTtlMs;
+  const serverTtlMs = parsePositiveMs(process.env.SPCOIN_READ_CACHE_TTL_MS);
+  if (serverTtlMs !== null) return serverTtlMs;
+  return FALLBACK_READ_CACHE_TTL_MS;
+}
 
 function normalizeAddress(value: unknown): string {
   return String(value ?? "").trim().toLowerCase();
@@ -147,13 +160,9 @@ function setCacheEntry(key: string, value: unknown, dependencies: Set<string>) {
 }
 
 function isEntryFresh(entry: CacheEntry, options: SpCoinReadCacheOptions) {
-  const ttlMs = Number(options.ttlMs ?? DEFAULT_READ_CACHE_TTL_MS);
+  const ttlMs = parsePositiveMs(options.ttlMs) ?? getDefaultReadCacheTtlMs();
   if (!Number.isFinite(ttlMs) || ttlMs <= 0) return false;
   return Date.now() - entry.cachedAt <= ttlMs;
-}
-
-function touchCacheEntry(entry: CacheEntry) {
-  entry.cachedAt = Date.now();
 }
 
 function trace(context: unknown, options: SpCoinReadCacheOptions, message: string) {
@@ -182,7 +191,6 @@ export async function runCachedRead(
     const fresh = Boolean(entry && isEntryFresh(entry, options));
     trace(context, options, `${fresh ? "hit" : "miss"} only method=${method} key=${key}`);
     if (entry && fresh) {
-      touchCacheEntry(entry);
       return entry.value;
     }
     return null;
@@ -190,7 +198,6 @@ export async function runCachedRead(
 
   if (mode !== "refresh" && entry && isEntryFresh(entry, options)) {
     trace(context, options, `hit method=${method} key=${key}`);
-    touchCacheEntry(entry);
     return entry.value;
   }
 
