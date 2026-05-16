@@ -22,6 +22,14 @@
             "symbol": "SPCOIN_V0",
             "decimals": 18
           }
+        },
+        "1": {
+          "0X5EA0F9CD3CC7D0678842F77EB65BF717A820DC15": {
+            "deployer": "0XF39FD6E51AAD88F6F4CE6AB8827279CFFFB92266",
+            "name": "spCoin V1",
+            "symbol": "SPCOIN_V1",
+            "decimals": 18
+          }
         }
       }
     }

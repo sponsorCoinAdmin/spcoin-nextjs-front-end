@@ -22,8 +22,8 @@ const PENDING_REWARDS_METHOD_NAMES = new Set([
 const PENDING_REWARDS_METHOD_DISPLAY_NAMES: Record<string, string> = {
   estimateOffChainTotalRewards: 'estimateOffChainTotalRewards',
   claimOnChainTotalRewards: 'claimOnChainTotalRewards',
-  estimateOffChainSponsorRewards: 'runOffChainSponsorRewardsEstimate',
-  claimOnChainSponsorRewards: 'runOnChainSponsorRewardsClaim',
+  estimateOffChainSponsorRewards: 'estimateOffChainSponsorRewards',
+  claimOnChainSponsorRewards: 'claimOnChainSponsorRewards',
   estimateOffChainRecipientRewards: 'estimateOffChainRecipientRewards',
   claimOnChainRecipientRewards: 'claimOnChainRecipientRewards',
   estimateOffChainAgentRewards: 'estimateOffChainAgentRewards',
@@ -271,13 +271,10 @@ function isTotalSpCoinsPendingRewards(parent: any, childKey: string, childValue:
 }
 
 function isPendingRewardsIncludedMethodNode(data: any): boolean {
-  return Boolean(
-    data &&
-      typeof data === 'object' &&
-      !Array.isArray(data) &&
-      ((data as Record<string, unknown>).__pendingRewardsIncludedMethod === true ||
-        (data as Record<string, unknown>).__lazyPendingRewardsMethod === true),
-  );
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return false;
+  const record = data as Record<string, unknown>;
+  if (record.call !== undefined || record.result !== undefined || record.meta !== undefined) return false;
+  return record.__pendingRewardsIncludedMethod === true || record.__lazyPendingRewardsMethod === true;
 }
 
 function getTotalSpCoinsPendingRewardsAction(_data: any): Record<string, unknown> | null {
@@ -502,13 +499,6 @@ function filterPendingRewardsRoleEntries(
 }
 
 function shouldForceExpandNode(data: any): boolean {
-  const call =
-    data && typeof data === 'object' && !Array.isArray(data) && (data as Record<string, unknown>).call;
-  const callMethod =
-    call && typeof call === 'object' && !Array.isArray(call)
-      ? String((call as Record<string, unknown>).method || '').trim()
-      : '';
-  if (PENDING_REWARDS_METHOD_NAMES.has(callMethod) && /^claimOnChain.*Rewards$/.test(callMethod)) return false;
   return Boolean(
     data &&
       typeof data === 'object' &&
@@ -946,6 +936,32 @@ function formatPathSegmentLabel(nextPath: string): string {
   return currentSegment;
 }
 
+function getPendingRewardsMethodSummaryValue(
+  methodName: string,
+  data: unknown,
+): { key: string; value: unknown } | null {
+  if (!PENDING_REWARDS_METHOD_NAMES.has(methodName)) return null;
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return null;
+  const record = data as Record<string, unknown>;
+  const result =
+    record.result && typeof record.result === 'object' && !Array.isArray(record.result)
+      ? (record.result as Record<string, unknown>)
+      : null;
+  if (!result) return null;
+
+  if (methodName.startsWith('estimateOffChain') && methodName.endsWith('Rewards')) {
+    const value = result.pendingTotalRewards ?? result.pendingRewards ?? result.totalRewards;
+    return value === undefined || value === null ? null : { key: 'pendingTotalRewards', value };
+  }
+
+  if (methodName.startsWith('claimOnChain') && methodName.endsWith('Rewards')) {
+    const value = result.totalRewardsClaimed ?? result.claimedAmount;
+    return value === undefined || value === null ? null : { key: 'totalRewardsClaimed', value };
+  }
+
+  return null;
+}
+
 function normalizeVisibleEntry(parent: any, childKey: string, childValue: any): [string, any] {
   if (
     childKey === 'calculatedFormatted' &&
@@ -1315,6 +1331,17 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
       return;
     }
     if (isPendingRewardsIncludedMethodNode(data)) {
+      const record = data as Record<string, unknown>;
+      onTrace?.(
+        `[PENDING_REWARDS_TRACE] inspector pending method toggle path=${currentPath} label=${String(label || '')} collapsed=${String(isCollapsed)} keys=${Object.keys(record).join(',')} method=${String(record.method || label || '')} accountKey=${String(record.accountKey || '')} included=${String(record.__pendingRewardsIncludedMethod === true)} lazy=${String(record.__lazyPendingRewardsMethod === true)} hasCall=${String(record.call !== undefined)} hasResult=${String(record.result !== undefined)} hasMeta=${String(record.meta !== undefined)} expandedKey=${expandedPathKey}`,
+      );
+      if (!isCollapsed) {
+        updateCollapsedKeys([
+          ...new Set([...collapsedKeys.filter((key) => key !== expandedPathKey), currentPath, forceExpandedDismissedKey]),
+        ]);
+        return;
+      }
+      updateCollapsedKeys([...new Set(nextOpenKeys)]);
       onLeafValueClick?.(
         JSON.stringify({
           __loadPendingRewardsMethod: true,
@@ -1436,7 +1463,18 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
       record.call && typeof record.call === 'object' && !Array.isArray(record.call)
         ? (record.call as Record<string, unknown>)
         : null;
-    const accountRelationLabel = getAccountRelationMethodLabel(String(callRecord?.method || ''));
+    const callMethod = String(callRecord?.method || '').trim();
+    const pendingRewardsSummary = getPendingRewardsMethodSummaryValue(callMethod, record);
+    if (pendingRewardsSummary) {
+      return `${baseLabel}: ${formatDisplayScalar(
+        pendingRewardsSummary.key,
+        pendingRewardsSummary.value,
+        formatTokenAmounts,
+        tokenDecimals,
+      )}`;
+    }
+
+    const accountRelationLabel = getAccountRelationMethodLabel(callMethod);
     if (accountRelationLabel && baseLabel === accountRelationLabel) {
       const resultCount = Array.isArray(record.result) ? record.result.length : 0;
       return `${baseLabel}[${resultCount}]`;
@@ -1488,7 +1526,18 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
   const isAccountRelationInlineMethod = Boolean(getAccountRelationMethodLabel(inlineStepMethod));
   const inlineStepMethodDisplayName = getPendingRewardsMethodDisplayName(inlineStepMethod);
   const displayPathLabel = getDisplayLabel(path ?? '');
+  const pendingRewardsMethodSummary = getPendingRewardsMethodSummaryValue(inlineStepMethod, data);
+  const pendingRewardsMethodSummaryDisplay = pendingRewardsMethodSummary
+    ? formatDisplayScalar(
+        pendingRewardsMethodSummary.key,
+        pendingRewardsMethodSummary.value,
+        formatTokenAmounts,
+        tokenDecimals,
+      )
+    : '';
+  const hasPendingRewardsMethodSummary = Boolean(pendingRewardsMethodSummary);
   const visibleInlineStepMethod =
+    hasPendingRewardsMethodSummary ||
     isAccountRelationInlineMethod ||
     inlineStepMethod === visibleStepLabel ||
     inlineStepMethod === displayPathLabel ||
@@ -1734,19 +1783,29 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
             {getDisplayLabel(path ?? '')}
           </button>
         ) : rerunnablePendingRewardsMethod ? (
-          <button
-            type="button"
-            className={`inline-flex bg-transparent p-0 text-left font-semibold underline decoration-dotted underline-offset-2 transition-colors hover:text-white focus:outline-none ${
-              isHighlighted ? highlightColorClass : 'text-white'
-            }`}
-            onClick={(event) => {
-              event.stopPropagation();
-              refreshPendingRewardsMethod();
-            }}
-            title={refreshPendingRewardsTitle}
-          >
-            {getDisplayLabel(path ?? '')}
-          </button>
+          <>
+            <button
+              type="button"
+              className={`inline-flex bg-transparent p-0 text-left font-semibold underline decoration-dotted underline-offset-2 transition-colors hover:text-white focus:outline-none ${
+                isHighlighted ? highlightColorClass : 'text-white'
+              }`}
+              onClick={(event) => {
+                event.stopPropagation();
+                refreshPendingRewardsMethod();
+              }}
+              title={refreshPendingRewardsTitle}
+            >
+              {hasPendingRewardsMethodSummary ? `${rerunnablePendingRewardsMethodDisplayName}:` : getDisplayLabel(path ?? '')}
+            </button>
+            {hasPendingRewardsMethodSummary ? (
+              <>
+                {' '}
+                <span className={isHighlighted ? highlightColorClass : 'text-green-400'}>
+                  {pendingRewardsMethodSummaryDisplay}
+                </span>
+              </>
+            ) : null}
+          </>
         ) : isAddressNode && (typeof onAddressNodeClick === 'function' || isLazyAddressStub) ? (
           <>
             <span className={`font-semibold ${isHighlighted ? highlightColorClass : 'text-white'}`}>

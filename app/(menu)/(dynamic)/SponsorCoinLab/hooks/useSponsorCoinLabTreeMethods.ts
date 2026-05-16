@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ParamDef } from '../jsonMethods/shared/types';
 import { runSpCoinReadMethod, type SpCoinReadMethod } from '../jsonMethods/spCoin/read';
 import { runSpCoinWriteMethod, type SpCoinWriteMethod } from '../jsonMethods/spCoin/write';
-import { createSpCoinLibraryAccess, type SpCoinReadAccess } from '../jsonMethods/shared';
+import { createSpCoinContract, createSpCoinLibraryAccess, type SpCoinReadAccess } from '../jsonMethods/shared';
 import {
   createMethodTimingCollector,
   runWithMethodTimingCollector,
@@ -138,12 +138,10 @@ function hasLazyPendingRewardsAction(value: unknown) {
 }
 
 function hasLazyPendingRewardsMethod(value: unknown) {
-  return Boolean(
-    value &&
-      typeof value === 'object' &&
-      !Array.isArray(value) &&
-      (value as Record<string, unknown>).__lazyPendingRewardsMethod === true,
-  );
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const record = value as Record<string, unknown>;
+  if (record.call !== undefined || record.result !== undefined || record.meta !== undefined) return false;
+  return record.__lazyPendingRewardsMethod === true;
 }
 
 function hasPendingRewardsRefreshAction(value: unknown) {
@@ -194,6 +192,8 @@ function mergePendingRewardsSummaryNode(
   normalizedAccount: string,
   action: PendingRewardsActionClick['action'],
   refreshAtMs: number,
+  loadedMethod: string,
+  loadedMethodNode: unknown,
 ) {
   const existing =
     existingNode && typeof existingNode === 'object' && !Array.isArray(existingNode)
@@ -203,30 +203,18 @@ function mergePendingRewardsSummaryNode(
     pendingResult && typeof pendingResult === 'object' && !Array.isArray(pendingResult)
       ? (normalizePendingRewardsEstimateResult(pendingResult) as Record<string, unknown>)
       : {};
-  const estimateOffChainTotalRewards =
-    existing.estimateOffChainTotalRewards ??
-    buildLazyPendingRewardsMethod(normalizedAccount, 'estimateOffChainTotalRewards');
-  const claimOnChainTotalRewards =
-    existing.claimOnChainTotalRewards ??
-    buildLazyPendingRewardsMethod(normalizedAccount, 'claimOnChainTotalRewards');
-  const estimateOffChainSponsorRewards =
-    existing.estimateOffChainSponsorRewards ??
-    buildLazyPendingRewardsMethod(normalizedAccount, 'estimateOffChainSponsorRewards');
-  const claimOnChainSponsorRewards =
-    existing.claimOnChainSponsorRewards ??
-    buildLazyPendingRewardsMethod(normalizedAccount, 'claimOnChainSponsorRewards');
-  const estimateOffChainRecipientRewards =
-    existing.estimateOffChainRecipientRewards ??
-    buildLazyPendingRewardsMethod(normalizedAccount, 'estimateOffChainRecipientRewards');
-  const claimOnChainRecipientRewards =
-    existing.claimOnChainRecipientRewards ??
-    buildLazyPendingRewardsMethod(normalizedAccount, 'claimOnChainRecipientRewards');
-  const estimateOffChainAgentRewards =
-    existing.estimateOffChainAgentRewards ??
-    buildLazyPendingRewardsMethod(normalizedAccount, 'estimateOffChainAgentRewards');
-  const claimOnChainAgentRewards =
-    existing.claimOnChainAgentRewards ??
-    buildLazyPendingRewardsMethod(normalizedAccount, 'claimOnChainAgentRewards');
+  const getMethodNode = (method: string) =>
+    loadedMethod === method
+      ? loadedMethodNode
+      : existing[method] ?? buildLazyPendingRewardsMethod(normalizedAccount, method);
+  const estimateOffChainTotalRewards = getMethodNode('estimateOffChainTotalRewards');
+  const claimOnChainTotalRewards = getMethodNode('claimOnChainTotalRewards');
+  const estimateOffChainSponsorRewards = getMethodNode('estimateOffChainSponsorRewards');
+  const claimOnChainSponsorRewards = getMethodNode('claimOnChainSponsorRewards');
+  const estimateOffChainRecipientRewards = getMethodNode('estimateOffChainRecipientRewards');
+  const claimOnChainRecipientRewards = getMethodNode('claimOnChainRecipientRewards');
+  const estimateOffChainAgentRewards = getMethodNode('estimateOffChainAgentRewards');
+  const claimOnChainAgentRewards = getMethodNode('claimOnChainAgentRewards');
   return {
     ...existing,
     TYPE: existing.TYPE ?? '--PENDING_REWARDS--',
@@ -245,12 +233,6 @@ function mergePendingRewardsSummaryNode(
   };
 }
 
-function toRewardAmount(value: unknown) {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return '0';
-  const record = value as Record<string, unknown>;
-  return String(record.stakingRewards ?? record.pendingRewards ?? '0');
-}
-
 function toRewardsBigInt(value: unknown) {
   const normalized = String(value ?? '0').replace(/,/g, '').trim();
   if (!normalized) return 0n;
@@ -261,44 +243,38 @@ function toRewardsBigInt(value: unknown) {
   }
 }
 
-function buildClaimedRewardsSummary(estimateBeforeClaim: unknown, refreshedRewards: unknown) {
-  const estimate =
-    estimateBeforeClaim && typeof estimateBeforeClaim === 'object' && !Array.isArray(estimateBeforeClaim)
-      ? (estimateBeforeClaim as Record<string, unknown>)
-      : null;
-  const refreshed =
-    refreshedRewards && typeof refreshedRewards === 'object' && !Array.isArray(refreshedRewards)
-      ? (refreshedRewards as Record<string, unknown>)
-      : null;
-  const sponsorRewardsClaimed = String(
-    estimate?.pendingSponsorRewards ?? toRewardAmount(refreshed?.sponsorRewardsList),
-  );
-  const recipientRewardsClaimed = String(
-    estimate?.pendingRecipientRewards ?? toRewardAmount(refreshed?.recipientRewardsList),
-  );
-  const agentRewardsClaimed = String(
-    estimate?.pendingAgentRewards ?? toRewardAmount(refreshed?.agentRewardsList),
-  );
-  const totalRewardsClaimed = String(
-    estimate?.pendingRewards ??
-      (toRewardsBigInt(sponsorRewardsClaimed) + toRewardsBigInt(recipientRewardsClaimed) + toRewardsBigInt(agentRewardsClaimed)),
-  );
+function getClaimBalanceRecord(value: unknown): Record<string, unknown> | null {
+  const entries = Array.isArray(value)
+    ? value
+    : value && typeof value === 'object' && !Array.isArray(value) && Array.isArray((value as Record<string, unknown>).receipts)
+      ? ((value as Record<string, unknown>).receipts as unknown[])
+      : [];
+  for (const entry of entries) {
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) continue;
+    const record = entry as Record<string, unknown>;
+    if (record.claimedAmount !== undefined || (record.balanceBefore !== undefined && record.balanceAfter !== undefined)) return record;
+  }
+  return null;
+}
 
+function buildClaimedBalanceSummary(updateResult: unknown, fallback?: {
+  balanceBefore?: string;
+  balanceAfter?: string;
+  claimedAmount?: string;
+}) {
+  const balanceRecord = getClaimBalanceRecord(updateResult);
+  const balanceBefore = String(balanceRecord?.balanceBefore ?? fallback?.balanceBefore ?? '0');
+  const balanceAfter = String(balanceRecord?.balanceAfter ?? fallback?.balanceAfter ?? '0');
+  const claimedAmount = String(
+    balanceRecord?.claimedAmount ??
+      fallback?.claimedAmount ??
+      (toRewardsBigInt(balanceAfter) - toRewardsBigInt(balanceBefore)).toString(),
+  );
   return {
-    calculatedTimeStamp: String(estimate?.calculatedTimeStamp ?? estimate?.calculatedAtTimestamp ?? '0'),
-    calculatedFormatted: String(estimate?.calculatedFormatted ?? ''),
-    lastSponsorUpdate: String(estimate?.lastSponsorUpdate ?? '0'),
-    lastRecipientUpdate: String(estimate?.lastRecipientUpdate ?? '0'),
-    lastAgentUpdate: String(estimate?.lastAgentUpdate ?? '0'),
-    pendingRewards: totalRewardsClaimed,
-    pendingSponsorRewards: sponsorRewardsClaimed,
-    pendingRecipientRewards: recipientRewardsClaimed,
-    pendingAgentRewards: agentRewardsClaimed,
-    pendingTotalRewards: totalRewardsClaimed,
-    totalRewardsClaimed,
-    sponsorRewardsClaimed,
-    recipientRewardsClaimed,
-    agentRewardsClaimed,
+    balanceBefore,
+    balanceAfter,
+    claimedAmount,
+    totalRewardsClaimed: claimedAmount,
   };
 }
 
@@ -1537,6 +1513,26 @@ export function useSponsorCoinLabTreeMethods({
           [head]: writePathValue((source as Record<string, unknown>)[head], tail, nextValue),
         };
       };
+      const getPendingRewardsAlternatePath = (segments: string[]): string[] | null => {
+        const pendingRewardsIndex = segments.findIndex((segment) => segment === 'pendingRewards');
+        if (pendingRewardsIndex < 0) return null;
+        if (segments[pendingRewardsIndex - 1] === 'totalSpCoins') {
+          return [
+            ...segments.slice(0, pendingRewardsIndex - 1),
+            ...segments.slice(pendingRewardsIndex),
+          ];
+        }
+        return [
+          ...segments.slice(0, pendingRewardsIndex),
+          'totalSpCoins',
+          ...segments.slice(pendingRewardsIndex),
+        ];
+      };
+      const writePendingRewardsPathValue = (source: unknown, segments: string[], nextValue: unknown): unknown => {
+        const primary = writePathValue(source, segments, nextValue);
+        const alternatePath = getPendingRewardsAlternatePath(segments);
+        return alternatePath ? writePathValue(primary, alternatePath, nextValue) : primary;
+      };
       const readDisplayPathValue = (source: unknown, segments: string[]): unknown => {
         const directValue = readPathValue(source, segments);
         if (directValue !== undefined) return directValue;
@@ -1668,30 +1664,6 @@ export function useSponsorCoinLabTreeMethods({
 
           const claimPendingRewards = async () => {
             const claimTimingCollector = createMethodTimingCollector();
-            const estimateBeforeClaim =
-              mode === 'hardhat'
-                ? (
-                    await runServerBackedTreeSpCoinMethod({
-                      panel: 'spcoin_rread',
-                      method: 'estimateOffChainTotalRewards',
-                      params: [{ key: 'Account Key', value: normalizedAccount }],
-                    })
-                  ).result
-                : await runWithMethodTimingCollector(claimTimingCollector, async () =>
-                    runSpCoinReadMethod({
-                      selectedMethod: 'estimateOffChainTotalRewards',
-                      spReadParams: [normalizedAccount],
-                      coerceParamValue,
-                      stringifyResult,
-                      spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
-                      requireContractAddress,
-                      ensureReadRunner,
-                      appendLog: noop,
-                      setStatus: noop,
-                      useReadCache,
-                      readCacheNamespace,
-                    }),
-                  );
             const selectedClaimMethod =
               click.method && PENDING_REWARDS_CLAIM_METHODS.has(click.method)
                 ? click.method
@@ -1699,6 +1671,19 @@ export function useSponsorCoinLabTreeMethods({
             appendLog(
               `[PENDING_REWARDS_TRACE] run claim method=${selectedClaimMethod} account=${normalizedAccount} target=${targetPath.join('.')}`,
             );
+            const readBalanceOf = async () =>
+              runWithMethodTimingCollector(claimTimingCollector, async () => {
+                const target = requireContractAddress();
+                const runner = await ensureReadRunner();
+                const contract = createSpCoinContract(target, runner) as unknown as {
+                  balanceOf?: (accountKey: string) => Promise<unknown>;
+                };
+                if (typeof contract.balanceOf !== 'function') {
+                  throw new Error('balanceOf is not available on the current SpCoin contract.');
+                }
+                return String(await contract.balanceOf(normalizedAccount));
+              });
+            const balanceBefore = mode === 'hardhat' ? undefined : await readBalanceOf();
             const updateResult =
               mode === 'hardhat'
                 ? await runServerBackedTreeSpCoinMethod({
@@ -1719,34 +1704,22 @@ export function useSponsorCoinLabTreeMethods({
                     setStatus: noop,
                     timingCollector: claimTimingCollector,
                   });
+            const balanceAfter = mode === 'hardhat' ? undefined : await readBalanceOf();
             treeAccountRecordCacheRef.current.delete(normalizedAccount);
-            const rewardsResult =
-              mode === 'hardhat'
-                ? (
-                    await runServerBackedTreeSpCoinMethod({
-                      panel: 'spcoin_rread',
-                      method: 'getAccountStakingRewards',
-                      params: [{ key: 'Account Key', value: normalizedAccount }],
-                    })
-                  ).result
-                : await runWithMethodTimingCollector(claimTimingCollector, async () =>
-                    runSpCoinReadMethod({
-                      selectedMethod: 'getAccountStakingRewards',
-                      spReadParams: [normalizedAccount],
-                      coerceParamValue,
-                      stringifyResult,
-                      spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
-                      requireContractAddress,
-                      ensureReadRunner,
-                      appendLog: noop,
-                      setStatus: noop,
-                    }),
-                  );
+            const balanceClaimSummary = buildClaimedBalanceSummary(
+              mode === 'hardhat' ? (updateResult as { result?: unknown }).result : updateResult,
+              balanceBefore !== undefined && balanceAfter !== undefined
+                ? {
+                    balanceBefore,
+                    balanceAfter,
+                    claimedAmount: (toRewardsBigInt(balanceAfter) - toRewardsBigInt(balanceBefore)).toString(),
+                  }
+                : undefined,
+            );
             return {
               pendingResult: {
-                ...buildClaimedRewardsSummary(estimateBeforeClaim, rewardsResult),
+                ...balanceClaimSummary,
                 receipts: mode === 'hardhat' ? (updateResult as { result?: unknown }).result : (updateResult as { receipts?: unknown }).receipts,
-                refreshedRewards: rewardsResult,
               },
               pendingMeta:
                 (updateResult as { meta?: MethodExecutionMeta }).meta ?? buildExecutionMeta(claimTimingCollector),
@@ -1758,7 +1731,9 @@ export function useSponsorCoinLabTreeMethods({
               ? callAccessMethod
                 ? await callAccessMethod(click.method || 'estimateOffChainTotalRewards', () => loadPendingRewardsEstimate())
                 : await loadPendingRewardsEstimate()
-              : await claimPendingRewards();
+              : callAccessMethod
+                ? await callAccessMethod(click.method || 'claimOnChainTotalRewards', () => claimPendingRewards())
+                : await claimPendingRewards();
           if (!loadedPending) return 'handled';
           const { pendingResult, pendingMeta } = loadedPending;
           const methodName = click.method
@@ -1766,6 +1741,7 @@ export function useSponsorCoinLabTreeMethods({
             : click.action === 'claim'
               ? 'claimPendingRewards'
               : 'estimateOffChainTotalRewards';
+          const expandedCallMethod = click.method ?? methodName;
           const refreshablePendingResult =
             click.action === 'estimate' && pendingResult && typeof pendingResult === 'object' && !Array.isArray(pendingResult)
               ? {
@@ -1775,7 +1751,6 @@ export function useSponsorCoinLabTreeMethods({
                   __pendingRewardsRefreshActionName: 'estimate',
                 }
               : pendingResult;
-          const expandedCallMethod = click.method ?? methodName;
           const expandedNode = {
             call: {
               method: expandedCallMethod,
@@ -1784,7 +1759,7 @@ export function useSponsorCoinLabTreeMethods({
               },
               selectedMethod: methodName,
               ...(click.action === 'claim'
-                ? { sequence: ['estimateOffChainTotalRewards', 'claimOnChainTotalRewards', 'getAccountStakingRewards'] }
+                ? { sequence: ['balanceOf', expandedCallMethod, 'balanceOf'] }
                 : {}),
             },
             ...(pendingMeta ? { meta: pendingMeta } : {}),
@@ -1809,9 +1784,9 @@ export function useSponsorCoinLabTreeMethods({
             targetLeaf === 'pendingRewards';
           const payloadWithExpandedNode =
             isPendingRewardsMethodLeaf
-              ? writePathValue(payload, targetPath, expandedNode)
+              ? writePendingRewardsPathValue(payload, targetPath, expandedNode)
               : targetLeaf === 'estimate' || targetLeaf === 'claim'
-              ? writePathValue(
+              ? writePendingRewardsPathValue(
                   payload,
                   targetPath,
                   buildLazyPendingRewardsMethod(normalizedAccount, click.action === 'claim' ? 'claimOnChainTotalRewards' : 'estimateOffChainTotalRewards'),
@@ -1826,7 +1801,7 @@ export function useSponsorCoinLabTreeMethods({
             existingPendingRewardsNode &&
             typeof existingPendingRewardsNode === 'object' &&
             !Array.isArray(existingPendingRewardsNode)
-              ? writePathValue(
+              ? writePendingRewardsPathValue(
                   payloadWithExpandedNode,
                   pendingRewardsPath,
                   mergePendingRewardsSummaryNode(
@@ -1835,9 +1810,29 @@ export function useSponsorCoinLabTreeMethods({
                     normalizedAccount,
                     click.action,
                     pendingRewardsRefreshAtMs,
+                    expandedCallMethod,
+                    expandedNode,
                   ),
                 )
               : payloadWithExpandedNode;
+          if (click.action === 'claim') {
+            const claimPath = pendingRewardsPath.length > 0
+              ? [...pendingRewardsPath, expandedCallMethod]
+              : targetPath;
+            const claimNode = readPathValue(payloadWithPendingRewardsSummary, claimPath);
+            const alternateClaimPath = getPendingRewardsAlternatePath(claimPath);
+            const alternateClaimNode = alternateClaimPath
+              ? readPathValue(payloadWithPendingRewardsSummary, alternateClaimPath)
+              : undefined;
+            const describeNode = (node: unknown) => {
+              if (!node || typeof node !== 'object' || Array.isArray(node)) return typeof node;
+              const record = node as Record<string, unknown>;
+              return `keys=${Object.keys(record).join(',')} lazy=${String(record.__lazyPendingRewardsMethod === true)} hasCall=${String(record.call !== undefined)} hasResult=${String(record.result !== undefined)} hasMeta=${String(record.meta !== undefined)}`;
+            };
+            const traceLine = `[PENDING_REWARDS_TRACE] claim write check method=${expandedCallMethod} target=${targetPath.join('.')} pendingPath=${pendingRewardsPath.join('.')} claimPath=${claimPath.join('.')} node=${describeNode(claimNode)} altPath=${String(alternateClaimPath?.join('.') || '')} altNode=${describeNode(alternateClaimNode)}`;
+            appendLog(traceLine);
+            appendWriteTrace?.(traceLine);
+          }
           const nextRootPayload = normalizeExecutionPayload(
             payloadWithPendingRewardsSummary,
           ) as Record<string, unknown>;
