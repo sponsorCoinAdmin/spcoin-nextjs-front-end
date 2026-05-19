@@ -19,6 +19,13 @@ const PENDING_REWARDS_METHOD_NAMES = new Set([
   'claimOnChainAgentRewards',
 ]);
 
+const PENDING_REWARDS_ESTIMATE_METHOD_NAMES = new Set(
+  [...PENDING_REWARDS_METHOD_NAMES].filter((methodName) => methodName.startsWith('estimateOffChain')),
+);
+const PENDING_REWARDS_CLAIM_METHOD_NAMES = new Set(
+  [...PENDING_REWARDS_METHOD_NAMES].filter((methodName) => methodName.startsWith('claimOnChain')),
+);
+
 const PENDING_REWARDS_METHOD_DISPLAY_NAMES: Record<string, string> = {
   estimateOffChainTotalRewards: 'estimateOffChainTotalRewards',
   claimOnChainTotalRewards: 'claimOnChainTotalRewards',
@@ -71,6 +78,7 @@ interface JsonInspectorProps {
     setDropTarget: (value: { stepNumber: number; placement: 'before' | 'after' } | null) => void;
     beginDrag: (stepNumber: number) => void;
     onStepDoubleClick?: (stepNumber: number, methodName: string) => void;
+    onStepMethodClick?: (stepNumber: number, methodName: string) => void;
   };
 }
 
@@ -266,6 +274,14 @@ function isPendingRewardsRecord(data: any): boolean {
   );
 }
 
+function isZeroPendingRewardsPlaceholderLabel(label: string, data: any): boolean {
+  if (label !== 'pendingRewards' || !isPendingRewardsRecord(data)) return false;
+  const record = data as Record<string, unknown>;
+  const amount = String(record.pendingRewards ?? '').replace(/,/g, '').trim();
+  if (amount !== '0') return false;
+  return [...PENDING_REWARDS_METHOD_NAMES].some((methodName) => Object.prototype.hasOwnProperty.call(record, methodName));
+}
+
 function isTotalSpCoinsPendingRewards(parent: any, childKey: string, childValue: any): boolean {
   return childKey === 'pendingRewards' && isTotalSpCoinsRecord(parent) && isPendingRewardsRecord(childValue);
 }
@@ -360,6 +376,9 @@ function getPendingRewardsRefreshActionName(data: any): string {
   if (directAction) return directAction;
   const call = record.call;
   if (call && typeof call === 'object' && !Array.isArray(call)) {
+    const methodName = String((call as Record<string, unknown>).method || '').trim();
+    if (PENDING_REWARDS_CLAIM_METHOD_NAMES.has(methodName)) return 'claim';
+    if (PENDING_REWARDS_ESTIMATE_METHOD_NAMES.has(methodName)) return 'estimate';
     const parameters = (call as Record<string, unknown>).parameters;
     const mode =
       parameters && typeof parameters === 'object' && !Array.isArray(parameters)
@@ -548,6 +567,19 @@ function normalizeLegacyDateDisplay(value: any): string | null {
     if (scriptCreatedDate) return scriptCreatedDate;
     if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/.test(trimmed)) return trimmed;
     const normalized = trimmed.replace(/_/g, ' ');
+    const shortMonthMatch = normalized.match(
+      /^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-(\d{1,2})-(\d{4}),\s*(\d{1,2}):(\d{2})(?::(\d{2})(?:\.(\d{1,3}))?)?\s+(a\.m\.|p\.m\.)(?:\s+([A-Z]{2,5}))?$/i,
+    );
+    if (shortMonthMatch) {
+      const [, monthText, dayText, yearText, hourText, minuteText, secondText, millisecondText, meridiem, timeZone] =
+        shortMonthMatch;
+      const normalizedDay = String(Number(dayText)).padStart(2, '0');
+      const secondsPart = secondText ? `:${secondText}.${(millisecondText || '000').padEnd(3, '0')}` : '';
+      const normalizedMeridiem = meridiem.toLowerCase() === 'a.m.' ? 'a.m.' : 'p.m.';
+      return `${monthText.toUpperCase()}-${normalizedDay}-${yearText}, ${Number(hourText)}:${minuteText}${secondsPart} ${normalizedMeridiem}${
+        timeZone ? ` ${timeZone.toUpperCase()}` : ''
+      }`;
+    }
     const match = normalized.match(
       /^(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2}),\s+(\d{4})\s+at\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)(?:\s+([A-Z]{2,5}))?$/i,
     );
@@ -588,13 +620,7 @@ function normalizeLegacyDateDisplay(value: any): string | null {
   return normalizeDisplayDateString(`${outerKey}:${minuteKey}:${secondValue}`);
 }
 
-function formatTimestampDateDisplay(value: unknown): string | null {
-  const raw = String(value ?? '').replace(/,/g, '').trim();
-  if (!raw || raw === '0') return 'N/A';
-  if (!/^\d+$/.test(raw)) return normalizeLegacyDateDisplay(value);
-  const seconds = Number(raw);
-  if (!Number.isFinite(seconds) || seconds <= 0) return 'N/A';
-  const date = new Date(seconds * 1000);
+function formatDateObjectDisplay(date: Date): string | null {
   if (Number.isNaN(date.getTime())) return null;
   const month = date.toLocaleString('en-US', { month: 'short' }).toUpperCase();
   const day = String(date.getDate()).padStart(2, '0');
@@ -602,17 +628,34 @@ function formatTimestampDateDisplay(value: unknown): string | null {
   const hour24 = date.getHours();
   const hour12 = hour24 % 12 || 12;
   const minute = String(date.getMinutes()).padStart(2, '0');
+  const second = String(date.getSeconds()).padStart(2, '0');
+  const millisecond = String(date.getMilliseconds()).padStart(3, '0');
   const meridiem = hour24 < 12 ? 'a.m.' : 'p.m.';
   const timeZone =
     date
       .toLocaleTimeString('en-US', { timeZoneName: 'short' })
       .split(' ')
       .pop() || '';
-  return `${month}-${day}-${year}, ${hour12}:${minute} ${meridiem}${timeZone ? ` ${timeZone}` : ''}`;
+  return `${month}-${day}-${year}, ${hour12}:${minute}:${second}.${millisecond} ${meridiem}${timeZone ? ` ${timeZone}` : ''}`;
+}
+
+function formatTimestampDateDisplay(value: unknown): string | null {
+  const raw = String(value ?? '').replace(/,/g, '').trim();
+  if (!raw || raw === '0') return 'N/A';
+  if (!/^\d+$/.test(raw)) {
+    const normalized = normalizeLegacyDateDisplay(value);
+    if (!normalized) return null;
+    const parsedDate = new Date(normalized);
+    return formatDateObjectDisplay(parsedDate) ?? normalized;
+  }
+  const seconds = Number(raw);
+  if (!Number.isFinite(seconds) || seconds <= 0) return 'N/A';
+  const date = new Date(seconds * 1000);
+  return formatDateObjectDisplay(date);
 }
 
 function isRewardUpdateTimestampKey(key: string): boolean {
-  return /^(lastSponsorUpdate|lastRecipientUpdate|lastAgentUpdate|lastSponsorUpdateTimeStamp|lastRecipientUpdateTimeStamp|lastAgentUpdateTimeStamp)$/i.test(
+  return /^(startedAt|completedAt|lastSponsorUpdate|lastRecipientUpdate|lastAgentUpdate|lastSponsorUpdateTimeStamp|lastRecipientUpdateTimeStamp|lastAgentUpdateTimeStamp|formatted[A-Za-z]*TimeStamp|formatted[A-Za-z]*Timestamp)$/i.test(
     String(key || '').trim(),
   );
 }
@@ -863,6 +906,7 @@ function isTokenAmountKey(key: string): boolean {
     'pendingSponsorRewards',
     'pendingRecipientRewards',
     'pendingAgentRewards',
+    'pendingTotalRewards',
     'totalRewards',
     'totalRewardsClaimed',
     'sponsorRewardsClaimed',
@@ -1331,10 +1375,6 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
       return;
     }
     if (isPendingRewardsIncludedMethodNode(data)) {
-      const record = data as Record<string, unknown>;
-      onTrace?.(
-        `[PENDING_REWARDS_TRACE] inspector pending method toggle path=${currentPath} label=${String(label || '')} collapsed=${String(isCollapsed)} keys=${Object.keys(record).join(',')} method=${String(record.method || label || '')} accountKey=${String(record.accountKey || '')} included=${String(record.__pendingRewardsIncludedMethod === true)} lazy=${String(record.__lazyPendingRewardsMethod === true)} hasCall=${String(record.call !== undefined)} hasResult=${String(record.result !== undefined)} hasMeta=${String(record.meta !== undefined)} expandedKey=${expandedPathKey}`,
-      );
       if (!isCollapsed) {
         updateCollapsedKeys([
           ...new Set([...collapsedKeys.filter((key) => key !== expandedPathKey), currentPath, forceExpandedDismissedKey]),
@@ -1415,11 +1455,18 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     : undefined;
   const refreshPendingRewardsMethod = useCallback(() => {
     const methodName = getPendingRewardsMethodName(label, data);
-    if (!methodName) return;
+    if (!methodName) {
+      onTrace?.(`[PENDING_REWARDS_TRACE] method label ignored reason=no-method path=${currentPath} label=${String(label || '')}`);
+      return;
+    }
     const accountKey = getPendingRewardsRefreshAccountKey(data);
+    if (!accountKey) {
+      onTrace?.(`[PENDING_REWARDS_TRACE] method label ignored reason=no-account path=${currentPath} method=${methodName}`);
+      return;
+    }
     const action = getPendingRewardsRefreshActionName(data);
     onTrace?.(
-      `[JSON_INSPECTOR_TRACE] pendingRewards method rerun path=${currentPath} method=${methodName} accountKey=${accountKey} action=${action}`,
+      `[PENDING_REWARDS_TRACE] method label dispatch path=${currentPath} method=${methodName} account=${accountKey} action=${action}`,
     );
     onLeafValueClick?.(
       JSON.stringify({
@@ -1479,6 +1526,8 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
       const resultCount = Array.isArray(record.result) ? record.result.length : 0;
       return `${baseLabel}[${resultCount}]`;
     }
+    if (isZeroPendingRewardsPlaceholderLabel(label, data)) return baseLabel;
+
     const inlineSummaryValue = record[label];
     if (
       label !== 'result' &&
@@ -1567,10 +1616,30 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     },
     [draggableScriptStepNumber, isDraggableScriptStep, scriptStepDragState],
   );
-  const handleScriptStepDoubleClick = useCallback(() => {
+  const handleScriptStepDoubleClick = useCallback((event?: React.MouseEvent<HTMLElement>) => {
+    const target = event?.target as HTMLElement | null;
+    if (target?.closest('button')) return;
     if (!isDraggableScriptStep || !scriptStepDragState?.onStepDoubleClick || draggableScriptStepNumber === null) return;
     scriptStepDragState.onStepDoubleClick(draggableScriptStepNumber, inlineStepMethod);
   }, [draggableScriptStepNumber, inlineStepMethod, isDraggableScriptStep, scriptStepDragState]);
+
+  const handleScriptStepLabelClick = useCallback(
+    (event: React.MouseEvent<HTMLButtonElement>) => {
+      event.stopPropagation();
+      if (!isDraggableScriptStep || !scriptStepDragState?.onStepDoubleClick || draggableScriptStepNumber === null) return;
+      scriptStepDragState.onStepDoubleClick(draggableScriptStepNumber, inlineStepMethod);
+    },
+    [draggableScriptStepNumber, inlineStepMethod, isDraggableScriptStep, scriptStepDragState],
+  );
+
+  const handleScriptStepMethodClick = useCallback(
+    (event: React.MouseEvent<HTMLButtonElement>) => {
+      event.stopPropagation();
+      if (!isDraggableScriptStep || !scriptStepDragState?.onStepMethodClick || draggableScriptStepNumber === null) return;
+      scriptStepDragState.onStepMethodClick(draggableScriptStepNumber, inlineStepMethod);
+    },
+    [draggableScriptStepNumber, inlineStepMethod, isDraggableScriptStep, scriptStepDragState],
+  );
 
   const renderValue = (value: any, key: string) => {
     const nextPath = getDisplayEntryPath(path ?? '', data, key, value);
@@ -1602,6 +1671,19 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
           : key;
     if (key === 'creationTime' || key === 'creationDate' || key === 'Date Created') {
       if (!showAll && hiddenRules.creationDates) return null;
+      const normalizedDate = normalizeLegacyDateDisplay(value);
+      if (normalizedDate) {
+        const valueHighlighted = highlightPathPrefixes.some(
+          (prefix) => nextPath === prefix || nextPath.startsWith(`${prefix}.`),
+        );
+        return (
+          <div key={nextPath} className="ml-4 whitespace-nowrap">
+            <span className={valueHighlighted ? highlightColorClass : 'text-[#5981F3]'}>{key}</span>: <span className={valueHighlighted ? highlightColorClass : 'text-green-400'}>"{normalizedDate}"</span>
+          </div>
+        );
+      }
+    }
+    if (isRewardUpdateTimestampKey(key) && value && typeof value === 'object') {
       const normalizedDate = normalizeLegacyDateDisplay(value);
       if (normalizedDate) {
         const valueHighlighted = highlightPathPrefixes.some(
@@ -1791,6 +1873,9 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
               }`}
               onClick={(event) => {
                 event.stopPropagation();
+                onTrace?.(
+                  `[PENDING_REWARDS_TRACE] method label click path=${path ?? ''} method=${rerunnablePendingRewardsMethod} hasSummary=${String(hasPendingRewardsMethodSummary)}`,
+                );
                 refreshPendingRewardsMethod();
               }}
               title={refreshPendingRewardsTitle}
@@ -1864,6 +1949,17 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
           >
             {visibleStepLabel}
           </button>
+        ) : isDraggableScriptStep && scriptStepDragState?.onStepDoubleClick && draggableScriptStepNumber !== null ? (
+          <button
+            type="button"
+            className={`inline-flex bg-transparent p-0 text-left font-semibold underline-offset-2 transition-colors hover:text-white focus:outline-none ${
+              scriptStepDragState?.draggedStepNumber === draggableScriptStepNumber ? 'opacity-70' : ''
+            } ${isHighlighted ? highlightColorClass : 'text-white'}`}
+            onClick={handleScriptStepLabelClick}
+            title={`Step ${draggableScriptStepNumber} actions`}
+          >
+            {visibleStepLabel}
+          </button>
         ) : (
           <span
             style={isDraggableScriptStep ? { cursor: 'grab' } : undefined}
@@ -1876,9 +1972,22 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
           </span>
         )}
         {visibleInlineStepMethod ? (
-          <span className={`ml-3 ${isHighlighted ? highlightColorClass : 'text-green-400'}`}>
-            {formatDisplayScalar('method', visibleInlineStepMethod, false, tokenDecimals)}
-          </span>
+          isDraggableScriptStep && scriptStepDragState?.onStepMethodClick && draggableScriptStepNumber !== null ? (
+            <button
+              type="button"
+              className={`ml-3 inline-flex bg-transparent p-0 text-left font-semibold transition-colors hover:text-white focus:outline-none ${
+                isHighlighted ? highlightColorClass : 'text-green-400'
+              }`}
+              onClick={handleScriptStepMethodClick}
+              title={`Rerun ${visibleInlineStepMethod}`}
+            >
+              {formatDisplayScalar('method', visibleInlineStepMethod, false, tokenDecimals)}
+            </button>
+          ) : (
+            <span className={`ml-3 ${isHighlighted ? highlightColorClass : 'text-green-400'}`}>
+              {formatDisplayScalar('method', visibleInlineStepMethod, false, tokenDecimals)}
+            </span>
+          )
         ) : null}
         <div className={`mt-[2px] h-[2px] rounded-full ${activeDropPlacement === 'after' ? 'bg-[#8FA8FF]' : 'bg-transparent'}`} />
       </div>

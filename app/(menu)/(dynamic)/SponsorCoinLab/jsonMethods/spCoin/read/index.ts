@@ -40,6 +40,7 @@ export type SpCoinReadMethod =
   | 'getAccountLinks'
   | 'getAccountRecord'
   | 'getAccountRecordShallow'
+  | 'getAccountRewardUpdateTimestamps'
   | 'getAccountRoleSummary'
   | 'getAccountRoles'
   | 'isSponsor'
@@ -139,6 +140,7 @@ export const SPCOIN_OFFCHAIN_READ_METHODS: SpCoinReadMethod[] = [
   'estimateOffChainRecipientRewards',
   'estimateOffChainAgentRewards',
   'getAccountRecordShallow',
+  'getAccountRewardUpdateTimestamps',
   'getRecipientTransaction',
   'getAgentTransaction',
   'getAgentRateTransactionCount',

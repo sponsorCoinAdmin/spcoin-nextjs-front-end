@@ -22,6 +22,7 @@ interface ScriptRunResult {
 }
 interface ScriptRunOptions {
   formattedOutputBase: string;
+  replaceOutputBlockIndex?: number;
   executionSignal?: AbortSignal;
   executionLabel?: string;
   scriptNetwork?: string;
@@ -50,6 +51,40 @@ function parseDisplayedOutputParameters(value: unknown): { label: string; value:
     label: label.trim(),
     value: toDisplayString(entryValue).trim(),
   }));
+}
+
+function resolveDisplayedOutputPanel(
+  call: DisplayedOutputCall,
+  methodDefs: {
+    spCoinReadMethodDefs: Record<string, unknown>;
+    spCoinWriteMethodDefs: Record<string, unknown>;
+    serializationTestMethodDefs: Record<string, unknown>;
+  },
+): LabScriptStep['panel'] | null {
+  if (ERC20_READ_OPTIONS.includes(call.method as Erc20ReadMethod)) return 'ecr20_read';
+  if (ERC20_WRITE_OPTIONS.includes(call.method as Erc20WriteMethod)) return 'erc20_write';
+  if (Object.prototype.hasOwnProperty.call(methodDefs.spCoinReadMethodDefs, call.method)) return 'spcoin_rread';
+  if (Object.prototype.hasOwnProperty.call(methodDefs.serializationTestMethodDefs, call.method)) return 'serialization_tests';
+  if (Object.prototype.hasOwnProperty.call(methodDefs.spCoinWriteMethodDefs, call.method)) return 'spcoin_write';
+  return null;
+}
+
+function buildDisplayedOutputSyntheticStep(
+  call: DisplayedOutputCall,
+  stepNumber: number,
+  panel: LabScriptStep['panel'],
+): LabScriptStep {
+  const syntheticStepSender = call.parameters.find((entry) => entry.label === 'msg.sender')?.value;
+  return {
+    step: stepNumber,
+    name: call.method,
+    panel,
+    method: call.method,
+    'msg.sender': syntheticStepSender ?? undefined,
+    params: call.parameters
+      .filter((entry) => entry.label !== 'msg.sender' && entry.label)
+      .map((entry) => ({ key: entry.label, value: entry.value })),
+  };
 }
 
 interface Params {
@@ -129,6 +164,19 @@ export function useControllerScriptExecution({
 
   const runScriptStepWithPopup = useCallback(
     async (step: LabScriptStep, options: { formattedOutputBase: string }) =>
+      callAccessMethod(step.name || step.method, ({ executionSignal, executionLabel }) =>
+        runScriptStep(step, {
+          ...options,
+          scriptNetwork: selectedScript?.network,
+          executionSignal,
+          executionLabel,
+        }),
+      ),
+    [callAccessMethod, runScriptStep, selectedScript?.network],
+  );
+
+  const runScriptStepWithPopupAtOutputBlock = useCallback(
+    async (step: LabScriptStep, options: { formattedOutputBase: string; replaceOutputBlockIndex: number }) =>
       callAccessMethod(step.name || step.method, ({ executionSignal, executionLabel }) =>
         runScriptStep(step, {
           ...options,
@@ -274,32 +322,16 @@ export function useControllerScriptExecution({
 
     try {
       for (const [index, call] of displayedOutputCalls.entries()) {
-        const panel: LabScriptStep['panel'] | null = ERC20_READ_OPTIONS.includes(call.method as Erc20ReadMethod)
-          ? 'ecr20_read'
-          : ERC20_WRITE_OPTIONS.includes(call.method as Erc20WriteMethod)
-            ? 'erc20_write'
-            : Object.prototype.hasOwnProperty.call(spCoinReadMethodDefs, call.method)
-              ? 'spcoin_rread'
-              : Object.prototype.hasOwnProperty.call(serializationTestMethodDefs, call.method)
-                ? 'serialization_tests'
-                : Object.prototype.hasOwnProperty.call(spCoinWriteMethodDefs, call.method)
-                  ? 'spcoin_write'
-                  : null;
+        const panel = resolveDisplayedOutputPanel(call, {
+          spCoinReadMethodDefs,
+          spCoinWriteMethodDefs,
+          serializationTestMethodDefs,
+        });
         if (!panel) {
           setStatus(`Unable to refresh Console Display output for ${call.method}.`);
           return;
         }
-        const syntheticStepSender = call.parameters.find((entry) => entry.label === 'msg.sender')?.value;
-        const syntheticStep: LabScriptStep = {
-          step: index + 1,
-          name: call.method,
-          panel,
-          method: call.method,
-          'msg.sender': syntheticStepSender ?? undefined,
-          params: call.parameters
-            .filter((entry) => entry.label !== 'msg.sender' && entry.label)
-            .map((entry) => ({ key: entry.label, value: entry.value })),
-        };
+        const syntheticStep = buildDisplayedOutputSyntheticStep(call, index + 1, panel);
         const result = await runScriptStepWithPopup(syntheticStep, { formattedOutputBase: accumulatedOutput });
         if (!result) return;
         setScriptStepExecutionErrors((prev) => ({
@@ -458,25 +490,95 @@ export function useControllerScriptExecution({
     });
   }, [runScriptDebugSequence, scriptDebugStopRef, setIsScriptDebugRunning]);
 
-  const runSelectedScriptStep = useCallback(async () => {
-    if (!selectedScript || selectedScript.steps.length === 0 || selectedScriptStepNumber === null) {
+  const runScriptStepByNumber = useCallback(async (stepNumber: number) => {
+    if (!selectedScript || selectedScript.steps.length === 0) {
       setStatus('Select a script step to run.');
       return;
     }
 
-    const selectedIndex = selectedScript.steps.findIndex((step) => step.step === selectedScriptStepNumber);
+    const selectedIndex = selectedScript.steps.findIndex((step) => step.step === stepNumber);
     if (selectedIndex < 0) {
-      setStatus('Unable to resolve the selected script step.');
+      setStatus(`Unable to resolve script step ${String(stepNumber)}.`);
       return;
     }
 
-    await runScriptDebugSequence({
-      startIndex: selectedIndex,
-      emptyScriptStatus: 'Select a script step to run.',
-      initialOutput: formattedOutputDisplay,
-      stopAfterCurrentStep: true,
+    const step = selectedScript.steps[selectedIndex];
+    if (!step) {
+      setStatus(`Unable to resolve script step ${String(stepNumber)}.`);
+      return;
+    }
+
+    const result = await runScriptStepWithPopupAtOutputBlock(step, {
+      formattedOutputBase: formattedOutputDisplay,
+      replaceOutputBlockIndex: selectedIndex,
     });
-  }, [formattedOutputDisplay, runScriptDebugSequence, selectedScript, selectedScriptStepNumber, setStatus]);
+    if (!result) return;
+    setScriptStepExecutionErrors((prev) => {
+      const nextHasError = !result.success;
+      if (prev[step.step] === nextHasError) return prev;
+      return {
+        ...prev,
+        [step.step]: nextHasError,
+      };
+    });
+    if (result.success) {
+      setStatus(`Completed step ${step.step}.`);
+    }
+  }, [formattedOutputDisplay, runScriptStepWithPopupAtOutputBlock, selectedScript, setScriptStepExecutionErrors, setStatus]);
+
+  const rerunDisplayedOutputStepByNumber = useCallback(async (stepNumber: number) => {
+    const outputIndex = stepNumber - 1;
+    const call = Number.isInteger(outputIndex) && outputIndex >= 0 ? displayedOutputCalls[outputIndex] : null;
+    if (!call) {
+      setStatus(`Unable to resolve Console Display step ${String(stepNumber)}.`);
+      return;
+    }
+
+    const panel = resolveDisplayedOutputPanel(call, {
+      spCoinReadMethodDefs,
+      spCoinWriteMethodDefs,
+      serializationTestMethodDefs,
+    });
+    if (!panel) {
+      setStatus(`Unable to refresh Console Display output for ${call.method}.`);
+      return;
+    }
+
+    const syntheticStep = buildDisplayedOutputSyntheticStep(call, stepNumber, panel);
+    const result = await runScriptStepWithPopupAtOutputBlock(syntheticStep, {
+      formattedOutputBase: formattedOutputDisplay,
+      replaceOutputBlockIndex: outputIndex,
+    });
+    if (!result) return;
+    setScriptStepExecutionErrors((prev) => {
+      const nextHasError = !result.success;
+      if (prev[syntheticStep.step] === nextHasError) return prev;
+      return {
+        ...prev,
+        [syntheticStep.step]: nextHasError,
+      };
+    });
+    if (result.success) {
+      setStatus(`Refreshed Console Display step ${String(stepNumber)}.`);
+    }
+  }, [
+    displayedOutputCalls,
+    formattedOutputDisplay,
+    runScriptStepWithPopupAtOutputBlock,
+    serializationTestMethodDefs,
+    setScriptStepExecutionErrors,
+    setStatus,
+    spCoinReadMethodDefs,
+    spCoinWriteMethodDefs,
+  ]);
+
+  const runSelectedScriptStep = useCallback(async () => {
+    if (selectedScriptStepNumber === null) {
+      setStatus('Select a script step to run.');
+      return;
+    }
+    await runScriptStepByNumber(selectedScriptStepNumber);
+  }, [runScriptStepByNumber, selectedScriptStepNumber, setStatus]);
 
   const runRemainingScriptSteps = useCallback(async () => {
     const selectedIndex = selectedScript?.steps.findIndex((step) => step.step === selectedScriptStepNumber) ?? -1;
@@ -492,6 +594,8 @@ export function useControllerScriptExecution({
     refreshActiveOutput,
     runScriptDebugSequence,
     restartScriptAtStart,
+    runScriptStepByNumber,
+    rerunDisplayedOutputStepByNumber,
     runSelectedScriptStep,
     runRemainingScriptSteps,
   };

@@ -13,6 +13,23 @@ export function mergeFormattedOutput(nextBlock: string, baseOutput?: string) {
   return `${current}\n\n${nextBlock}`;
 }
 
+export function replaceFormattedOutputBlock(nextBlock: string, baseOutput: string | undefined, blockIndex: number) {
+  const current = toDisplayString(baseOutput).trim();
+  if (!current || current === '(no output yet)' || !Number.isInteger(blockIndex) || blockIndex < 0) {
+    return mergeFormattedOutput(nextBlock, baseOutput);
+  }
+
+  const blocks = current
+    .split(/\n\s*\n/)
+    .map((block) => block.trim())
+    .filter(Boolean);
+
+  if (blockIndex >= blocks.length) return mergeFormattedOutput(nextBlock, baseOutput);
+
+  blocks[blockIndex] = nextBlock.trim();
+  return blocks.join('\n\n');
+}
+
 export function normalizeWriteResultForDisplay(result: unknown) {
   if (result === undefined || result === null) {
     return {

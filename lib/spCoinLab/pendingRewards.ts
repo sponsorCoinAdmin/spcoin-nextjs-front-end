@@ -119,9 +119,12 @@ export function normalizePendingRewardsDisplayResult(value: unknown): unknown {
   const lastRoleTimeStampKey = `last${role}TimeStamp`;
   const lastRoleUpdateKey = `last${role}Update`;
   const lastRoleTimeStamp = getRoleTimestamp(record, role);
-  const timeDifferenceMS = (
-    toPendingRewardsBigInt(calculatedTimeStamp) - toPendingRewardsBigInt(lastRoleTimeStamp)
-  ).toString();
+  const calculatedTimeStampValue = toPendingRewardsBigInt(calculatedTimeStamp);
+  const lastRoleTimeStampValue = toPendingRewardsBigInt(lastRoleTimeStamp);
+  const timeDifferenceMS =
+    lastRoleTimeStampValue > 0n && calculatedTimeStampValue > lastRoleTimeStampValue
+      ? (calculatedTimeStampValue - lastRoleTimeStampValue).toString()
+      : '0';
   const formattedDifference = formatDurationParts(toPendingRewardsBigInt(timeDifferenceMS) * 1000n);
   const calculatedFormatted =
     String(record.calculatedFormatted ?? record.calculatedAt ?? '').trim() ||

@@ -170,9 +170,15 @@ contract RewardsManager is StakingManager{
         sponsorRewards = claimSponsorRewardsAt( _sourceKey, updateTimeStamp);
         agentRewards = claimAgentRewardsAt( _sourceKey, updateTimeStamp);
         recipientRewards = claimRecipientRewardsAt( _sourceKey, updateTimeStamp);
-        updateAccountRewardTimestamp(SPONSOR, _sourceKey, updateTimeStamp);
-        updateAccountRewardTimestamp(RECIPIENT, _sourceKey, updateTimeStamp);
-        updateAccountRewardTimestamp(AGENT, _sourceKey, updateTimeStamp);
+        if (accountRec.recipientKeys.length > 0) {
+            updateAccountRewardTimestamp(SPONSOR, _sourceKey, updateTimeStamp);
+        }
+        if (accountRec.sponsorKeys.length > 0) {
+            updateAccountRewardTimestamp(RECIPIENT, _sourceKey, updateTimeStamp);
+        }
+        if (accountRec.parentRecipientKeys.length > 0) {
+            updateAccountRewardTimestamp(AGENT, _sourceKey, updateTimeStamp);
+        }
         lastSponsorUpdateTimeStamp = accountRec.lastSponsorUpdateTimeStamp;
         lastRecipientUpdateTimeStamp = accountRec.lastRecipientUpdateTimeStamp;
         lastAgentUpdateTimeStamp = accountRec.lastAgentUpdateTimeStamp;
@@ -201,7 +207,9 @@ contract RewardsManager is StakingManager{
         uint256 updateTimeStamp = block.timestamp;
 
         sponsorRewards = claimSponsorRewardsAt( _sourceKey, updateTimeStamp);
-        updateAccountRewardTimestamp(SPONSOR, _sourceKey, updateTimeStamp);
+        if (accountRec.recipientKeys.length > 0) {
+            updateAccountRewardTimestamp(SPONSOR, _sourceKey, updateTimeStamp);
+        }
         lastSponsorUpdateTimeStamp = accountRec.lastSponsorUpdateTimeStamp;
         // console.log("SOL=>1.0 totalRewards = ",totalRewards );
         // console.log("SOL 1.4 -------------------------------------------");
@@ -219,7 +227,9 @@ contract RewardsManager is StakingManager{
         uint256 updateTimeStamp = block.timestamp;
 
         agentRewards = claimAgentRewardsAt( _sourceKey, updateTimeStamp);
-        updateAccountRewardTimestamp(AGENT, _sourceKey, updateTimeStamp);
+        if (accountRec.parentRecipientKeys.length > 0) {
+            updateAccountRewardTimestamp(AGENT, _sourceKey, updateTimeStamp);
+        }
         lastAgentUpdateTimeStamp = accountRec.lastAgentUpdateTimeStamp;
         // console.log("SOL=>1.0 totalRewards = ",totalRewards );
         // console.log("SOL 1.4 -------------------------------------------");
@@ -237,7 +247,9 @@ contract RewardsManager is StakingManager{
         uint256 updateTimeStamp = block.timestamp;
 
         recipientRewards = claimRecipientRewardsAt( _sourceKey, updateTimeStamp);
-        updateAccountRewardTimestamp(RECIPIENT, _sourceKey, updateTimeStamp);
+        if (accountRec.sponsorKeys.length > 0) {
+            updateAccountRewardTimestamp(RECIPIENT, _sourceKey, updateTimeStamp);
+        }
         lastRecipientUpdateTimeStamp = accountRec.lastRecipientUpdateTimeStamp;
         // console.log("SOL=>1.0 totalRewards = ",totalRewards );
         // console.log("SOL 1.4 -------------------------------------------");

@@ -115,7 +115,7 @@ interface SponsorCoinLabControllerProps {
 }
 
 const TRACE_LOG_PATTERN =
-  /\[TRACE\]|\[EXPAND\]|\[ACCOUNT_EXPAND_TRACE\]|\[ACCOUNT_POPUP_TRACE\]|\[JSON_INSPECTOR_TRACE\]|\[PENDING_REWARDS_TRACE\]|\[SPCOIN_RPC_TRACE\]|Lazy-loaded|Inline account record|Inline pending rewards/i;
+  /\[TRACE\]|\[EXPAND\]|\[ACCOUNT_EXPAND_TRACE\]|\[ACCOUNT_POPUP_TRACE\]|\[JSON_INSPECTOR_TRACE\]|\[PENDING_REWARDS_TRACE\]|\[REWARD_CALC_TRACE\]|\[SPCOIN_RPC_TRACE\]|Lazy-loaded|Inline account record|Inline pending rewards/i;
 
 export default function SponsorCoinLabPage({
   initialContractDirectoryOptions = [],
@@ -1392,6 +1392,7 @@ export default function SponsorCoinLabPage({
   const {
     refreshActiveOutput,
     restartScriptAtStart,
+    rerunDisplayedOutputStepByNumber,
     runSelectedScriptStep,
     runRemainingScriptSteps,
   } = useControllerScriptExecution({
@@ -1736,6 +1737,7 @@ export default function SponsorCoinLabPage({
     openAccountFromAddress,
     deleteScriptStepByNumber,
     duplicateScriptStepByNumber,
+    rerunDisplayedOutputStepByNumber,
     createScriptFromSteps,
     existingScriptNames: allScripts.filter((script) => !script.isSystemScript).map((script) => script.name),
   });

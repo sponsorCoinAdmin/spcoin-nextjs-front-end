@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "createdAt": "2026-05-17 05:24:43 -04:00",
-  "sourceRoot": "C:\\Users\\robin\\spCoin\\SPCOIN-PROJECT-MODULES\\spcoin-nextjs-front-end\\spCoinAccess\\contracts\\spCoin",
+  "createdAt": "2026-05-17 05:22:02 -04:00",
+  "sourceRoot": "C:\\Users\\robin\\spCoin\\SPCOIN-PROJECT-MODULES\\spcoin-nextjs-front-end\\spCoinAccess\\contracts\\spCoin-2026-05-17",
   "entryFile": "SPCoin.sol",
   "contractName": "SPCoin",
   "solcVersion": "0.8.18",
@@ -9,13 +9,13 @@
   "optimizerRuns": 200,
   "viaIR": true,
   "sourceCount": 17,
-  "sourceFingerprint": "{\"sourceRoot\":\"C:\\\\Users\\\\robin\\\\spCoin\\\\SPCOIN-PROJECT-MODULES\\\\spcoin-nextjs-front-end\\\\spCoinAccess\\\\contracts\\\\spCoin\",\"files\":[{\"key\":\"SPCoin.sol\",\"size\":1418},{\"key\":\"Token.sol\",\"size\":2998},{\"key\":\"accounts/Account.sol\",\"size\":12308},{\"key\":\"accounts/Agent.sol\",\"size\":5450},{\"key\":\"accounts/AgentRates.sol\",\"size\":3266},{\"key\":\"accounts/Recipient.sol\",\"size\":4759},{\"key\":\"accounts/RecipientRates.sol\",\"size\":3951},{\"key\":\"accounts/Sponsor.sol\",\"size\":351},{\"key\":\"accounts/Transactions.sol\",\"size\":38338},{\"key\":\"accounts/UnSubscribe.sol\",\"size\":19295},{\"key\":\"dataTypes/KYC.sol\",\"size\":868},{\"key\":\"dataTypes/SpCoinDataTypes.sol\",\"size\":12161},{\"key\":\"rewardsManagement/RewardsManager.sol\",\"size\":25175},{\"key\":\"rewardsManagement/StakingManager.sol\",\"size\":9253},{\"key\":\"utils/Security.sol\",\"size\":8114},{\"key\":\"utils/TimeUtils.sol\",\"size\":1133},{\"key\":\"utils/Utils.sol\",\"size\":217}]}",
-  "creationBytes": 26510,
-  "deployedBytes": 24110,
+  "sourceFingerprint": "{\"sourceRoot\":\"C:\\\\Users\\\\robin\\\\spCoin\\\\SPCOIN-PROJECT-MODULES\\\\spcoin-nextjs-front-end\\\\spCoinAccess\\\\contracts\\\\spCoin-2026-05-17\",\"files\":[{\"key\":\"SPCoin.sol\",\"size\":1418},{\"key\":\"Token.sol\",\"size\":2998},{\"key\":\"accounts/Account.sol\",\"size\":12308},{\"key\":\"accounts/Agent.sol\",\"size\":5450},{\"key\":\"accounts/AgentRates.sol\",\"size\":3266},{\"key\":\"accounts/Recipient.sol\",\"size\":4759},{\"key\":\"accounts/RecipientRates.sol\",\"size\":3951},{\"key\":\"accounts/Sponsor.sol\",\"size\":351},{\"key\":\"accounts/Transactions.sol\",\"size\":38338},{\"key\":\"accounts/UnSubscribe.sol\",\"size\":19295},{\"key\":\"dataTypes/KYC.sol\",\"size\":868},{\"key\":\"dataTypes/SpCoinDataTypes.sol\",\"size\":12161},{\"key\":\"rewardsManagement/RewardsManager.sol\",\"size\":25603},{\"key\":\"rewardsManagement/StakingManager.sol\",\"size\":9253},{\"key\":\"utils/Security.sol\",\"size\":8114},{\"key\":\"utils/TimeUtils.sol\",\"size\":1133},{\"key\":\"utils/Utils.sol\",\"size\":217}]}",
+  "creationBytes": 26627,
+  "deployedBytes": 24227,
   "abiLength": 0,
   "eip170LimitBytes": 24576,
-  "deployedMarginBytes": 466,
-  "deployedMarginLabel": "+466 bytes vs EIP-170",
+  "deployedMarginBytes": 349,
+  "deployedMarginLabel": "+349 bytes vs EIP-170",
   "sourceFiles": [
     {
       "key": "SPCoin.sol",
@@ -79,8 +79,8 @@
     },
     {
       "key": "rewardsManagement/RewardsManager.sol",
-      "size": 25175,
-      "mtimeMs": 1779008909741.368
+      "size": 25603,
+      "mtimeMs": 1778782160295.516
     },
     {
       "key": "rewardsManagement/StakingManager.sol",

@@ -646,6 +646,9 @@ function normalizeOnChainAccountRecordResult(result: unknown, requestedAccountKe
     agentKeys: buildLazyAccountRelation(normalizedAccountKey, 'agentKeys', agentCount),
     agentRates: {},
     parentRecipientKeys: buildLazyAccountRelation(normalizedAccountKey, 'parentRecipientKeys', parentRecipientCount),
+    lastSponsorUpdateTimeStamp: String(lastSponsorUpdateTimeStamp ?? '0'),
+    lastRecipientUpdateTimeStamp: String(lastRecipientUpdateTimeStamp ?? '0'),
+    lastAgentUpdateTimeStamp: String(lastAgentUpdateTimeStamp ?? '0'),
   };
 }
 
@@ -843,11 +846,167 @@ type AccountRewardSnapshot = {
   lastAgentUpdateTimeStamp: string;
 };
 
+const STAKING_REWARD_YEAR_SECONDS = '31556925';
+const STAKING_REWARD_FORMULA = 'rewards = floor((timeDiffSeconds * totalStaked * rate) / 100 / yearSeconds)';
+const STAKING_REWARD_TIME_DIFF_FORMULA = 'timeDiffSeconds = max(0, settlementTimestamp - bucketLastUpdateTimeStamp)';
+const PARENT_REWARD_FORMULA = 'parentAmount = floor((childRewards * 10^18 / childRate) / (10^18 / 100))';
+const SPONSOR_DEPOSIT_FORMULA = 'sponsorDepositAmount = parentAmount - floor(parentAmount * annualInflation / 100)';
+
 type RewardUpdateWriteMethod =
   | 'claimOnChainTotalRewards'
   | 'claimOnChainSponsorRewards'
   | 'claimOnChainRecipientRewards'
   | 'claimOnChainAgentRewards';
+
+type RewardRole = 'Sponsor' | 'Recipient' | 'Agent' | 'Total';
+
+function getRewardRoleForMethod(methodName: string): RewardRole {
+  if (/SponsorRewards$/i.test(methodName)) return 'Sponsor';
+  if (/RecipientRewards$/i.test(methodName)) return 'Recipient';
+  if (/AgentRewards$/i.test(methodName)) return 'Agent';
+  return 'Total';
+}
+
+function getRoleSnapshotFields(snapshot: AccountRewardSnapshot | null | undefined, role: RewardRole) {
+  if (!snapshot) return {};
+  if (role === 'Sponsor') {
+    return {
+      accountRoleRewards: snapshot.sponsorRewards,
+      accountRoleUpdateTimeStamp: snapshot.lastSponsorUpdateTimeStamp,
+    };
+  }
+  if (role === 'Recipient') {
+    return {
+      accountRoleRewards: snapshot.recipientRewards,
+      accountRoleUpdateTimeStamp: snapshot.lastRecipientUpdateTimeStamp,
+    };
+  }
+  if (role === 'Agent') {
+    return {
+      accountRoleRewards: snapshot.agentRewards,
+      accountRoleUpdateTimeStamp: snapshot.lastAgentUpdateTimeStamp,
+    };
+  }
+  return {
+    accountRoleRewards: (
+      toBigIntAmount(snapshot.sponsorRewards) +
+      toBigIntAmount(snapshot.recipientRewards) +
+      toBigIntAmount(snapshot.agentRewards)
+    ).toString(),
+    accountRoleUpdateTimeStamp: {
+      lastSponsorUpdateTimeStamp: snapshot.lastSponsorUpdateTimeStamp,
+      lastRecipientUpdateTimeStamp: snapshot.lastRecipientUpdateTimeStamp,
+      lastAgentUpdateTimeStamp: snapshot.lastAgentUpdateTimeStamp,
+    },
+  };
+}
+
+function getRewardPathFormula(role: RewardRole) {
+  if (role === 'Sponsor') {
+    return [
+      'recipientSetRewards = stakingFormula(recipientRateTransactionSet.totalStaked, recipientRate)',
+      'sponsorParentAmount = parentAmount(recipientSetRewards, recipientRate)',
+      'sponsorRewards += sponsorDepositAmount(sponsorParentAmount, annualInflation)',
+      'for agent branches: agentSetRewards -> recipientParentAmount -> sponsorParentAmount -> sponsorDepositAmount',
+    ];
+  }
+  if (role === 'Recipient') {
+    return [
+      'recipientRewards += stakingFormula(recipientRateTransactionSet.totalStaked, recipientRate)',
+      'for agent branches: recipientRewards += parentAmount(agentSetRewards, agentRate)',
+    ];
+  }
+  if (role === 'Agent') {
+    return ['agentRewards += stakingFormula(agentRateTransactionSet.totalStaked, agentRate)'];
+  }
+  return [
+    'totalRewards = sponsorRewards + recipientRewards + agentRewards',
+    'each role uses its role-specific reward path formula',
+  ];
+}
+
+function buildRewardFormulaMeta(role: RewardRole = 'Total') {
+  return {
+    formula: STAKING_REWARD_FORMULA,
+    timeDiffFormula: STAKING_REWARD_TIME_DIFF_FORMULA,
+    parentRewardFormula: PARENT_REWARD_FORMULA,
+    sponsorDepositFormula: SPONSOR_DEPOSIT_FORMULA,
+    rewardPathFormula: getRewardPathFormula(role),
+    yearSeconds: STAKING_REWARD_YEAR_SECONDS,
+    rateUnit: 'percent',
+    solidityMethod: 'RewardsManager.calculateStakingRewards',
+    soliditySource:
+      'spCoinAccess/contracts/spCoin/rewardsManagement/RewardsManager.sol',
+  };
+}
+
+function getEstimateRewardCalculationMeta(methodName: string, normalizedResult: unknown) {
+  const record =
+    normalizedResult && typeof normalizedResult === 'object' && !Array.isArray(normalizedResult)
+      ? (normalizedResult as Record<string, unknown>)
+      : {};
+  const role = getRewardRoleForMethod(methodName);
+  const pendingRoleRewards =
+    role === 'Sponsor'
+      ? record.pendingSponsorRewards
+      : role === 'Recipient'
+        ? record.pendingRecipientRewards
+        : role === 'Agent'
+          ? record.pendingAgentRewards
+          : record.pendingTotalRewards ?? record.pendingRewards ?? record.totalRewards;
+  const roleTimestampKey = `last${role}TimeStamp`;
+  const roleUpdateKey = `last${role}Update`;
+  return {
+    source: 'offChainEstimate',
+    method: methodName,
+    role,
+    ...buildRewardFormulaMeta(role),
+    calculatedTimeStamp: String(record.calculatedTimeStamp ?? '0'),
+    bucketLastUpdateTimeStamp: String(record[roleTimestampKey] ?? '0'),
+    bucketLastUpdateFormatted: String(record[roleUpdateKey] ?? ''),
+    timeDifferenceMS: String(record.timeDifferenceMS ?? '0'),
+    pendingRoleRewards: String(pendingRoleRewards ?? '0'),
+    pendingTotalRewards: String(record.pendingTotalRewards ?? record.pendingRewards ?? record.totalRewards ?? '0'),
+    note:
+      'Estimate uses transaction/rate bucket timestamps. It does not update account last*UpdateTimeStamp on chain.',
+  };
+}
+
+function buildClaimRewardCalculationMeta(params: {
+  methodName: RewardUpdateWriteMethod;
+  accountKey: string;
+  balanceBefore: string;
+  balanceAfter: string;
+  claimedAmount: string;
+  settlementTimestamp: string | null;
+  beforeSnapshot: AccountRewardSnapshot | null;
+  afterSnapshot: AccountRewardSnapshot | null;
+}) {
+  const role = getRewardRoleForMethod(params.methodName);
+  return {
+    source: 'onChainClaim',
+    method: params.methodName,
+    accountKey: params.accountKey,
+    role,
+    ...buildRewardFormulaMeta(role),
+    exactClaimedAmountFormula: 'claimedAmount = balanceAfter - balanceBefore',
+    exactClaimedAmountSource: 'ERC20 balanceOf(account) before and after the claim transaction',
+    balanceBefore: params.balanceBefore,
+    balanceAfter: params.balanceAfter,
+    claimedAmount: params.claimedAmount,
+    settlementTimestamp: params.settlementTimestamp ?? '',
+    accountSnapshotBefore: {
+      ...getRoleSnapshotFields(params.beforeSnapshot, role),
+      ...(params.beforeSnapshot ? { accountStakingRewards: params.beforeSnapshot.accountStakingRewards } : {}),
+    },
+    accountSnapshotAfter: {
+      ...getRoleSnapshotFields(params.afterSnapshot, role),
+      ...(params.afterSnapshot ? { accountStakingRewards: params.afterSnapshot.accountStakingRewards } : {}),
+    },
+    note:
+      'Claim executes the Solidity settlement formula on chain. The returned claimed amount is audited here by balance delta.',
+  };
+}
 
 type PendingAccountRewardsReader = {
   estimateOffChainTotalRewards?: (
@@ -865,6 +1024,29 @@ function toBigIntAmount(value: unknown) {
   } catch {
     return 0n;
   }
+}
+
+function formatUnixSecondsTimestamp(value: unknown): string {
+  const raw = String(value ?? '').replace(/,/g, '').trim();
+  if (!raw || raw === '0' || !/^\d+$/.test(raw)) return 'N/A';
+  const seconds = Number(raw);
+  if (!Number.isFinite(seconds) || seconds <= 0) return 'N/A';
+  const date = new Date(seconds * 1000);
+  if (Number.isNaN(date.getTime())) return 'N/A';
+  const month = date.toLocaleString('en-US', { month: 'short' }).toUpperCase();
+  const day = String(date.getDate()).padStart(2, '0');
+  const year = date.getFullYear();
+  const hour24 = date.getHours();
+  const hour12 = hour24 % 12 || 12;
+  const minute = String(date.getMinutes()).padStart(2, '0');
+  const second = String(date.getSeconds()).padStart(2, '0');
+  const meridiem = hour24 < 12 ? 'a.m.' : 'p.m.';
+  const timeZone =
+    date
+      .toLocaleTimeString('en-US', { timeZoneName: 'short' })
+      .split(' ')
+      .pop() || '';
+  return `${month}-${day}-${year}, ${hour12}:${minute}:${second}.000 ${meridiem}${timeZone ? ` ${timeZone}` : ''}`;
 }
 
 function pendingRewardsToSnapshot(value: unknown): AccountRewardSnapshot {
@@ -893,6 +1075,14 @@ async function getReceiptBlockTimestamp(provider: JsonRpcProvider, receipt: { bl
   if (!Number.isFinite(blockNumber)) return null;
   const block = await provider.getBlock(blockNumber);
   return block?.timestamp == null ? null : String(block.timestamp);
+}
+
+async function getLatestBlockClock(provider: JsonRpcProvider) {
+  const block = await provider.getBlock('latest');
+  return {
+    blockNumber: block?.number == null ? null : String(block.number),
+    timeStamp: block?.timestamp == null ? null : String(block.timestamp),
+  };
 }
 
 async function readAccountRewardSnapshot(contract: Contract, accountKey: string): Promise<AccountRewardSnapshot> {
@@ -931,6 +1121,18 @@ async function readAccountBalanceOf(contract: Contract, accountKey: string): Pro
     throw new Error('balanceOf is not available on the current SpCoin contract access path.');
   }
   return toBigIntAmount(await readableContract.balanceOf(accountKey)).toString();
+}
+
+function readAccountRecordBalanceOf(record: unknown): string | null {
+  if (!record || typeof record !== 'object' || Array.isArray(record)) return null;
+  const accountRecord = record as Record<string, unknown>;
+  const totalSpCoins = accountRecord.totalSpCoins;
+  if (totalSpCoins && typeof totalSpCoins === 'object' && !Array.isArray(totalSpCoins)) {
+    const balanceOf = (totalSpCoins as Record<string, unknown>).balanceOf;
+    if (balanceOf !== undefined && balanceOf !== null) return toBigIntAmount(balanceOf).toString();
+  }
+  const balanceOf = accountRecord.balanceOf ?? accountRecord.accountBalance;
+  return balanceOf === undefined || balanceOf === null ? null : toBigIntAmount(balanceOf).toString();
 }
 
 function resolveStepMode(step: LabScriptStep, script: LabScript) {
@@ -997,6 +1199,7 @@ export async function POST(request: NextRequest) {
       const stepTrace: string[] = [...traceBase, `step=${String(step.step)}`, `panel=${String(step.panel || '')}`, `method=${String(step.method || '')}`];
       const timingCollector = createMethodTimingCollector();
       let resolvedSenderAddress = explicitSender;
+      let stepRewardCalculationMeta: Record<string, unknown> | null = null;
 
       try {
         if (stepMode !== 'hardhat') {
@@ -1024,6 +1227,13 @@ export async function POST(request: NextRequest) {
         appendTrace(`spCoinAccessSource=${source}`);
         appendTrace(`readCacheMode=${cacheMode}; readCacheNamespace=${readCacheOptions.cacheNamespace || ''}`);
         const access = createSpCoinModuleAccess(contract, signer, source, appendTrace);
+        const initialLatestBlockClock = await getLatestBlockClock(provider);
+        const initialWallClockTimestamp = String(Math.floor(Date.now() / 1000));
+        appendTrace(
+          `[REWARD_CALC_TRACE] server initial latestBlockNumber=${String(
+            initialLatestBlockClock.blockNumber || '',
+          )} latestBlockTimeStamp=${String(initialLatestBlockClock.timeStamp || '')} wallClockTimeStamp=${initialWallClockTimestamp}`,
+        );
         if (source === 'local') {
           const readWithRelationshipCache = access.read as Record<string, unknown>;
           readWithRelationshipCache.__relationshipReadCache = sharedRelationshipReadCache;
@@ -1184,6 +1394,51 @@ export async function POST(request: NextRequest) {
                 access.read as unknown as { getAccountRecordShallow: (accountKey: string, options?: unknown) => Promise<unknown> }
               ).getAccountRecordShallow(findParam('Account Key'), readCacheOptions);
               break;
+            case 'getAccountRewardUpdateTimestamps': {
+              const accountKey = requireAddressParam('Account Key', 'getAccountRewardUpdateTimestamps');
+              const readableContract = contract as unknown as { getAccountRecord?: (accountKey: string) => Promise<unknown> };
+              if (typeof readableContract.getAccountRecord !== 'function') {
+                throw new Error('getAccountRewardUpdateTimestamps requires getAccountRecord on the current SpCoin contract.');
+              }
+              appendTrace(`getAccountRewardUpdateTimestamps direct getAccountRecord start; accountKey=${accountKey}`);
+              const accountRecord = await readableContract.getAccountRecord(accountKey);
+              const values = Array.isArray(accountRecord) ? accountRecord : [];
+              const latestBlockTimestamp = initialLatestBlockClock.timeStamp || '0';
+              const latestBlockTimestampValue = toBigIntAmount(latestBlockTimestamp);
+              const sponsorTimestamp = toBigIntAmount(values[9]).toString();
+              const recipientTimestamp = toBigIntAmount(values[10]).toString();
+              const agentTimestamp = toBigIntAmount(values[11]).toString();
+              const elapsedSeconds = (timestamp: string) => {
+                const value = toBigIntAmount(timestamp);
+                return value > 0n && latestBlockTimestampValue >= value
+                  ? (latestBlockTimestampValue - value).toString()
+                  : '0';
+              };
+              appendTrace(
+                `[REWARD_CALC_TRACE] timestamp read account=${accountKey} latestBlockNumber=${String(
+                  initialLatestBlockClock.blockNumber || '',
+                )} latestBlockTimeStamp=${latestBlockTimestamp} sponsorTimeStamp=${sponsorTimestamp} recipientTimeStamp=${recipientTimestamp} agentTimeStamp=${agentTimestamp}`,
+              );
+              stepResult = {
+                TYPE: '--ACCOUNT_REWARD_UPDATE_TIMESTAMPS--',
+                accountKey: normalizeAddressDisplay(accountKey),
+                latestBlockNumber: initialLatestBlockClock.blockNumber || '',
+                latestBlockTimeStamp: latestBlockTimestamp,
+                formattedLatestBlockTimeStamp: formatUnixSecondsTimestamp(latestBlockTimestamp),
+                wallClockTimeStamp: initialWallClockTimestamp,
+                formattedWallClockTimeStamp: formatUnixSecondsTimestamp(initialWallClockTimestamp),
+                lastSponsorUpdateTimeStamp: sponsorTimestamp,
+                formattedLastSponsorUpdateTimeStamp: formatUnixSecondsTimestamp(sponsorTimestamp),
+                lastRecipientUpdateTimeStamp: recipientTimestamp,
+                formattedLastRecipientUpdateTimeStamp: formatUnixSecondsTimestamp(recipientTimestamp),
+                lastAgentUpdateTimeStamp: agentTimestamp,
+                formattedLastAgentUpdateTimeStamp: formatUnixSecondsTimestamp(agentTimestamp),
+                secondsSinceSponsorUpdate: elapsedSeconds(sponsorTimestamp),
+                secondsSinceRecipientUpdate: elapsedSeconds(recipientTimestamp),
+                secondsSinceAgentUpdate: elapsedSeconds(agentTimestamp),
+              };
+              break;
+            }
             case 'getAccountStakingRewards': {
               const accountKey = requireAddressParam('Account Key', 'getAccountStakingRewards');
               const readHost = access.read as Record<string, unknown>;
@@ -1226,11 +1481,29 @@ export async function POST(request: NextRequest) {
                 throw new Error(`${String(step.method)} is not available on the current SpCoin access path.`);
               }
               appendTrace(`${String(step.method)} using access.read.${String(step.method)}; accountKey=${accountKey}`);
+              const wallClockTimestamp = String(Math.floor(Date.now() / 1000));
+              const latestBlockTimestamp = initialLatestBlockClock.timeStamp;
+              const pendingRewardsOptions = { ...readCacheOptions, timestampOverride: wallClockTimestamp };
+              appendTrace(
+                `[REWARD_CALC_TRACE] estimate clock method=${String(
+                  step.method,
+                )} account=${accountKey} source=serverWallClock wallClockTimestamp=${wallClockTimestamp} latestBlockTimestamp=${String(
+                  latestBlockTimestamp || '',
+                )}`,
+              );
               stepResult = normalizePendingRewardsResult(
                 await (pendingRewardsMethod as (accountKey: string, options?: unknown) => Promise<unknown>)(
                   accountKey,
-                  readCacheOptions,
+                  pendingRewardsOptions,
                 ),
+              );
+              stepRewardCalculationMeta = getEstimateRewardCalculationMeta(String(step.method), stepResult);
+              appendTrace(
+                `[REWARD_CALC_TRACE] estimate method=${String(step.method)} account=${accountKey} formula="${STAKING_REWARD_FORMULA}" yearSeconds=${STAKING_REWARD_YEAR_SECONDS} calculatedTimeStamp=${String(
+                  stepRewardCalculationMeta.calculatedTimeStamp || '',
+                )} bucketLastUpdateTimeStamp=${String(
+                  stepRewardCalculationMeta.bucketLastUpdateTimeStamp || '',
+                )} pendingTotalRewards=${String(stepRewardCalculationMeta.pendingTotalRewards || '')}`,
               );
               break;
             }
@@ -1779,6 +2052,10 @@ export async function POST(request: NextRequest) {
                 includeOfflineComparison && typeof pendingRewardsReader.estimateOffChainTotalRewards === 'function'
                   ? await pendingRewardsReader.estimateOffChainTotalRewards(accountKey)
                   : null;
+              const rewardSnapshotBefore = await readAccountRewardSnapshot(contract, accountKey);
+              appendTrace(
+                `[REWARD_CALC_TRACE] claim before method=${methodName} account=${accountKey} sponsorTs=${rewardSnapshotBefore.lastSponsorUpdateTimeStamp} recipientTs=${rewardSnapshotBefore.lastRecipientUpdateTimeStamp} agentTs=${rewardSnapshotBefore.lastAgentUpdateTimeStamp}`,
+              );
               const balanceBefore = await readAccountBalanceOf(contract, accountKey);
               const tx = await sendSignedContractTransaction({
                 label: methodName,
@@ -1791,14 +2068,54 @@ export async function POST(request: NextRequest) {
               });
               const receipt = (await tx.wait()) as { hash?: string; blockNumber?: bigint | number | null; status?: number | bigint | null };
               const settlementTimestamp = await getReceiptBlockTimestamp(provider, receipt);
+              appendTrace(
+                `[REWARD_CALC_TRACE] claim receipt method=${methodName} account=${accountKey} settlementTimestamp=${String(settlementTimestamp || '')} formula="${STAKING_REWARD_FORMULA}" yearSeconds=${STAKING_REWARD_YEAR_SECONDS}`,
+              );
               const settlementOfflinePreview =
                 includeOfflineComparison && settlementTimestamp && typeof pendingRewardsReader.estimateOffChainTotalRewards === 'function'
                   ? await pendingRewardsReader.estimateOffChainTotalRewards(accountKey, settlementTimestamp)
                   : null;
               invalidateCachedAccountRecord(contractAddress, accountKey);
-              const balanceAfter = await readAccountBalanceOf(contract, accountKey);
+              const refreshedAccountRecord =
+                typeof (access.read as Record<string, unknown>).getAccountRecord === 'function'
+                  ? withLazyAccountRelationBuckets(
+                      await access.read.getAccountRecord(accountKey, {
+                        ...readCacheOptions,
+                        cache: 'refresh',
+                      }),
+                      accountKey,
+                    )
+                  : typeof (contract as Record<string, unknown>).getAccountRecord === 'function'
+                    ? withLazyAccountRelationBuckets(
+                        normalizeOnChainAccountRecordResult(
+                          await (
+                            contract as unknown as { getAccountRecord: (accountKey: string) => Promise<unknown> }
+                          ).getAccountRecord(accountKey),
+                          accountKey,
+                        ),
+                        accountKey,
+                      )
+                    : null;
+              if (refreshedAccountRecord) {
+                setCachedAccountRecord(contractAddress, accountKey, refreshedAccountRecord);
+              }
+              const rewardSnapshotAfter = await readAccountRewardSnapshot(contract, accountKey);
+              const balanceAfter = readAccountRecordBalanceOf(refreshedAccountRecord) ?? await readAccountBalanceOf(contract, accountKey);
               const claimedAmount = (toBigIntAmount(balanceAfter) - toBigIntAmount(balanceBefore)).toString();
               const settlementOfflineDelta = pendingRewardsToSnapshot(settlementOfflinePreview);
+              stepRewardCalculationMeta = buildClaimRewardCalculationMeta({
+                methodName,
+                accountKey,
+                balanceBefore,
+                balanceAfter,
+                claimedAmount,
+                settlementTimestamp,
+                beforeSnapshot: rewardSnapshotBefore,
+                afterSnapshot: rewardSnapshotAfter,
+              });
+              appendTrace(
+                `[REWARD_CALC_TRACE] claim after method=${methodName} account=${accountKey} sponsorTs=${rewardSnapshotAfter.lastSponsorUpdateTimeStamp} recipientTs=${rewardSnapshotAfter.lastRecipientUpdateTimeStamp} agentTs=${rewardSnapshotAfter.lastAgentUpdateTimeStamp} balanceBefore=${balanceBefore} balanceAfter=${balanceAfter} claimedAmount=${claimedAmount}`,
+              );
               stepResult = [
                 ...formatReceiptResult(methodName, tx, receipt, timingCollector),
                 {
@@ -1807,6 +2124,8 @@ export async function POST(request: NextRequest) {
                   balanceBefore,
                   balanceAfter,
                   claimedAmount,
+                  rewardCalculation: stepRewardCalculationMeta,
+                  ...(refreshedAccountRecord ? { refreshedAccountRecord } : {}),
                   ...(includeOfflineComparison
                     ? {
                         offlineComparison: {
@@ -1852,7 +2171,10 @@ export async function POST(request: NextRequest) {
               }
             : undefined;
 
-        const meta = buildMethodTimingMeta(timingCollector);
+        const meta = {
+          ...buildMethodTimingMeta(timingCollector),
+          ...(stepRewardCalculationMeta ? { rewardCalculation: stepRewardCalculationMeta } : {}),
+        };
         const sanitizedResult = sanitizeJsonValue(result);
         const payload = isMasterAccountMetaDataStep(step)
           ? buildMasterAccountMetaDataPayload(call, sanitizedResult, warning, meta)

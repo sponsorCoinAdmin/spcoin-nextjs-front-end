@@ -208,13 +208,15 @@ function formatOutputValue(value: unknown, keyPath: string[] = []): unknown {
     if (scriptCreatedDate) return scriptCreatedDate;
     const normalized = trimmed.replace(/_/g, ' ');
     const normalizedDisplayMatch = normalized.match(
-      /^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-(\d{1,2})-(\d{4}),\s*(\d{1,2}):(\d{2})\s+(a\.m\.|p\.m\.)(?:\s+([A-Z]{2,5}))?$/i,
+      /^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-(\d{1,2})-(\d{4}),\s*(\d{1,2}):(\d{2})(?::(\d{2})(?:\.(\d{1,3}))?)?\s+(a\.m\.|p\.m\.)(?:\s+([A-Z]{2,5}))?$/i,
     );
     if (normalizedDisplayMatch) {
-      const [, monthText, dayText, yearText, hourText, minuteText, meridiem, timeZone] = normalizedDisplayMatch;
+      const [, monthText, dayText, yearText, hourText, minuteText, secondText, millisecondText, meridiem, timeZone] =
+        normalizedDisplayMatch;
       const normalizedDay = String(Number(dayText)).padStart(2, '0');
       const normalizedMeridiem = meridiem.toLowerCase() === 'a.m.' ? 'a.m.' : 'p.m.';
-      return `${monthText.toUpperCase()}-${normalizedDay}-${yearText}, ${Number(hourText)}:${minuteText} ${normalizedMeridiem}${
+      const secondsPart = secondText ? `:${secondText}.${(millisecondText || '000').padEnd(3, '0')}` : '';
+      return `${monthText.toUpperCase()}-${normalizedDay}-${yearText}, ${Number(hourText)}:${minuteText}${secondsPart} ${normalizedMeridiem}${
         timeZone ? ` ${timeZone.toUpperCase()}` : ''
       }`;
     }
@@ -257,6 +259,8 @@ function formatOutputValue(value: unknown, keyPath: string[] = []): unknown {
     if (typeof secondValue !== 'string') return null;
     return normalizeDisplayDateString(`${outerKey}:${minuteKey}:${secondValue}`);
   };
+  const isFormattedTimestampKey = (key: string) =>
+    /^formatted[A-Za-z]*TimeStamp$/.test(key) || /^formatted[A-Za-z]*Timestamp$/.test(key);
 
   const parseSerializedMapString = (input: string): Record<string, unknown> | null => {
     const trimmed = input.trim();
@@ -329,7 +333,8 @@ function formatOutputValue(value: unknown, keyPath: string[] = []): unknown {
   }
   if (value && typeof value === 'object') {
     const normalizedLegacyDate = normalizeLegacyDateObject(value);
-    if (normalizedLegacyDate && DATE_TIME_KEYS.includes(keyPath[keyPath.length - 1] || '')) {
+    const currentKey = keyPath[keyPath.length - 1] || '';
+    if (normalizedLegacyDate && (DATE_TIME_KEYS.includes(currentKey) || isFormattedTimestampKey(currentKey))) {
       return normalizedLegacyDate;
     }
     return Object.fromEntries(
@@ -338,13 +343,15 @@ function formatOutputValue(value: unknown, keyPath: string[] = []): unknown {
   }
   if (typeof value === 'string') {
     const trimmed = value.trim();
+    const currentKey = keyPath[keyPath.length - 1] || '';
     if (!trimmed || isAddressLike(trimmed) || isHashLike(trimmed)) return value;
     if (keyPath.includes('meta')) return value;
+    if (isFormattedTimestampKey(currentKey)) return normalizeDisplayDateString(trimmed) ?? value;
     if (keyPath.includes('formatted')) return value;
-    if (DURATION_KEYS.includes(keyPath[keyPath.length - 1] || '') && /^\d{2}:\d{2}:\d{2}$/.test(trimmed)) {
+    if (DURATION_KEYS.includes(currentKey) && /^\d{2}:\d{2}:\d{2}$/.test(trimmed)) {
       return trimmed;
     }
-    if (DATE_TIME_KEYS.includes(keyPath[keyPath.length - 1] || '')) {
+    if (DATE_TIME_KEYS.includes(currentKey)) {
       return normalizeDisplayDateString(trimmed) ?? value;
     }
     const normalizedDateString = normalizeDisplayDateString(trimmed);

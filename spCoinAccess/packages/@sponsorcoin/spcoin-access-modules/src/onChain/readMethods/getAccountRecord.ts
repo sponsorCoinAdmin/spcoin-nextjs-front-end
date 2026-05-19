@@ -22,7 +22,7 @@ const ACCOUNT_RECORD_FIELDS = [
   'lastAgentUpdateTimeStamp',
 ];
 
-async function callGetAccountRecord(contract, accountKey) {
+export async function callGetAccountRecord(contract, accountKey) {
   const target = String(contract?.target || (typeof contract?.getAddress === 'function' ? await contract.getAddress() : ''));
   const runner = contract?.runner;
   if (!target || !runner || typeof runner.call !== 'function') {

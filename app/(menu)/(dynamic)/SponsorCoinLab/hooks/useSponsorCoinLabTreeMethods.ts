@@ -21,7 +21,15 @@ import {
   parseLazyAccountRelationClick,
   useLazyAccountRelationExpansion,
 } from './useLazyAccountRelationExpansion';
-import { normalizePendingRewardsDisplayResult } from '@/lib/spCoinLab/pendingRewards';
+import {
+  getSpCoinLabAccountRecord,
+  invalidateSpCoinLabAccountRecord,
+  setSpCoinLabAccountRecord,
+} from '@/lib/spCoinLab/accountRecordStore';
+import {
+  calculateFormattedDT,
+  normalizePendingRewardsDisplayResult,
+} from '@/lib/spCoinLab/pendingRewards';
 
 type OutputPanelMode = 'execution' | 'formatted' | 'tree' | 'raw_status' | 'debug';
 
@@ -89,7 +97,25 @@ const PENDING_REWARDS_CLAIM_METHODS = new Set([
   'claimOnChainAgentRewards',
 ]);
 
+const PENDING_REWARDS_METHOD_KEYS = [
+  'estimateOffChainTotalRewards',
+  'claimOnChainTotalRewards',
+  'estimateOffChainSponsorRewards',
+  'claimOnChainSponsorRewards',
+  'estimateOffChainRecipientRewards',
+  'claimOnChainRecipientRewards',
+  'estimateOffChainAgentRewards',
+  'claimOnChainAgentRewards',
+] as const;
+
 const PENDING_REWARDS_INLINE_REFRESH_MS = 10_000;
+
+const PENDING_REWARDS_CLAIM_TO_ESTIMATE_METHOD: Record<string, PendingRewardsActionClick['method']> = {
+  claimOnChainTotalRewards: 'estimateOffChainTotalRewards',
+  claimOnChainSponsorRewards: 'estimateOffChainSponsorRewards',
+  claimOnChainRecipientRewards: 'estimateOffChainRecipientRewards',
+  claimOnChainAgentRewards: 'estimateOffChainAgentRewards',
+};
 
 function parsePendingRewardsActionClick(
   value: string,
@@ -169,9 +195,25 @@ function readPendingRewardsAmount(value: unknown) {
   const normalized = normalizePendingRewardsDisplayResult(value);
   if (!normalized || typeof normalized !== 'object' || Array.isArray(normalized)) return null;
   const record = normalized as Record<string, unknown>;
-  const amount = record.pendingRewards ?? record.pendingTotalRewards ?? record.totalRewards;
+  const amount =
+    record.pendingRewards ??
+    record.pendingTotalRewards ??
+    record.totalRewards ??
+    record.totalRewardsClaimed ??
+    record.claimedAmount;
   if (amount === undefined || amount === null) return null;
   return String(amount);
+}
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function isLoadedPendingRewardsMethodNode(value: unknown) {
+  const record = asRecord(value);
+  return Boolean(record && (record.call || record.meta || record.result || record.onChainCalls));
 }
 
 function buildLazyPendingRewardsMethod(accountKey: string, method: string) {
@@ -184,6 +226,95 @@ function buildLazyPendingRewardsMethod(accountKey: string, method: string) {
 
 function normalizePendingRewardsEstimateResult(value: unknown) {
   return normalizePendingRewardsDisplayResult(value);
+}
+
+function readPendingRewardsMethodAmount(pendingRewardsBranch: unknown, method: string) {
+  const normalized = normalizePendingRewardsDisplayResult(pendingRewardsBranch);
+  const record = asRecord(normalized) ?? asRecord(pendingRewardsBranch);
+  if (!record) return null;
+
+  const keys =
+    method === 'estimateOffChainRecipientRewards'
+      ? ['pendingRecipientRewards', 'recipientRewards', 'pendingRewards']
+      : method === 'estimateOffChainAgentRewards'
+        ? ['pendingAgentRewards', 'agentRewards', 'pendingRewards']
+        : method === 'estimateOffChainSponsorRewards'
+          ? ['pendingSponsorRewards', 'sponsorRewards', 'pendingRewards']
+          : ['pendingTotalRewards', 'totalRewards', 'pendingRewards'];
+
+  for (const key of keys) {
+    const value = record[key];
+    if (value !== undefined && value !== null) return String(value);
+  }
+  return readPendingRewardsAmount(record);
+}
+
+function mergeMethodResultAmount(methodNode: unknown, amount: string | null, method: string) {
+  if (amount === null || !isLoadedPendingRewardsMethodNode(methodNode)) return methodNode;
+  const record = asRecord(methodNode);
+  const result = asRecord(record?.result);
+  if (!record || !result) return methodNode;
+
+  const nextResult = { ...result };
+  const commonKeys = ['pendingRewards', 'pendingTotalRewards', 'totalRewards'];
+  for (const key of commonKeys) {
+    if (key in nextResult) nextResult[key] = amount;
+  }
+  if (method === 'estimateOffChainSponsorRewards' && 'pendingSponsorRewards' in nextResult) {
+    nextResult.pendingSponsorRewards = amount;
+  }
+  if (method === 'estimateOffChainRecipientRewards' && 'pendingRecipientRewards' in nextResult) {
+    nextResult.pendingRecipientRewards = amount;
+  }
+  if (method === 'estimateOffChainAgentRewards' && 'pendingAgentRewards' in nextResult) {
+    nextResult.pendingAgentRewards = amount;
+  }
+
+  return {
+    ...record,
+    result: nextResult,
+  };
+}
+
+function mergePendingRewardsBranchForAccountRefresh(
+  existingNode: unknown,
+  refreshedNode: unknown,
+  normalizedAccount: string,
+  loadedMethod: string,
+  loadedMethodNode: unknown,
+  action: PendingRewardsActionClick['action'],
+  refreshAtMs: number,
+) {
+  const existing = asRecord(existingNode) ?? {};
+  const refreshed = asRecord(refreshedNode) ?? {};
+  const next: Record<string, unknown> = {
+    ...refreshed,
+    TYPE: refreshed.TYPE ?? existing.TYPE ?? '--PENDING_REWARDS--',
+  };
+
+  for (const method of PENDING_REWARDS_METHOD_KEYS) {
+    const methodName = String(method);
+    const candidate =
+      loadedMethod === methodName
+        ? loadedMethodNode
+        : isLoadedPendingRewardsMethodNode(existing[method])
+          ? existing[method]
+          : refreshed[method] ?? existing[method] ?? buildLazyPendingRewardsMethod(normalizedAccount, methodName);
+
+    next[method] = PENDING_REWARDS_ESTIMATE_METHODS.has(methodName)
+      ? mergeMethodResultAmount(
+          candidate,
+          readPendingRewardsMethodAmount(refreshed, methodName) ?? readPendingRewardsMethodAmount(existing, methodName),
+          methodName,
+        )
+      : candidate;
+  }
+
+  next.pendingRewards = String(refreshed.pendingRewards ?? existing.pendingRewards ?? '0');
+  next.__pendingRewardsRefreshAction = true;
+  next.__pendingRewardsRefreshAtMs = refreshAtMs;
+  next.__pendingRewardsRefreshActionName = action;
+  return next;
 }
 
 function mergePendingRewardsSummaryNode(
@@ -241,6 +372,71 @@ function toRewardsBigInt(value: unknown) {
   } catch {
     return 0n;
   }
+}
+
+function readAccountRecordBalanceOf(value: unknown): string | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const record = value as Record<string, unknown>;
+  const totalSpCoins = record.totalSpCoins;
+  if (totalSpCoins && typeof totalSpCoins === 'object' && !Array.isArray(totalSpCoins)) {
+    const balance = (totalSpCoins as Record<string, unknown>).balanceOf;
+    if (balance !== undefined && balance !== null) return String(balance);
+  }
+  const balance = record.balanceOf ?? record.accountBalance;
+  return balance === undefined || balance === null ? null : String(balance);
+}
+
+function readAccountRecordTimestamp(value: unknown, timestampKey: string, pendingRewardsKey: string): string | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const record = value as Record<string, unknown>;
+  const direct = record[timestampKey];
+  if (direct !== undefined && direct !== null) return String(direct);
+  const totalSpCoins = record.totalSpCoins;
+  const pendingRewards =
+    totalSpCoins && typeof totalSpCoins === 'object' && !Array.isArray(totalSpCoins)
+      ? (totalSpCoins as Record<string, unknown>).pendingRewards
+      : null;
+  if (pendingRewards && typeof pendingRewards === 'object' && !Array.isArray(pendingRewards)) {
+    const nested = (pendingRewards as Record<string, unknown>)[pendingRewardsKey];
+    if (nested !== undefined && nested !== null) return String(nested);
+  }
+  return null;
+}
+
+function buildAccountRecordMetaPatch(value: unknown): Record<string, unknown> {
+  const lastSponsorUpdateTimeStamp = readAccountRecordTimestamp(value, 'lastSponsorUpdateTimeStamp', 'lastSponsorUpdate');
+  const lastRecipientUpdateTimeStamp = readAccountRecordTimestamp(value, 'lastRecipientUpdateTimeStamp', 'lastRecipientUpdate');
+  const lastAgentUpdateTimeStamp = readAccountRecordTimestamp(value, 'lastAgentUpdateTimeStamp', 'lastAgentUpdate');
+  return {
+    ...(lastSponsorUpdateTimeStamp ? { lastSponsorUpdateTimeStamp: calculateFormattedDT(lastSponsorUpdateTimeStamp) } : {}),
+    ...(lastRecipientUpdateTimeStamp ? { lastRecipientUpdateTimeStamp: calculateFormattedDT(lastRecipientUpdateTimeStamp) } : {}),
+    ...(lastAgentUpdateTimeStamp ? { lastAgentUpdateTimeStamp: calculateFormattedDT(lastAgentUpdateTimeStamp) } : {}),
+  };
+}
+
+function readRefreshedAccountRecordFromClaim(value: unknown): unknown | null {
+  const visit = (entry: unknown): unknown | null => {
+    if (!entry || typeof entry !== 'object') return null;
+    if (Array.isArray(entry)) {
+      for (const item of entry) {
+        const found = visit(item);
+        if (found) return found;
+      }
+      return null;
+    }
+    const record = entry as Record<string, unknown>;
+    if (record.refreshedAccountRecord) return record.refreshedAccountRecord;
+    if (record.result) {
+      const found = visit(record.result);
+      if (found) return found;
+    }
+    if (record.receipts) {
+      const found = visit(record.receipts);
+      if (found) return found;
+    }
+    return null;
+  };
+  return visit(value);
 }
 
 function getClaimBalanceRecord(value: unknown): Record<string, unknown> | null {
@@ -436,11 +632,13 @@ export function useSponsorCoinLabTreeMethods({
       method,
       params,
       sender,
+      useCacheOverride,
     }: {
       panel: 'spcoin_rread' | 'spcoin_write';
       method: string;
       params: { key: string; value: string }[];
       sender?: string;
+      useCacheOverride?: boolean;
     }) => {
       const target = requireContractAddress();
       appendWriteTrace?.(
@@ -453,7 +651,11 @@ export function useSponsorCoinLabTreeMethods({
           contractAddress: target,
           rpcUrl,
           spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
-          ...(useReadCache === undefined ? {} : { useCache: useReadCache }),
+          ...(useCacheOverride === undefined
+            ? useReadCache === undefined
+              ? {}
+              : { useCache: useReadCache }
+            : { useCache: useCacheOverride }),
           cacheNamespace: readCacheNamespace,
           script: {
             id: `tree-${method}-${Date.now()}`,
@@ -787,7 +989,9 @@ export function useSponsorCoinLabTreeMethods({
   const loadAccountRecordForAddress = useCallback(
     async (account: string, options?: { force?: boolean; signal?: AbortSignal }) => {
       const normalizedAccount = normalizeAddressValue(account);
-      let tree = options?.force ? undefined : treeAccountRecordCacheRef.current.get(normalizedAccount);
+      let tree = options?.force
+        ? undefined
+        : treeAccountRecordCacheRef.current.get(normalizedAccount) ?? getSpCoinLabAccountRecord(normalizedAccount);
       if (!tree) {
         const target = requireContractAddress();
         const response = await fetch('/api/spCoin/run-script', {
@@ -799,6 +1003,7 @@ export function useSponsorCoinLabTreeMethods({
             rpcUrl,
             spCoinAccessSource: 'local',
             cacheNamespace: readCacheNamespace,
+            ...(options?.force ? { cacheMode: 'bypass' } : {}),
             script: {
               id: `expand-account-record-${Date.now()}`,
               name: 'Expand Account Record',
@@ -860,6 +1065,7 @@ export function useSponsorCoinLabTreeMethods({
           applyLazyAccountRelationBuckets(treeRecord, normalizedAccount);
         }
         treeAccountRecordCacheRef.current.set(normalizedAccount, tree);
+        setSpCoinLabAccountRecord(normalizedAccount, tree);
       }
       return tree;
     },
@@ -902,8 +1108,10 @@ export function useSponsorCoinLabTreeMethods({
       let tree = treeAccountRecordCacheRef.current.get(activeAccount);
       if (!tree || options?.force) {
         tree = executionTimingCollector
-          ? await runWithMethodTimingCollector(executionTimingCollector, async () => loadAccountRecordForAddress(activeAccount))
-          : await loadAccountRecordForAddress(activeAccount);
+          ? await runWithMethodTimingCollector(executionTimingCollector, async () =>
+              loadAccountRecordForAddress(activeAccount, { force: options?.force }),
+            )
+          : await loadAccountRecordForAddress(activeAccount, { force: options?.force });
         treeAccountRecordCacheRef.current.set(activeAccount, tree);
       }
       setTrackedTreeOutputDisplay(
@@ -950,6 +1158,7 @@ export function useSponsorCoinLabTreeMethods({
 
     treeAccountListCacheRef.current = null;
     treeAccountRecordCacheRef.current.delete(activeAccount);
+    invalidateSpCoinLabAccountRecord(activeAccount);
     setTreeAccountRefreshToken((prev) => prev + 1);
     await runTreeDump(activeAccount, { force: true });
   }, [appendLog, runTreeDump, selectedTreeAccount, setStatus]);
@@ -1513,25 +1722,8 @@ export function useSponsorCoinLabTreeMethods({
           [head]: writePathValue((source as Record<string, unknown>)[head], tail, nextValue),
         };
       };
-      const getPendingRewardsAlternatePath = (segments: string[]): string[] | null => {
-        const pendingRewardsIndex = segments.findIndex((segment) => segment === 'pendingRewards');
-        if (pendingRewardsIndex < 0) return null;
-        if (segments[pendingRewardsIndex - 1] === 'totalSpCoins') {
-          return [
-            ...segments.slice(0, pendingRewardsIndex - 1),
-            ...segments.slice(pendingRewardsIndex),
-          ];
-        }
-        return [
-          ...segments.slice(0, pendingRewardsIndex),
-          'totalSpCoins',
-          ...segments.slice(pendingRewardsIndex),
-        ];
-      };
       const writePendingRewardsPathValue = (source: unknown, segments: string[], nextValue: unknown): unknown => {
-        const primary = writePathValue(source, segments, nextValue);
-        const alternatePath = getPendingRewardsAlternatePath(segments);
-        return alternatePath ? writePathValue(primary, alternatePath, nextValue) : primary;
+        return writePathValue(source, segments, nextValue);
       };
       const readDisplayPathValue = (source: unknown, segments: string[]): unknown => {
         const directValue = readPathValue(source, segments);
@@ -1600,11 +1792,22 @@ export function useSponsorCoinLabTreeMethods({
           pendingRewardsNode && typeof pendingRewardsNode === 'object' && !Array.isArray(pendingRewardsNode)
             ? (pendingRewardsNode as Record<string, unknown>)
             : null;
+        const pairedEstimateMethod =
+          click.method && PENDING_REWARDS_CLAIM_METHODS.has(click.method)
+            ? PENDING_REWARDS_CLAIM_TO_ESTIMATE_METHOD[click.method]
+            : null;
+        const shouldRefreshPairedEstimate =
+          Boolean(
+            click.action === 'claim' &&
+              pairedEstimateMethod &&
+              pendingRewardsRecord &&
+              isLoadedPendingRewardsMethodNode(pendingRewardsRecord[pairedEstimateMethod]),
+          );
         const fallbackActionNode = pendingRewardsRecord
           ? pendingRewardsRecord[click.action] ?? pendingRewardsRecord.estimate ?? pendingRewardsRecord.claim
           : null;
         appendLog(
-          `[PENDING_REWARDS_TRACE] candidate block=${String(entry.index)} target=${targetPath.join('.')} leaf=${String(targetLeaf || '')} targetRefresh=${String(hasPendingRewardsRefreshAction(targetNode))} methodRerun=${String(isRerunnablePendingRewardsMethod)} actionLazy=${String(hasLazyPendingRewardsAction(actionNode))} methodLazy=${String(hasLazyPendingRewardsMethod(actionNode))} fallbackLazy=${String(hasLazyPendingRewardsAction(fallbackActionNode) || hasLazyPendingRewardsMethod(fallbackActionNode))}`,
+          `[PENDING_REWARDS_TRACE] candidate target=${targetPath.join('.')} leaf=${String(targetLeaf || '')} method=${String(click.method || '')} action=${click.action} rerun=${String(isRerunnablePendingRewardsMethod)} lazy=${String(hasLazyPendingRewardsAction(actionNode) || hasLazyPendingRewardsMethod(actionNode))}`,
         );
         if (
           !hasLazyPendingRewardsAction(actionNode) &&
@@ -1621,10 +1824,15 @@ export function useSponsorCoinLabTreeMethods({
         try {
           const actionLabel = click.method || (click.action === 'estimate' ? 'pending rewards estimate' : 'pending rewards claim');
           setStatus(`Loading ${actionLabel} for ${normalizedAccount}...`);
-          const loadPendingRewardsEstimate = async () => {
+          const loadPendingRewardsEstimate = async (
+            methodOverride?: PendingRewardsActionClick['method'],
+            options?: { bypassCache?: boolean },
+          ) => {
             const pendingTimingCollector = createMethodTimingCollector();
             const selectedEstimateMethod =
-              click.method && PENDING_REWARDS_ESTIMATE_METHODS.has(click.method)
+              methodOverride && PENDING_REWARDS_ESTIMATE_METHODS.has(methodOverride)
+                ? methodOverride
+                : click.method && PENDING_REWARDS_ESTIMATE_METHODS.has(click.method)
                 ? click.method
                 : 'estimateOffChainTotalRewards';
             appendLog(
@@ -1635,6 +1843,7 @@ export function useSponsorCoinLabTreeMethods({
                 panel: 'spcoin_rread',
                 method: selectedEstimateMethod,
                 params: [{ key: 'Account Key', value: normalizedAccount }],
+                ...(options?.bypassCache ? { useCacheOverride: false } : {}),
               });
               return {
                 pendingResult: serverResult.result,
@@ -1653,6 +1862,7 @@ export function useSponsorCoinLabTreeMethods({
                      appendLog: noop,
                      setStatus: noop,
                       useReadCache,
+                      ...(options?.bypassCache ? { useReadCache: false } : {}),
                       readCacheNamespace,
                     }),
             );
@@ -1660,6 +1870,21 @@ export function useSponsorCoinLabTreeMethods({
               pendingResult,
               pendingMeta: buildExecutionMeta(pendingTimingCollector),
             };
+          };
+          const getTopLevelGetAccountRecordKey = (candidate: unknown) => {
+            if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) return '';
+            const call = (candidate as Record<string, unknown>).call;
+            if (!call || typeof call !== 'object' || Array.isArray(call)) return '';
+            if (String((call as Record<string, unknown>).method || '').trim() !== 'getAccountRecord') return '';
+            const parameters = (call as Record<string, unknown>).parameters;
+            if (!parameters || typeof parameters !== 'object' || Array.isArray(parameters)) return '';
+            return normalizeAddressValue(
+              toDisplayString(
+                (parameters as Record<string, unknown>)['Account Key'] ??
+                  (parameters as Record<string, unknown>).Account ??
+                  (parameters as Record<string, unknown>).accountKey,
+              ),
+            );
           };
 
           const claimPendingRewards = async () => {
@@ -1704,8 +1929,16 @@ export function useSponsorCoinLabTreeMethods({
                     setStatus: noop,
                     timingCollector: claimTimingCollector,
                   });
-            const balanceAfter = mode === 'hardhat' ? undefined : await readBalanceOf();
-            treeAccountRecordCacheRef.current.delete(normalizedAccount);
+            let refreshedAccountRecord: unknown | null = null;
+            if (mode !== 'hardhat') {
+              treeAccountRecordCacheRef.current.delete(normalizedAccount);
+              invalidateSpCoinLabAccountRecord(normalizedAccount);
+              refreshedAccountRecord = await loadAccountRecordForAddress(normalizedAccount, { force: true });
+            }
+            const balanceAfter =
+              mode === 'hardhat'
+                ? undefined
+                : readAccountRecordBalanceOf(refreshedAccountRecord) ?? await readBalanceOf();
             const balanceClaimSummary = buildClaimedBalanceSummary(
               mode === 'hardhat' ? (updateResult as { result?: unknown }).result : updateResult,
               balanceBefore !== undefined && balanceAfter !== undefined
@@ -1716,26 +1949,37 @@ export function useSponsorCoinLabTreeMethods({
                   }
                 : undefined,
             );
+            const serverClaimResult = mode === 'hardhat' ? (updateResult as { result?: unknown }).result : null;
+            const effectiveRefreshedAccountRecord =
+              refreshedAccountRecord ?? readRefreshedAccountRecordFromClaim(serverClaimResult);
             return {
               pendingResult: {
                 ...balanceClaimSummary,
-                receipts: mode === 'hardhat' ? (updateResult as { result?: unknown }).result : (updateResult as { receipts?: unknown }).receipts,
+                ...(effectiveRefreshedAccountRecord ? { refreshedAccountRecord: effectiveRefreshedAccountRecord } : {}),
+                receipts: mode === 'hardhat' ? serverClaimResult : (updateResult as { receipts?: unknown }).receipts,
               },
               pendingMeta:
                 (updateResult as { meta?: MethodExecutionMeta }).meta ?? buildExecutionMeta(claimTimingCollector),
             };
           };
 
-          const loadedPending =
-            (click.method && PENDING_REWARDS_ESTIMATE_METHODS.has(click.method)) || click.action === 'estimate'
-              ? callAccessMethod
-                ? await callAccessMethod(click.method || 'estimateOffChainTotalRewards', () => loadPendingRewardsEstimate())
-                : await loadPendingRewardsEstimate()
-              : callAccessMethod
-                ? await callAccessMethod(click.method || 'claimOnChainTotalRewards', () => claimPendingRewards())
-                : await claimPendingRewards();
+          const isEstimatePendingRewardsRequest =
+            (click.method && PENDING_REWARDS_ESTIMATE_METHODS.has(click.method)) || click.action === 'estimate';
+          const loadedPending = isEstimatePendingRewardsRequest
+            ? callAccessMethod
+              ? await callAccessMethod(click.method || 'estimateOffChainTotalRewards', () => loadPendingRewardsEstimate())
+              : await loadPendingRewardsEstimate()
+            : callAccessMethod
+              ? await callAccessMethod(click.method || 'claimOnChainTotalRewards', () => claimPendingRewards())
+              : await claimPendingRewards();
           if (!loadedPending) return 'handled';
           const { pendingResult, pendingMeta } = loadedPending;
+          const refreshedAccountRecord =
+            click.action === 'claim' ? readRefreshedAccountRecordFromClaim(pendingResult) : null;
+          if (refreshedAccountRecord) {
+            treeAccountRecordCacheRef.current.set(normalizedAccount, refreshedAccountRecord);
+            setSpCoinLabAccountRecord(normalizedAccount, refreshedAccountRecord);
+          }
           const methodName = click.method
             ? click.method
             : click.action === 'claim'
@@ -1759,7 +2003,7 @@ export function useSponsorCoinLabTreeMethods({
               },
               selectedMethod: methodName,
               ...(click.action === 'claim'
-                ? { sequence: ['balanceOf', expandedCallMethod, 'balanceOf'] }
+                ? { sequence: ['balanceOf', expandedCallMethod, 'getAccountRecord'] }
                 : {}),
             },
             ...(pendingMeta ? { meta: pendingMeta } : {}),
@@ -1767,6 +2011,47 @@ export function useSponsorCoinLabTreeMethods({
             __forceExpanded: true,
             __showEmptyFields: true,
           };
+          let pairedEstimateExpandedNode: Record<string, unknown> | null = null;
+          if (!isEstimatePendingRewardsRequest && shouldRefreshPairedEstimate && pairedEstimateMethod) {
+            try {
+              const pairedLoaded = callAccessMethod
+                ? await callAccessMethod(pairedEstimateMethod, () =>
+                    loadPendingRewardsEstimate(pairedEstimateMethod, { bypassCache: true }),
+                  )
+                : await loadPendingRewardsEstimate(pairedEstimateMethod, { bypassCache: true });
+              if (pairedLoaded) {
+                const pairedRefreshableResult =
+                  pairedLoaded.pendingResult &&
+                  typeof pairedLoaded.pendingResult === 'object' &&
+                  !Array.isArray(pairedLoaded.pendingResult)
+                    ? {
+                        ...(normalizePendingRewardsEstimateResult(pairedLoaded.pendingResult) as Record<string, unknown>),
+                        __pendingRewardsRefreshAction: true,
+                        __pendingRewardsRefreshAtMs: Date.now() + PENDING_REWARDS_INLINE_REFRESH_MS,
+                        __pendingRewardsRefreshActionName: 'estimate',
+                      }
+                    : pairedLoaded.pendingResult;
+                const existingPairedEstimateNode = asRecord(pendingRewardsRecord?.[pairedEstimateMethod]);
+                pairedEstimateExpandedNode = {
+                  call: {
+                    method: pairedEstimateMethod,
+                    parameters: {
+                      'Account Key': normalizedAccount,
+                    },
+                    selectedMethod: pairedEstimateMethod,
+                  },
+                  ...(pairedLoaded.pendingMeta ? { meta: pairedLoaded.pendingMeta } : {}),
+                  result: pairedRefreshableResult,
+                  ...(existingPairedEstimateNode?.__forceExpanded === true ? { __forceExpanded: true } : {}),
+                  ...(existingPairedEstimateNode?.__showEmptyFields === true ? { __showEmptyFields: true } : {}),
+                };
+              }
+            } catch (error) {
+              appendLog(
+                `Unable to refresh paired estimate ${pairedEstimateMethod} after claim: ${getErrorMessage(error, 'Unknown error')}`,
+              );
+            }
+          }
           const pendingRewardsAmount = readPendingRewardsAmount(pendingResult);
           const pendingRewardsRefreshAtMs = Date.now() + PENDING_REWARDS_INLINE_REFRESH_MS;
           const pendingRewardsPath =
@@ -1794,7 +2079,15 @@ export function useSponsorCoinLabTreeMethods({
               : shouldPreservePendingRewardsShape
                 ? payload
                 : writePathValue(payload, targetPath, expandedNode);
-          const existingPendingRewardsNode = readPathValue(payloadWithExpandedNode, pendingRewardsPath);
+          const payloadWithRefreshedPairedEstimate =
+            pairedEstimateExpandedNode && pairedEstimateMethod && pendingRewardsPath.length > 0
+              ? writePendingRewardsPathValue(
+                  payloadWithExpandedNode,
+                  [...pendingRewardsPath, pairedEstimateMethod],
+                  pairedEstimateExpandedNode,
+                )
+              : payloadWithExpandedNode;
+          const existingPendingRewardsNode = readPathValue(payloadWithRefreshedPairedEstimate, pendingRewardsPath);
           const payloadWithPendingRewardsSummary =
             pendingRewardsAmount !== null &&
             pendingRewardsPath.length > 0 &&
@@ -1802,7 +2095,7 @@ export function useSponsorCoinLabTreeMethods({
             typeof existingPendingRewardsNode === 'object' &&
             !Array.isArray(existingPendingRewardsNode)
               ? writePendingRewardsPathValue(
-                  payloadWithExpandedNode,
+                  payloadWithRefreshedPairedEstimate,
                   pendingRewardsPath,
                   mergePendingRewardsSummaryNode(
                     existingPendingRewardsNode,
@@ -1815,26 +2108,61 @@ export function useSponsorCoinLabTreeMethods({
                   ),
                 )
               : payloadWithExpandedNode;
+          const owningAccountRecordKey = getTopLevelGetAccountRecordKey(payload);
+          const shouldReplaceOwningAccountRecord =
+            click.action === 'claim' &&
+            refreshedAccountRecord &&
+            owningAccountRecordKey === normalizedAccount &&
+            targetPath[0] === 'result';
           if (click.action === 'claim') {
-            const claimPath = pendingRewardsPath.length > 0
-              ? [...pendingRewardsPath, expandedCallMethod]
-              : targetPath;
-            const claimNode = readPathValue(payloadWithPendingRewardsSummary, claimPath);
-            const alternateClaimPath = getPendingRewardsAlternatePath(claimPath);
-            const alternateClaimNode = alternateClaimPath
-              ? readPathValue(payloadWithPendingRewardsSummary, alternateClaimPath)
-              : undefined;
-            const describeNode = (node: unknown) => {
-              if (!node || typeof node !== 'object' || Array.isArray(node)) return typeof node;
-              const record = node as Record<string, unknown>;
-              return `keys=${Object.keys(record).join(',')} lazy=${String(record.__lazyPendingRewardsMethod === true)} hasCall=${String(record.call !== undefined)} hasResult=${String(record.result !== undefined)} hasMeta=${String(record.meta !== undefined)}`;
-            };
-            const traceLine = `[PENDING_REWARDS_TRACE] claim write check method=${expandedCallMethod} target=${targetPath.join('.')} pendingPath=${pendingRewardsPath.join('.')} claimPath=${claimPath.join('.')} node=${describeNode(claimNode)} altPath=${String(alternateClaimPath?.join('.') || '')} altNode=${describeNode(alternateClaimNode)}`;
-            appendLog(traceLine);
-            appendWriteTrace?.(traceLine);
+            appendLog(
+              `[PENDING_REWARDS_TRACE] account refresh replace=${String(Boolean(shouldReplaceOwningAccountRecord))} owner=${owningAccountRecordKey} account=${normalizedAccount} hasRecord=${String(Boolean(refreshedAccountRecord))}`,
+            );
           }
+          const payloadAfterAccountRefresh = shouldReplaceOwningAccountRecord
+            ? (() => {
+                setSpCoinLabAccountRecord(normalizedAccount, refreshedAccountRecord);
+                treeAccountRecordCacheRef.current.set(normalizedAccount, refreshedAccountRecord);
+                const refreshedPayloadBase = {
+                  ...payload,
+                  meta: {
+                    ...((payload.meta && typeof payload.meta === 'object' && !Array.isArray(payload.meta)
+                      ? payload.meta
+                      : {}) as Record<string, unknown>),
+                    ...buildAccountRecordMetaPatch(refreshedAccountRecord),
+                  },
+                  result: refreshedAccountRecord,
+                };
+                const existingPendingRewardsForDisplay = readPathValue(
+                  payloadWithPendingRewardsSummary,
+                  pendingRewardsPath,
+                );
+                const refreshedPendingRewardsForDisplay = readPathValue(refreshedPayloadBase, pendingRewardsPath);
+                const refreshedPayload =
+                  pendingRewardsPath.length > 0 &&
+                  (existingPendingRewardsForDisplay || refreshedPendingRewardsForDisplay)
+                    ? writePendingRewardsPathValue(
+                        refreshedPayloadBase,
+                        pendingRewardsPath,
+                        mergePendingRewardsBranchForAccountRefresh(
+                          existingPendingRewardsForDisplay,
+                          refreshedPendingRewardsForDisplay,
+                          normalizedAccount,
+                          expandedCallMethod,
+                          expandedNode,
+                          click.action,
+                          pendingRewardsRefreshAtMs,
+                        ),
+                      )
+                    : refreshedPayloadBase;
+                const refreshedWithExpandedNode = isPendingRewardsMethodLeaf
+                  ? writePendingRewardsPathValue(refreshedPayload, targetPath, expandedNode)
+                  : refreshedPayload;
+                return refreshedWithExpandedNode;
+              })()
+            : payloadWithPendingRewardsSummary;
           const nextRootPayload = normalizeExecutionPayload(
-            payloadWithPendingRewardsSummary,
+            payloadAfterAccountRefresh,
           ) as Record<string, unknown>;
           const nextPayload = formatFormattedPanelPayload(nextRootPayload);
           if (blocks.length > 1) {
@@ -1877,7 +2205,10 @@ export function useSponsorCoinLabTreeMethods({
       executeWriteConnected,
       ensureReadRunner,
       formatFormattedPanelPayload,
+      loadAccountRecordForAddress,
+      mode,
       normalizeAddressValue,
+      readCacheNamespace,
       requireContractAddress,
       runServerBackedTreeSpCoinMethod,
       selectedHardhatAddress,
@@ -1886,6 +2217,7 @@ export function useSponsorCoinLabTreeMethods({
       setTrackedTreeOutputDisplay,
       stringifyResult,
       useLocalSpCoinAccessPackage,
+      useReadCache,
     ],
   );
 

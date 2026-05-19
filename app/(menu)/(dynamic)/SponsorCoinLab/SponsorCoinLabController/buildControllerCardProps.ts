@@ -124,6 +124,7 @@ export type BuildControllerCardPropsArgs = {
   moveScriptStepToPosition: (sourceStepNumber: number, targetStepNumber: number, placement: 'before' | 'after') => void;
   deleteScriptStepByNumber: (stepNumber: number) => void;
   duplicateScriptStepByNumber: (stepNumber: number) => void;
+  rerunDisplayedOutputStepByNumber: (stepNumber: number) => Promise<void>;
   createScriptFromSteps: (nextNameRaw: string, steps: LabScriptStep[]) => boolean;
   existingScriptNames: string[];
 };
@@ -276,6 +277,7 @@ export function buildControllerCardProps(args: BuildControllerCardPropsArgs) {
       moveScriptStepToPosition: args.moveScriptStepToPosition,
       deleteScriptStepByNumber: args.deleteScriptStepByNumber,
       duplicateScriptStepByNumber: args.duplicateScriptStepByNumber,
+      rerunDisplayedOutputStepByNumber: args.rerunDisplayedOutputStepByNumber,
       createScriptFromSteps: args.createScriptFromSteps,
       existingScriptNames: args.existingScriptNames,
     },

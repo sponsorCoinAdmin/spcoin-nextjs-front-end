@@ -5,6 +5,7 @@ import getAccountKeys from './getMasterAccountList';
 import getMasterAccountMetaData from './getMasterAccountMetaData';
 import getActiveAccountKeys from './getActiveAccountList';
 import getAccountRecord from './getAccountRecord';
+import getAccountRewardUpdateTimestamps from './getAccountRewardUpdateTimestamps';
 import getRecipientRateKeys from './getRecipientRateList';
 import getRecipientRateAgentKeys from './getRecipientRateAgentList';
 import getLowerRecipientRate from './getLowerRecipientRate';
@@ -64,6 +65,7 @@ export const ONCHAIN_READ_METHOD_HANDLERS = {
     getMasterAccountKeys: getAccountKeys,
     getAccountKeys,
     getAccountRecord,
+    getAccountRewardUpdateTimestamps,
     getActiveAccountKeys,
     getRecipientRateKeys,
     getSponsorRecipientRates: getRecipientRateKeys,

@@ -17,6 +17,7 @@ import {
   normalizeAddressForAssets,
 } from '@/lib/context/helpers/assetHelpers';
 import { useJsonInspector } from '@/lib/hooks/useJsonInspector';
+import { SPONSOR_COIN_LAB_CONSOLE_DISPLAY_KEY } from '@/lib/context/exchangeContext/localStorageKeys';
 import {
   ACCOUNT_POPUP_TRACE_FILE,
   recordSponsorCoinLabAccountTrace,
@@ -453,6 +454,7 @@ type Props = {
     ) => void;
     deleteScriptStepByNumber: (stepNumber: number) => void;
     duplicateScriptStepByNumber: (stepNumber: number) => void;
+    rerunDisplayedOutputStepByNumber: (stepNumber: number) => Promise<void> | void;
     createScriptFromSteps: (nextNameRaw: string, steps: LabScriptStep[]) => boolean;
     existingScriptNames: string[];
   };
@@ -603,7 +605,11 @@ export default function OutputResultsCard({
     controls.outputPanelMode === 'tree'
       ? 'sponsorCoinLab.tree'
       : `sponsorCoinLab.formatted.${controls.formattedPanelView}`;
-  const { collapsedKeys, updateCollapsedKeys } = useJsonInspector(inspectorNamespace);
+  const { collapsedKeys, updateCollapsedKeys } = useJsonInspector(inspectorNamespace, {
+    storageKey: SPONSOR_COIN_LAB_CONSOLE_DISPLAY_KEY,
+    cardId: 'output',
+    debounceMs: 150,
+  });
   const parseCollapsibleBlocks = useMemo(
     () => (rawValue: string) => {
       const trimmed = String(rawValue || '').trim();
@@ -679,10 +685,12 @@ export default function OutputResultsCard({
       const headerPath = isHeaderBlock ? `script-header-${index}` : null;
       return headerPath ? [headerPath, ...childPaths] : childPaths;
     });
-    if (collapsePaths.length === 0) return;
+    const newDefaultCollapsePaths = collapsePaths.filter(
+      (path) => !collapsedKeys.includes(path) && !collapsedKeys.includes(`__expanded__:${path}`),
+    );
+    if (newDefaultCollapsePaths.length === 0) return;
     seededDefaultCollapseSignatureRef.current = signature;
-    if (collapsePaths.every((path) => collapsedKeys.includes(path))) return;
-    updateCollapsedKeys([...new Set([...collapsedKeys, ...collapsePaths])]);
+    updateCollapsedKeys([...new Set([...collapsedKeys, ...newDefaultCollapsePaths])]);
   }, [
     activeInspectorRootLabel,
     collapsedKeys,
@@ -1083,6 +1091,16 @@ export default function OutputResultsCard({
       confirmingDelete: false,
     });
   }, []);
+
+  const handleStepMethodClick = React.useCallback(
+    (stepNumber: number, methodName: string) => {
+      appendOutputTrace(
+        `[JSON_INSPECTOR_TRACE] script step method rerun click step=${String(stepNumber)} method=${String(methodName || '').trim()}`,
+      );
+      void scriptActions.rerunDisplayedOutputStepByNumber(stepNumber);
+    },
+    [appendOutputTrace, scriptActions],
+  );
 
   const handleDeleteStepFromModal = React.useCallback(() => {
     if (!stepActionModalState) return;
@@ -1578,6 +1596,7 @@ export default function OutputResultsCard({
                       setDropTarget: setScriptStepDropTarget,
                       beginDrag: beginInspectorScriptDrag,
                       onStepDoubleClick: handleStepDoubleClick,
+                      onStepMethodClick: handleStepMethodClick,
                     }}
                   />
                 ))}

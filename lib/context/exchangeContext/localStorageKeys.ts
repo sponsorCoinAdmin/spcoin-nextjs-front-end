@@ -8,6 +8,7 @@ export const EXCHANGE_CONTEXT_TREE_DISPLAY_MAP = 'exCtxTreeDisplayMap';
 
 // Misc UI / debug maps
 export const COLLAPSE_KEYS_MAP = 'CollapsedKeysMap';
+export const SPONSOR_COIN_LAB_CONSOLE_DISPLAY_KEY = 'spcoin.sponsorCoinLab.consoleDisplay';
 
 // FSM debug
 export const LATEST_FSM_HEADER_KEY = 'latestFSMHeader';

@@ -5,7 +5,7 @@ import {
   getExecutionMetaFromError,
   type MethodExecutionMeta,
 } from './methodExecutionHelpers';
-import { mergeFormattedOutput } from './methodOutputFormatting';
+import { mergeFormattedOutput, replaceFormattedOutputBlock } from './methodOutputFormatting';
 import { normalizePendingRewardsDisplayResult } from '@/lib/spCoinLab/pendingRewards';
 
 interface MethodParamEntry {
@@ -36,6 +36,7 @@ interface ScriptRunResult {
 
 interface ScriptRunOptions {
   formattedOutputBase?: string;
+  replaceOutputBlockIndex?: number;
   executionSignal?: AbortSignal;
   executionLabel?: string;
   scriptNetwork?: string;
@@ -238,6 +239,209 @@ function findPendingRewardsSnapshotInOutput(formattedOutputBase: string | undefi
   return null;
 }
 
+function isAccountRecordLike(value: unknown): value is Record<string, unknown> {
+  return Boolean(
+    value &&
+      typeof value === 'object' &&
+      !Array.isArray(value) &&
+      (value as Record<string, unknown>).totalSpCoins &&
+      typeof (value as Record<string, unknown>).totalSpCoins === 'object',
+  );
+}
+
+function findRefreshedAccountRecord(value: unknown, visited = new Set<unknown>()): Record<string, unknown> | null {
+  if (!value || typeof value !== 'object') return null;
+  if (visited.has(value)) return null;
+  visited.add(value);
+
+  if (Array.isArray(value)) {
+    for (const entry of value) {
+      const found = findRefreshedAccountRecord(entry, visited);
+      if (found) return found;
+    }
+    return null;
+  }
+
+  const record = value as Record<string, unknown>;
+  if (isAccountRecordLike(record.refreshedAccountRecord)) return record.refreshedAccountRecord;
+
+  for (const childValue of Object.values(record)) {
+    const found = findRefreshedAccountRecord(childValue, visited);
+    if (found) return found;
+  }
+  return null;
+}
+
+function findFirstAccountRecord(value: unknown, visited = new Set<unknown>()): Record<string, unknown> | null {
+  if (!value || typeof value !== 'object') return null;
+  if (visited.has(value)) return null;
+  visited.add(value);
+
+  if (Array.isArray(value)) {
+    for (const entry of value) {
+      const found = findFirstAccountRecord(entry, visited);
+      if (found) return found;
+    }
+    return null;
+  }
+
+  const record = value as Record<string, unknown>;
+  if (isAccountRecordLike(record) && normalizeAddress(record.accountKey)) return record;
+
+  for (const childValue of Object.values(record)) {
+    const found = findFirstAccountRecord(childValue, visited);
+    if (found) return found;
+  }
+  return null;
+}
+
+function isLoadedPendingRewardsMethodNode(value: unknown) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const record = value as Record<string, unknown>;
+  return Boolean(record.call || record.meta || record.result || record.onChainCalls);
+}
+
+function mergePendingRewardsMethods(existing: unknown, refreshed: unknown) {
+  const existingRecord =
+    existing && typeof existing === 'object' && !Array.isArray(existing)
+      ? (existing as Record<string, unknown>)
+      : {};
+  const refreshedRecord =
+    refreshed && typeof refreshed === 'object' && !Array.isArray(refreshed)
+      ? (refreshed as Record<string, unknown>)
+      : {};
+  if (Object.keys(existingRecord).length === 0) return refreshed;
+
+  const methodKeys = [
+    'estimateOffChainTotalRewards',
+    'claimOnChainTotalRewards',
+    'estimateOffChainSponsorRewards',
+    'claimOnChainSponsorRewards',
+    'estimateOffChainRecipientRewards',
+    'claimOnChainRecipientRewards',
+    'estimateOffChainAgentRewards',
+    'claimOnChainAgentRewards',
+  ];
+
+  return {
+    ...refreshedRecord,
+    ...Object.fromEntries(
+      methodKeys
+        .filter((key) => isLoadedPendingRewardsMethodNode(existingRecord[key]))
+        .map((key) => [key, existingRecord[key]]),
+    ),
+  };
+}
+
+function mergePendingRewardsBranch(existing: unknown, refreshed: unknown) {
+  const existingRecord =
+    existing && typeof existing === 'object' && !Array.isArray(existing)
+      ? (existing as Record<string, unknown>)
+      : null;
+  const refreshedRecord =
+    refreshed && typeof refreshed === 'object' && !Array.isArray(refreshed)
+      ? (refreshed as Record<string, unknown>)
+      : null;
+
+  if (!existingRecord || !refreshedRecord) return refreshed;
+  return mergePendingRewardsMethods(existingRecord, refreshedRecord);
+}
+
+function mergeAccountRecordForOutput(existing: Record<string, unknown>, refreshed: Record<string, unknown>) {
+  const existingTotal =
+    existing.totalSpCoins && typeof existing.totalSpCoins === 'object' && !Array.isArray(existing.totalSpCoins)
+      ? (existing.totalSpCoins as Record<string, unknown>)
+      : {};
+  const refreshedTotal =
+    refreshed.totalSpCoins && typeof refreshed.totalSpCoins === 'object' && !Array.isArray(refreshed.totalSpCoins)
+      ? (refreshed.totalSpCoins as Record<string, unknown>)
+      : {};
+  const nextRecord: Record<string, unknown> = {
+    ...existing,
+    ...refreshed,
+  };
+
+  if (
+    existing.pendingRewards &&
+    typeof existing.pendingRewards === 'object' &&
+    !Array.isArray(existing.pendingRewards) &&
+    refreshed.pendingRewards &&
+    typeof refreshed.pendingRewards === 'object' &&
+    !Array.isArray(refreshed.pendingRewards)
+  ) {
+    nextRecord.pendingRewards = mergePendingRewardsBranch(existing.pendingRewards, refreshed.pendingRewards);
+  }
+
+  nextRecord.totalSpCoins = {
+      ...refreshedTotal,
+      pendingRewards: mergePendingRewardsMethods(existingTotal.pendingRewards, refreshedTotal.pendingRewards),
+  };
+
+  return nextRecord;
+}
+
+function patchAccountRecordValue(value: unknown, refreshed: Record<string, unknown>, accountKey: string): unknown {
+  if (!value || typeof value !== 'object') return value;
+  if (Array.isArray(value)) return value.map((entry) => patchAccountRecordValue(entry, refreshed, accountKey));
+
+  const record = value as Record<string, unknown>;
+  if (isAccountRecordLike(record) && normalizeAddress(record.accountKey) === accountKey) {
+    return mergeAccountRecordForOutput(record, refreshed);
+  }
+
+  let changed = false;
+  const nextEntries = Object.entries(record).map(([key, childValue]) => {
+    const nextValue = patchAccountRecordValue(childValue, refreshed, accountKey);
+    if (nextValue !== childValue) changed = true;
+    return [key, nextValue] as const;
+  });
+  return changed ? Object.fromEntries(nextEntries) : value;
+}
+
+function patchFormattedOutputAccountRecord(baseOutput: string | undefined, refreshedAccountRecord: Record<string, unknown> | null) {
+  const accountKey = normalizeAddress(refreshedAccountRecord?.accountKey);
+  const current = toDisplayString(baseOutput).trim();
+  if (!accountKey || !current || current === '(no output yet)' || !refreshedAccountRecord) return baseOutput;
+
+  let changed = false;
+  const nextBlocks = current
+    .split(/\n\s*\n/)
+    .map((block) => block.trim())
+    .filter(Boolean)
+    .map((block) => {
+      try {
+        const parsed = JSON.parse(block);
+        const patched = patchAccountRecordValue(parsed, refreshedAccountRecord, accountKey);
+        if (patched !== parsed) {
+          changed = true;
+          return JSON.stringify(patched, null, 2);
+        }
+      } catch {
+        return block;
+      }
+      return block;
+    });
+
+  return changed ? nextBlocks.join('\n\n') : baseOutput;
+}
+
+function preserveAccountRecordBranchesFromOutput(payload: unknown, baseOutput: string | undefined) {
+  const accountRecord = findRefreshedAccountRecord(payload) || findFirstAccountRecord(payload);
+  const accountKey = normalizeAddress(accountRecord?.accountKey);
+  if (!accountRecord || !accountKey) return payload;
+
+  const blocks = parseFormattedOutputBlocks(baseOutput);
+  for (let index = blocks.length - 1; index >= 0; index -= 1) {
+    const existingAccountRecord = findAccountRecordInPayload(blocks[index], accountKey);
+    if (!existingAccountRecord) continue;
+
+    const mergedAccountRecord = mergeAccountRecordForOutput(existingAccountRecord, accountRecord);
+    return patchAccountRecordValue(payload, mergedAccountRecord, accountKey);
+  }
+
+  return payload;
+}
+
 function resolveScriptExecutionMode(step: LabScriptStep, scriptNetwork?: string): ConnectionMode | undefined {
   if (step.mode === 'hardhat' || step.mode === 'metamask') return step.mode;
 
@@ -283,7 +487,16 @@ export function useSponsorCoinLabScriptRunner({
       };
 
       const commitResult = (payload: unknown, success: boolean) => {
-        const nextFormattedOutput = mergeFormattedOutput(formatFormattedPanelPayload(payload), formattedOutputBase);
+        const payloadWithPreservedBranches = preserveAccountRecordBranchesFromOutput(payload, formattedOutputBase);
+        const nextBlock = formatFormattedPanelPayload(payloadWithPreservedBranches);
+        const patchedFormattedOutputBase = patchFormattedOutputAccountRecord(
+          formattedOutputBase,
+          findRefreshedAccountRecord(payloadWithPreservedBranches) || findFirstAccountRecord(payloadWithPreservedBranches),
+        );
+        const nextFormattedOutput =
+          typeof options?.replaceOutputBlockIndex === 'number'
+            ? replaceFormattedOutputBlock(nextBlock, patchedFormattedOutputBase, options.replaceOutputBlockIndex)
+            : mergeFormattedOutput(nextBlock, patchedFormattedOutputBase);
         setFormattedOutputDisplay(nextFormattedOutput);
         return {
           success,
