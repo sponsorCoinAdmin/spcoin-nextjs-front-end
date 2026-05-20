@@ -841,16 +841,28 @@ type AccountRewardSnapshot = {
   sponsorRewards: string;
   recipientRewards: string;
   agentRewards: string;
+  sponsorCount: string;
+  recipientCount: string;
+  agentCount: string;
+  parentRecipientCount: string;
   lastSponsorUpdateTimeStamp: string;
   lastRecipientUpdateTimeStamp: string;
   lastAgentUpdateTimeStamp: string;
 };
 
 const STAKING_REWARD_YEAR_SECONDS = '31556925';
-const STAKING_REWARD_FORMULA = 'rewards = floor((timeDiffSeconds * totalStaked * rate) / 100 / yearSeconds)';
-const STAKING_REWARD_TIME_DIFF_FORMULA = 'timeDiffSeconds = max(0, settlementTimestamp - bucketLastUpdateTimeStamp)';
-const PARENT_REWARD_FORMULA = 'parentAmount = floor((childRewards * 10^18 / childRate) / (10^18 / 100))';
-const SPONSOR_DEPOSIT_FORMULA = 'sponsorDepositAmount = parentAmount - floor(parentAmount * annualInflation / 100)';
+const REWARD_INDEX_NOTATION = {
+  t: 'transaction/rate bucket index',
+  r: 'recipient-rate bucket index',
+  a: 'agent-rate bucket index',
+};
+const BUCKET_PENDING_REWARD_FORMULA = 'transactionBucketPendingRewards[t] = floor((transactionBucketTimeDiffSeconds[t] * transactionBucketStakedQuantity[t] * transactionBucketRate[t]) / 100 / yearSeconds)';
+const STAKING_REWARD_TIME_DIFF_FORMULA = 'transactionBucketTimeDiffSeconds[t] = max(0, currentTransactionBucketTime[t] - transactionBucketLastUpdateTime[t])';
+const DOWNSTREAM_REWARDS_FORMULA = 'downstreamRewards = recipientPendingRewards + agentPendingRewards';
+const SPONSOR_PENDING_REWARDS_FORMULA = 'sponsorPendingRewards = totalPendingRewards - downstreamRewards';
+const DISPLAY_PENDING_REWARD_FORMULA = 'totalPendingRewards = \u03A3_t transactionBucketPendingRewards[t]';
+const DISPLAY_RECIPIENT_PENDING_REWARDS_FORMULA = 'recipientPendingRewards = \u03A3_r floor((recipientBucketTimeDiffSeconds[r] * recipientBucketStakedQuantity[r] * recipientRate[r]) / 100 / yearSeconds)';
+const DISPLAY_AGENT_PENDING_REWARDS_FORMULA = 'agentPendingRewards = \u03A3_a floor((agentBucketTimeDiffSeconds[a] * agentBucketStakedQuantity[a] * agentRate[a]) / 100 / yearSeconds)';
 
 type RewardUpdateWriteMethod =
   | 'claimOnChainTotalRewards'
@@ -901,51 +913,89 @@ function getRoleSnapshotFields(snapshot: AccountRewardSnapshot | null | undefine
   };
 }
 
+function getAccountRolesDisplay(snapshot: AccountRewardSnapshot | null | undefined) {
+  if (!snapshot) return 'N/A';
+  const roles = [
+    toBigIntAmount(snapshot.sponsorCount) > 0n ? 'Sponsor' : '',
+    toBigIntAmount(snapshot.recipientCount) > 0n ? 'Recipient' : '',
+    toBigIntAmount(snapshot.agentCount) > 0n ? 'Agent' : '',
+  ].filter(Boolean);
+  return roles.length > 0 ? roles.join(' / ') : 'N/A';
+}
+
 function getRewardPathFormula(role: RewardRole) {
   if (role === 'Sponsor') {
     return [
-      'recipientSetRewards = stakingFormula(recipientRateTransactionSet.totalStaked, recipientRate)',
-      'sponsorParentAmount = parentAmount(recipientSetRewards, recipientRate)',
-      'sponsorRewards += sponsorDepositAmount(sponsorParentAmount, annualInflation)',
-      'for agent branches: agentSetRewards -> recipientParentAmount -> sponsorParentAmount -> sponsorDepositAmount',
+      'totalPendingRewards = Σ_t transactionBucketPendingRewards[t]',
+      'downstreamRewards = recipientPendingRewards + agentPendingRewards',
+      'sponsorPendingRewards = totalPendingRewards - downstreamRewards',
     ];
   }
   if (role === 'Recipient') {
     return [
-      'recipientRewards += stakingFormula(recipientRateTransactionSet.totalStaked, recipientRate)',
-      'for agent branches: recipientRewards += parentAmount(agentSetRewards, agentRate)',
+      'recipientPendingRewards = Σ recipient rate bucket rewards',
+      'agentPendingRewards may be downstream from Recipient when Agent rates exist',
     ];
   }
   if (role === 'Agent') {
-    return ['agentRewards += stakingFormula(agentRateTransactionSet.totalStaked, agentRate)'];
+    return ['agentPendingRewards = Σ agent rate bucket rewards'];
   }
   return [
-    'totalRewards = sponsorRewards + recipientRewards + agentRewards',
-    'each role uses its role-specific reward path formula',
+    'totalPendingRewards = sponsorPendingRewards + recipientPendingRewards + agentPendingRewards',
+    'each role is summed from its applicable transaction/rate buckets',
   ];
 }
 
-function buildRewardFormulaMeta(role: RewardRole = 'Total') {
+function buildRewardsFormulaMeta() {
   return {
-    formula: STAKING_REWARD_FORMULA,
+    indexNotation: REWARD_INDEX_NOTATION,
+    totalPendingRewardsFormula: DISPLAY_PENDING_REWARD_FORMULA,
+    bucketPendingRewardsFormula: BUCKET_PENDING_REWARD_FORMULA,
     timeDiffFormula: STAKING_REWARD_TIME_DIFF_FORMULA,
-    parentRewardFormula: PARENT_REWARD_FORMULA,
-    sponsorDepositFormula: SPONSOR_DEPOSIT_FORMULA,
-    rewardPathFormula: getRewardPathFormula(role),
-    yearSeconds: STAKING_REWARD_YEAR_SECONDS,
-    rateUnit: 'percent',
+    downstreamRewardsFormula: DOWNSTREAM_REWARDS_FORMULA,
+    recipientPendingRewardsFormula: DISPLAY_RECIPIENT_PENDING_REWARDS_FORMULA,
+    agentPendingRewardsFormula: DISPLAY_AGENT_PENDING_REWARDS_FORMULA,
+    sponsorPendingRewardsFormula: SPONSOR_PENDING_REWARDS_FORMULA,
+  };
+}
+
+function buildRewardFormulaValuesMeta() {
+  return {
+    secondsInYesr: STAKING_REWARD_YEAR_SECONDS,
     solidityMethod: 'RewardsManager.calculateStakingRewards',
     soliditySource:
       'spCoinAccess/contracts/spCoin/rewardsManagement/RewardsManager.sol',
   };
 }
 
-function getEstimateRewardCalculationMeta(methodName: string, normalizedResult: unknown) {
+function buildRewardFormulaMeta(role: RewardRole = 'Total') {
+  return {
+    rewardPathFormula: getRewardPathFormula(role),
+    rewardsFormula: buildRewardsFormulaMeta(),
+  };
+}
+
+type RewardCalculationMetaParams = {
+  source: 'offChainEstimate' | 'onChainClaim';
+  methodName: string;
+  accountKey?: string;
+  normalizedResult?: unknown;
+  accountSnapshot?: AccountRewardSnapshot | null;
+  beforeSnapshot?: AccountRewardSnapshot | null;
+  afterSnapshot?: AccountRewardSnapshot | null;
+  balanceBefore?: string;
+  balanceAfter?: string;
+  claimedAmount?: string;
+  settlementTimestamp?: string | null;
+};
+
+function buildRewardCalculationMeta(params: RewardCalculationMetaParams) {
+  const role = getRewardRoleForMethod(params.methodName);
   const record =
-    normalizedResult && typeof normalizedResult === 'object' && !Array.isArray(normalizedResult)
-      ? (normalizedResult as Record<string, unknown>)
+    params.normalizedResult && typeof params.normalizedResult === 'object' && !Array.isArray(params.normalizedResult)
+      ? (params.normalizedResult as Record<string, unknown>)
       : {};
-  const role = getRewardRoleForMethod(methodName);
+  const accountSnapshot = params.accountSnapshot ?? params.afterSnapshot ?? params.beforeSnapshot ?? null;
   const pendingRoleRewards =
     role === 'Sponsor'
       ? record.pendingSponsorRewards
@@ -956,20 +1006,77 @@ function getEstimateRewardCalculationMeta(methodName: string, normalizedResult: 
           : record.pendingTotalRewards ?? record.pendingRewards ?? record.totalRewards;
   const roleTimestampKey = `last${role}TimeStamp`;
   const roleUpdateKey = `last${role}Update`;
-  return {
-    source: 'offChainEstimate',
-    method: methodName,
+  const baseMeta = {
+    source: params.source,
+    method: params.methodName,
+    ...(params.accountKey ? { accountKey: params.accountKey } : {}),
     role,
+    'role(s)': getAccountRolesDisplay(accountSnapshot),
     ...buildRewardFormulaMeta(role),
-    calculatedTimeStamp: String(record.calculatedTimeStamp ?? '0'),
-    bucketLastUpdateTimeStamp: String(record[roleTimestampKey] ?? '0'),
-    bucketLastUpdateFormatted: String(record[roleUpdateKey] ?? ''),
-    timeDifferenceMS: String(record.timeDifferenceMS ?? '0'),
-    pendingRoleRewards: String(pendingRoleRewards ?? '0'),
-    pendingTotalRewards: String(record.pendingTotalRewards ?? record.pendingRewards ?? record.totalRewards ?? '0'),
-    note:
-      'Estimate uses transaction/rate bucket timestamps. It does not update account last*UpdateTimeStamp on chain.',
   };
+
+  if (params.source === 'offChainEstimate') {
+    return {
+      ...baseMeta,
+      rewardsFormula: {
+        ...baseMeta.rewardsFormula,
+        rewardFormulsValues: {
+          Note:
+            'Estimate uses transaction/rate bucket timestamps. It does not update account last*UpdateTimeStamp on chain.',
+          ...buildRewardFormulaValuesMeta(),
+          bucketLastUpdateTimeStamp: String(record[roleTimestampKey] ?? '0'),
+          bucketLastUpdateFormatted: String(record[roleUpdateKey] ?? ''),
+          timeDifferenceMS: String(record.timeDifferenceMS ?? '0'),
+          pendingRoleRewards: String(pendingRoleRewards ?? '0'),
+          calculatedTimeStamp: String(record.calculatedTimeStamp ?? '0'),
+          calculatedFormatted: String(record.calculatedFormatted ?? ''),
+          pendingTotalRewards: String(record.pendingTotalRewards ?? record.pendingRewards ?? record.totalRewards ?? '0'),
+          totalRewards: String(record.totalRewards ?? record.pendingTotalRewards ?? record.pendingRewards ?? '0'),
+        },
+      },
+    };
+  }
+
+  return {
+    ...baseMeta,
+    rewardsFormula: {
+      ...baseMeta.rewardsFormula,
+      rewardFormulsValues: {
+        Note:
+          'Claim executes the Solidity settlement formula on chain. The returned claimed amount is audited here by balance delta.',
+        ...buildRewardFormulaValuesMeta(),
+        exactClaimedAmountFormula: 'claimedAmount = balanceAfter - balanceBefore',
+        exactClaimedAmountSource: 'ERC20 balanceOf(account) before and after the claim transaction',
+        balanceBefore: params.balanceBefore ?? '',
+        balanceAfter: params.balanceAfter ?? '',
+        claimedAmount: params.claimedAmount ?? '',
+        settlementTimestamp: params.settlementTimestamp ?? '',
+        accountSnapshotBefore: {
+          ...getRoleSnapshotFields(params.beforeSnapshot, role),
+          ...(params.beforeSnapshot ? { accountStakingRewards: params.beforeSnapshot.accountStakingRewards } : {}),
+        },
+        accountSnapshotAfter: {
+          ...getRoleSnapshotFields(params.afterSnapshot, role),
+          ...(params.afterSnapshot ? { accountStakingRewards: params.afterSnapshot.accountStakingRewards } : {}),
+        },
+      },
+    },
+  };
+}
+
+function getEstimateRewardCalculationMeta(
+  methodName: string,
+  normalizedResult: unknown,
+  accountKey?: string,
+  accountSnapshot?: AccountRewardSnapshot | null,
+) {
+  return buildRewardCalculationMeta({
+    source: 'offChainEstimate',
+    methodName,
+    accountKey,
+    normalizedResult,
+    accountSnapshot,
+  });
 }
 
 function buildClaimRewardCalculationMeta(params: {
@@ -982,30 +1089,17 @@ function buildClaimRewardCalculationMeta(params: {
   beforeSnapshot: AccountRewardSnapshot | null;
   afterSnapshot: AccountRewardSnapshot | null;
 }) {
-  const role = getRewardRoleForMethod(params.methodName);
-  return {
+  return buildRewardCalculationMeta({
     source: 'onChainClaim',
-    method: params.methodName,
+    methodName: params.methodName,
     accountKey: params.accountKey,
-    role,
-    ...buildRewardFormulaMeta(role),
-    exactClaimedAmountFormula: 'claimedAmount = balanceAfter - balanceBefore',
-    exactClaimedAmountSource: 'ERC20 balanceOf(account) before and after the claim transaction',
     balanceBefore: params.balanceBefore,
     balanceAfter: params.balanceAfter,
     claimedAmount: params.claimedAmount,
-    settlementTimestamp: params.settlementTimestamp ?? '',
-    accountSnapshotBefore: {
-      ...getRoleSnapshotFields(params.beforeSnapshot, role),
-      ...(params.beforeSnapshot ? { accountStakingRewards: params.beforeSnapshot.accountStakingRewards } : {}),
-    },
-    accountSnapshotAfter: {
-      ...getRoleSnapshotFields(params.afterSnapshot, role),
-      ...(params.afterSnapshot ? { accountStakingRewards: params.afterSnapshot.accountStakingRewards } : {}),
-    },
-    note:
-      'Claim executes the Solidity settlement formula on chain. The returned claimed amount is audited here by balance delta.',
-  };
+    settlementTimestamp: params.settlementTimestamp,
+    beforeSnapshot: params.beforeSnapshot,
+    afterSnapshot: params.afterSnapshot,
+  });
 }
 
 type PendingAccountRewardsReader = {
@@ -1059,6 +1153,10 @@ function pendingRewardsToSnapshot(value: unknown): AccountRewardSnapshot {
     sponsorRewards: toBigIntAmount(record.pendingSponsorRewards).toString(),
     recipientRewards: toBigIntAmount(record.pendingRecipientRewards).toString(),
     agentRewards: toBigIntAmount(record.pendingAgentRewards).toString(),
+    sponsorCount: '0',
+    recipientCount: '0',
+    agentCount: '0',
+    parentRecipientCount: '0',
     lastSponsorUpdateTimeStamp: String(record.lastSponsorUpdate ?? '0'),
     lastRecipientUpdateTimeStamp: String(record.lastRecipientUpdate ?? '0'),
     lastAgentUpdateTimeStamp: String(record.lastAgentUpdate ?? '0'),
@@ -1107,6 +1205,10 @@ async function readAccountRewardSnapshot(contract: Contract, accountKey: string)
     sponsorRewards: toBigIntAmount(rewardTotalValues[0]).toString(),
     recipientRewards: toBigIntAmount(rewardTotalValues[1]).toString(),
     agentRewards: toBigIntAmount(rewardTotalValues[2]).toString(),
+    sponsorCount: toBigIntAmount(accountRecordValues[5]).toString(),
+    recipientCount: toBigIntAmount(accountRecordValues[6]).toString(),
+    agentCount: toBigIntAmount(accountRecordValues[7]).toString(),
+    parentRecipientCount: toBigIntAmount(accountRecordValues[8]).toString(),
     lastSponsorUpdateTimeStamp: toBigIntAmount(accountRecordValues[9]).toString(),
     lastRecipientUpdateTimeStamp: toBigIntAmount(accountRecordValues[10]).toString(),
     lastAgentUpdateTimeStamp: toBigIntAmount(accountRecordValues[11]).toString(),
@@ -1497,13 +1599,28 @@ export async function POST(request: NextRequest) {
                   pendingRewardsOptions,
                 ),
               );
-              stepRewardCalculationMeta = getEstimateRewardCalculationMeta(String(step.method), stepResult);
+              const accountSnapshot = await readAccountRewardSnapshot(contract, accountKey);
+              stepRewardCalculationMeta = getEstimateRewardCalculationMeta(
+                String(step.method),
+                stepResult,
+                accountKey,
+                accountSnapshot,
+              );
+              const rewardFormulsValues =
+                stepRewardCalculationMeta.rewardsFormula &&
+                typeof stepRewardCalculationMeta.rewardsFormula === 'object' &&
+                !Array.isArray(stepRewardCalculationMeta.rewardsFormula) &&
+                (stepRewardCalculationMeta.rewardsFormula as Record<string, unknown>).rewardFormulsValues &&
+                typeof (stepRewardCalculationMeta.rewardsFormula as Record<string, unknown>).rewardFormulsValues === 'object' &&
+                !Array.isArray((stepRewardCalculationMeta.rewardsFormula as Record<string, unknown>).rewardFormulsValues)
+                  ? ((stepRewardCalculationMeta.rewardsFormula as Record<string, unknown>).rewardFormulsValues as Record<string, unknown>)
+                  : {};
               appendTrace(
-                `[REWARD_CALC_TRACE] estimate method=${String(step.method)} account=${accountKey} formula="${STAKING_REWARD_FORMULA}" yearSeconds=${STAKING_REWARD_YEAR_SECONDS} calculatedTimeStamp=${String(
-                  stepRewardCalculationMeta.calculatedTimeStamp || '',
+                `[REWARD_CALC_TRACE] estimate method=${String(step.method)} account=${accountKey} formula="${DISPLAY_PENDING_REWARD_FORMULA}" yearSeconds=${STAKING_REWARD_YEAR_SECONDS} calculatedTimeStamp=${String(
+                  rewardFormulsValues.calculatedTimeStamp || '',
                 )} bucketLastUpdateTimeStamp=${String(
-                  stepRewardCalculationMeta.bucketLastUpdateTimeStamp || '',
-                )} pendingTotalRewards=${String(stepRewardCalculationMeta.pendingTotalRewards || '')}`,
+                  rewardFormulsValues.bucketLastUpdateTimeStamp || '',
+                )} pendingTotalRewards=${String(rewardFormulsValues.pendingTotalRewards || '')}`,
               );
               break;
             }
@@ -2069,7 +2186,7 @@ export async function POST(request: NextRequest) {
               const receipt = (await tx.wait()) as { hash?: string; blockNumber?: bigint | number | null; status?: number | bigint | null };
               const settlementTimestamp = await getReceiptBlockTimestamp(provider, receipt);
               appendTrace(
-                `[REWARD_CALC_TRACE] claim receipt method=${methodName} account=${accountKey} settlementTimestamp=${String(settlementTimestamp || '')} formula="${STAKING_REWARD_FORMULA}" yearSeconds=${STAKING_REWARD_YEAR_SECONDS}`,
+                `[REWARD_CALC_TRACE] claim receipt method=${methodName} account=${accountKey} settlementTimestamp=${String(settlementTimestamp || '')} formula="${DISPLAY_PENDING_REWARD_FORMULA}" yearSeconds=${STAKING_REWARD_YEAR_SECONDS}`,
               );
               const settlementOfflinePreview =
                 includeOfflineComparison && settlementTimestamp && typeof pendingRewardsReader.estimateOffChainTotalRewards === 'function'

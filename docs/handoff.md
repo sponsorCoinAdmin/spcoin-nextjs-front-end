@@ -1,111 +1,131 @@
-SponsorCoinLab Handoff - 2026-05-18
+SponsorCoinLab Handoff - 2026-05-19
 
-Context
+Current Focus
 
-The user stopped the prior attempts because too much time was spent exploring and proposing broad fixes. The next pass must stay narrow. Do not redesign the console tree, localStorage state, cache architecture, or branch persistence while handling the current bug.
-
-Current Issue
-
-In SponsorCoinLab Console Display, inside:
-
-result.pendingRewards
-
-there are paired methods:
-
-- estimateOffChainSponsorRewards
-- claimOnChainSponsorRewards
-
-When claimOnChainSponsorRewards is clicked/executed, the claim result updates, but the already-visible estimateOffChainSponsorRewards summary stays stale.
-
-Expected Behavior
-
-If estimateOffChainSponsorRewards is already present/open/loaded in the same pendingRewards branch, then after claimOnChainSponsorRewards completes, estimateOffChainSponsorRewards should refresh and display the new estimate value.
-
-The branch open/closed state must not be reset by this refresh.
-
-Simple Intended Fix
-
-After claimOnChainSponsorRewards completes successfully:
-
-1. Run the paired estimate method:
-   estimateOffChainSponsorRewards
-
-2. Merge only that refreshed estimate node/value back into the existing pendingRewards branch.
-
-3. Preserve the existing tree branch state.
-
-4. Do not replace the whole getAccountRecord tree.
-
-5. Do not collapse/expand branches unless the user clicked that branch manually.
-
-Scope
-
-For now, handle the sponsor pair only unless the same nearby code already has a clean generic mapping:
-
-- claimOnChainSponsorRewards -> estimateOffChainSponsorRewards
-
-If making the generic mapping is simple and local, the natural full mapping is:
-
-- claimOnChainTotalRewards -> estimateOffChainTotalRewards
-- claimOnChainSponsorRewards -> estimateOffChainSponsorRewards
-- claimOnChainRecipientRewards -> estimateOffChainRecipientRewards
-- claimOnChainAgentRewards -> estimateOffChainAgentRewards
-
-But do not turn this into a larger refactor.
-
-Likely File
+We are cleaning up SponsorCoinLab file size and separating areas of concern, starting with:
 
 app/(menu)/(dynamic)/SponsorCoinLab/hooks/useSponsorCoinLabTreeMethods.ts
 
-Likely Existing Helpers
+The user wants the large hook tamed carefully without changing behavior.
 
-The file already has pending rewards helpers and method lists:
+Recent Cleanup Completed
 
-- PENDING_REWARDS_ESTIMATE_METHODS
-- PENDING_REWARDS_CLAIM_METHODS
-- PENDING_REWARDS_METHOD_KEYS
-- mergePendingRewardsBranchForAccountRefresh
-- mergePendingRewardsSummaryNode
-- writePendingRewardsPathValue
-- loadPendingRewardsEstimate
-- claimPendingRewards
+The tree hook was reduced from about 2,235 lines to about 1,778 lines.
 
-Likely Implementation Shape
+Extracted pending rewards helpers into:
 
-In the pending rewards click handler, after claimPendingRewards returns, determine the paired estimate method. If the paired estimate node is already loaded in the existing pendingRewards branch, call loadPendingRewardsEstimate with that paired method and merge the returned result into the same branch.
+app/(menu)/(dynamic)/SponsorCoinLab/hooks/pendingRewardsTreeUtils.ts
 
-The important part is to update:
+This file now owns:
 
-estimateOffChainSponsorRewards: "<new value>"
+- pending rewards click parsing
+- pending rewards method sets/mappings
+- lazy pending rewards node helpers
+- zero estimate result after successful claim
+- pending rewards summary/branch merge helpers
+- account record balance/timestamp helpers
+- claim balance summary helpers
 
-without changing the user's branch state.
+Extracted shared tree payload utilities into:
 
-Do Not Do
+app/(menu)/(dynamic)/SponsorCoinLab/hooks/treePayloadUtils.ts
 
-- Do not add a new localStorage system.
-- Do not change branch persistence.
-- Do not change the cache design.
-- Do not modify Solidity.
-- Do not change Hardhat scripts.
-- Do not broadly refactor the Console Display.
-- Do not chase unrelated formatting issues.
-- Do not add tracing unless the minimal fix cannot be verified.
+This file now owns:
+
+- JSON payload parsing
+- formatted/tree block splitting
+- candidate block selection
+- readPathValue
+- writePathValue
+- readDisplayPathValue
 
 Verification
 
-Run:
+After the extraction, this passed:
 
 npm.cmd run -s typecheck
 
-Manual verification expected by the user:
+Important Behavior Context
 
-1. Open pendingRewards.
-2. Open estimateOffChainSponsorRewards.
-3. Click claimOnChainSponsorRewards.
-4. Confirm claimOnChainSponsorRewards updates.
-5. Confirm estimateOffChainSponsorRewards also updates.
-6. Confirm estimateOffChainSponsorRewards remains open if it was open.
+The latest settled reward behavior is:
 
-Tone / User State
+When a claim method succeeds, the paired estimate method should be locally set to zero instead of doing a paired estimate RPC call.
 
-The user is frustrated because previous attempts burned usage without making the simple requested change. Keep updates short. Do not over-explain. Do the smallest useful change and report exactly what changed.
+Examples:
+
+- claimOnChainTotalRewards -> estimateOffChainTotalRewards = 0
+- claimOnChainSponsorRewards -> estimateOffChainSponsorRewards = 0
+- claimOnChainRecipientRewards -> estimateOffChainRecipientRewards = 0
+- claimOnChainAgentRewards -> estimateOffChainAgentRewards = 0
+
+Only do this after a successful claim. Failed claims must not zero estimates.
+
+Do not reintroduce the old paired-estimate RPC refresh, timer delay, readiness polling, or extra post-claim estimate call.
+
+Current File Size State
+
+useSponsorCoinLabTreeMethods.ts is still large at about 1,778 lines.
+
+The main remaining extraction targets are:
+
+1. expandPendingRewardsActionInline
+2. expandMasterSponsorListAccountInline
+3. metadata/master-account inline expansion
+4. server-backed tree method runner
+5. tree/header/account read runners
+
+Recommended Next Step
+
+Extract expandPendingRewardsActionInline into a dedicated hook:
+
+app/(menu)/(dynamic)/SponsorCoinLab/hooks/usePendingRewardsInlineExpansion.ts
+
+This should be the next biggest cleanup, but it is more delicate than the utility extraction because it touches:
+
+- claim vs estimate execution
+- account refresh replacement
+- paired estimate zeroing
+- formatted/tree display patching
+- pending rewards branch preservation
+
+Keep this as a behavior-preserving extraction. Do not change reward behavior while moving it.
+
+Likely Dependency Inputs For The New Hook
+
+The extracted hook/function will likely need a params object containing:
+
+- appendLog
+- appendWriteTrace
+- callAccessMethod
+- coerceParamValue
+- executeWriteConnected
+- ensureReadRunner
+- formatFormattedPanelPayload
+- loadAccountRecordForAddress
+- mode
+- normalizeAddressValue
+- readCacheNamespace
+- requireContractAddress
+- runServerBackedTreeSpCoinMethod
+- selectedHardhatAddress
+- setFormattedOutputDisplay
+- setStatus
+- setTrackedTreeOutputDisplay
+- stringifyResult
+- treeAccountRecordCacheRef
+- treeOutputDisplayRef
+- formattedOutputDisplayRef
+- useLocalSpCoinAccessPackage
+- useReadCache
+
+Worktree Note
+
+At the time of this handoff, an unrelated file was already modified:
+
+resources/data/spCoinLab/methodMemberLists.json
+
+Do not touch or revert it unless the user asks.
+
+Style / User Preference
+
+Keep updates short. The user wants cleanup progress, not a broad redesign. Make one safe extraction at a time and typecheck after each pass.

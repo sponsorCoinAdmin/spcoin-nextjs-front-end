@@ -82,6 +82,19 @@ function toBigIntAmount(value: unknown) {
   }
 }
 
+const PENDING_REWARDS_CLAIM_METHODS = new Set([
+  'claimOnChainTotalRewards',
+  'claimOnChainSponsorRewards',
+  'claimOnChainRecipientRewards',
+  'claimOnChainAgentRewards',
+]);
+
+function readClaimedRewardsAmount(value: unknown) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
+  const record = value as Record<string, unknown>;
+  return record.totalRewardsClaimed ?? record.claimedAmount;
+}
+
 const PENDING_REWARDS_YEAR_SECONDS = 31556925n;
 
 function calculatePendingStakingRewards(
@@ -540,7 +553,17 @@ export function useSponsorCoinLabScriptRunner({
           appendWriteTrace(`estimateOffChainTotalRewards no previous snapshot; running method; accountKey=${accountKey}`);
         }
         const { call, result, warning, meta, onChainCalls } = await executeMethodDescriptor(descriptor, { executionSignal: options?.executionSignal });
-        return commitResult({ call, meta, ...(onChainCalls ? { onChainCalls } : {}), result, ...(warning ? { warning } : {}) }, true);
+        const claimedRewardsAmount = PENDING_REWARDS_CLAIM_METHODS.has(descriptor.method)
+          ? readClaimedRewardsAmount(result)
+          : undefined;
+        const nextMeta =
+          claimedRewardsAmount !== undefined
+            ? {
+                ...(meta ?? {}),
+                'Last Claimed Rewards': claimedRewardsAmount,
+              }
+            : meta;
+        return commitResult({ call, meta: nextMeta, ...(onChainCalls ? { onChainCalls } : {}), result, ...(warning ? { warning } : {}) }, true);
       } catch (error) {
         const message =
           error instanceof Error

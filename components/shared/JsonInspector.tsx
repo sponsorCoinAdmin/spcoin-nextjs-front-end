@@ -510,6 +510,18 @@ function ensurePendingRewardsMethodEntries(entries: Array<[string, any]>): Array
   return nextEntries;
 }
 
+function shouldInjectPendingRewardsMethodEntries(
+  label: string | undefined,
+  path: string | undefined,
+  value: any,
+): boolean {
+  if (!isPendingRewardsRecord(value)) return false;
+  if (label !== 'pendingRewards') return false;
+  const normalizedPath = String(path || '');
+  if (normalizedPath.split('.').includes('rewardCalculation')) return false;
+  return true;
+}
+
 function filterPendingRewardsRoleEntries(
   entries: Array<[string, any]>,
   counts: AccountRoleCounts | null | undefined,
@@ -537,6 +549,15 @@ function shouldShowEmptyChildren(data: any): boolean {
 
 function getExpandedPathKey(path: string) {
   return `__expanded__:${path}`;
+}
+
+function getAncestorPaths(path: string): string[] {
+  const segments = String(path || '').split('.').filter(Boolean);
+  return segments.slice(0, -1).map((_, index) => segments.slice(0, index + 1).join('.'));
+}
+
+function getExpandedAncestorPathKeys(path: string): string[] {
+  return getAncestorPaths(path).map(getExpandedPathKey);
 }
 
 function normalizeLegacyDateDisplay(value: any): string | null {
@@ -909,6 +930,7 @@ function isTokenAmountKey(key: string): boolean {
     'pendingTotalRewards',
     'totalRewards',
     'totalRewardsClaimed',
+    'Last Claimed Rewards',
     'sponsorRewardsClaimed',
     'recipientRewardsClaimed',
     'agentRewardsClaimed',
@@ -958,6 +980,17 @@ function formatDisplayScalar(
     return displayFormattedAmount(renderedValue, tokenDecimals) ?? String(renderedValue);
   }
   return typeof value === 'string' ? `"${String(value)}"` : String(renderedValue);
+}
+
+function renderFormulaDisplayValue(displayValue: string): React.ReactNode {
+  if (!displayValue.includes('Σ')) return displayValue;
+  const parts = displayValue.split('Σ');
+  return parts.map((part, index) => (
+    <React.Fragment key={`${part}-${index}`}>
+      {index > 0 ? <span className="inline-block text-[1.5em] leading-none align-[-0.08em]">Σ</span> : null}
+      {part}
+    </React.Fragment>
+  ));
 }
 
 function formatPathSegmentLabel(nextPath: string): string {
@@ -1020,6 +1053,246 @@ function normalizeVisibleEntry(parent: any, childKey: string, childValue: any): 
   return [childKey, childValue];
 }
 
+function normalizeRewardCalculationDisplayShape(value: any): any {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
+  const record = value as Record<string, unknown>;
+  const hasRewardFormulaGroupFields =
+    Object.prototype.hasOwnProperty.call(record, 'indexNotation') ||
+    Object.prototype.hasOwnProperty.call(record, 'totalPendingRewardsFormula') ||
+    Object.prototype.hasOwnProperty.call(record, 'bucketPendingRewardsFormula') ||
+    Object.prototype.hasOwnProperty.call(record, 'downstreamRewardsFormula') ||
+    Object.prototype.hasOwnProperty.call(record, 'recipientPendingRewardsFormula') ||
+    Object.prototype.hasOwnProperty.call(record, 'agentPendingRewardsFormula') ||
+    Object.prototype.hasOwnProperty.call(record, 'sponsorPendingRewardsFormula');
+  const hasRewardCalculationContainerFields =
+    Object.prototype.hasOwnProperty.call(record, 'rewardPathFormula') ||
+    Object.prototype.hasOwnProperty.call(record, 'source') ||
+    Object.prototype.hasOwnProperty.call(record, 'method') ||
+    Object.prototype.hasOwnProperty.call(record, 'role');
+  if (hasRewardFormulaGroupFields && !hasRewardCalculationContainerFields) {
+    const formulaGroup = { ...record };
+    delete formulaGroup.rewardsFormula;
+    return formulaGroup;
+  }
+  const looksLikeRewardCalculation =
+    Object.prototype.hasOwnProperty.call(record, 'rewardPathFormula') ||
+    Object.prototype.hasOwnProperty.call(record, 'rewardsFormula') ||
+    Object.prototype.hasOwnProperty.call(record, 'rewardFormulsValues') ||
+    Object.prototype.hasOwnProperty.call(record, 'source') ||
+    Object.prototype.hasOwnProperty.call(record, 'method') ||
+    Object.prototype.hasOwnProperty.call(record, 'role') ||
+    Object.prototype.hasOwnProperty.call(record, 'parentRewardFormula') ||
+    Object.prototype.hasOwnProperty.call(record, 'sponsorDepositFormula') ||
+    Object.prototype.hasOwnProperty.call(record, 'totalStakedRewardsFormula') ||
+    Object.prototype.hasOwnProperty.call(record, 'totalPendingRewardsFormula') ||
+    Object.prototype.hasOwnProperty.call(record, 'downstreamRewardsFormula') ||
+    Object.prototype.hasOwnProperty.call(record, 'sponsorStakedTokensFormula');
+  if (!looksLikeRewardCalculation) return value;
+
+  const isRewardCalculationContainer =
+    Object.prototype.hasOwnProperty.call(record, 'rewardPathFormula') ||
+    Object.prototype.hasOwnProperty.call(record, 'rewardsFormula') ||
+    Object.prototype.hasOwnProperty.call(record, 'rewardFormulsValues') ||
+    Object.prototype.hasOwnProperty.call(record, 'source') ||
+    Object.prototype.hasOwnProperty.call(record, 'method') ||
+    Object.prototype.hasOwnProperty.call(record, 'role');
+  if (!isRewardCalculationContainer) return value;
+
+  const next = { ...record };
+  const currentRewardPathFormula = (roleValue: unknown) => {
+    const normalizedRole = String(roleValue || '').trim();
+    if (normalizedRole === 'Sponsor') {
+      return [
+        'totalPendingRewards = \u03A3_t transactionBucketPendingRewards[t]',
+        'downstreamRewards = recipientPendingRewards + agentPendingRewards',
+        'sponsorPendingRewards = totalPendingRewards - downstreamRewards',
+      ];
+    }
+    if (normalizedRole === 'Recipient') {
+      return [
+        'recipientPendingRewards = \u03A3_r recipientBucketPendingRewards[r]',
+        'agentPendingRewards may be downstream from Recipient when Agent rates exist',
+      ];
+    }
+    if (normalizedRole === 'Agent') {
+      return ['agentPendingRewards = \u03A3_a agentBucketPendingRewards[a]'];
+    }
+    return [
+      'totalPendingRewards = sponsorPendingRewards + recipientPendingRewards + agentPendingRewards',
+      'each role is summed from its applicable transaction/rate buckets',
+    ];
+  };
+  if (Object.prototype.hasOwnProperty.call(next, 'rewardPathFormula')) {
+    next.rewardPathFormula = currentRewardPathFormula(next.role);
+  }
+  const existingRewardsFormula =
+    next.rewardsFormula && typeof next.rewardsFormula === 'object' && !Array.isArray(next.rewardsFormula)
+      ? (next.rewardsFormula as Record<string, unknown>)
+      : {};
+  const existingRewardFormulsValues =
+    next.rewardFormulsValues && typeof next.rewardFormulsValues === 'object' && !Array.isArray(next.rewardFormulsValues)
+      ? (next.rewardFormulsValues as Record<string, unknown>)
+      : {};
+  const moveFields = (keys: string[], target: Record<string, unknown>) => {
+    keys.forEach((key) => {
+      if (Object.prototype.hasOwnProperty.call(next, key) && !Object.prototype.hasOwnProperty.call(target, key)) {
+        target[key] = next[key];
+      }
+      delete next[key];
+    });
+  };
+  moveFields(
+    [
+      'indexNotation',
+      'formula',
+      'totalStakedRewardsFormula',
+      'totalPendingRewardsFormula',
+      'bucketPendingRewardsFormula',
+      'timeDiffFormula',
+      'parentRewardFormula',
+      'sponsorDepositFormula',
+      'sponsorStakedTokensFormula',
+      'downstreamRewardsFormula',
+      'recipientPendingRewardsFormula',
+      'agentPendingRewardsFormula',
+      'sponsorPendingRewardsFormula',
+    ],
+    existingRewardsFormula,
+  );
+  moveFields(
+    [
+      'Note',
+      'note',
+      'secondsInYesr',
+      'yearSeconds',
+      'rateUnit',
+      'solidityMethod',
+      'soliditySource',
+      'bucketLastUpdateTimeStamp',
+      'bucketLastUpdateFormatted',
+      'timeDifferenceMS',
+      'pendingRoleRewards',
+      'calculatedTimeStamp',
+      'calculatedFormatted',
+      'pendingTotalRewards',
+      'totalRewards',
+      'exactClaimedAmountFormula',
+      'exactClaimedAmountSource',
+      'balanceBefore',
+      'balanceAfter',
+      'claimedAmount',
+      'settlementTimestamp',
+      'accountSnapshotBefore',
+      'accountSnapshotAfter',
+    ],
+    existingRewardFormulsValues,
+  );
+  next.rewardsFormula = {
+    indexNotation:
+      existingRewardsFormula.indexNotation && typeof existingRewardsFormula.indexNotation === 'object'
+        ? existingRewardsFormula.indexNotation
+        : {
+            t: 'transaction/rate bucket index',
+            r: 'recipient-rate bucket index',
+            a: 'agent-rate bucket index',
+          },
+    totalPendingRewardsFormula:
+      existingRewardsFormula.totalPendingRewardsFormula ??
+      'totalPendingRewards = \u03A3_t transactionBucketPendingRewards[t]',
+    bucketPendingRewardsFormula:
+      existingRewardsFormula.bucketPendingRewardsFormula ??
+      'transactionBucketPendingRewards[t] = floor((transactionBucketTimeDiffSeconds[t] * transactionBucketStakedQuantity[t] * transactionBucketRate[t]) / 100 / yearSeconds)',
+    timeDiffFormula:
+      existingRewardsFormula.timeDiffFormula ??
+      'transactionBucketTimeDiffSeconds[t] = max(0, currentTransactionBucketTime[t] - transactionBucketLastUpdateTime[t])',
+    downstreamRewardsFormula:
+      existingRewardsFormula.downstreamRewardsFormula ??
+      'downstreamRewards = recipientPendingRewards + agentPendingRewards',
+    recipientPendingRewardsFormula:
+      existingRewardsFormula.recipientPendingRewardsFormula ??
+      'recipientPendingRewards = \u03A3_r floor((recipientBucketTimeDiffSeconds[r] * recipientBucketStakedQuantity[r] * recipientRate[r]) / 100 / yearSeconds)',
+    agentPendingRewardsFormula:
+      existingRewardsFormula.agentPendingRewardsFormula ??
+      'agentPendingRewards = \u03A3_a floor((agentBucketTimeDiffSeconds[a] * agentBucketStakedQuantity[a] * agentRate[a]) / 100 / yearSeconds)',
+    sponsorPendingRewardsFormula:
+      existingRewardsFormula.sponsorPendingRewardsFormula ??
+      'sponsorPendingRewards = totalPendingRewards - downstreamRewards',
+  };
+  if (Object.keys(existingRewardFormulsValues).length > 0) {
+    if (
+      Object.prototype.hasOwnProperty.call(existingRewardFormulsValues, 'note') &&
+      !Object.prototype.hasOwnProperty.call(existingRewardFormulsValues, 'Note')
+    ) {
+      existingRewardFormulsValues.Note = existingRewardFormulsValues.note;
+    }
+    delete existingRewardFormulsValues.note;
+    if (
+      Object.prototype.hasOwnProperty.call(existingRewardFormulsValues, 'yearSeconds') &&
+      !Object.prototype.hasOwnProperty.call(existingRewardFormulsValues, 'secondsInYesr')
+    ) {
+      existingRewardFormulsValues.secondsInYesr = existingRewardFormulsValues.yearSeconds;
+    }
+    delete existingRewardFormulsValues.yearSeconds;
+    delete existingRewardFormulsValues.rateUnit;
+    next.rewardsFormula = {
+      ...(next.rewardsFormula as Record<string, unknown>),
+      rewardFormulsValues: {
+        ...(Object.prototype.hasOwnProperty.call(existingRewardFormulsValues, 'Note')
+          ? { Note: existingRewardFormulsValues.Note }
+          : {}),
+        ...existingRewardFormulsValues,
+      },
+    };
+    delete next.rewardFormulsValues;
+  }
+  return next;
+  const applyCurrentRewardFormulas = () => {
+    next.indexNotation =
+      next.indexNotation ??
+      't = transaction/rate bucket index; r = recipient-rate bucket index; a = agent-rate bucket index';
+    next.totalPendingRewardsFormula =
+      next.totalPendingRewardsFormula ?? 'totalPendingRewards = Σ_t transactionBucketPendingRewards[t]';
+    next.bucketPendingRewardsFormula =
+      next.bucketPendingRewardsFormula ??
+      'transactionBucketPendingRewards[t] = floor((transactionBucketTimeDiffSeconds[t] * transactionBucketStakedQuantity[t] * transactionBucketRate[t]) / 100 / yearSeconds)';
+    next.timeDiffFormula =
+      next.timeDiffFormula ??
+      'transactionBucketTimeDiffSeconds[t] = max(0, currentTransactionBucketTime[t] - transactionBucketLastUpdateTime[t])';
+    next.downstreamRewardsFormula =
+      next.downstreamRewardsFormula ?? 'downstreamRewards = recipientPendingRewards + agentPendingRewards';
+    next.recipientPendingRewardsFormula =
+      next.recipientPendingRewardsFormula ??
+      'recipientPendingRewards = Σ_r floor((recipientBucketTimeDiffSeconds[r] * recipientBucketStakedQuantity[r] * recipientRate[r]) / 100 / yearSeconds)';
+    next.agentPendingRewardsFormula =
+      next.agentPendingRewardsFormula ??
+      'agentPendingRewards = Σ_a floor((agentBucketTimeDiffSeconds[a] * agentBucketStakedQuantity[a] * agentRate[a]) / 100 / yearSeconds)';
+    next.sponsorPendingRewardsFormula =
+      next.sponsorPendingRewardsFormula ?? 'sponsorPendingRewards = totalPendingRewards - downstreamRewards';
+  };
+
+  if (Object.prototype.hasOwnProperty.call(next, 'formula')) {
+    applyCurrentRewardFormulas();
+    delete next.formula;
+  }
+  if (Object.prototype.hasOwnProperty.call(next, 'totalStakedRewardsFormula')) {
+    applyCurrentRewardFormulas();
+    delete next.totalStakedRewardsFormula;
+  }
+  if (Object.prototype.hasOwnProperty.call(next, 'parentRewardFormula')) {
+    applyCurrentRewardFormulas();
+    delete next.parentRewardFormula;
+  }
+  if (Object.prototype.hasOwnProperty.call(next, 'sponsorDepositFormula')) {
+    applyCurrentRewardFormulas();
+    delete next.sponsorDepositFormula;
+  }
+  if (Object.prototype.hasOwnProperty.call(next, 'sponsorStakedTokensFormula')) {
+    applyCurrentRewardFormulas();
+    delete next.sponsorStakedTokensFormula;
+  }
+  return next;
+}
+
 function shouldHideByDropdownRules(
   value: unknown,
   showAll: boolean,
@@ -1070,6 +1343,8 @@ function getVisibleEntries(
   forceShowEntryKeys: string[] = [],
   showStructureType = false,
   accountRoleCounts: AccountRoleCounts | null = null,
+  label?: string,
+  path?: string,
 ): Array<[string, any]> {
   const sortEntries = ([leftKey]: [string, any], [rightKey]: [string, any]) => {
     const displayRecord =
@@ -1128,7 +1403,9 @@ function getVisibleEntries(
     normalizedValue && typeof normalizedValue === 'object' && !Array.isArray(normalizedValue)
       ? addPendingRewardsTimingToStepResult(moveAccountUpdateTimestampsToMeta(normalizedValue))
       : addPendingRewardsTimingToStepResult(value);
-  const displayValue = normalizeAccountRecordDisplayShape(displayValueBeforeAccountShape);
+  const displayValue = normalizeRewardCalculationDisplayShape(
+    normalizeAccountRecordDisplayShape(displayValueBeforeAccountShape),
+  );
   const forceShowChildren = shouldShowEmptyChildren(displayValue);
   if (showAll || forceShowChildren) {
     if (Array.isArray(displayValue)) {
@@ -1172,7 +1449,7 @@ function getVisibleEntries(
           (showStructureType || childKey !== 'TYPE'),
       )
       .sort(sortEntries);
-    return isPendingRewardsRecord(displayValue)
+    return shouldInjectPendingRewardsMethodEntries(label, path, displayValue)
       ? filterPendingRewardsRoleEntries(
           ensurePendingRewardsMethodEntries(entries),
           accountRoleCounts,
@@ -1226,7 +1503,7 @@ function getVisibleEntries(
       return hasPopulatedContent(childValue, hiddenRules, showStructureType);
     })
     .sort(sortEntries);
-  return isPendingRewardsRecord(displayValue)
+  return shouldInjectPendingRewardsMethodEntries(label, path, displayValue)
     ? filterPendingRewardsRoleEntries(
         ensurePendingRewardsMethodEntries(entries),
         accountRoleCounts,
@@ -1273,6 +1550,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     typeof data === 'object' &&
     !Array.isArray(data) &&
     typeof (data as Record<string, unknown>).accountKey === 'string' &&
+    (hasInlineAccountRecord(data) || isLazyAccountRelationNode(data) || isPendingRewardsIncludedMethodNode(data)) &&
     !effectiveHideEntryKeys.includes('accountKey')
   ) {
     effectiveHideEntryKeys.push('accountKey');
@@ -1285,14 +1563,21 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     forceShowEntryKeys,
     showStructureType,
     effectiveAccountRoleCounts,
+    label,
+    path,
   );
   const addressNode =
     data && typeof data === 'object' && !Array.isArray(data)
       ? String((data as Record<string, unknown>).address || (data as Record<string, unknown>).accountKey || '').trim()
       : '';
   const isAddressNode = /^0x[0-9a-fA-F]{40}$/.test(addressNode);
+  const isAddressFieldBackedNode =
+    data &&
+    typeof data === 'object' &&
+    !Array.isArray(data) &&
+    typeof (data as Record<string, unknown>).address === 'string';
   const hasLoadedAccountRecord = isAddressNode && hasInlineAccountRecord(data);
-  const isLazyAddressStub = isAddressNode && !hasLoadedAccountRecord && visibleEntries.length === 0;
+  const isLazyAddressStub = isAddressNode && isAddressFieldBackedNode && !hasLoadedAccountRecord && visibleEntries.length === 0;
   const isLazySpCoinMetaData = isLazySpCoinMetaDataNode(data);
   const isLazyMasterAccountKeys = isLazyMasterAccountKeysNode(data);
   const isLazyAccountRelation = isLazyAccountRelationNode(data);
@@ -1325,26 +1610,19 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
   const isHighlighted = highlightPathPrefixes.some(
     (prefix) => path === prefix || path.startsWith(`${prefix}.`),
   );
-  const toggle = useCallback(() => {
-    onTrace?.(
-      `[JSON_INSPECTOR_TRACE] toggle path=${currentPath} collapsed=${String(isCollapsed)} addressNode=${String(isAddressNode)} lazyAddress=${String(isLazyAddressStub)} loaded=${String(hasLoadedAccountRecord)} lazyMeta=${String(isLazySpCoinMetaData)} lazyMasterKeys=${String(isLazyMasterAccountKeys)} lazyRelation=${String(isLazyAccountRelation)} relationCount=${String(lazyAccountRelationCount)} pendingRefreshReady=${String(isPendingRewardsRefreshReady)} refreshAtMs=${String(refreshAtMs)} nowMs=${String(refreshClockMs)} label=${String(label || '')}`,
-    );
-    const nextOpenKeys = [
-      ...collapsedKeys.filter((key) => key !== currentPath && key !== forceExpandedDismissedKey),
-      expandedPathKey,
-    ];
-    if (isCollapsed && isLazySpCoinMetaData) {
-      updateCollapsedKeys([...new Set(nextOpenKeys)]);
+  const materializeBranch = useCallback(() => {
+    if (isLazySpCoinMetaData) {
+      onTrace?.(`[JSON_BRANCH_MATERIALIZE] kind=spcoin-metadata path=${currentPath}`);
       onLeafValueClick?.('__load_spcoin_metadata__', currentPath, 'spCoinMetaData');
-      return;
+      return true;
     }
-    if (isCollapsed && isLazyMasterAccountKeys) {
-      updateCollapsedKeys([...new Set(nextOpenKeys)]);
+    if (isLazyMasterAccountKeys) {
+      onTrace?.(`[JSON_BRANCH_MATERIALIZE] kind=master-account-keys path=${currentPath}`);
       onLeafValueClick?.('__load_master_account_keys__', currentPath, 'masterAccountKeys');
-      return;
+      return true;
     }
-    if (isCollapsed && isLazyTotalSpCoinsPendingRewards && totalSpCoinsPendingRewardsAction) {
-      updateCollapsedKeys([...new Set(nextOpenKeys)]);
+    if (isLazyTotalSpCoinsPendingRewards && totalSpCoinsPendingRewardsAction) {
+      onTrace?.(`[JSON_BRANCH_MATERIALIZE] kind=total-pending-rewards path=${currentPath}`);
       onLeafValueClick?.(
         JSON.stringify({
           __loadPendingRewardsAction: true,
@@ -1354,15 +1632,12 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
         `${currentPath}.pendingRewards.estimateOffChainTotalRewards`,
         'estimateOffChainTotalRewards',
       );
-      return;
+      return true;
     }
-    if (isCollapsed && isPendingRewardsRefreshReady) {
-      updateCollapsedKeys([
-        ...new Set([
-          ...collapsedKeys.filter((key) => key !== currentPath && key !== forceExpandedDismissedKey),
-          expandedPathKey,
-        ]),
-      ]);
+    if (isPendingRewardsRefreshReady) {
+      onTrace?.(
+        `[JSON_BRANCH_MATERIALIZE] kind=pending-rewards-refresh path=${currentPath} refreshAtMs=${String(refreshAtMs)} nowMs=${String(refreshClockMs)}`,
+      );
       onLeafValueClick?.(
         JSON.stringify({
           __loadPendingRewardsAction: true,
@@ -1372,16 +1647,12 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
         currentPath,
         'result',
       );
-      return;
+      return true;
     }
     if (isPendingRewardsIncludedMethodNode(data)) {
-      if (!isCollapsed) {
-        updateCollapsedKeys([
-          ...new Set([...collapsedKeys.filter((key) => key !== expandedPathKey), currentPath, forceExpandedDismissedKey]),
-        ]);
-        return;
-      }
-      updateCollapsedKeys([...new Set(nextOpenKeys)]);
+      onTrace?.(
+        `[JSON_BRANCH_MATERIALIZE] kind=pending-rewards-method path=${currentPath} method=${String((data as Record<string, unknown>).method || label || '')}`,
+      );
       onLeafValueClick?.(
         JSON.stringify({
           __loadPendingRewardsMethod: true,
@@ -1391,48 +1662,47 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
         currentPath,
         String((data as Record<string, unknown>).method || label || ''),
       );
-      return;
+      return true;
     }
     if (isLazyAccountRelation) {
-      if (!lazyAccountRelationCanExpand) return;
-      if (isCollapsed) {
-        updateCollapsedKeys([...new Set(nextOpenKeys)]);
-        onLeafValueClick?.(
-          JSON.stringify({
-            __loadAccountRelation: true,
-            accountKey: String((data as Record<string, unknown>).accountKey || ''),
-            relation: String((data as Record<string, unknown>).relation || ''),
-            count: lazyAccountRelationCount,
-          }),
-          currentPath,
-          String((data as Record<string, unknown>).relation || ''),
-        );
+      if (!lazyAccountRelationCanExpand) return true;
+      onTrace?.(
+        `[JSON_BRANCH_MATERIALIZE] kind=account-relation path=${currentPath} relation=${String((data as Record<string, unknown>).relation || '')} count=${String(lazyAccountRelationCount)}`,
+      );
+      onLeafValueClick?.(
+        JSON.stringify({
+          __loadAccountRelation: true,
+          accountKey: String((data as Record<string, unknown>).accountKey || ''),
+          relation: String((data as Record<string, unknown>).relation || ''),
+          count: lazyAccountRelationCount,
+        }),
+        currentPath,
+        String((data as Record<string, unknown>).relation || ''),
+      );
+      return true;
+    }
+    if (isAddressNode && !hasLoadedAccountRecord) {
+      if (isLazyAddressStub) {
+        onTrace?.(`[JSON_BRANCH_MATERIALIZE] kind=address-record path=${currentPath} account=${addressNode}`);
+        onLeafValueClick?.(addressNode, currentPath, 'address');
+        return true;
       }
-      return;
+      onTrace?.(
+        `[JSON_BRANCH_MATERIALIZE] kind=none-address-metadata path=${currentPath} label=${String(label || '')} account=${addressNode} reason=not-address-field-backed-lazy-stub`,
+      );
+      return false;
     }
-    if (isCollapsed && isAddressNode && !hasLoadedAccountRecord) {
-      updateCollapsedKeys([...new Set(nextOpenKeys)]);
-      onLeafValueClick?.(addressNode, currentPath, 'address');
-      return;
-    }
-    updateCollapsedKeys(
-      isCollapsed
-        ? [...new Set(nextOpenKeys)]
-        : [...new Set([...collapsedKeys.filter((key) => key !== expandedPathKey), currentPath, forceExpandedDismissedKey])],
-    );
+    return false;
   }, [
     addressNode,
-    collapsedKeys,
     currentPath,
-    expandedPathKey,
-    forceExpandedDismissedKey,
+    data,
     hasLoadedAccountRecord,
     isAddressNode,
-    isCollapsed,
-    data,
-    isLazySpCoinMetaData,
-    isLazyMasterAccountKeys,
+    isLazyAddressStub,
     isLazyAccountRelation,
+    isLazyMasterAccountKeys,
+    isLazySpCoinMetaData,
     isLazyTotalSpCoinsPendingRewards,
     isPendingRewardsRefreshReady,
     label,
@@ -1443,8 +1713,61 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     refreshAtMs,
     refreshClockMs,
     totalSpCoinsPendingRewardsAction,
+  ]);
+
+  const openBranch = useCallback((source = 'toggle') => {
+    const ancestorPaths = getAncestorPaths(currentPath);
+    const expandedAncestorPathKeys = getExpandedAncestorPathKeys(currentPath);
+    const nextKeys = [...new Set([
+      ...collapsedKeys.filter(
+        (key) => key !== currentPath && key !== forceExpandedDismissedKey && !ancestorPaths.includes(key),
+      ),
+      ...expandedAncestorPathKeys,
+      expandedPathKey,
+    ])];
+    onTrace?.(
+      `[JSON_BRANCH_TOGGLE] action=open source=${source} path=${currentPath} label=${String(label || '')} wasCollapsed=${String(isCollapsed)} ancestors=${ancestorPaths.join('>')} nextHasPath=${String(nextKeys.includes(currentPath))} nextHasExpanded=${String(nextKeys.includes(expandedPathKey))}`,
+    );
+    updateCollapsedKeys(nextKeys);
+    materializeBranch();
+  }, [
+    collapsedKeys,
+    currentPath,
+    expandedPathKey,
+    forceExpandedDismissedKey,
+    isCollapsed,
+    label,
+    materializeBranch,
+    onTrace,
     updateCollapsedKeys,
   ]);
+
+  const closeBranch = useCallback((source = 'toggle') => {
+    const nextKeys = [
+      ...new Set([...collapsedKeys.filter((key) => key !== expandedPathKey), currentPath, forceExpandedDismissedKey]),
+    ];
+    onTrace?.(
+      `[JSON_BRANCH_TOGGLE] action=close source=${source} path=${currentPath} label=${String(label || '')} wasCollapsed=${String(isCollapsed)} nextHasPath=${String(nextKeys.includes(currentPath))} nextHasExpanded=${String(nextKeys.includes(expandedPathKey))}`,
+    );
+    updateCollapsedKeys(nextKeys);
+  }, [
+    collapsedKeys,
+    currentPath,
+    expandedPathKey,
+    forceExpandedDismissedKey,
+    isCollapsed,
+    label,
+    onTrace,
+    updateCollapsedKeys,
+  ]);
+
+  const toggleBranch = useCallback(() => {
+    if (isCollapsed) {
+      openBranch('toggle');
+      return;
+    }
+    closeBranch('toggle');
+  }, [closeBranch, isCollapsed, openBranch]);
 
   const rerunnablePendingRewardsMethod = getPendingRewardsMethodName(label, data);
   const rerunnablePendingRewardsMethodDisplayName = rerunnablePendingRewardsMethod
@@ -1797,7 +2120,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
                 }}
                 title={`Show metadata for ${rawStringValue}`}
               >
-                {displayValue}
+                {renderFormulaDisplayValue(displayValue)}
               </button>
             ) : (
               <span
@@ -1806,14 +2129,16 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
                 }`}
                 title={`Show metadata for ${rawStringValue}`}
               >
-                {displayValue}
+                {renderFormulaDisplayValue(displayValue)}
               </span>
             )}
           </span>
         ) : (
           <>
             <span className={valueHighlighted ? highlightColorClass : 'text-[#5981F3]'}>{key}</span>:{' '}
-            <span className={valueHighlighted ? highlightColorClass : getValueColor(value)}>{displayValue}</span>
+            <span className={valueHighlighted ? highlightColorClass : getValueColor(value)}>
+              {renderFormulaDisplayValue(displayValue)}
+            </span>
           </>
         )}
       </div>
@@ -1836,7 +2161,10 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
         <button
           type="button"
           className="inline-flex items-center bg-transparent p-0"
-          onClick={toggle}
+          onClick={(event) => {
+            event.stopPropagation();
+            toggleBranch();
+          }}
           title={undefined}
         >
           <span className={isHighlighted ? highlightColorClass : isCollapsed ? 'text-green-400' : 'text-red-400'}>{isCollapsed ? '[+]' : '[-]'}</span>
@@ -1853,7 +2181,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
                 `[JSON_INSPECTOR_TRACE] relation node click path=${path ?? ''} relation=${String((data as Record<string, unknown>).relation || '')} count=${String(lazyAccountRelationCount)}`,
               );
               if (lazyAccountRelationCanExpand) {
-                toggle();
+                openBranch('label');
               }
             }}
             title={
@@ -1888,6 +2216,12 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
                 <span className={isHighlighted ? highlightColorClass : 'text-green-400'}>
                   {pendingRewardsMethodSummaryDisplay}
                 </span>
+                {PENDING_REWARDS_CLAIM_METHOD_NAMES.has(rerunnablePendingRewardsMethod) ? (
+                  <>
+                    {' '}
+                    <span className="text-yellow-300">(Last Claimed)</span>
+                  </>
+                ) : null}
               </>
             ) : null}
           </>
@@ -1914,7 +2248,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
                   `[JSON_INSPECTOR_TRACE] address node click path=${path ?? ''} key=${label || 'address'} value=${addressNode} lazy=${String(isLazyAddressStub)} loaded=${String(hasLoadedAccountRecord)}`,
                 );
                 if (isLazyAddressStub) {
-                  toggle();
+                  openBranch('label');
                   return;
                 }
                 onAddressNodeClick?.(addressNode, path ?? '', label || 'address');
