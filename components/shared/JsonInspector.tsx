@@ -721,7 +721,10 @@ function shouldInjectPendingRewardsMethodEntries(
   if (!isPendingRewardsRecord(value)) return false;
   if (label !== 'pendingRewards') return false;
   const normalizedPath = String(path || '');
-  if (normalizedPath.split('.').includes('rewardCalculation')) return false;
+  if (
+    normalizedPath.split('.').includes('rewardCalculation') ||
+    normalizedPath.split('.').includes('rewardCalculations')
+  ) return false;
   return true;
 }
 
@@ -1243,6 +1246,9 @@ function getPendingRewardsMethodSummaryValue(
 }
 
 function normalizeVisibleEntry(parent: any, childKey: string, childValue: any): [string, any] {
+  if (childKey === 'rewardCalculation') {
+    return ['rewardCalculations', childValue];
+  }
   if (
     childKey === 'calculatedFormatted' &&
     String(childValue ?? '').trim() === '' &&
@@ -1320,9 +1326,13 @@ function normalizeRewardCalculationDisplayShape(
 ): any {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
   const record = value as Record<string, unknown>;
-  if (label === 'rewardsNotations') {
+  if (label === 'rewardNotations') {
     const nextNotations = { ...record };
     delete nextNotations.rewardsFormula;
+    delete nextNotations.rewardFormulas;
+    delete nextNotations.secondsInYear;
+    delete nextNotations.yearsInSeconds;
+    delete nextNotations.role;
     return nextNotations;
   }
   const roleFromMethod = (methodValue: unknown): 'Sponsor' | 'Recipient' | 'Agent' | 'Total' | '' => {
@@ -1380,38 +1390,41 @@ function normalizeRewardCalculationDisplayShape(
     const legacyFormulaMatch = formulaValue.match(/^[A-Za-z0-9_[\]]+\s*=\s*(.+)$/);
     return normalizeFormulaTerms(legacyFormulaMatch ? legacyFormulaMatch[1].trim() : formulaValue);
   };
-  const compactRewardFormulaGroup = (formulaRecord: Record<string, unknown>, roleValue?: unknown) => {
+  const compactRewardFormulaGroup = (
+    formulaRecord: Record<string, unknown>,
+    roleValue?: unknown,
+    options?: { includeMeta?: boolean },
+  ) => {
     const nestedRewardsFormula =
-      formulaRecord.rewardsFormula &&
-      typeof formulaRecord.rewardsFormula === 'object' &&
-      !Array.isArray(formulaRecord.rewardsFormula)
-        ? (formulaRecord.rewardsFormula as Record<string, unknown>)
+      (formulaRecord.rewardFormulas || formulaRecord.rewardsFormula) &&
+      typeof (formulaRecord.rewardFormulas || formulaRecord.rewardsFormula) === 'object' &&
+      !Array.isArray(formulaRecord.rewardFormulas || formulaRecord.rewardsFormula)
+        ? ((formulaRecord.rewardFormulas || formulaRecord.rewardsFormula) as Record<string, unknown>)
         : {};
     const sourceFormulaRecord = {
       ...nestedRewardsFormula,
       ...formulaRecord,
     };
     delete sourceFormulaRecord.rewardsFormula;
+    delete sourceFormulaRecord.rewardFormulas;
     const nestedRewardFormulsValues =
-      sourceFormulaRecord.rewardFormulsValues &&
-      typeof sourceFormulaRecord.rewardFormulsValues === 'object' &&
-      !Array.isArray(sourceFormulaRecord.rewardFormulsValues)
-        ? (sourceFormulaRecord.rewardFormulsValues as Record<string, unknown>)
+      (sourceFormulaRecord.rewardValues || sourceFormulaRecord.rewardFormulsValues) &&
+      typeof (sourceFormulaRecord.rewardValues || sourceFormulaRecord.rewardFormulsValues) === 'object' &&
+      !Array.isArray(sourceFormulaRecord.rewardValues || sourceFormulaRecord.rewardFormulsValues)
+        ? ((sourceFormulaRecord.rewardValues || sourceFormulaRecord.rewardFormulsValues) as Record<string, unknown>)
         : {};
     const normalizedRole = String(roleValue || roleFromRewardValues(nestedRewardFormulsValues) || '').trim();
     const defaultRewardsNotations: Record<string, unknown> = {
-      yearsInSeconds: '365.25 Days = 31556925',
-      secondsInYear: '31556925 seconds = 365.2421875 days',
       yearSeconds: '31556925 seconds = 365.2421875 days',
       t: 'sponsor/rate bucket index',
       r: 'recipient-rate bucket index',
       a: 'agent-rate bucket index',
     };
     const sourceNotations =
-      sourceFormulaRecord.rewardsNotations &&
-      typeof sourceFormulaRecord.rewardsNotations === 'object' &&
-      !Array.isArray(sourceFormulaRecord.rewardsNotations)
-        ? (sourceFormulaRecord.rewardsNotations as Record<string, unknown>)
+      (sourceFormulaRecord.rewardNotations || sourceFormulaRecord.rewardsNotations) &&
+      typeof (sourceFormulaRecord.rewardNotations || sourceFormulaRecord.rewardsNotations) === 'object' &&
+      !Array.isArray(sourceFormulaRecord.rewardNotations || sourceFormulaRecord.rewardsNotations)
+        ? ((sourceFormulaRecord.rewardNotations || sourceFormulaRecord.rewardsNotations) as Record<string, unknown>)
         : sourceFormulaRecord.indexNotation &&
             typeof sourceFormulaRecord.indexNotation === 'object' &&
             !Array.isArray(sourceFormulaRecord.indexNotation)
@@ -1419,35 +1432,36 @@ function normalizeRewardCalculationDisplayShape(
           : {};
     const compactSourceNotations = { ...sourceNotations };
     delete compactSourceNotations.rewardsFormula;
-    const rewardsNotations: Record<string, unknown> = {
+    delete compactSourceNotations.rewardFormulas;
+    delete compactSourceNotations.secondsInYear;
+    delete compactSourceNotations.yearsInSeconds;
+    delete compactSourceNotations.role;
+    const rewardNotations: Record<string, unknown> = {
       ...defaultRewardsNotations,
       ...compactSourceNotations,
     };
-    if (normalizedRole) {
-      rewardsNotations.role = normalizedRole;
-    }
-    const compact: Record<string, unknown> = {
-      rewardsNotations,
-    };
+    const compact: Record<string, unknown> = options?.includeMeta === false ? {} : { rewardNotations };
     rewardFormulaFields.forEach((field) => {
       const formulaValue = sourceFormulaRecord[field.displayKey] ?? sourceFormulaRecord[field.legacyKey] ?? field.fallback;
       compact[field.displayKey] = stripFormulaLeftHandSide(formulaValue, field.displayKey);
     });
-    if (Object.prototype.hasOwnProperty.call(sourceFormulaRecord, 'rewardFormulsValues')) {
-      compact.rewardFormulsValues =
-        sourceFormulaRecord.rewardFormulsValues &&
-        typeof sourceFormulaRecord.rewardFormulsValues === 'object' &&
-        !Array.isArray(sourceFormulaRecord.rewardFormulsValues)
+    const sourceRewardValues = sourceFormulaRecord.rewardValues ?? sourceFormulaRecord.rewardFormulsValues;
+    if (options?.includeMeta !== false && sourceRewardValues !== undefined) {
+      compact.rewardValues =
+        sourceRewardValues &&
+        typeof sourceRewardValues === 'object' &&
+        !Array.isArray(sourceRewardValues)
           ? normalizeRewardFormulsValuesDisplayShape(
-              sourceFormulaRecord.rewardFormulsValues as Record<string, unknown>,
+              sourceRewardValues as Record<string, unknown>,
               normalizedRole,
             )
-          : sourceFormulaRecord.rewardFormulsValues;
+          : sourceRewardValues;
     }
     return compact;
   };
   const hasRewardFormulaGroupFields =
     Object.prototype.hasOwnProperty.call(record, 'rewardsNotations') ||
+    Object.prototype.hasOwnProperty.call(record, 'rewardNotations') ||
     Object.prototype.hasOwnProperty.call(record, 'indexNotation') ||
     rewardFormulaFields.some((field) => Object.prototype.hasOwnProperty.call(record, field.displayKey)) ||
     Object.prototype.hasOwnProperty.call(record, 'totalPendingRewardsFormula') ||
@@ -1464,7 +1478,7 @@ function normalizeRewardCalculationDisplayShape(
     Object.prototype.hasOwnProperty.call(record, 'role');
   const roleSingleSource = getRoleSingleSource(accountRoleCounts);
   if (hasRewardFormulaGroupFields && !hasRewardCalculationContainerFields) {
-    return compactRewardFormulaGroup(record, roleSingleSource.role);
+    return compactRewardFormulaGroup(record, roleSingleSource.role, { includeMeta: label !== 'rewardFormulas' });
   }
   if (
     Object.prototype.hasOwnProperty.call(record, 'sponsorBucketLastUpdateTimeStamp') &&
@@ -1475,7 +1489,9 @@ function normalizeRewardCalculationDisplayShape(
   const looksLikeRewardCalculation =
     Object.prototype.hasOwnProperty.call(record, 'rewardPathFormula') ||
     Object.prototype.hasOwnProperty.call(record, 'rewardsFormula') ||
+    Object.prototype.hasOwnProperty.call(record, 'rewardFormulas') ||
     Object.prototype.hasOwnProperty.call(record, 'rewardFormulsValues') ||
+    Object.prototype.hasOwnProperty.call(record, 'rewardValues') ||
     Object.prototype.hasOwnProperty.call(record, 'source') ||
     Object.prototype.hasOwnProperty.call(record, 'method') ||
     Object.prototype.hasOwnProperty.call(record, 'role') ||
@@ -1490,7 +1506,9 @@ function normalizeRewardCalculationDisplayShape(
   const isRewardCalculationContainer =
     Object.prototype.hasOwnProperty.call(record, 'rewardPathFormula') ||
     Object.prototype.hasOwnProperty.call(record, 'rewardsFormula') ||
+    Object.prototype.hasOwnProperty.call(record, 'rewardFormulas') ||
     Object.prototype.hasOwnProperty.call(record, 'rewardFormulsValues') ||
+    Object.prototype.hasOwnProperty.call(record, 'rewardValues') ||
     Object.prototype.hasOwnProperty.call(record, 'source') ||
     Object.prototype.hasOwnProperty.call(record, 'method') ||
     Object.prototype.hasOwnProperty.call(record, 'role');
@@ -1542,18 +1560,22 @@ function normalizeRewardCalculationDisplayShape(
     next.rewardPathFormula = currentRewardPathFormula(next.role);
   }
   const existingRewardsFormula =
-    next.rewardsFormula && typeof next.rewardsFormula === 'object' && !Array.isArray(next.rewardsFormula)
-      ? (next.rewardsFormula as Record<string, unknown>)
+    (next.rewardFormulas || next.rewardsFormula) &&
+    typeof (next.rewardFormulas || next.rewardsFormula) === 'object' &&
+    !Array.isArray(next.rewardFormulas || next.rewardsFormula)
+      ? ((next.rewardFormulas || next.rewardsFormula) as Record<string, unknown>)
       : {};
   const existingNestedRewardFormulsValues =
-    existingRewardsFormula.rewardFormulsValues &&
-    typeof existingRewardsFormula.rewardFormulsValues === 'object' &&
-    !Array.isArray(existingRewardsFormula.rewardFormulsValues)
-      ? (existingRewardsFormula.rewardFormulsValues as Record<string, unknown>)
+    (existingRewardsFormula.rewardValues || existingRewardsFormula.rewardFormulsValues) &&
+    typeof (existingRewardsFormula.rewardValues || existingRewardsFormula.rewardFormulsValues) === 'object' &&
+    !Array.isArray(existingRewardsFormula.rewardValues || existingRewardsFormula.rewardFormulsValues)
+      ? ((existingRewardsFormula.rewardValues || existingRewardsFormula.rewardFormulsValues) as Record<string, unknown>)
       : {};
   const existingTopLevelRewardFormulsValues =
-    next.rewardFormulsValues && typeof next.rewardFormulsValues === 'object' && !Array.isArray(next.rewardFormulsValues)
-      ? (next.rewardFormulsValues as Record<string, unknown>)
+    (next.rewardValues || next.rewardFormulsValues) &&
+    typeof (next.rewardValues || next.rewardFormulsValues) === 'object' &&
+    !Array.isArray(next.rewardValues || next.rewardFormulsValues)
+      ? ((next.rewardValues || next.rewardFormulsValues) as Record<string, unknown>)
       : {};
   const existingRewardFormulsValues = {
     ...existingNestedRewardFormulsValues,
@@ -1577,6 +1599,7 @@ function normalizeRewardCalculationDisplayShape(
     [
       'indexNotation',
       'rewardsNotations',
+      'rewardNotations',
       'formula',
       'totalStakedRewardsFormula',
       'totalPendingRewardsFormula',
@@ -1630,9 +1653,25 @@ function normalizeRewardCalculationDisplayShape(
     ],
     existingRewardFormulsValues,
   );
-  next.rewardsFormula = compactRewardFormulaGroup(existingRewardsFormula, next.role);
-  if (next.rewardsFormula && typeof next.rewardsFormula === 'object' && !Array.isArray(next.rewardsFormula)) {
-    delete (next.rewardsFormula as Record<string, unknown>).rewardsFormula;
+  delete next.rewardsFormula;
+  delete next.rewardFormulsValues;
+  next.rewardFormulas = compactRewardFormulaGroup(existingRewardsFormula, next.role);
+  if (next.rewardFormulas && typeof next.rewardFormulas === 'object' && !Array.isArray(next.rewardFormulas)) {
+    const compactRewardsFormula = next.rewardFormulas as Record<string, unknown>;
+    delete compactRewardsFormula.rewardsFormula;
+    delete compactRewardsFormula.rewardFormulas;
+    const compactRewardNotations = compactRewardsFormula.rewardNotations ?? compactRewardsFormula.rewardsNotations;
+    if (compactRewardNotations && typeof compactRewardNotations === 'object') {
+      next.rewardNotations = compactRewardNotations;
+      delete compactRewardsFormula.rewardNotations;
+      delete compactRewardsFormula.rewardsNotations;
+    }
+    const compactRewardValues = compactRewardsFormula.rewardValues ?? compactRewardsFormula.rewardFormulsValues;
+    if (compactRewardValues && typeof compactRewardValues === 'object') {
+      next.rewardValues = compactRewardValues;
+      delete compactRewardsFormula.rewardValues;
+      delete compactRewardsFormula.rewardFormulsValues;
+    }
   }
   if (Object.keys(existingRewardFormulsValues).length > 0) {
     if (
@@ -1733,20 +1772,18 @@ function normalizeRewardCalculationDisplayShape(
       normalizedRole,
     );
     const compactRewardsFormula =
-      next.rewardsFormula && typeof next.rewardsFormula === 'object' && !Array.isArray(next.rewardsFormula)
-        ? { ...(next.rewardsFormula as Record<string, unknown>) }
+      next.rewardFormulas && typeof next.rewardFormulas === 'object' && !Array.isArray(next.rewardFormulas)
+        ? { ...(next.rewardFormulas as Record<string, unknown>) }
         : {};
     delete compactRewardsFormula.rewardsFormula;
-    next.rewardsFormula = {
-      ...compactRewardsFormula,
-      rewardFormulsValues: {
-        ...(Object.prototype.hasOwnProperty.call(normalizedRewardFormulsValues, 'Note')
-          ? { Note: normalizedRewardFormulsValues.Note }
-          : {}),
-        ...normalizedRewardFormulsValues,
-      },
+    delete compactRewardsFormula.rewardFormulas;
+    next.rewardFormulas = compactRewardsFormula;
+    next.rewardValues = {
+      ...(Object.prototype.hasOwnProperty.call(normalizedRewardFormulsValues, 'Note')
+        ? { Note: normalizedRewardFormulsValues.Note }
+        : {}),
+      ...normalizedRewardFormulsValues,
     };
-    delete next.rewardFormulsValues;
   }
   return next;
   const applyCurrentRewardFormulas = () => {
@@ -1871,6 +1908,16 @@ function getVisibleEntries(
     if (rightKey === 'source' && leftKey !== 'source') return 1;
     if (leftKey === 'role' && rightKey !== 'source' && rightKey !== 'role') return -1;
     if (rightKey === 'role' && leftKey !== 'source' && leftKey !== 'role') return 1;
+    const rewardCalculationOrder: Record<string, number> = {
+      rewardNotations: 10,
+      rewardFormulas: 11,
+      rewardValues: 12,
+    };
+    const leftRewardCalculationOrder = rewardCalculationOrder[leftKey];
+    const rightRewardCalculationOrder = rewardCalculationOrder[rightKey];
+    if (leftRewardCalculationOrder !== undefined || rightRewardCalculationOrder !== undefined) {
+      return (leftRewardCalculationOrder ?? 100) - (rightRewardCalculationOrder ?? 100);
+    }
     if (
       (leftKey === 'onChainCalls' || leftKey === 'methodOnChainCalls' || leftKey === 'totalMethodsOnChainMs') &&
       rightKey !== 'onChainCalls' &&
@@ -2583,7 +2630,10 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     const isRewardFormulaEntry =
       key !== 'indexNotation' &&
       key !== 'rewardsNotations' &&
-      (String(path || '').endsWith('.rewardsFormula') ||
+      key !== 'rewardNotations' &&
+      (String(path || '').endsWith('.rewardFormulas') ||
+        String(path || '').endsWith('.rewardsFormula') ||
+        label === 'rewardFormulas' ||
         label === 'rewardsFormula' ||
         isCompactRewardFormulaDisplayGroup(data));
     const scalarDelimiter = isRewardFormulaEntry ? '=' : ':';
