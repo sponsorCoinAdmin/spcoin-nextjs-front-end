@@ -53,5 +53,9 @@ export { getRecipientTransactionEntries } from './getRecipientTransactionEntries
 export { getRateTransactionSet } from './getRateTransactionSet';
 export { getRecipientRateTransactionSetKey } from './getRecipientRateTransactionSetKey';
 export { getAgentRateTransactionSetKey } from './getAgentRateTransactionSetKey';
+export { getAgentSponsorKeys } from './getAgentSponsorKeys';
+export {
+    getAgentSponsorAgentRateTransactionSetKeys,
+} from './getAgentSponsorAgentRateTransactionSetKeys';
 export { getAccountRecordBase } from './getAccountRecordBase';
 

@@ -65,6 +65,10 @@ contract SpCoinDataTypes {
     mapping(address => SponsorContainerStruct) internal sponsorContainerMap;
     mapping(address => mapping(bytes32 => bool)) internal sponsorHasRecipientRateTransactionSetKey;
     mapping(address => mapping(bytes32 => bool)) internal sponsorHasAgentRateTransactionSetKey;
+    mapping(address => address[]) internal agentSponsorKeys;
+    mapping(address => mapping(address => bool)) internal agentHasSponsorKey;
+    mapping(address => mapping(address => bytes32[])) internal agentSponsorAgentRateTransactionSetKeys;
+    mapping(address => mapping(address => mapping(bytes32 => bool))) internal agentSponsorHasAgentRateTransactionSetKey;
 
     uint internal constant UNDEFINED = 0;
     uint internal constant SPONSOR = 1;

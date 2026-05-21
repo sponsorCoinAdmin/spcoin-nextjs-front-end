@@ -43,39 +43,19 @@ function getPendingRewardsRole(record: Record<string, unknown>): 'Sponsor' | 'Re
   return 'Agent';
 }
 
-function getRoleTimestamp(record: Record<string, unknown>, role: 'Sponsor' | 'Recipient' | 'Agent'): string {
-  return toPendingRewardsBigInt(
-    record[`last${role}TimeStamp`] ??
-      record[`last${role}UpdateTimeStamp`] ??
-      record[`last${role}Update`],
-  ).toString();
+function getVisiblePendingRewardComponents(
+  role: 'Sponsor' | 'Recipient' | 'Agent',
+  pendingSponsorRewards: string,
+  pendingRecipientRewards: string,
+  pendingAgentRewards: string,
+): Record<string, string> {
+  if (role === 'Sponsor') return { pendingSponsorRewards };
+  if (role === 'Recipient') return { pendingRecipientRewards };
+  return { pendingAgentRewards };
 }
 
 function isScalarRewardValue(value: unknown): boolean {
   return value == null || ['string', 'number', 'bigint', 'boolean'].includes(typeof value);
-}
-
-function formatDurationParts(milliseconds: bigint): string {
-  let remaining = milliseconds < 0n ? -milliseconds : milliseconds;
-  const msPerSecond = 1000n;
-  const msPerMinute = 60n * msPerSecond;
-  const msPerDay = 24n * 60n * msPerMinute;
-  const msPerYear = 365n * msPerDay;
-  const years = remaining / msPerYear;
-  remaining %= msPerYear;
-  const days = remaining / msPerDay;
-  remaining %= msPerDay;
-  const mins = remaining / msPerMinute;
-  remaining %= msPerMinute;
-  const seconds = remaining / msPerSecond;
-  const ms = remaining % msPerSecond;
-  const parts: string[] = [];
-  if (years > 1n) parts.push(`Years: ${years.toString()}`);
-  if (days > 1n) parts.push(`Days: ${days.toString()}`);
-  if (mins > 1n) parts.push(`Minutes: ${mins.toString()}`);
-  if (seconds > 1n) parts.push(`Seconds: ${seconds.toString()}`);
-  if (ms > 1n) parts.push(`Milli: ${ms.toString()}`);
-  return parts.join(', ') || '0';
 }
 
 export function hasPendingRewardsFields(value: unknown): value is Record<string, unknown> {
@@ -120,16 +100,12 @@ export function normalizePendingRewardsDisplayResult(value: unknown): unknown {
       : explicitTotal.toString();
   const calculatedTimeStamp = String(record.calculatedTimeStamp ?? record.calculatedmestamp ?? record.calculatedAtTimestamp ?? '0');
   const role = getPendingRewardsRole(record);
-  const lastRoleTimeStampKey = `last${role}TimeStamp`;
-  const lastRoleUpdateKey = `last${role}Update`;
-  const lastRoleTimeStamp = getRoleTimestamp(record, role);
-  const calculatedTimeStampValue = toPendingRewardsBigInt(calculatedTimeStamp);
-  const lastRoleTimeStampValue = toPendingRewardsBigInt(lastRoleTimeStamp);
-  const timeDifferenceMS =
-    lastRoleTimeStampValue > 0n && calculatedTimeStampValue > lastRoleTimeStampValue
-      ? (calculatedTimeStampValue - lastRoleTimeStampValue).toString()
-      : '0';
-  const formattedDifference = formatDurationParts(toPendingRewardsBigInt(timeDifferenceMS) * 1000n);
+  const visiblePendingRewardComponents = getVisiblePendingRewardComponents(
+    role,
+    pendingSponsorRewards,
+    pendingRecipientRewards,
+    pendingAgentRewards,
+  );
   const calculatedFormatted =
     String(record.calculatedFormatted ?? record.calculatedAt ?? '').trim() ||
     calculateFormattedDT(calculatedTimeStamp);
@@ -193,12 +169,8 @@ export function normalizePendingRewardsDisplayResult(value: unknown): unknown {
       ...restRecord,
       TYPE: restRecord.TYPE ?? '--ACCOUNT_PENDING_REWARDS--',
       accountKey: String(restRecord.accountKey ?? ''),
-      [lastRoleUpdateKey]: calculateFormattedDT(lastRoleTimeStamp),
       calculatedFormatted,
-      formattedDifference,
-      pendingSponsorRewards,
-      pendingRecipientRewards,
-      pendingAgentRewards,
+      ...visiblePendingRewardComponents,
       pendingTotalRewards: pendingRewards,
       __showEmptyFields: true,
     };
@@ -209,17 +181,9 @@ export function normalizePendingRewardsDisplayResult(value: unknown): unknown {
     TYPE: restRecord.TYPE ?? '--ACCOUNT_PENDING_REWARDS--',
     accountKey: String(restRecord.accountKey ?? ''),
     calculatedTimeStamp,
-    [lastRoleTimeStampKey]: lastRoleTimeStamp,
-    timeDifferenceMS,
     calculatedFormatted,
-    [lastRoleUpdateKey]: calculateFormattedDT(lastRoleTimeStamp),
-    formattedDifference,
-    pendingRewards,
-    pendingSponsorRewards,
-    pendingRecipientRewards,
-    pendingAgentRewards,
+    ...visiblePendingRewardComponents,
     pendingTotalRewards: pendingRewards,
-    totalRewards: pendingRewards,
     __showEmptyFields: true,
   };
 }

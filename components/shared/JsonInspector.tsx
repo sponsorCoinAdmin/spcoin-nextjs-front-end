@@ -37,6 +37,192 @@ const PENDING_REWARDS_METHOD_DISPLAY_NAMES: Record<string, string> = {
   claimOnChainAgentRewards: 'claimOnChainAgentRewards',
 };
 
+type DisplayAccountRole = 'Sponsor' | 'Recipient' | 'Agent';
+
+type RoleSingleSource = {
+  role: DisplayAccountRole | '';
+  isSponsor: boolean;
+  isRecipient: boolean;
+  isAgent: boolean;
+};
+
+function toDisplayBigInt(value: unknown): bigint {
+  const normalized = String(value ?? '0').replace(/,/g, '').trim();
+  if (!normalized) return 0n;
+  try {
+    return BigInt(normalized);
+  } catch {
+    return 0n;
+  }
+}
+
+function calculateDisplayTimeDiffSeconds(startValue: unknown, endValue: unknown): string {
+  const start = toDisplayBigInt(startValue);
+  const end = toDisplayBigInt(endValue);
+  if (start <= 0n || end <= start) return '0';
+  return (end - start).toString();
+}
+
+function formatDisplayTimeDiffSeconds(value: unknown): string {
+  let remainingMs = toDisplayBigInt(value) * 1000n;
+  if (remainingMs <= 0n) return '0';
+  const msPerSecond = 1000n;
+  const msPerMinute = 60n * msPerSecond;
+  const msPerHour = 60n * msPerMinute;
+  const msPerDay = 24n * msPerHour;
+  const days = remainingMs / msPerDay;
+  remainingMs %= msPerDay;
+  const hours = remainingMs / msPerHour;
+  remainingMs %= msPerHour;
+  const mins = remainingMs / msPerMinute;
+  remainingMs %= msPerMinute;
+  const secs = remainingMs / msPerSecond;
+  const ms = remainingMs % msPerSecond;
+  const parts: string[] = [];
+  if (days > 0n) parts.push(`Days = ${days.toString()}`);
+  if (hours > 0n) parts.push(`Hours = ${hours.toString()}`);
+  if (mins > 0n) parts.push(`Mins = ${mins.toString()}`);
+  if (secs > 0n) parts.push(`Secs = ${secs.toString()}`);
+  if (ms > 0n) parts.push(`MS = ${ms.toString()}`);
+  return parts.join(' ');
+}
+
+function getRoleSingleSource(counts: AccountRoleCounts | null | undefined): RoleSingleSource {
+  if (!counts) {
+    return {
+      role: '',
+      isSponsor: false,
+      isRecipient: false,
+      isAgent: false,
+    };
+  }
+  const isSponsor = counts.isSponsor ?? counts.recipientCount > 0;
+  const isRecipient = counts.isRecipient ?? (counts.sponsorCount > 0 || counts.agentCount > 0);
+  const isAgent = counts.isAgent ?? counts.parentRecipientCount > 0;
+  const role = isAgent ? 'Agent' : isRecipient ? 'Recipient' : isSponsor ? 'Sponsor' : '';
+  return {
+    role,
+    isSponsor,
+    isRecipient,
+    isAgent,
+  };
+}
+
+function normalizeRewardFormulsValuesDisplayShape(
+  value: Record<string, unknown>,
+  roleValue?: unknown,
+): Record<string, unknown> {
+  const next = { ...value };
+  const normalizedRole = String(roleValue ?? '').trim();
+  if (normalizedRole) {
+    next.role = normalizedRole;
+  }
+  if (
+    Object.prototype.hasOwnProperty.call(next, 'bucketLastUpdateTimeStamp') &&
+    !Object.prototype.hasOwnProperty.call(next, 'sponsorBucketLastUpdateTimeStamp')
+  ) {
+    next.sponsorBucketLastUpdateTimeStamp = next.bucketLastUpdateTimeStamp;
+  }
+  if (
+    Object.prototype.hasOwnProperty.call(next, 'bucketLastUpdateFormatted') &&
+    !Object.prototype.hasOwnProperty.call(next, 'sponsorBucketLastUpdateFormatted')
+  ) {
+    next.sponsorBucketLastUpdateFormatted = next.bucketLastUpdateFormatted;
+  }
+
+  delete next.bucketLastUpdateTimeStamp;
+  delete next.bucketLastUpdateFormatted;
+  delete next.lastSponsorUpdate;
+  delete next.lastRecipientUpdate;
+  delete next.lastAgentUpdate;
+  delete next.lastSponsorTimeStamp;
+  delete next.lastRecipientTimeStamp;
+  delete next.lastAgentTimeStamp;
+  delete next.timeDifference;
+  delete next.timeDifferenceMS;
+  delete next.formattedDifference;
+  delete next.pendingRewards;
+  delete next.secondsInYesr;
+  delete next.yearSeconds;
+  delete next.rateUnit;
+  delete next.pendingRoleRewards;
+  delete next.totalRewards;
+
+  const bucketTimestamp =
+    next.sponsorBucketLastUpdateTimeStamp ??
+    next.recipientBucketLastUpdateTimeStamp ??
+    next.agentBucketLastUpdateTimeStamp;
+  if (
+    bucketTimestamp !== undefined &&
+    next.calculatedTimeStamp !== undefined &&
+    !Object.prototype.hasOwnProperty.call(next, 'calculatedTimeDiff')
+  ) {
+    next.calculatedTimeDiff = calculateDisplayTimeDiffSeconds(bucketTimestamp, next.calculatedTimeStamp);
+  }
+  if (
+    next.calculatedTimeDiff !== undefined &&
+    !Object.prototype.hasOwnProperty.call(next, 'TimeDiffFormatted')
+  ) {
+    next.TimeDiffFormatted = formatDisplayTimeDiffSeconds(next.calculatedTimeDiff);
+  }
+
+  if (normalizedRole === 'Sponsor') {
+    delete next.pendingRecipientRewards;
+    delete next.pendingAgentRewards;
+  } else if (normalizedRole === 'Recipient') {
+    delete next.pendingSponsorRewards;
+    delete next.pendingAgentRewards;
+  } else if (normalizedRole === 'Agent') {
+    delete next.pendingSponsorRewards;
+    delete next.pendingRecipientRewards;
+  } else {
+    const hasSponsorBucket = Object.prototype.hasOwnProperty.call(next, 'sponsorBucketLastUpdateTimeStamp');
+    const hasRecipientBucket = Object.prototype.hasOwnProperty.call(next, 'recipientBucketLastUpdateTimeStamp');
+    const hasAgentBucket = Object.prototype.hasOwnProperty.call(next, 'agentBucketLastUpdateTimeStamp');
+    if (!hasSponsorBucket) delete next.pendingSponsorRewards;
+    if (!hasRecipientBucket) delete next.pendingRecipientRewards;
+    if (!hasAgentBucket) delete next.pendingAgentRewards;
+  }
+
+  const orderedKeys = [
+    'Note',
+    'note',
+    'role',
+    'solidityMethod',
+    'soliditySource',
+    'sponsorBucketLastUpdateTimeStamp',
+    'recipientBucketLastUpdateTimeStamp',
+    'agentBucketLastUpdateTimeStamp',
+    'calculatedTimeStamp',
+    'calculatedTimeDiff',
+    'TimeDiffFormatted',
+    'sponsorBucketLastUpdateFormatted',
+    'recipientBucketLastUpdateFormatted',
+    'agentBucketLastUpdateFormatted',
+    'calculatedFormatted',
+    'pendingSponsorRewards',
+    'pendingRecipientRewards',
+    'pendingAgentRewards',
+    'pendingTotalRewards',
+    'exactClaimedAmountFormula',
+    'exactClaimedAmountSource',
+    'balanceBefore',
+    'balanceAfter',
+    'claimedAmount',
+    'settlementTimestamp',
+    'accountSnapshotBefore',
+    'accountSnapshotAfter',
+  ];
+  const ordered: Record<string, unknown> = {};
+  for (const key of orderedKeys) {
+    if (Object.prototype.hasOwnProperty.call(next, key)) ordered[key] = next[key];
+  }
+  for (const [key, entry] of Object.entries(next)) {
+    if (!Object.prototype.hasOwnProperty.call(ordered, key)) ordered[key] = entry;
+  }
+  return ordered;
+}
+
 function getPendingRewardsMethodDisplayName(methodName: string): string {
   return PENDING_REWARDS_METHOD_DISPLAY_NAMES[methodName] || methodName;
 }
@@ -87,6 +273,9 @@ type AccountRoleCounts = {
   recipientCount: number;
   agentCount: number;
   parentRecipientCount: number;
+  isSponsor?: boolean;
+  isRecipient?: boolean;
+  isAgent?: boolean;
 };
 
 function parseCountValue(value: unknown): number {
@@ -94,6 +283,14 @@ function parseCountValue(value: unknown): number {
   if (!normalized) return 0;
   const parsed = Number(normalized);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+}
+
+function parseBooleanValue(value: unknown): boolean | undefined {
+  if (typeof value === 'boolean') return value;
+  const normalized = String(value ?? '').trim().toLowerCase();
+  if (['true', '1', 'yes'].includes(normalized)) return true;
+  if (['false', '0', 'no'].includes(normalized)) return false;
+  return undefined;
 }
 
 function getAccountRoleCounts(data: any): AccountRoleCounts | null {
@@ -104,12 +301,20 @@ function getAccountRoleCounts(data: any): AccountRoleCounts | null {
     Object.prototype.hasOwnProperty.call(record, 'recipientCount') ||
     Object.prototype.hasOwnProperty.call(record, 'agentCount') ||
     Object.prototype.hasOwnProperty.call(record, 'parentRecipientCount');
-  if (!hasCount) return null;
+  const hasRoleFlag =
+    Object.prototype.hasOwnProperty.call(record, 'isSponsor') ||
+    Object.prototype.hasOwnProperty.call(record, 'isRecipient') ||
+    Object.prototype.hasOwnProperty.call(record, 'isRecipiet') ||
+    Object.prototype.hasOwnProperty.call(record, 'isAgent');
+  if (!hasCount && !hasRoleFlag) return null;
   return {
     sponsorCount: parseCountValue(record.sponsorCount),
     recipientCount: parseCountValue(record.recipientCount),
     agentCount: parseCountValue(record.agentCount),
     parentRecipientCount: parseCountValue(record.parentRecipientCount),
+    isSponsor: parseBooleanValue(record.isSponsor),
+    isRecipient: parseBooleanValue(record.isRecipient ?? record.isRecipiet),
+    isAgent: parseBooleanValue(record.isAgent),
   };
 }
 
@@ -118,18 +323,16 @@ function hasRoleCountForPendingRewardsKey(key: string, counts: AccountRoleCounts
   if (/^update.*AccountRewards$/.test(normalizedKey) || /^get.*PendingRewards$/.test(normalizedKey)) {
     return false;
   }
-  const isSponsor = counts ? counts.recipientCount > 0 : true;
-  const isRecipient = counts ? counts.sponsorCount > 0 || counts.agentCount > 0 : true;
-  const isAgent = counts ? counts.parentRecipientCount > 0 : true;
   if (!counts) return true;
+  const roleSource = getRoleSingleSource(counts);
   if (/SponsorRewards$/.test(normalizedKey) || normalizedKey === 'pendingSponsorRewards') {
-    return isSponsor;
+    return roleSource.isSponsor;
   }
   if (/RecipientRewards$/.test(normalizedKey) || normalizedKey === 'pendingRecipientRewards') {
-    return isRecipient;
+    return roleSource.isRecipient;
   }
   if (/AgentRewards$/.test(normalizedKey) || normalizedKey === 'pendingAgentRewards') {
-    return isAgent;
+    return roleSource.isAgent;
   }
   return true;
 }
@@ -1110,9 +1313,54 @@ function isCompactRewardFormulaDisplayGroup(value: unknown): boolean {
   return rewardFormulaFields.some((field) => Object.prototype.hasOwnProperty.call(record, field.displayKey));
 }
 
-function normalizeRewardCalculationDisplayShape(value: any): any {
+function normalizeRewardCalculationDisplayShape(
+  value: any,
+  accountRoleCounts?: AccountRoleCounts | null,
+): any {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
   const record = value as Record<string, unknown>;
+  const roleFromMethod = (methodValue: unknown): 'Sponsor' | 'Recipient' | 'Agent' | 'Total' | '' => {
+    const methodName = String(methodValue ?? '').trim();
+    if (/SponsorRewards$/i.test(methodName)) return 'Sponsor';
+    if (/RecipientRewards$/i.test(methodName)) return 'Recipient';
+    if (/AgentRewards$/i.test(methodName)) return 'Agent';
+    if (/TotalRewards$/i.test(methodName)) return 'Total';
+    return '';
+  };
+  const roleFromRewardValues = (rewardValues: Record<string, unknown>): 'Sponsor' | 'Recipient' | 'Agent' | 'Total' | '' => {
+    const explicitRole = String(rewardValues.role ?? '').trim();
+    if (['Sponsor', 'Recipient', 'Agent', 'Total'].includes(explicitRole)) {
+      return explicitRole as 'Sponsor' | 'Recipient' | 'Agent' | 'Total';
+    }
+    if (
+      Object.prototype.hasOwnProperty.call(rewardValues, 'lastSponsorTimeStamp') ||
+      Object.prototype.hasOwnProperty.call(rewardValues, 'lastSponsorUpdate') ||
+      Object.prototype.hasOwnProperty.call(rewardValues, 'lastSponsorUpdateTimeStamp')
+    ) return 'Sponsor';
+    if (
+      Object.prototype.hasOwnProperty.call(rewardValues, 'lastRecipientTimeStamp') ||
+      Object.prototype.hasOwnProperty.call(rewardValues, 'lastRecipientUpdate') ||
+      Object.prototype.hasOwnProperty.call(rewardValues, 'lastRecipientUpdateTimeStamp')
+    ) return 'Recipient';
+    if (
+      Object.prototype.hasOwnProperty.call(rewardValues, 'lastAgentTimeStamp') ||
+      Object.prototype.hasOwnProperty.call(rewardValues, 'lastAgentUpdate') ||
+      Object.prototype.hasOwnProperty.call(rewardValues, 'lastAgentUpdateTimeStamp')
+    ) return 'Agent';
+    if (
+      Object.prototype.hasOwnProperty.call(rewardValues, 'sponsorBucketLastUpdateTimeStamp') ||
+      Object.prototype.hasOwnProperty.call(rewardValues, 'pendingSponsorRewards')
+    ) return 'Sponsor';
+    if (
+      Object.prototype.hasOwnProperty.call(rewardValues, 'recipientBucketLastUpdateTimeStamp') ||
+      Object.prototype.hasOwnProperty.call(rewardValues, 'pendingRecipientRewards')
+    ) return 'Recipient';
+    if (
+      Object.prototype.hasOwnProperty.call(rewardValues, 'agentBucketLastUpdateTimeStamp') ||
+      Object.prototype.hasOwnProperty.call(rewardValues, 'pendingAgentRewards')
+    ) return 'Agent';
+    return '';
+  };
   const stripFormulaLeftHandSide = (formulaValue: unknown, displayKey: string) => {
     if (typeof formulaValue !== 'string') return formulaValue;
     const prefix = `${displayKey} =`;
@@ -1126,28 +1374,72 @@ function normalizeRewardCalculationDisplayShape(value: any): any {
     const legacyFormulaMatch = formulaValue.match(/^[A-Za-z0-9_[\]]+\s*=\s*(.+)$/);
     return normalizeFormulaTerms(legacyFormulaMatch ? legacyFormulaMatch[1].trim() : formulaValue);
   };
-  const compactRewardFormulaGroup = (formulaRecord: Record<string, unknown>) => {
+  const compactRewardFormulaGroup = (formulaRecord: Record<string, unknown>, roleValue?: unknown) => {
+    const nestedRewardsFormula =
+      formulaRecord.rewardsFormula &&
+      typeof formulaRecord.rewardsFormula === 'object' &&
+      !Array.isArray(formulaRecord.rewardsFormula)
+        ? (formulaRecord.rewardsFormula as Record<string, unknown>)
+        : {};
+    const sourceFormulaRecord = {
+      ...nestedRewardsFormula,
+      ...formulaRecord,
+    };
+    delete sourceFormulaRecord.rewardsFormula;
+    const nestedRewardFormulsValues =
+      sourceFormulaRecord.rewardFormulsValues &&
+      typeof sourceFormulaRecord.rewardFormulsValues === 'object' &&
+      !Array.isArray(sourceFormulaRecord.rewardFormulsValues)
+        ? (sourceFormulaRecord.rewardFormulsValues as Record<string, unknown>)
+        : {};
+    const normalizedRole = String(roleValue || roleFromRewardValues(nestedRewardFormulsValues) || '').trim();
+    const defaultRewardsNotations: Record<string, unknown> = {
+      yearsInSeconds: '365.25 Days = 31556925',
+      secondsInYear: '31556925 seconds = 365.2421875 days',
+      yearSeconds: '31556925 seconds = 365.2421875 days',
+      t: 'sponsor/rate bucket index',
+      r: 'recipient-rate bucket index',
+      a: 'agent-rate bucket index',
+    };
+    const sourceNotations =
+      sourceFormulaRecord.rewardsNotations &&
+      typeof sourceFormulaRecord.rewardsNotations === 'object' &&
+      !Array.isArray(sourceFormulaRecord.rewardsNotations)
+        ? (sourceFormulaRecord.rewardsNotations as Record<string, unknown>)
+        : sourceFormulaRecord.indexNotation &&
+            typeof sourceFormulaRecord.indexNotation === 'object' &&
+            !Array.isArray(sourceFormulaRecord.indexNotation)
+          ? (sourceFormulaRecord.indexNotation as Record<string, unknown>)
+          : {};
+    const rewardsNotations: Record<string, unknown> = {
+      ...defaultRewardsNotations,
+      ...sourceNotations,
+    };
+    if (normalizedRole) {
+      rewardsNotations.role = normalizedRole;
+    }
     const compact: Record<string, unknown> = {
-      indexNotation:
-        formulaRecord.indexNotation && typeof formulaRecord.indexNotation === 'object'
-          ? formulaRecord.indexNotation
-          : {
-              yearSeconds: '31556925 seconds = 365.2421875 days',
-              t: 'sponsor/rate bucket index',
-              r: 'recipient-rate bucket index',
-              a: 'agent-rate bucket index',
-            },
+      rewardsNotations,
     };
     rewardFormulaFields.forEach((field) => {
-      const formulaValue = formulaRecord[field.displayKey] ?? formulaRecord[field.legacyKey] ?? field.fallback;
+      const formulaValue = sourceFormulaRecord[field.displayKey] ?? sourceFormulaRecord[field.legacyKey] ?? field.fallback;
       compact[field.displayKey] = stripFormulaLeftHandSide(formulaValue, field.displayKey);
     });
-    if (Object.prototype.hasOwnProperty.call(formulaRecord, 'rewardFormulsValues')) {
-      compact.rewardFormulsValues = formulaRecord.rewardFormulsValues;
+    if (Object.prototype.hasOwnProperty.call(sourceFormulaRecord, 'rewardFormulsValues')) {
+      compact.rewardFormulsValues =
+        sourceFormulaRecord.rewardFormulsValues &&
+        typeof sourceFormulaRecord.rewardFormulsValues === 'object' &&
+        !Array.isArray(sourceFormulaRecord.rewardFormulsValues)
+          ? normalizeRewardFormulsValuesDisplayShape(
+              sourceFormulaRecord.rewardFormulsValues as Record<string, unknown>,
+              normalizedRole,
+            )
+          : sourceFormulaRecord.rewardFormulsValues;
     }
     return compact;
   };
   const hasRewardFormulaGroupFields =
+    Object.prototype.hasOwnProperty.call(record, 'rewardsNotations') ||
     Object.prototype.hasOwnProperty.call(record, 'indexNotation') ||
     rewardFormulaFields.some((field) => Object.prototype.hasOwnProperty.call(record, field.displayKey)) ||
     Object.prototype.hasOwnProperty.call(record, 'totalPendingRewardsFormula') ||
@@ -1162,8 +1454,15 @@ function normalizeRewardCalculationDisplayShape(value: any): any {
     Object.prototype.hasOwnProperty.call(record, 'source') ||
     Object.prototype.hasOwnProperty.call(record, 'method') ||
     Object.prototype.hasOwnProperty.call(record, 'role');
+  const roleSingleSource = getRoleSingleSource(accountRoleCounts);
   if (hasRewardFormulaGroupFields && !hasRewardCalculationContainerFields) {
-    return compactRewardFormulaGroup(record);
+    return compactRewardFormulaGroup(record, roleSingleSource.role);
+  }
+  if (
+    Object.prototype.hasOwnProperty.call(record, 'sponsorBucketLastUpdateTimeStamp') &&
+    Object.prototype.hasOwnProperty.call(record, 'pendingTotalRewards')
+  ) {
+    return normalizeRewardFormulsValuesDisplayShape(record, roleSingleSource.role);
   }
   const looksLikeRewardCalculation =
     Object.prototype.hasOwnProperty.call(record, 'rewardPathFormula') ||
@@ -1190,6 +1489,24 @@ function normalizeRewardCalculationDisplayShape(value: any): any {
   if (!isRewardCalculationContainer) return value;
 
   const next = { ...record };
+  delete next.rewardPathFormula;
+  delete next.timeDifferenceMS;
+  delete next.lastAgentTimeStamp;
+  delete next.lastAgentUpdate;
+  delete next.formattedDifference;
+  const initialRewardPathRecord =
+    next.rewardPathFormula && typeof next.rewardPathFormula === 'object' && !Array.isArray(next.rewardPathFormula)
+      ? (next.rewardPathFormula as Record<string, unknown>)
+      : {};
+  const accountRole = roleSingleSource.role;
+  if (accountRole) {
+    next.role = accountRole;
+  } else if (!Object.prototype.hasOwnProperty.call(next, 'role')) {
+    const derivedRole =
+      roleFromMethod(next.method) ||
+      roleFromRewardValues(initialRewardPathRecord);
+    if (derivedRole) next.role = derivedRole;
+  }
   const currentRewardPathFormula = (roleValue: unknown) => {
     const normalizedRole = String(roleValue || '').trim();
     if (normalizedRole === 'Sponsor') {
@@ -1220,10 +1537,26 @@ function normalizeRewardCalculationDisplayShape(value: any): any {
     next.rewardsFormula && typeof next.rewardsFormula === 'object' && !Array.isArray(next.rewardsFormula)
       ? (next.rewardsFormula as Record<string, unknown>)
       : {};
-  const existingRewardFormulsValues =
+  const existingNestedRewardFormulsValues =
+    existingRewardsFormula.rewardFormulsValues &&
+    typeof existingRewardsFormula.rewardFormulsValues === 'object' &&
+    !Array.isArray(existingRewardsFormula.rewardFormulsValues)
+      ? (existingRewardsFormula.rewardFormulsValues as Record<string, unknown>)
+      : {};
+  const existingTopLevelRewardFormulsValues =
     next.rewardFormulsValues && typeof next.rewardFormulsValues === 'object' && !Array.isArray(next.rewardFormulsValues)
       ? (next.rewardFormulsValues as Record<string, unknown>)
       : {};
+  const existingRewardFormulsValues = {
+    ...existingNestedRewardFormulsValues,
+    ...existingTopLevelRewardFormulsValues,
+  };
+  if (accountRole) {
+    next.role = accountRole;
+  } else if (!Object.prototype.hasOwnProperty.call(next, 'role')) {
+    const derivedRole = roleFromRewardValues(existingRewardFormulsValues);
+    if (derivedRole) next.role = derivedRole;
+  }
   const moveFields = (keys: string[], target: Record<string, unknown>) => {
     keys.forEach((key) => {
       if (Object.prototype.hasOwnProperty.call(next, key) && !Object.prototype.hasOwnProperty.call(target, key)) {
@@ -1235,6 +1568,7 @@ function normalizeRewardCalculationDisplayShape(value: any): any {
   moveFields(
     [
       'indexNotation',
+      'rewardsNotations',
       'formula',
       'totalStakedRewardsFormula',
       'totalPendingRewardsFormula',
@@ -1254,23 +1588,27 @@ function normalizeRewardCalculationDisplayShape(value: any): any {
     [
       'Note',
       'note',
-      'secondsInYesr',
       'yearSeconds',
+      'secondsInYear',
       'rateUnit',
       'solidityMethod',
       'soliditySource',
       'bucketLastUpdateTimeStamp',
-      'bucketLastUpdateFormatted',
       'sponsorBucketLastUpdateTimeStamp',
-      'sponsorBucketLastUpdateFormatted',
       'recipientBucketLastUpdateTimeStamp',
-      'recipientBucketLastUpdateFormatted',
       'agentBucketLastUpdateTimeStamp',
-      'agentBucketLastUpdateFormatted',
-      'timeDifferenceMS',
-      'pendingRoleRewards',
       'calculatedTimeStamp',
+      'calculatedTimeDiff',
+      'TimeDiffFormatted',
+      'bucketLastUpdateFormatted',
+      'sponsorBucketLastUpdateFormatted',
+      'recipientBucketLastUpdateFormatted',
+      'agentBucketLastUpdateFormatted',
       'calculatedFormatted',
+      'pendingRoleRewards',
+      'pendingSponsorRewards',
+      'pendingRecipientRewards',
+      'pendingAgentRewards',
       'pendingTotalRewards',
       'totalRewards',
       'exactClaimedAmountFormula',
@@ -1284,7 +1622,7 @@ function normalizeRewardCalculationDisplayShape(value: any): any {
     ],
     existingRewardFormulsValues,
   );
-  next.rewardsFormula = compactRewardFormulaGroup(existingRewardsFormula);
+  next.rewardsFormula = compactRewardFormulaGroup(existingRewardsFormula, next.role);
   if (Object.keys(existingRewardFormulsValues).length > 0) {
     if (
       Object.prototype.hasOwnProperty.call(existingRewardFormulsValues, 'note') &&
@@ -1292,15 +1630,77 @@ function normalizeRewardCalculationDisplayShape(value: any): any {
     ) {
       existingRewardFormulsValues.Note = existingRewardFormulsValues.note;
     }
-    delete existingRewardFormulsValues.note;
     if (
-      Object.prototype.hasOwnProperty.call(existingRewardFormulsValues, 'yearSeconds') &&
-      !Object.prototype.hasOwnProperty.call(existingRewardFormulsValues, 'secondsInYesr')
+      !Object.prototype.hasOwnProperty.call(existingRewardFormulsValues, 'role') &&
+      Object.prototype.hasOwnProperty.call(next, 'role')
     ) {
-      existingRewardFormulsValues.secondsInYesr = existingRewardFormulsValues.yearSeconds;
+      existingRewardFormulsValues.role = next.role;
     }
+    delete existingRewardFormulsValues.note;
+    delete existingRewardFormulsValues.secondsInYesr;
     delete existingRewardFormulsValues.yearSeconds;
     delete existingRewardFormulsValues.rateUnit;
+    delete existingRewardFormulsValues.lastSponsorUpdate;
+    delete existingRewardFormulsValues.lastRecipientUpdate;
+    delete existingRewardFormulsValues.lastAgentUpdate;
+    delete existingRewardFormulsValues.lastSponsorTimeStamp;
+    delete existingRewardFormulsValues.lastRecipientTimeStamp;
+    delete existingRewardFormulsValues.lastAgentTimeStamp;
+    delete existingRewardFormulsValues.timeDifference;
+    delete existingRewardFormulsValues.timeDifferenceMS;
+    delete existingRewardFormulsValues.formattedDifference;
+    delete existingRewardFormulsValues.pendingRewards;
+    const bucketTimestamp =
+      existingRewardFormulsValues.sponsorBucketLastUpdateTimeStamp ??
+      existingRewardFormulsValues.recipientBucketLastUpdateTimeStamp ??
+      existingRewardFormulsValues.agentBucketLastUpdateTimeStamp;
+    if (
+      bucketTimestamp !== undefined &&
+      existingRewardFormulsValues.calculatedTimeStamp !== undefined &&
+      !Object.prototype.hasOwnProperty.call(existingRewardFormulsValues, 'calculatedTimeDiff')
+    ) {
+      existingRewardFormulsValues.calculatedTimeDiff = calculateDisplayTimeDiffSeconds(
+        bucketTimestamp,
+        existingRewardFormulsValues.calculatedTimeStamp,
+      );
+    }
+    if (
+      existingRewardFormulsValues.calculatedTimeDiff !== undefined &&
+      !Object.prototype.hasOwnProperty.call(existingRewardFormulsValues, 'TimeDiffFormatted')
+    ) {
+      existingRewardFormulsValues.TimeDiffFormatted = formatDisplayTimeDiffSeconds(
+        existingRewardFormulsValues.calculatedTimeDiff,
+      );
+    }
+    const normalizedRole = String(next.role || '').trim();
+    const rolePendingRewardKey =
+      normalizedRole === 'Sponsor'
+        ? 'pendingSponsorRewards'
+        : normalizedRole === 'Recipient'
+          ? 'pendingRecipientRewards'
+          : normalizedRole === 'Agent'
+            ? 'pendingAgentRewards'
+            : '';
+    if (
+      rolePendingRewardKey &&
+      existingRewardFormulsValues.pendingRoleRewards !== undefined &&
+      (!existingRewardFormulsValues[rolePendingRewardKey] ||
+        String(existingRewardFormulsValues[rolePendingRewardKey]) === '0')
+    ) {
+      existingRewardFormulsValues[rolePendingRewardKey] = existingRewardFormulsValues.pendingRoleRewards;
+    }
+    delete existingRewardFormulsValues.pendingRoleRewards;
+    delete existingRewardFormulsValues.totalRewards;
+    if (normalizedRole === 'Sponsor') {
+      delete existingRewardFormulsValues.pendingRecipientRewards;
+      delete existingRewardFormulsValues.pendingAgentRewards;
+    } else if (normalizedRole === 'Recipient') {
+      delete existingRewardFormulsValues.pendingSponsorRewards;
+      delete existingRewardFormulsValues.pendingAgentRewards;
+    } else if (normalizedRole === 'Agent') {
+      delete existingRewardFormulsValues.pendingSponsorRewards;
+      delete existingRewardFormulsValues.pendingRecipientRewards;
+    }
     if (
       Object.prototype.hasOwnProperty.call(existingRewardFormulsValues, 'bucketLastUpdateTimeStamp') &&
       !Object.prototype.hasOwnProperty.call(existingRewardFormulsValues, 'sponsorBucketLastUpdateTimeStamp')
@@ -1317,13 +1717,17 @@ function normalizeRewardCalculationDisplayShape(value: any): any {
     }
     delete existingRewardFormulsValues.bucketLastUpdateTimeStamp;
     delete existingRewardFormulsValues.bucketLastUpdateFormatted;
+    const normalizedRewardFormulsValues = normalizeRewardFormulsValuesDisplayShape(
+      existingRewardFormulsValues,
+      normalizedRole,
+    );
     next.rewardsFormula = {
       ...(next.rewardsFormula as Record<string, unknown>),
       rewardFormulsValues: {
-        ...(Object.prototype.hasOwnProperty.call(existingRewardFormulsValues, 'Note')
-          ? { Note: existingRewardFormulsValues.Note }
+        ...(Object.prototype.hasOwnProperty.call(normalizedRewardFormulsValues, 'Note')
+          ? { Note: normalizedRewardFormulsValues.Note }
           : {}),
-        ...existingRewardFormulsValues,
+        ...normalizedRewardFormulsValues,
       },
     };
     delete next.rewardFormulsValues;
@@ -1447,6 +1851,10 @@ function getVisibleEntries(
     }
     if (leftKey === 'meta' && rightKey !== 'meta') return -1;
     if (rightKey === 'meta' && leftKey !== 'meta') return 1;
+    if (leftKey === 'source' && rightKey !== 'source') return -1;
+    if (rightKey === 'source' && leftKey !== 'source') return 1;
+    if (leftKey === 'role' && rightKey !== 'source' && rightKey !== 'role') return -1;
+    if (rightKey === 'role' && leftKey !== 'source' && leftKey !== 'role') return 1;
     if (
       (leftKey === 'onChainCalls' || leftKey === 'methodOnChainCalls' || leftKey === 'totalMethodsOnChainMs') &&
       rightKey !== 'onChainCalls' &&
@@ -1488,6 +1896,7 @@ function getVisibleEntries(
       : addPendingRewardsTimingToStepResult(value);
   const displayValue = normalizeRewardCalculationDisplayShape(
     normalizeAccountRecordDisplayShape(displayValueBeforeAccountShape),
+    accountRoleCounts,
   );
   const forceShowChildren = shouldShowEmptyChildren(displayValue);
   if (showAll || forceShowChildren) {
@@ -2156,6 +2565,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     const scalarDisplayValue = formatDisplayScalar(key, value, formatTokenAmounts, tokenDecimals);
     const isRewardFormulaEntry =
       key !== 'indexNotation' &&
+      key !== 'rewardsNotations' &&
       (String(path || '').endsWith('.rewardsFormula') ||
         label === 'rewardsFormula' ||
         isCompactRewardFormulaDisplayGroup(data));

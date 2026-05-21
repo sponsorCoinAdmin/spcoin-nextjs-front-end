@@ -24,6 +24,8 @@ const METHOD_READ_CACHE_TTL_BLOCKS: Record<string, string> = {
   getRateTransactionSet: "RATES",
   getRecipientRateTransactionSetKey: "RATES",
   getAgentRateTransactionSetKey: "RATES",
+  getAgentSponsorKeys: "RATES",
+  getAgentSponsorAgentRateTransactionSetKeys: "RATES",
   isDeployed: "ACCOUNT_EXISTENCE",
   isAccountInserted: "ACCOUNT_EXISTENCE",
 };
@@ -97,6 +99,9 @@ const METHOD_READ_CACHE_TTL_ENV_VALUES: Record<string, string | undefined> = {
   getRateTransactionSet: process.env.NEXT_PUBLIC_SPCOIN_READ_CACHE_TTL_MS_GET_RATE_TRANSACTION_SET,
   getRecipientRateTransactionSetKey: process.env.NEXT_PUBLIC_SPCOIN_READ_CACHE_TTL_MS_GET_RECIPIENT_RATE_TRANSACTION_SET_KEY,
   getAgentRateTransactionSetKey: process.env.NEXT_PUBLIC_SPCOIN_READ_CACHE_TTL_MS_GET_AGENT_RATE_TRANSACTION_SET_KEY,
+  getAgentSponsorKeys: process.env.NEXT_PUBLIC_SPCOIN_READ_CACHE_TTL_MS_GET_AGENT_SPONSOR_KEYS,
+  getAgentSponsorAgentRateTransactionSetKeys:
+    process.env.NEXT_PUBLIC_SPCOIN_READ_CACHE_TTL_MS_GET_AGENT_SPONSOR_AGENT_RATE_TRANSACTION_SET_KEYS,
   getAccountRecordBase: process.env.NEXT_PUBLIC_SPCOIN_READ_CACHE_TTL_MS_GET_ACCOUNT_RECORD_BASE,
   isDeployed: process.env.NEXT_PUBLIC_SPCOIN_READ_CACHE_TTL_MS_IS_DEPLOYED,
   isAccountInserted: process.env.NEXT_PUBLIC_SPCOIN_READ_CACHE_TTL_MS_IS_ACCOUNT_INSERTED,

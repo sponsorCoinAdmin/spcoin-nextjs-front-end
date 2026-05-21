@@ -851,7 +851,9 @@ type AccountRewardSnapshot = {
 };
 
 const STAKING_REWARD_YEAR_SECONDS = '31556925';
-const REWARD_INDEX_NOTATION = {
+const REWARD_NOTATIONS = {
+  yearsInSeconds: `365.25 Days = ${STAKING_REWARD_YEAR_SECONDS}`,
+  secondsInYear: `${STAKING_REWARD_YEAR_SECONDS} seconds = 365.2421875 days`,
   yearSeconds: `${STAKING_REWARD_YEAR_SECONDS} seconds = 365.2421875 days`,
   t: 'sponsor/rate bucket index',
   r: 'recipient-rate bucket index',
@@ -926,32 +928,9 @@ function getAccountRolesDisplay(snapshot: AccountRewardSnapshot | null | undefin
   return roles.length > 0 ? roles.join(' / ') : 'N/A';
 }
 
-function getRewardPathFormula(role: RewardRole) {
-  if (role === 'Sponsor') {
-    return [
-      'grossSponsorPendingRewards = Σ_t sponsorBucketPendingRewards[t]',
-      'downstreamPendingRewards = recipientPendingRewards + agentPendingRewards',
-      'netSponsorPendingRewards = grossSponsorPendingRewards - downstreamPendingRewards',
-    ];
-  }
-  if (role === 'Recipient') {
-    return [
-      'recipientPendingRewards = Σ_r recipientBucketPendingRewards[r]',
-      'agentPendingRewards may be downstream from Recipient when Agent rates exist',
-    ];
-  }
-  if (role === 'Agent') {
-    return ['agentPendingRewards = Σ_a agentBucketPendingRewards[a]'];
-  }
-  return [
-    'grossSponsorPendingRewards = netSponsorPendingRewards + downstreamPendingRewards',
-    'each role is summed from its applicable sponsor/recipient/agent rate buckets',
-  ];
-}
-
 function buildRewardsFormulaMeta() {
   return {
-    indexNotation: REWARD_INDEX_NOTATION,
+    rewardsNotations: REWARD_NOTATIONS,
     'sponsorBucketTimeDiffSeconds[t]': SPONSOR_BUCKET_TIME_DIFF_FORMULA,
     'sponsorBucketPendingRewards[t]': SPONSOR_BUCKET_PENDING_REWARD_FORMULA,
     grossSponsorPendingRewards: GROSS_SPONSOR_PENDING_REWARDS_FORMULA,
@@ -966,16 +945,14 @@ function buildRewardsFormulaMeta() {
 
 function buildRewardFormulaValuesMeta() {
   return {
-    secondsInYesr: STAKING_REWARD_YEAR_SECONDS,
     solidityMethod: 'RewardsManager.calculateStakingRewards',
     soliditySource:
       'spCoinAccess/contracts/spCoin/rewardsManagement/RewardsManager.sol',
   };
 }
 
-function buildRewardFormulaMeta(role: RewardRole = 'Total') {
+function buildRewardFormulaMeta() {
   return {
-    rewardPathFormula: getRewardPathFormula(role),
     rewardsFormula: buildRewardsFormulaMeta(),
   };
 }
@@ -1009,16 +986,26 @@ function buildRewardCalculationMeta(params: RewardCalculationMetaParams) {
         : role === 'Agent'
           ? record.pendingAgentRewards
           : record.pendingTotalRewards ?? record.pendingRewards ?? record.totalRewards;
-  const roleTimestampKey = `last${role}TimeStamp`;
-  const roleUpdateKey = `last${role}Update`;
+  const pendingRoleRewardsKey =
+    role === 'Sponsor'
+      ? 'pendingSponsorRewards'
+      : role === 'Recipient'
+        ? 'pendingRecipientRewards'
+        : role === 'Agent'
+          ? 'pendingAgentRewards'
+          : 'pendingTotalRewards';
   const roleBucketPrefix = role === 'Total' ? 'sponsor' : role.toLowerCase();
+  const roleBucketLastUpdateTimeStamp = readRewardRoleTimestamp(record, role, accountSnapshot);
+  const roleBucketLastUpdateFormatted = readRewardRoleFormattedUpdate(record, role, roleBucketLastUpdateTimeStamp);
+  const calculatedTimeStamp = String(record.calculatedTimeStamp ?? '0');
+  const calculatedTimeDiff = calculateTimestampDiffSeconds(roleBucketLastUpdateTimeStamp, calculatedTimeStamp);
   const baseMeta = {
     source: params.source,
     method: params.methodName,
     ...(params.accountKey ? { accountKey: params.accountKey } : {}),
     role,
     'role(s)': getAccountRolesDisplay(accountSnapshot),
-    ...buildRewardFormulaMeta(role),
+    ...buildRewardFormulaMeta(),
   };
 
   if (params.source === 'offChainEstimate') {
@@ -1029,15 +1016,16 @@ function buildRewardCalculationMeta(params: RewardCalculationMetaParams) {
         rewardFormulsValues: {
           Note:
             'Estimate uses sponsor/rate bucket timestamps. It does not update account last*UpdateTimeStamp on chain.',
+          role,
           ...buildRewardFormulaValuesMeta(),
-          [`${roleBucketPrefix}BucketLastUpdateTimeStamp`]: String(record[roleTimestampKey] ?? '0'),
-          [`${roleBucketPrefix}BucketLastUpdateFormatted`]: String(record[roleUpdateKey] ?? ''),
-          timeDifferenceMS: String(record.timeDifferenceMS ?? '0'),
-          pendingRoleRewards: String(pendingRoleRewards ?? '0'),
-          calculatedTimeStamp: String(record.calculatedTimeStamp ?? '0'),
+          [`${roleBucketPrefix}BucketLastUpdateTimeStamp`]: roleBucketLastUpdateTimeStamp,
+          calculatedTimeStamp,
+          calculatedTimeDiff,
+          TimeDiffFormatted: formatTimeDiffSeconds(calculatedTimeDiff),
+          [`${roleBucketPrefix}BucketLastUpdateFormatted`]: roleBucketLastUpdateFormatted,
           calculatedFormatted: String(record.calculatedFormatted ?? ''),
+          [pendingRoleRewardsKey]: String(pendingRoleRewards ?? '0'),
           pendingTotalRewards: String(record.pendingTotalRewards ?? record.pendingRewards ?? record.totalRewards ?? '0'),
-          totalRewards: String(record.totalRewards ?? record.pendingTotalRewards ?? record.pendingRewards ?? '0'),
         },
       },
     };
@@ -1147,6 +1135,78 @@ function formatUnixSecondsTimestamp(value: unknown): string {
       .split(' ')
       .pop() || '';
   return `${month}-${day}-${year}, ${hour12}:${minute}:${second}.000 ${meridiem}${timeZone ? ` ${timeZone}` : ''}`;
+}
+
+function calculateTimestampDiffSeconds(startValue: unknown, endValue: unknown): string {
+  const start = toBigIntAmount(startValue);
+  const end = toBigIntAmount(endValue);
+  if (start <= 0n || end <= start) return '0';
+  return (end - start).toString();
+}
+
+function formatTimeDiffSeconds(value: unknown): string {
+  let remainingMs = toBigIntAmount(value) * 1000n;
+  if (remainingMs <= 0n) return '0';
+  const msPerSecond = 1000n;
+  const msPerMinute = 60n * msPerSecond;
+  const msPerHour = 60n * msPerMinute;
+  const msPerDay = 24n * msPerHour;
+  const days = remainingMs / msPerDay;
+  remainingMs %= msPerDay;
+  const hours = remainingMs / msPerHour;
+  remainingMs %= msPerHour;
+  const mins = remainingMs / msPerMinute;
+  remainingMs %= msPerMinute;
+  const secs = remainingMs / msPerSecond;
+  const ms = remainingMs % msPerSecond;
+  const parts: string[] = [];
+  if (days > 0n) parts.push(`Days = ${days.toString()}`);
+  if (hours > 0n) parts.push(`Hours = ${hours.toString()}`);
+  if (mins > 0n) parts.push(`Mins = ${mins.toString()}`);
+  if (secs > 0n) parts.push(`Secs = ${secs.toString()}`);
+  if (ms > 0n) parts.push(`MS = ${ms.toString()}`);
+  return parts.join(' ');
+}
+
+function getSnapshotRoleTimestamp(snapshot: AccountRewardSnapshot | null | undefined, role: RewardRole): unknown {
+  if (!snapshot) return undefined;
+  if (role === 'Sponsor' || role === 'Total') return snapshot.lastSponsorUpdateTimeStamp;
+  if (role === 'Recipient') return snapshot.lastRecipientUpdateTimeStamp;
+  if (role === 'Agent') return snapshot.lastAgentUpdateTimeStamp;
+  return undefined;
+}
+
+function readRewardRoleTimestamp(
+  record: Record<string, unknown>,
+  role: RewardRole,
+  snapshot?: AccountRewardSnapshot | null,
+): string {
+  const roleBucketPrefix = role === 'Total' ? 'sponsor' : role.toLowerCase();
+  const candidates = [
+    record[`last${role}TimeStamp`],
+    record[`last${role}UpdateTimeStamp`],
+    record[`last${role}Update`],
+    record[`${roleBucketPrefix}BucketLastUpdateTimeStamp`],
+    getSnapshotRoleTimestamp(snapshot, role),
+  ];
+  for (const candidate of candidates) {
+    const timestamp = toBigIntAmount(candidate);
+    if (timestamp > 0n) return timestamp.toString();
+  }
+  return '0';
+}
+
+function readRewardRoleFormattedUpdate(
+  record: Record<string, unknown>,
+  role: RewardRole,
+  timestamp: string,
+): string {
+  const roleBucketPrefix = role === 'Total' ? 'sponsor' : role.toLowerCase();
+  const formatted = String(record[`last${role}Update`] ?? '').trim();
+  if (formatted && !/^N\/A$/i.test(formatted)) return formatted;
+  const bucketFormatted = String(record[`${roleBucketPrefix}BucketLastUpdateFormatted`] ?? '').trim();
+  if (bucketFormatted && !/^N\/A$/i.test(bucketFormatted)) return bucketFormatted;
+  return formatUnixSecondsTimestamp(timestamp);
 }
 
 function pendingRewardsToSnapshot(value: unknown): AccountRewardSnapshot {
@@ -1614,6 +1674,14 @@ export async function POST(request: NextRequest) {
               );
               const rewardRole = getRewardRoleForMethod(String(step.method));
               const rewardRoleBucketPrefix = rewardRole === 'Total' ? 'sponsor' : rewardRole.toLowerCase();
+              const rewardRoleValueKey =
+                rewardRole === 'Sponsor'
+                  ? 'pendingSponsorRewards'
+                  : rewardRole === 'Recipient'
+                    ? 'pendingRecipientRewards'
+                    : rewardRole === 'Agent'
+                      ? 'pendingAgentRewards'
+                      : 'pendingTotalRewards';
               const rewardFormulsValues =
                 stepRewardCalculationMeta.rewardsFormula &&
                 typeof stepRewardCalculationMeta.rewardsFormula === 'object' &&
@@ -1628,7 +1696,7 @@ export async function POST(request: NextRequest) {
                   rewardFormulsValues.calculatedTimeStamp || '',
                 )} ${rewardRoleBucketPrefix}BucketLastUpdateTimeStamp=${String(
                   rewardFormulsValues[`${rewardRoleBucketPrefix}BucketLastUpdateTimeStamp`] || '',
-                )} pendingTotalRewards=${String(rewardFormulsValues.pendingTotalRewards || '')}`,
+                )} ${rewardRoleValueKey}=${String(rewardFormulsValues[rewardRoleValueKey] || '')}`,
               );
               break;
             }
@@ -1792,6 +1860,30 @@ export async function POST(request: NextRequest) {
                 );
               } else {
                 throw new Error('getAgentTransactionIdKeys is not available on the current SpCoin contract.');
+              }
+              break;
+            case 'getAgentSponsorKeys':
+              if (typeof (access.read as Record<string, unknown>).getAgentSponsorKeys === 'function') {
+                stepResult = await (access.read as unknown as { getAgentSponsorKeys: (agentKey: string) => Promise<unknown> })
+                  .getAgentSponsorKeys(findParam('Agent Key'));
+              } else if (typeof (contract as Record<string, unknown>).getAgentSponsorKeys === 'function') {
+                stepResult = await (contract as unknown as { getAgentSponsorKeys: (agentKey: string) => Promise<unknown> })
+                  .getAgentSponsorKeys(findParam('Agent Key'));
+              } else {
+                throw new Error('getAgentSponsorKeys is not available on the current SpCoin contract.');
+              }
+              break;
+            case 'getAgentSponsorAgentRateTransactionSetKeys':
+              if (typeof (access.read as Record<string, unknown>).getAgentSponsorAgentRateTransactionSetKeys === 'function') {
+                stepResult = await (access.read as unknown as {
+                  getAgentSponsorAgentRateTransactionSetKeys: (agentKey: string, sponsorKey: string) => Promise<unknown>;
+                }).getAgentSponsorAgentRateTransactionSetKeys(findParam('Agent Key'), findParam('Sponsor Key'));
+              } else if (typeof (contract as Record<string, unknown>).getAgentSponsorAgentRateTransactionSetKeys === 'function') {
+                stepResult = await (contract as unknown as {
+                  getAgentSponsorAgentRateTransactionSetKeys: (agentKey: string, sponsorKey: string) => Promise<unknown>;
+                }).getAgentSponsorAgentRateTransactionSetKeys(findParam('Agent Key'), findParam('Sponsor Key'));
+              } else {
+                throw new Error('getAgentSponsorAgentRateTransactionSetKeys is not available on the current SpCoin contract.');
               }
               break;
             case 'getMasterAccountCount':
