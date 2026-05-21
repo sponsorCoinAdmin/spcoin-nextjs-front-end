@@ -1316,9 +1316,15 @@ function isCompactRewardFormulaDisplayGroup(value: unknown): boolean {
 function normalizeRewardCalculationDisplayShape(
   value: any,
   accountRoleCounts?: AccountRoleCounts | null,
+  label?: string,
 ): any {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
   const record = value as Record<string, unknown>;
+  if (label === 'rewardsNotations') {
+    const nextNotations = { ...record };
+    delete nextNotations.rewardsFormula;
+    return nextNotations;
+  }
   const roleFromMethod = (methodValue: unknown): 'Sponsor' | 'Recipient' | 'Agent' | 'Total' | '' => {
     const methodName = String(methodValue ?? '').trim();
     if (/SponsorRewards$/i.test(methodName)) return 'Sponsor';
@@ -1411,9 +1417,11 @@ function normalizeRewardCalculationDisplayShape(
             !Array.isArray(sourceFormulaRecord.indexNotation)
           ? (sourceFormulaRecord.indexNotation as Record<string, unknown>)
           : {};
+    const compactSourceNotations = { ...sourceNotations };
+    delete compactSourceNotations.rewardsFormula;
     const rewardsNotations: Record<string, unknown> = {
       ...defaultRewardsNotations,
-      ...sourceNotations,
+      ...compactSourceNotations,
     };
     if (normalizedRole) {
       rewardsNotations.role = normalizedRole;
@@ -1623,6 +1631,9 @@ function normalizeRewardCalculationDisplayShape(
     existingRewardFormulsValues,
   );
   next.rewardsFormula = compactRewardFormulaGroup(existingRewardsFormula, next.role);
+  if (next.rewardsFormula && typeof next.rewardsFormula === 'object' && !Array.isArray(next.rewardsFormula)) {
+    delete (next.rewardsFormula as Record<string, unknown>).rewardsFormula;
+  }
   if (Object.keys(existingRewardFormulsValues).length > 0) {
     if (
       Object.prototype.hasOwnProperty.call(existingRewardFormulsValues, 'note') &&
@@ -1721,8 +1732,13 @@ function normalizeRewardCalculationDisplayShape(
       existingRewardFormulsValues,
       normalizedRole,
     );
+    const compactRewardsFormula =
+      next.rewardsFormula && typeof next.rewardsFormula === 'object' && !Array.isArray(next.rewardsFormula)
+        ? { ...(next.rewardsFormula as Record<string, unknown>) }
+        : {};
+    delete compactRewardsFormula.rewardsFormula;
     next.rewardsFormula = {
-      ...(next.rewardsFormula as Record<string, unknown>),
+      ...compactRewardsFormula,
       rewardFormulsValues: {
         ...(Object.prototype.hasOwnProperty.call(normalizedRewardFormulsValues, 'Note')
           ? { Note: normalizedRewardFormulsValues.Note }
@@ -1897,6 +1913,7 @@ function getVisibleEntries(
   const displayValue = normalizeRewardCalculationDisplayShape(
     normalizeAccountRecordDisplayShape(displayValueBeforeAccountShape),
     accountRoleCounts,
+    label,
   );
   const forceShowChildren = shouldShowEmptyChildren(displayValue);
   if (showAll || forceShowChildren) {
