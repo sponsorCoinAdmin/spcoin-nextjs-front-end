@@ -1053,13 +1053,106 @@ function normalizeVisibleEntry(parent: any, childKey: string, childValue: any): 
   return [childKey, childValue];
 }
 
+const rewardFormulaFields = [
+  {
+    legacyKey: 'timeDiffFormula',
+    displayKey: 'sponsorBucketTimeDiffSeconds[t]',
+    fallback: 'max(0, settlementTimestamp - sponsorBucketLastUpdateTimeStamp[t])',
+  },
+  {
+    legacyKey: 'bucketPendingRewardsFormula',
+    displayKey: 'sponsorBucketPendingRewards[t]',
+    fallback:
+      'floor((sponsorBucketTimeDiffSeconds[t] * sponsorBucketStakedQuantity[t] * sponsorBucketRate[t]) / 100 / yearSeconds)',
+  },
+  {
+    legacyKey: 'totalPendingRewardsFormula',
+    displayKey: 'grossSponsorPendingRewards',
+    fallback: '\u03A3_t sponsorBucketPendingRewards[t]',
+  },
+  {
+    legacyKey: 'recipientBucketPendingRewardsFormula',
+    displayKey: 'recipientBucketPendingRewards[r]',
+    fallback:
+      'floor((recipientBucketTimeDiffSeconds[r] * recipientBucketStakedQuantity[r] * recipientRate[r]) / 100 / yearSeconds)',
+  },
+  {
+    legacyKey: 'recipientPendingRewardsFormula',
+    displayKey: 'recipientPendingRewards',
+    fallback: '\u03A3_r recipientBucketPendingRewards[r]',
+  },
+  {
+    legacyKey: 'agentBucketPendingRewardsFormula',
+    displayKey: 'agentBucketPendingRewards[a]',
+    fallback:
+      'floor((agentBucketTimeDiffSeconds[a] * agentBucketStakedQuantity[a] * agentRate[a]) / 100 / yearSeconds)',
+  },
+  {
+    legacyKey: 'agentPendingRewardsFormula',
+    displayKey: 'agentPendingRewards',
+    fallback: '\u03A3_a agentBucketPendingRewards[a]',
+  },
+  {
+    legacyKey: 'downstreamRewardsFormula',
+    displayKey: 'downstreamPendingRewards',
+    fallback: 'recipientPendingRewards + agentPendingRewards',
+  },
+  {
+    legacyKey: 'sponsorPendingRewardsFormula',
+    displayKey: 'netSponsorPendingRewards',
+    fallback: 'grossSponsorPendingRewards - downstreamPendingRewards',
+  },
+];
+
+function isCompactRewardFormulaDisplayGroup(value: unknown): boolean {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const record = value as Record<string, unknown>;
+  return rewardFormulaFields.some((field) => Object.prototype.hasOwnProperty.call(record, field.displayKey));
+}
+
 function normalizeRewardCalculationDisplayShape(value: any): any {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
   const record = value as Record<string, unknown>;
+  const stripFormulaLeftHandSide = (formulaValue: unknown, displayKey: string) => {
+    if (typeof formulaValue !== 'string') return formulaValue;
+    const prefix = `${displayKey} =`;
+    const normalizeFormulaTerms = (formula: string) =>
+      formula
+        .replace(/bucketLastUpdateTimeStamp/g, 'sponsorBucketLastUpdateTimeStamp[t]')
+        .replace(/totalPendingRewards/g, 'grossSponsorPendingRewards')
+        .replace(/downstreamRewards/g, 'downstreamPendingRewards')
+        .replace(/sponsorPendingRewards/g, 'netSponsorPendingRewards');
+    if (formulaValue.startsWith(prefix)) return normalizeFormulaTerms(formulaValue.slice(prefix.length).trim());
+    const legacyFormulaMatch = formulaValue.match(/^[A-Za-z0-9_[\]]+\s*=\s*(.+)$/);
+    return normalizeFormulaTerms(legacyFormulaMatch ? legacyFormulaMatch[1].trim() : formulaValue);
+  };
+  const compactRewardFormulaGroup = (formulaRecord: Record<string, unknown>) => {
+    const compact: Record<string, unknown> = {
+      indexNotation:
+        formulaRecord.indexNotation && typeof formulaRecord.indexNotation === 'object'
+          ? formulaRecord.indexNotation
+          : {
+              yearSeconds: '31556925 seconds = 365.2421875 days',
+              t: 'sponsor/rate bucket index',
+              r: 'recipient-rate bucket index',
+              a: 'agent-rate bucket index',
+            },
+    };
+    rewardFormulaFields.forEach((field) => {
+      const formulaValue = formulaRecord[field.displayKey] ?? formulaRecord[field.legacyKey] ?? field.fallback;
+      compact[field.displayKey] = stripFormulaLeftHandSide(formulaValue, field.displayKey);
+    });
+    if (Object.prototype.hasOwnProperty.call(formulaRecord, 'rewardFormulsValues')) {
+      compact.rewardFormulsValues = formulaRecord.rewardFormulsValues;
+    }
+    return compact;
+  };
   const hasRewardFormulaGroupFields =
     Object.prototype.hasOwnProperty.call(record, 'indexNotation') ||
+    rewardFormulaFields.some((field) => Object.prototype.hasOwnProperty.call(record, field.displayKey)) ||
     Object.prototype.hasOwnProperty.call(record, 'totalPendingRewardsFormula') ||
     Object.prototype.hasOwnProperty.call(record, 'bucketPendingRewardsFormula') ||
+    Object.prototype.hasOwnProperty.call(record, 'timeDiffFormula') ||
     Object.prototype.hasOwnProperty.call(record, 'downstreamRewardsFormula') ||
     Object.prototype.hasOwnProperty.call(record, 'recipientPendingRewardsFormula') ||
     Object.prototype.hasOwnProperty.call(record, 'agentPendingRewardsFormula') ||
@@ -1070,9 +1163,7 @@ function normalizeRewardCalculationDisplayShape(value: any): any {
     Object.prototype.hasOwnProperty.call(record, 'method') ||
     Object.prototype.hasOwnProperty.call(record, 'role');
   if (hasRewardFormulaGroupFields && !hasRewardCalculationContainerFields) {
-    const formulaGroup = { ...record };
-    delete formulaGroup.rewardsFormula;
-    return formulaGroup;
+    return compactRewardFormulaGroup(record);
   }
   const looksLikeRewardCalculation =
     Object.prototype.hasOwnProperty.call(record, 'rewardPathFormula') ||
@@ -1103,9 +1194,9 @@ function normalizeRewardCalculationDisplayShape(value: any): any {
     const normalizedRole = String(roleValue || '').trim();
     if (normalizedRole === 'Sponsor') {
       return [
-        'totalPendingRewards = \u03A3_t transactionBucketPendingRewards[t]',
-        'downstreamRewards = recipientPendingRewards + agentPendingRewards',
-        'sponsorPendingRewards = totalPendingRewards - downstreamRewards',
+        'grossSponsorPendingRewards = \u03A3_t sponsorBucketPendingRewards[t]',
+        'downstreamPendingRewards = recipientPendingRewards + agentPendingRewards',
+        'netSponsorPendingRewards = grossSponsorPendingRewards - downstreamPendingRewards',
       ];
     }
     if (normalizedRole === 'Recipient') {
@@ -1118,8 +1209,8 @@ function normalizeRewardCalculationDisplayShape(value: any): any {
       return ['agentPendingRewards = \u03A3_a agentBucketPendingRewards[a]'];
     }
     return [
-      'totalPendingRewards = sponsorPendingRewards + recipientPendingRewards + agentPendingRewards',
-      'each role is summed from its applicable transaction/rate buckets',
+      'grossSponsorPendingRewards = netSponsorPendingRewards + downstreamPendingRewards',
+      'each role is summed from its applicable sponsor/recipient/agent rate buckets',
     ];
   };
   if (Object.prototype.hasOwnProperty.call(next, 'rewardPathFormula')) {
@@ -1170,6 +1261,12 @@ function normalizeRewardCalculationDisplayShape(value: any): any {
       'soliditySource',
       'bucketLastUpdateTimeStamp',
       'bucketLastUpdateFormatted',
+      'sponsorBucketLastUpdateTimeStamp',
+      'sponsorBucketLastUpdateFormatted',
+      'recipientBucketLastUpdateTimeStamp',
+      'recipientBucketLastUpdateFormatted',
+      'agentBucketLastUpdateTimeStamp',
+      'agentBucketLastUpdateFormatted',
       'timeDifferenceMS',
       'pendingRoleRewards',
       'calculatedTimeStamp',
@@ -1187,37 +1284,7 @@ function normalizeRewardCalculationDisplayShape(value: any): any {
     ],
     existingRewardFormulsValues,
   );
-  next.rewardsFormula = {
-    indexNotation:
-      existingRewardsFormula.indexNotation && typeof existingRewardsFormula.indexNotation === 'object'
-        ? existingRewardsFormula.indexNotation
-        : {
-            t: 'transaction/rate bucket index',
-            r: 'recipient-rate bucket index',
-            a: 'agent-rate bucket index',
-          },
-    totalPendingRewardsFormula:
-      existingRewardsFormula.totalPendingRewardsFormula ??
-      'totalPendingRewards = \u03A3_t transactionBucketPendingRewards[t]',
-    bucketPendingRewardsFormula:
-      existingRewardsFormula.bucketPendingRewardsFormula ??
-      'transactionBucketPendingRewards[t] = floor((transactionBucketTimeDiffSeconds[t] * transactionBucketStakedQuantity[t] * transactionBucketRate[t]) / 100 / yearSeconds)',
-    timeDiffFormula:
-      existingRewardsFormula.timeDiffFormula ??
-      'transactionBucketTimeDiffSeconds[t] = max(0, currentTransactionBucketTime[t] - transactionBucketLastUpdateTime[t])',
-    downstreamRewardsFormula:
-      existingRewardsFormula.downstreamRewardsFormula ??
-      'downstreamRewards = recipientPendingRewards + agentPendingRewards',
-    recipientPendingRewardsFormula:
-      existingRewardsFormula.recipientPendingRewardsFormula ??
-      'recipientPendingRewards = \u03A3_r floor((recipientBucketTimeDiffSeconds[r] * recipientBucketStakedQuantity[r] * recipientRate[r]) / 100 / yearSeconds)',
-    agentPendingRewardsFormula:
-      existingRewardsFormula.agentPendingRewardsFormula ??
-      'agentPendingRewards = \u03A3_a floor((agentBucketTimeDiffSeconds[a] * agentBucketStakedQuantity[a] * agentRate[a]) / 100 / yearSeconds)',
-    sponsorPendingRewardsFormula:
-      existingRewardsFormula.sponsorPendingRewardsFormula ??
-      'sponsorPendingRewards = totalPendingRewards - downstreamRewards',
-  };
+  next.rewardsFormula = compactRewardFormulaGroup(existingRewardsFormula);
   if (Object.keys(existingRewardFormulsValues).length > 0) {
     if (
       Object.prototype.hasOwnProperty.call(existingRewardFormulsValues, 'note') &&
@@ -1234,6 +1301,22 @@ function normalizeRewardCalculationDisplayShape(value: any): any {
     }
     delete existingRewardFormulsValues.yearSeconds;
     delete existingRewardFormulsValues.rateUnit;
+    if (
+      Object.prototype.hasOwnProperty.call(existingRewardFormulsValues, 'bucketLastUpdateTimeStamp') &&
+      !Object.prototype.hasOwnProperty.call(existingRewardFormulsValues, 'sponsorBucketLastUpdateTimeStamp')
+    ) {
+      existingRewardFormulsValues.sponsorBucketLastUpdateTimeStamp =
+        existingRewardFormulsValues.bucketLastUpdateTimeStamp;
+    }
+    if (
+      Object.prototype.hasOwnProperty.call(existingRewardFormulsValues, 'bucketLastUpdateFormatted') &&
+      !Object.prototype.hasOwnProperty.call(existingRewardFormulsValues, 'sponsorBucketLastUpdateFormatted')
+    ) {
+      existingRewardFormulsValues.sponsorBucketLastUpdateFormatted =
+        existingRewardFormulsValues.bucketLastUpdateFormatted;
+    }
+    delete existingRewardFormulsValues.bucketLastUpdateTimeStamp;
+    delete existingRewardFormulsValues.bucketLastUpdateFormatted;
     next.rewardsFormula = {
       ...(next.rewardsFormula as Record<string, unknown>),
       rewardFormulsValues: {
@@ -1249,25 +1332,25 @@ function normalizeRewardCalculationDisplayShape(value: any): any {
   const applyCurrentRewardFormulas = () => {
     next.indexNotation =
       next.indexNotation ??
-      't = transaction/rate bucket index; r = recipient-rate bucket index; a = agent-rate bucket index';
+      't = sponsor/rate bucket index; r = recipient-rate bucket index; a = agent-rate bucket index; yearSeconds = 31556925 seconds = 365.2421875 days';
     next.totalPendingRewardsFormula =
-      next.totalPendingRewardsFormula ?? 'totalPendingRewards = Σ_t transactionBucketPendingRewards[t]';
+      next.totalPendingRewardsFormula ?? 'grossSponsorPendingRewards = Σ_t sponsorBucketPendingRewards[t]';
     next.bucketPendingRewardsFormula =
       next.bucketPendingRewardsFormula ??
-      'transactionBucketPendingRewards[t] = floor((transactionBucketTimeDiffSeconds[t] * transactionBucketStakedQuantity[t] * transactionBucketRate[t]) / 100 / yearSeconds)';
+      'sponsorBucketPendingRewards[t] = floor((sponsorBucketTimeDiffSeconds[t] * sponsorBucketStakedQuantity[t] * sponsorBucketRate[t]) / 100 / yearSeconds)';
     next.timeDiffFormula =
       next.timeDiffFormula ??
-      'transactionBucketTimeDiffSeconds[t] = max(0, currentTransactionBucketTime[t] - transactionBucketLastUpdateTime[t])';
+      'sponsorBucketTimeDiffSeconds[t] = max(0, settlementTimestamp - sponsorBucketLastUpdateTimeStamp[t])';
     next.downstreamRewardsFormula =
-      next.downstreamRewardsFormula ?? 'downstreamRewards = recipientPendingRewards + agentPendingRewards';
+      next.downstreamRewardsFormula ?? 'downstreamPendingRewards = recipientPendingRewards + agentPendingRewards';
     next.recipientPendingRewardsFormula =
       next.recipientPendingRewardsFormula ??
-      'recipientPendingRewards = Σ_r floor((recipientBucketTimeDiffSeconds[r] * recipientBucketStakedQuantity[r] * recipientRate[r]) / 100 / yearSeconds)';
+      'recipientPendingRewards = Σ_r recipientBucketPendingRewards[r]';
     next.agentPendingRewardsFormula =
       next.agentPendingRewardsFormula ??
-      'agentPendingRewards = Σ_a floor((agentBucketTimeDiffSeconds[a] * agentBucketStakedQuantity[a] * agentRate[a]) / 100 / yearSeconds)';
+      'agentPendingRewards = Σ_a agentBucketPendingRewards[a]';
     next.sponsorPendingRewardsFormula =
-      next.sponsorPendingRewardsFormula ?? 'sponsorPendingRewards = totalPendingRewards - downstreamRewards';
+      next.sponsorPendingRewardsFormula ?? 'netSponsorPendingRewards = grossSponsorPendingRewards - downstreamPendingRewards';
   };
 
   if (Object.prototype.hasOwnProperty.call(next, 'formula')) {
@@ -1416,7 +1499,7 @@ function getVisibleEntries(
       .filter(
         ([childKey, childValue]) =>
           childKey !== 'address' &&
-          !shouldHideByDropdownRules(childValue, showAll, hiddenRules, showStructureType) &&
+          !shouldHideByDropdownRules(childValue, showAll || forceShowChildren, hiddenRules, showStructureType) &&
           !(isLazyAccountRelationNode(childValue) && getLazyAccountRelationCount(childValue) <= 0) &&
           childKey !== '__lazySpCoinMetaData' &&
           childKey !== '__lazyMasterAccountKeys' &&
@@ -2070,7 +2153,14 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     const valueHighlighted = highlightPathPrefixes.some(
       (prefix) => nextPath === prefix || nextPath.startsWith(`${prefix}.`),
     );
-    const displayValue = formatDisplayScalar(key, value, formatTokenAmounts, tokenDecimals);
+    const scalarDisplayValue = formatDisplayScalar(key, value, formatTokenAmounts, tokenDecimals);
+    const isRewardFormulaEntry =
+      key !== 'indexNotation' &&
+      (String(path || '').endsWith('.rewardsFormula') ||
+        label === 'rewardsFormula' ||
+        isCompactRewardFormulaDisplayGroup(data));
+    const scalarDelimiter = isRewardFormulaEntry ? '=' : ':';
+    const scalarDelimiterText = scalarDelimiter === '=' ? ' = ' : ': ';
     const rawStringValue = typeof value === 'string' ? value.trim() : '';
     const isClickableAddress = /^0x[0-9a-fA-F]{40}$/.test(rawStringValue);
     const isArrayIndexAddress = isClickableAddress && /^\d+$/.test(String(key || ''));
@@ -2105,7 +2195,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
               </button>
             ) : null}
             <span className={`${isArrayIndexAddress ? 'text-right' : ''} ${valueHighlighted ? highlightColorClass : 'text-[#5981F3]'}`}>
-              {key}:
+              {key}{scalarDelimiter}
             </span>
             {typeof onAddressNodeClick === 'function' ? (
               <button
@@ -2120,7 +2210,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
                 }}
                 title={`Show metadata for ${rawStringValue}`}
               >
-                {renderFormulaDisplayValue(displayValue)}
+                {renderFormulaDisplayValue(scalarDisplayValue)}
               </button>
             ) : (
               <span
@@ -2129,15 +2219,16 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
                 }`}
                 title={`Show metadata for ${rawStringValue}`}
               >
-                {renderFormulaDisplayValue(displayValue)}
+                {renderFormulaDisplayValue(scalarDisplayValue)}
               </span>
             )}
           </span>
         ) : (
           <>
-            <span className={valueHighlighted ? highlightColorClass : 'text-[#5981F3]'}>{key}</span>:{' '}
+            <span className={valueHighlighted ? highlightColorClass : 'text-[#5981F3]'}>{key}</span>
+            {scalarDelimiterText}
             <span className={valueHighlighted ? highlightColorClass : getValueColor(value)}>
-              {renderFormulaDisplayValue(displayValue)}
+              {renderFormulaDisplayValue(scalarDisplayValue)}
             </span>
           </>
         )}

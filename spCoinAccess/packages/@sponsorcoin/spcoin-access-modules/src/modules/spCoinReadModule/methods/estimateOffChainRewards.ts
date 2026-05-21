@@ -7,6 +7,10 @@ async function getPending(context, accountKey, optionsOrTimestampOverride = unde
 
 function selectRewards(result, role) {
     const pending = result && typeof result === "object" ? result : {};
+    const pendingSponsorRewards = String(pending.pendingSponsorRewards ?? "0");
+    const pendingRecipientRewards = String(pending.pendingRecipientRewards ?? "0");
+    const pendingAgentRewards = String(pending.pendingAgentRewards ?? "0");
+    const pendingTotalRewards = String(pending.pendingRewards ?? "0");
     if (role === "sponsor") {
         return {
             TYPE: "--ACCOUNT_PENDING_SPONSOR_REWARDS--",
@@ -14,7 +18,10 @@ function selectRewards(result, role) {
             calculatedTimeStamp: String(pending.calculatedTimeStamp ?? "0"),
             calculatedFormatted: String(pending.calculatedFormatted ?? ""),
             lastSponsorUpdate: String(pending.lastSponsorUpdate ?? "0"),
-            pendingSponsorRewards: String(pending.pendingSponsorRewards ?? "0"),
+            pendingSponsorRewards,
+            pendingRecipientRewards,
+            pendingAgentRewards,
+            pendingTotalRewards,
         };
     }
     if (role === "recipient") {
@@ -24,7 +31,10 @@ function selectRewards(result, role) {
             calculatedTimeStamp: String(pending.calculatedTimeStamp ?? "0"),
             calculatedFormatted: String(pending.calculatedFormatted ?? ""),
             lastRecipientUpdate: String(pending.lastRecipientUpdate ?? "0"),
-            pendingRecipientRewards: String(pending.pendingRecipientRewards ?? "0"),
+            pendingSponsorRewards,
+            pendingRecipientRewards,
+            pendingAgentRewards,
+            pendingTotalRewards,
         };
     }
     if (role === "agent") {
@@ -34,7 +44,10 @@ function selectRewards(result, role) {
             calculatedTimeStamp: String(pending.calculatedTimeStamp ?? "0"),
             calculatedFormatted: String(pending.calculatedFormatted ?? ""),
             lastAgentUpdate: String(pending.lastAgentUpdate ?? "0"),
-            pendingAgentRewards: String(pending.pendingAgentRewards ?? "0"),
+            pendingSponsorRewards,
+            pendingRecipientRewards,
+            pendingAgentRewards,
+            pendingTotalRewards,
         };
     }
     return {

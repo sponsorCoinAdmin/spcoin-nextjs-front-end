@@ -852,17 +852,20 @@ type AccountRewardSnapshot = {
 
 const STAKING_REWARD_YEAR_SECONDS = '31556925';
 const REWARD_INDEX_NOTATION = {
-  t: 'transaction/rate bucket index',
+  yearSeconds: `${STAKING_REWARD_YEAR_SECONDS} seconds = 365.2421875 days`,
+  t: 'sponsor/rate bucket index',
   r: 'recipient-rate bucket index',
   a: 'agent-rate bucket index',
 };
-const BUCKET_PENDING_REWARD_FORMULA = 'transactionBucketPendingRewards[t] = floor((transactionBucketTimeDiffSeconds[t] * transactionBucketStakedQuantity[t] * transactionBucketRate[t]) / 100 / yearSeconds)';
-const STAKING_REWARD_TIME_DIFF_FORMULA = 'transactionBucketTimeDiffSeconds[t] = max(0, currentTransactionBucketTime[t] - transactionBucketLastUpdateTime[t])';
-const DOWNSTREAM_REWARDS_FORMULA = 'downstreamRewards = recipientPendingRewards + agentPendingRewards';
-const SPONSOR_PENDING_REWARDS_FORMULA = 'sponsorPendingRewards = totalPendingRewards - downstreamRewards';
-const DISPLAY_PENDING_REWARD_FORMULA = 'totalPendingRewards = \u03A3_t transactionBucketPendingRewards[t]';
-const DISPLAY_RECIPIENT_PENDING_REWARDS_FORMULA = 'recipientPendingRewards = \u03A3_r floor((recipientBucketTimeDiffSeconds[r] * recipientBucketStakedQuantity[r] * recipientRate[r]) / 100 / yearSeconds)';
-const DISPLAY_AGENT_PENDING_REWARDS_FORMULA = 'agentPendingRewards = \u03A3_a floor((agentBucketTimeDiffSeconds[a] * agentBucketStakedQuantity[a] * agentRate[a]) / 100 / yearSeconds)';
+const SPONSOR_BUCKET_TIME_DIFF_FORMULA = 'max(0, settlementTimestamp - sponsorBucketLastUpdateTimeStamp[t])';
+const SPONSOR_BUCKET_PENDING_REWARD_FORMULA = 'floor((sponsorBucketTimeDiffSeconds[t] * sponsorBucketStakedQuantity[t] * sponsorBucketRate[t]) / 100 / yearSeconds)';
+const GROSS_SPONSOR_PENDING_REWARDS_FORMULA = '\u03A3_t sponsorBucketPendingRewards[t]';
+const RECIPIENT_BUCKET_PENDING_REWARD_FORMULA = 'floor((recipientBucketTimeDiffSeconds[r] * recipientBucketStakedQuantity[r] * recipientRate[r]) / 100 / yearSeconds)';
+const RECIPIENT_PENDING_REWARDS_FORMULA = '\u03A3_r recipientBucketPendingRewards[r]';
+const AGENT_BUCKET_PENDING_REWARD_FORMULA = 'floor((agentBucketTimeDiffSeconds[a] * agentBucketStakedQuantity[a] * agentRate[a]) / 100 / yearSeconds)';
+const AGENT_PENDING_REWARDS_FORMULA = '\u03A3_a agentBucketPendingRewards[a]';
+const DOWNSTREAM_PENDING_REWARDS_FORMULA = 'recipientPendingRewards + agentPendingRewards';
+const NET_SPONSOR_PENDING_REWARDS_FORMULA = 'grossSponsorPendingRewards - downstreamPendingRewards';
 
 type RewardUpdateWriteMethod =
   | 'claimOnChainTotalRewards'
@@ -926,36 +929,38 @@ function getAccountRolesDisplay(snapshot: AccountRewardSnapshot | null | undefin
 function getRewardPathFormula(role: RewardRole) {
   if (role === 'Sponsor') {
     return [
-      'totalPendingRewards = Σ_t transactionBucketPendingRewards[t]',
-      'downstreamRewards = recipientPendingRewards + agentPendingRewards',
-      'sponsorPendingRewards = totalPendingRewards - downstreamRewards',
+      'grossSponsorPendingRewards = Σ_t sponsorBucketPendingRewards[t]',
+      'downstreamPendingRewards = recipientPendingRewards + agentPendingRewards',
+      'netSponsorPendingRewards = grossSponsorPendingRewards - downstreamPendingRewards',
     ];
   }
   if (role === 'Recipient') {
     return [
-      'recipientPendingRewards = Σ recipient rate bucket rewards',
+      'recipientPendingRewards = Σ_r recipientBucketPendingRewards[r]',
       'agentPendingRewards may be downstream from Recipient when Agent rates exist',
     ];
   }
   if (role === 'Agent') {
-    return ['agentPendingRewards = Σ agent rate bucket rewards'];
+    return ['agentPendingRewards = Σ_a agentBucketPendingRewards[a]'];
   }
   return [
-    'totalPendingRewards = sponsorPendingRewards + recipientPendingRewards + agentPendingRewards',
-    'each role is summed from its applicable transaction/rate buckets',
+    'grossSponsorPendingRewards = netSponsorPendingRewards + downstreamPendingRewards',
+    'each role is summed from its applicable sponsor/recipient/agent rate buckets',
   ];
 }
 
 function buildRewardsFormulaMeta() {
   return {
     indexNotation: REWARD_INDEX_NOTATION,
-    totalPendingRewardsFormula: DISPLAY_PENDING_REWARD_FORMULA,
-    bucketPendingRewardsFormula: BUCKET_PENDING_REWARD_FORMULA,
-    timeDiffFormula: STAKING_REWARD_TIME_DIFF_FORMULA,
-    downstreamRewardsFormula: DOWNSTREAM_REWARDS_FORMULA,
-    recipientPendingRewardsFormula: DISPLAY_RECIPIENT_PENDING_REWARDS_FORMULA,
-    agentPendingRewardsFormula: DISPLAY_AGENT_PENDING_REWARDS_FORMULA,
-    sponsorPendingRewardsFormula: SPONSOR_PENDING_REWARDS_FORMULA,
+    'sponsorBucketTimeDiffSeconds[t]': SPONSOR_BUCKET_TIME_DIFF_FORMULA,
+    'sponsorBucketPendingRewards[t]': SPONSOR_BUCKET_PENDING_REWARD_FORMULA,
+    grossSponsorPendingRewards: GROSS_SPONSOR_PENDING_REWARDS_FORMULA,
+    'recipientBucketPendingRewards[r]': RECIPIENT_BUCKET_PENDING_REWARD_FORMULA,
+    recipientPendingRewards: RECIPIENT_PENDING_REWARDS_FORMULA,
+    'agentBucketPendingRewards[a]': AGENT_BUCKET_PENDING_REWARD_FORMULA,
+    agentPendingRewards: AGENT_PENDING_REWARDS_FORMULA,
+    downstreamPendingRewards: DOWNSTREAM_PENDING_REWARDS_FORMULA,
+    netSponsorPendingRewards: NET_SPONSOR_PENDING_REWARDS_FORMULA,
   };
 }
 
@@ -1006,6 +1011,7 @@ function buildRewardCalculationMeta(params: RewardCalculationMetaParams) {
           : record.pendingTotalRewards ?? record.pendingRewards ?? record.totalRewards;
   const roleTimestampKey = `last${role}TimeStamp`;
   const roleUpdateKey = `last${role}Update`;
+  const roleBucketPrefix = role === 'Total' ? 'sponsor' : role.toLowerCase();
   const baseMeta = {
     source: params.source,
     method: params.methodName,
@@ -1022,10 +1028,10 @@ function buildRewardCalculationMeta(params: RewardCalculationMetaParams) {
         ...baseMeta.rewardsFormula,
         rewardFormulsValues: {
           Note:
-            'Estimate uses transaction/rate bucket timestamps. It does not update account last*UpdateTimeStamp on chain.',
+            'Estimate uses sponsor/rate bucket timestamps. It does not update account last*UpdateTimeStamp on chain.',
           ...buildRewardFormulaValuesMeta(),
-          bucketLastUpdateTimeStamp: String(record[roleTimestampKey] ?? '0'),
-          bucketLastUpdateFormatted: String(record[roleUpdateKey] ?? ''),
+          [`${roleBucketPrefix}BucketLastUpdateTimeStamp`]: String(record[roleTimestampKey] ?? '0'),
+          [`${roleBucketPrefix}BucketLastUpdateFormatted`]: String(record[roleUpdateKey] ?? ''),
           timeDifferenceMS: String(record.timeDifferenceMS ?? '0'),
           pendingRoleRewards: String(pendingRoleRewards ?? '0'),
           calculatedTimeStamp: String(record.calculatedTimeStamp ?? '0'),
@@ -1606,6 +1612,8 @@ export async function POST(request: NextRequest) {
                 accountKey,
                 accountSnapshot,
               );
+              const rewardRole = getRewardRoleForMethod(String(step.method));
+              const rewardRoleBucketPrefix = rewardRole === 'Total' ? 'sponsor' : rewardRole.toLowerCase();
               const rewardFormulsValues =
                 stepRewardCalculationMeta.rewardsFormula &&
                 typeof stepRewardCalculationMeta.rewardsFormula === 'object' &&
@@ -1616,10 +1624,10 @@ export async function POST(request: NextRequest) {
                   ? ((stepRewardCalculationMeta.rewardsFormula as Record<string, unknown>).rewardFormulsValues as Record<string, unknown>)
                   : {};
               appendTrace(
-                `[REWARD_CALC_TRACE] estimate method=${String(step.method)} account=${accountKey} formula="${DISPLAY_PENDING_REWARD_FORMULA}" yearSeconds=${STAKING_REWARD_YEAR_SECONDS} calculatedTimeStamp=${String(
+                `[REWARD_CALC_TRACE] estimate method=${String(step.method)} account=${accountKey} formula="grossSponsorPendingRewards = ${GROSS_SPONSOR_PENDING_REWARDS_FORMULA}" yearSeconds=${STAKING_REWARD_YEAR_SECONDS} calculatedTimeStamp=${String(
                   rewardFormulsValues.calculatedTimeStamp || '',
-                )} bucketLastUpdateTimeStamp=${String(
-                  rewardFormulsValues.bucketLastUpdateTimeStamp || '',
+                )} ${rewardRoleBucketPrefix}BucketLastUpdateTimeStamp=${String(
+                  rewardFormulsValues[`${rewardRoleBucketPrefix}BucketLastUpdateTimeStamp`] || '',
                 )} pendingTotalRewards=${String(rewardFormulsValues.pendingTotalRewards || '')}`,
               );
               break;
@@ -2186,7 +2194,7 @@ export async function POST(request: NextRequest) {
               const receipt = (await tx.wait()) as { hash?: string; blockNumber?: bigint | number | null; status?: number | bigint | null };
               const settlementTimestamp = await getReceiptBlockTimestamp(provider, receipt);
               appendTrace(
-                `[REWARD_CALC_TRACE] claim receipt method=${methodName} account=${accountKey} settlementTimestamp=${String(settlementTimestamp || '')} formula="${DISPLAY_PENDING_REWARD_FORMULA}" yearSeconds=${STAKING_REWARD_YEAR_SECONDS}`,
+                `[REWARD_CALC_TRACE] claim receipt method=${methodName} account=${accountKey} settlementTimestamp=${String(settlementTimestamp || '')} formula="grossSponsorPendingRewards = ${GROSS_SPONSOR_PENDING_REWARDS_FORMULA}" yearSeconds=${STAKING_REWARD_YEAR_SECONDS}`,
               );
               const settlementOfflinePreview =
                 includeOfflineComparison && settlementTimestamp && typeof pendingRewardsReader.estimateOffChainTotalRewards === 'function'

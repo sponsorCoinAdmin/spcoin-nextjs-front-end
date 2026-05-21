@@ -105,15 +105,19 @@ export function normalizePendingRewardsDisplayResult(value: unknown): unknown {
   const pendingSponsorRewards = toPendingRewardsBigInt(record.pendingSponsorRewards).toString();
   const pendingRecipientRewards = toPendingRewardsBigInt(record.pendingRecipientRewards).toString();
   const pendingAgentRewards = toPendingRewardsBigInt(record.pendingAgentRewards).toString();
+  const hasAnyPendingRewardComponent =
+    Object.prototype.hasOwnProperty.call(record, 'pendingSponsorRewards') ||
+    Object.prototype.hasOwnProperty.call(record, 'pendingRecipientRewards') ||
+    Object.prototype.hasOwnProperty.call(record, 'pendingAgentRewards');
   const componentTotal =
     toPendingRewardsBigInt(pendingSponsorRewards) +
     toPendingRewardsBigInt(pendingRecipientRewards) +
     toPendingRewardsBigInt(pendingAgentRewards);
   const explicitTotal = toPendingRewardsBigInt(record.pendingRewards ?? record.pendingTotalRewards ?? record.totalRewards);
   const pendingRewards =
-    explicitTotal > 0n || componentTotal === 0n
-      ? explicitTotal.toString()
-      : componentTotal.toString();
+    hasAnyPendingRewardComponent
+      ? componentTotal.toString()
+      : explicitTotal.toString();
   const calculatedTimeStamp = String(record.calculatedTimeStamp ?? record.calculatedmestamp ?? record.calculatedAtTimestamp ?? '0');
   const role = getPendingRewardsRole(record);
   const lastRoleTimeStampKey = `last${role}TimeStamp`;
@@ -192,9 +196,9 @@ export function normalizePendingRewardsDisplayResult(value: unknown): unknown {
       [lastRoleUpdateKey]: calculateFormattedDT(lastRoleTimeStamp),
       calculatedFormatted,
       formattedDifference,
-      ...(pendingSponsorRewards !== '0' ? { pendingSponsorRewards } : {}),
-      ...(pendingRecipientRewards !== '0' ? { pendingRecipientRewards } : {}),
-      ...(pendingAgentRewards !== '0' ? { pendingAgentRewards } : {}),
+      pendingSponsorRewards,
+      pendingRecipientRewards,
+      pendingAgentRewards,
       pendingTotalRewards: pendingRewards,
       __showEmptyFields: true,
     };
