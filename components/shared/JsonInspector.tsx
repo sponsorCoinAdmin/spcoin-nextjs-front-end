@@ -184,6 +184,31 @@ function normalizeRewardFormulsValuesDisplayShape(
     if (!hasAgentBucket) delete next.pendingAgentRewards;
   }
 
+  const normalizeRoleSnapshotFields = (snapshotValue: unknown) => {
+    if (!snapshotValue || typeof snapshotValue !== 'object' || Array.isArray(snapshotValue)) return snapshotValue;
+    if (!['Sponsor', 'Recipient', 'Agent'].includes(normalizedRole)) return snapshotValue;
+    const snapshot = { ...(snapshotValue as Record<string, unknown>) };
+    const rewardsKey = `account${normalizedRole}Rewards`;
+    const updateKey = `account${normalizedRole}UpdateTimeStamp`;
+    if (
+      Object.prototype.hasOwnProperty.call(snapshot, 'accountRoleRewards') &&
+      !Object.prototype.hasOwnProperty.call(snapshot, rewardsKey)
+    ) {
+      snapshot[rewardsKey] = snapshot.accountRoleRewards;
+    }
+    if (
+      Object.prototype.hasOwnProperty.call(snapshot, 'accountRoleUpdateTimeStamp') &&
+      !Object.prototype.hasOwnProperty.call(snapshot, updateKey)
+    ) {
+      snapshot[updateKey] = snapshot.accountRoleUpdateTimeStamp;
+    }
+    delete snapshot.accountRoleRewards;
+    delete snapshot.accountRoleUpdateTimeStamp;
+    return snapshot;
+  };
+  next.accountSnapshotBefore = normalizeRoleSnapshotFields(next.accountSnapshotBefore);
+  next.accountSnapshotAfter = normalizeRoleSnapshotFields(next.accountSnapshotAfter);
+
   const orderedKeys = [
     'Note',
     'note',
@@ -1147,6 +1172,22 @@ function isTokenAmountKey(key: string): boolean {
   ].includes(String(key || '').trim());
 }
 
+function isRedundantLastClaimedRewardsField(key: string): boolean {
+  const normalized = String(key || '').trim();
+  return normalized === 'Last Claimed Rewards' || normalized === 'lastClaimedRewards';
+}
+
+function stripRedundantLastClaimedRewardsFields(value: unknown): unknown {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
+  const next = { ...(value as Record<string, unknown>) };
+  for (const key of Object.keys(next)) {
+    if (isRedundantLastClaimedRewardsField(key)) {
+      delete next[key];
+    }
+  }
+  return next;
+}
+
 function unwrapNumericDisplayString(value: unknown): { raw: string; wasQuoted: boolean } {
   const trimmed = String(value ?? '').trim();
   const wasQuoted =
@@ -1224,6 +1265,15 @@ function getPendingRewardsMethodSummaryValue(
   data: unknown,
 ): { key: string; value: unknown } | null {
   if (!PENDING_REWARDS_METHOD_NAMES.has(methodName)) return null;
+  const accountKey = getPendingRewardsRefreshAccountKey(data);
+  return accountKey ? { key: 'accountKey', value: accountKey } : null;
+}
+
+function getPendingRewardsMethodResultSummaryValue(
+  methodName: string,
+  data: unknown,
+): { key: string; value: unknown; suffix: string } | null {
+  if (!PENDING_REWARDS_METHOD_NAMES.has(methodName)) return null;
   if (!data || typeof data !== 'object' || Array.isArray(data)) return null;
   const record = data as Record<string, unknown>;
   const result =
@@ -1234,18 +1284,40 @@ function getPendingRewardsMethodSummaryValue(
 
   if (methodName.startsWith('estimateOffChain') && methodName.endsWith('Rewards')) {
     const value = result.pendingTotalRewards ?? result.pendingRewards ?? result.totalRewards;
-    return value === undefined || value === null ? null : { key: 'pendingTotalRewards', value };
+    return value === undefined || value === null ? null : { key: 'pendingTotalRewards', value, suffix: '(Estimate)' };
   }
 
   if (methodName.startsWith('claimOnChain') && methodName.endsWith('Rewards')) {
     const value = result.totalRewardsClaimed ?? result.claimedAmount;
-    return value === undefined || value === null ? null : { key: 'totalRewardsClaimed', value };
+    return value === undefined || value === null ? null : { key: 'totalRewardsClaimed', value, suffix: '(Last Claimed)' };
   }
 
   return null;
 }
 
+function roleFromPendingRewardsMethod(methodName: string): DisplayAccountRole | '' {
+  if (/SponsorRewards$/i.test(methodName)) return 'Sponsor';
+  if (/RecipientRewards$/i.test(methodName)) return 'Recipient';
+  if (/AgentRewards$/i.test(methodName)) return 'Agent';
+  return '';
+}
+
 function normalizeVisibleEntry(parent: any, childKey: string, childValue: any): [string, any] {
+  const parentRecord =
+    parent && typeof parent === 'object' && !Array.isArray(parent)
+      ? (parent as Record<string, unknown>)
+      : null;
+  const parentMethod = String(
+    parentRecord?.method ||
+      (parentRecord?.call && typeof parentRecord.call === 'object' && !Array.isArray(parentRecord.call)
+        ? (parentRecord.call as Record<string, unknown>).method
+        : '') ||
+      '',
+  ).trim();
+  const claimRole = parentMethod.startsWith('claimOnChain') ? roleFromPendingRewardsMethod(parentMethod) : '';
+  if (childKey === 'claimedAmount' && claimRole) {
+    return [`claimed${claimRole}Amount`, childValue];
+  }
   if (childKey === 'rewardCalculation') {
     return ['rewardCalculations', childValue];
   }
@@ -1334,6 +1406,17 @@ function normalizeRewardCalculationDisplayShape(
     delete nextNotations.yearsInSeconds;
     delete nextNotations.role;
     return nextNotations;
+  }
+  if (label === 'rewardValues') {
+    const nextRewardValues = { ...record };
+    delete nextRewardValues.role;
+    delete nextRewardValues.rewardsFormula;
+    delete nextRewardValues.rewardFormulas;
+    delete nextRewardValues.rewardsNotations;
+    delete nextRewardValues.rewardNotations;
+    delete nextRewardValues.rewardFormulsValues;
+    delete nextRewardValues.rewardValues;
+    return nextRewardValues;
   }
   const roleFromMethod = (methodValue: unknown): 'Sponsor' | 'Recipient' | 'Agent' | 'Total' | '' => {
     const methodName = String(methodValue ?? '').trim();
@@ -1520,6 +1603,8 @@ function normalizeRewardCalculationDisplayShape(
   delete next.lastAgentTimeStamp;
   delete next.lastAgentUpdate;
   delete next.formattedDifference;
+  delete next.method;
+  delete next.accountKey;
   const initialRewardPathRecord =
     next.rewardPathFormula && typeof next.rewardPathFormula === 'object' && !Array.isArray(next.rewardPathFormula)
       ? (next.rewardPathFormula as Record<string, unknown>)
@@ -1958,7 +2043,7 @@ function getVisibleEntries(
       ? addPendingRewardsTimingToStepResult(moveAccountUpdateTimestampsToMeta(normalizedValue))
       : addPendingRewardsTimingToStepResult(value);
   const displayValue = normalizeRewardCalculationDisplayShape(
-    normalizeAccountRecordDisplayShape(displayValueBeforeAccountShape),
+    normalizeAccountRecordDisplayShape(stripRedundantLastClaimedRewardsFields(displayValueBeforeAccountShape)),
     accountRoleCounts,
     label,
   );
@@ -1986,6 +2071,7 @@ function getVisibleEntries(
           childKey !== 'annualInflationRate' &&
           !(childKey === 'parameters' && typeof (displayValue as Record<string, unknown>).call === 'object') &&
           childKey !== 'accountKey' &&
+          !isRedundantLastClaimedRewardsField(childKey) &&
           childKey !== 'relation' &&
           childKey !== 'count' &&
           childKey !== 'method' &&
@@ -2126,7 +2212,8 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     data && typeof data === 'object' && !Array.isArray(data)
       ? String((data as Record<string, unknown>).address || (data as Record<string, unknown>).accountKey || '').trim()
       : '';
-  const isAddressNode = /^0x[0-9a-fA-F]{40}$/.test(addressNode);
+  const isPendingRewardsResultSummaryLabel = String(label || '').startsWith('result: ');
+  const isAddressNode = !isPendingRewardsResultSummaryLabel && /^0x[0-9a-fA-F]{40}$/.test(addressNode);
   const isAddressFieldBackedNode =
     data &&
     typeof data === 'object' &&
@@ -2366,6 +2453,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
   const getPathLabel = (nextPath: string): string => {
     if (label && label.startsWith('onChainCalls')) return label;
     if (label && label.startsWith('childOnChainCalls')) return label;
+    if (label && label.startsWith('result: ')) return label;
     if (label && PENDING_REWARDS_METHOD_NAMES.has(label)) {
       return getPendingRewardsMethodDisplayName(label);
     }
@@ -2455,6 +2543,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
   const inlineStepMethodDisplayName = getPendingRewardsMethodDisplayName(inlineStepMethod);
   const displayPathLabel = getDisplayLabel(path ?? '');
   const pendingRewardsMethodSummary = getPendingRewardsMethodSummaryValue(inlineStepMethod, data);
+  const pendingRewardsMethodResultSummary = getPendingRewardsMethodResultSummaryValue(inlineStepMethod, data);
   const pendingRewardsMethodSummaryDisplay = pendingRewardsMethodSummary
     ? formatDisplayScalar(
         pendingRewardsMethodSummary.key,
@@ -2462,6 +2551,14 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
         formatTokenAmounts,
         tokenDecimals,
       )
+    : '';
+  const pendingRewardsMethodResultSummaryDisplay = pendingRewardsMethodResultSummary
+    ? `${formatDisplayScalar(
+        pendingRewardsMethodResultSummary.key,
+        pendingRewardsMethodResultSummary.value,
+        formatTokenAmounts,
+        tokenDecimals,
+      )} ${pendingRewardsMethodResultSummary.suffix}`
     : '';
   const hasPendingRewardsMethodSummary = Boolean(pendingRewardsMethodSummary);
   const visibleInlineStepMethod =
@@ -2547,6 +2644,8 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
               }, 0);
               return `childOnChainCalls: ${totalMs}ms`;
             })()
+        : key === 'result' && pendingRewardsMethodResultSummaryDisplay
+          ? `result: ${pendingRewardsMethodResultSummaryDisplay}`
           : key;
     if (key === 'creationTime' || key === 'creationDate' || key === 'Date Created') {
       if (!showAll && hiddenRules.creationDates) return null;
@@ -2784,12 +2883,6 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
                 <span className={isHighlighted ? highlightColorClass : 'text-green-400'}>
                   {pendingRewardsMethodSummaryDisplay}
                 </span>
-                {PENDING_REWARDS_CLAIM_METHOD_NAMES.has(rerunnablePendingRewardsMethod) ? (
-                  <>
-                    {' '}
-                    <span className="text-yellow-300">(Last Claimed)</span>
-                  </>
-                ) : null}
               </>
             ) : null}
           </>
