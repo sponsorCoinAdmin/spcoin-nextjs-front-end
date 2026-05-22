@@ -208,6 +208,38 @@ function normalizeRewardFormulsValuesDisplayShape(
   };
   next.accountSnapshotBefore = normalizeRoleSnapshotFields(next.accountSnapshotBefore);
   next.accountSnapshotAfter = normalizeRoleSnapshotFields(next.accountSnapshotAfter);
+  if (
+    normalizedRole &&
+    next.accountSnapshotBefore &&
+    typeof next.accountSnapshotBefore === 'object' &&
+    !Array.isArray(next.accountSnapshotBefore) &&
+    !Object.prototype.hasOwnProperty.call(next, 'previousUpdateSeconds')
+  ) {
+    const snapshotBefore = next.accountSnapshotBefore as Record<string, unknown>;
+    const roleUpdateKey = `account${normalizedRole}UpdateTimeStamp`;
+    const previousUpdateTimeStamp = snapshotBefore[roleUpdateKey] ?? snapshotBefore.accountRoleUpdateTimeStamp;
+    if (previousUpdateTimeStamp !== undefined) {
+      next.previousUpdateSeconds = previousUpdateTimeStamp;
+      if (!Object.prototype.hasOwnProperty.call(next, 'previousFormattedTimeStamp')) {
+        next.previousFormattedTimeStamp = formatTimestampDateDisplay(previousUpdateTimeStamp);
+      }
+    }
+  }
+  if (
+    normalizedRole &&
+    Object.prototype.hasOwnProperty.call(next, 'settlementTimestamp')
+  ) {
+    const lastUpdateSecondsKey = `last${normalizedRole}UpdateSeconds`;
+    const lastUpdateTimeStampKey = `last${normalizedRole}UpdateTimeStamp`;
+    if (!Object.prototype.hasOwnProperty.call(next, lastUpdateSecondsKey)) {
+      next[lastUpdateSecondsKey] = next.settlementTimestamp;
+    }
+    if (!Object.prototype.hasOwnProperty.call(next, lastUpdateTimeStampKey)) {
+      next[lastUpdateTimeStampKey] = formatTimestampDateDisplay(next.settlementTimestamp);
+    }
+    delete next.settlementTimestamp;
+    delete next.formattedSettlementTimestamp;
+  }
 
   const orderedKeys = [
     'Note',
@@ -234,7 +266,16 @@ function normalizeRewardFormulsValuesDisplayShape(
     'balanceBefore',
     'balanceAfter',
     'claimedAmount',
+    'previousUpdateSeconds',
+    'previousFormattedTimeStamp',
+    'lastSponsorUpdateSeconds',
+    'lastSponsorUpdateTimeStamp',
+    'lastRecipientUpdateSeconds',
+    'lastRecipientUpdateTimeStamp',
+    'lastAgentUpdateSeconds',
+    'lastAgentUpdateTimeStamp',
     'settlementTimestamp',
+    'formattedSettlementTimestamp',
     'accountSnapshotBefore',
     'accountSnapshotAfter',
   ];
@@ -364,7 +405,7 @@ function hasRoleCountForPendingRewardsKey(key: string, counts: AccountRoleCounts
 
 function getScriptStepNumberFromPath(path: string): number | null {
   const normalizedPath = String(path || '').trim();
-  const indexedMatch = normalizedPath.match(/(?:^|\.)(?:steps\.(\d+)|step-(\d+)|script-(\d+))$/);
+  const indexedMatch = normalizedPath.match(/(?:^|\.)(?:steps\.(\d+)|step-(\d+)|script-(\d+))(?:\.|$)/);
   if (!indexedMatch) return null;
   const rawStepNumber = indexedMatch[1] ?? indexedMatch[2] ?? indexedMatch[3];
   if (rawStepNumber == null) return null;
@@ -388,8 +429,14 @@ function getScriptStepNumberFromExactSegment(value: string): number | null {
   return Number.isInteger(parsed) && parsed >= 0 ? parsed + 1 : null;
 }
 
+function isScriptStepDisplayLabel(value: string): boolean {
+  return /^(?:Step|Script)\s+\d+(?::)?$/i.test(String(value || '').trim());
+}
+
 function getAddressNodeLabel(data: any, fallbackLabel: string): string {
   if (!data || typeof data !== 'object' || Array.isArray(data)) return fallbackLabel;
+  if (isScriptStepDisplayLabel(fallbackLabel)) return fallbackLabel;
+  if (data.call && typeof data.call === 'object' && !Array.isArray(data.call)) return fallbackLabel;
   const address = typeof data.address === 'string' ? data.address.trim() : '';
   if (/^0x[0-9a-fA-F]{40}$/.test(address)) return `${fallbackLabel}: "${address}"`;
   const accountKey = typeof data.accountKey === 'string' ? data.accountKey.trim() : '';
@@ -1191,9 +1238,19 @@ function isRedundantPendingRewardResultField(key: string): boolean {
   );
 }
 
-function stripRedundantPendingRewardResultFields(value: unknown): unknown {
+function stripRedundantPendingRewardResultFields(value: unknown, path?: string): unknown {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
   const next = { ...(value as Record<string, unknown>) };
+  const claimMethodMatch = String(path || '').match(/claimOnChain(Sponsor|Recipient|Agent)Rewards/);
+  const claimRole = claimMethodMatch?.[1] as DisplayAccountRole | undefined;
+  if (
+    claimRole &&
+    Object.prototype.hasOwnProperty.call(next, 'claimedAmount') &&
+    !Object.prototype.hasOwnProperty.call(next, `claimed${claimRole}Amount`)
+  ) {
+    next[`claimed${claimRole}Amount`] = next.claimedAmount;
+    delete next.claimedAmount;
+  }
   if (
     next.refreshedAccountRecord &&
     typeof next.refreshedAccountRecord === 'object' &&
@@ -1201,14 +1258,55 @@ function stripRedundantPendingRewardResultFields(value: unknown): unknown {
   ) {
     const refreshedAccountRecord = { ...(next.refreshedAccountRecord as Record<string, unknown>) };
     delete refreshedAccountRecord.pendingRewards;
-    next.refreshedAccountRecord = refreshedAccountRecord;
+    for (const key of ['lastSponsorUpdateTimeStamp', 'lastRecipientUpdateTimeStamp', 'lastAgentUpdateTimeStamp']) {
+      if (
+        Object.prototype.hasOwnProperty.call(refreshedAccountRecord, key) &&
+        !Object.prototype.hasOwnProperty.call(next, key)
+      ) {
+        next[key] = refreshedAccountRecord[key];
+      }
+    }
+    if (
+      Object.prototype.hasOwnProperty.call(refreshedAccountRecord, 'rewardsEarned') &&
+      !Object.prototype.hasOwnProperty.call(next, 'rewardsEarned')
+    ) {
+      next.rewardsEarned = refreshedAccountRecord.rewardsEarned;
+    }
+    if (
+      Object.prototype.hasOwnProperty.call(refreshedAccountRecord, 'totalSpCoins') &&
+      !Object.prototype.hasOwnProperty.call(next, 'totalSpCoins')
+    ) {
+      next.totalSpCoins = refreshedAccountRecord.totalSpCoins;
+    }
+    delete next.refreshedAccountRecord;
   }
   for (const key of Object.keys(next)) {
     if (isRedundantPendingRewardResultField(key)) {
       delete next[key];
     }
   }
-  return next;
+  const preferredKeys = [
+    'lastSponsorUpdateTimeStamp',
+    'lastRecipientUpdateTimeStamp',
+    'lastAgentUpdateTimeStamp',
+    'balanceBefore',
+    'claimedSponsorAmount',
+    'claimedRecipientAmount',
+    'claimedAgentAmount',
+    'claimedAmount',
+    'balanceAfter',
+    'totalRewardsClaimed',
+    'rewardsEarned',
+    'totalSpCoins',
+  ];
+  const ordered: Record<string, unknown> = {};
+  for (const key of preferredKeys) {
+    if (Object.prototype.hasOwnProperty.call(next, key)) ordered[key] = next[key];
+  }
+  for (const [key, entry] of Object.entries(next)) {
+    if (!Object.prototype.hasOwnProperty.call(ordered, key)) ordered[key] = entry;
+  }
+  return ordered;
 }
 
 function unwrapNumericDisplayString(value: unknown): { raw: string; wasQuoted: boolean } {
@@ -1263,6 +1361,17 @@ function renderFormulaDisplayValue(displayValue: string): React.ReactNode {
   ));
 }
 
+function renderDisplayLabelWithStatusSuffix(label: string): React.ReactNode {
+  const match = label.match(/^(.*?)(\s+\((?:Last Estimate|Last Claimed)\))$/);
+  if (!match) return label;
+  return (
+    <>
+      <span className="!text-white">{match[1]}</span>
+      <span className="!text-yellow-300">{match[2]}</span>
+    </>
+  );
+}
+
 function formatPathSegmentLabel(nextPath: string): string {
   const segments = nextPath.split('.');
   const currentSegment = segments[segments.length - 1] || nextPath;
@@ -1307,7 +1416,7 @@ function getPendingRewardsMethodResultSummaryValue(
 
   if (methodName.startsWith('estimateOffChain') && methodName.endsWith('Rewards')) {
     const value = result.pendingTotalRewards ?? result.pendingRewards ?? result.totalRewards;
-    return value === undefined || value === null ? null : { key: 'pendingTotalRewards', value, suffix: '(Estimate)' };
+    return value === undefined || value === null ? null : { key: 'pendingTotalRewards', value, suffix: '(Last Estimate)' };
   }
 
   if (methodName.startsWith('claimOnChain') && methodName.endsWith('Rewards')) {
@@ -2070,7 +2179,7 @@ function getVisibleEntries(
     String(label || '').startsWith('refreshedAccountRecord');
   const displayValue = normalizeRewardCalculationDisplayShape(
     normalizeAccountRecordDisplayShape(
-      stripRedundantPendingRewardResultFields(displayValueBeforeAccountShape),
+      stripRedundantPendingRewardResultFields(displayValueBeforeAccountShape, path),
       { suppressPendingRewardsLift: isRefreshedAccountRecordNode },
     ),
     accountRoleCounts,
@@ -2113,6 +2222,7 @@ function getVisibleEntries(
           childKey !== '__forceExpanded' &&
           childKey !== '__showEmptyFields' &&
           childKey !== 'annualInflationRate' &&
+          childKey !== 'role(s)' &&
           !shouldDropRefreshedAccountPendingRewards(childKey) &&
           !shouldDropPendingRewardsClaimResultArtifact(childKey) &&
           !(childKey === 'parameters' && typeof (displayValue as Record<string, unknown>).call === 'object') &&
@@ -2170,6 +2280,7 @@ function getVisibleEntries(
       if (childKey === '__forceExpanded') return false;
       if (childKey === '__showEmptyFields') return false;
       if (childKey === 'annualInflationRate') return false;
+      if (childKey === 'role(s)') return false;
       if (shouldDropRefreshedAccountPendingRewards(childKey)) return false;
       if (shouldDropPendingRewardsClaimResultArtifact(childKey)) return false;
       if (childKey === 'parameters' && displayValue && typeof displayValue === 'object' && !Array.isArray(displayValue) && typeof (displayValue as Record<string, unknown>).call === 'object') return false;
@@ -2555,7 +2666,6 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     return baseLabel;
   };
 
-  const visibleStepLabel = getDisplayLabel(path ?? '');
   const lastPathSegment = String(path || '')
     .trim()
     .split('.')
@@ -2565,15 +2675,13 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     getScriptStepNumberFromExactSegment(label || '') ??
     getScriptStepNumberFromExactSegment(lastPathSegment) ??
     getScriptStepNumberFromLabel(label || '') ??
-    getScriptStepNumberFromLabel(visibleStepLabel) ??
     getScriptStepNumberFromPath(path);
-  const isDraggableScriptStep = Boolean(
-    scriptStepDragState?.enabled && draggableScriptStepNumber !== null,
-  );
-  const activeDropPlacement =
-    scriptStepDragState?.dropTarget?.stepNumber === draggableScriptStepNumber
-      ? scriptStepDragState.dropTarget.placement
-      : null;
+  const methodLabelScriptStepMethod =
+    draggableScriptStepNumber !== null &&
+    label &&
+    PENDING_REWARDS_METHOD_NAMES.has(label)
+      ? label
+      : '';
   const stepCallRecord =
     data &&
     typeof data === 'object' &&
@@ -2583,13 +2691,32 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     !Array.isArray((data as Record<string, unknown>).call)
       ? ((data as Record<string, unknown>).call as Record<string, unknown>)
       : null;
+  const visibleStepLabel = methodLabelScriptStepMethod
+    ? `Step ${draggableScriptStepNumber}`
+    : stepCallRecord && draggableScriptStepNumber !== null
+      ? `Step ${draggableScriptStepNumber}`
+      : getDisplayLabel(path ?? '');
+  const draggableScriptStepNumberWithLabel =
+    draggableScriptStepNumber ?? getScriptStepNumberFromLabel(visibleStepLabel);
+  const isDraggableScriptStep = Boolean(
+    scriptStepDragState?.enabled && draggableScriptStepNumberWithLabel !== null,
+  );
+  const activeDropPlacement =
+    scriptStepDragState?.dropTarget?.stepNumber === draggableScriptStepNumberWithLabel
+      ? scriptStepDragState.dropTarget.placement
+      : null;
   const inlineStepMethod =
     stepCallRecord && typeof stepCallRecord.method === 'string'
       ? String(stepCallRecord.method).trim()
+      : methodLabelScriptStepMethod
+        ? methodLabelScriptStepMethod
       : '';
   const isAccountRelationInlineMethod = Boolean(getAccountRelationMethodLabel(inlineStepMethod));
   const inlineStepMethodDisplayName = getPendingRewardsMethodDisplayName(inlineStepMethod);
-  const displayPathLabel = getDisplayLabel(path ?? '');
+  const displayPathLabel =
+    stepCallRecord && draggableScriptStepNumber !== null
+      ? `Step ${draggableScriptStepNumber}`
+      : getDisplayLabel(path ?? '');
   const pendingRewardsMethodSummary = getPendingRewardsMethodSummaryValue(inlineStepMethod, data);
   const pendingRewardsMethodResultSummary = getPendingRewardsMethodResultSummaryValue(inlineStepMethod, data);
   const pendingRewardsMethodSummaryDisplay = pendingRewardsMethodSummary
@@ -2610,7 +2737,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     : '';
   const hasPendingRewardsMethodSummary = Boolean(pendingRewardsMethodSummary);
   const visibleInlineStepMethod =
-    hasPendingRewardsMethodSummary ||
+    (hasPendingRewardsMethodSummary && !isDraggableScriptStep) ||
     isAccountRelationInlineMethod ||
     inlineStepMethod === visibleStepLabel ||
     inlineStepMethod === displayPathLabel ||
@@ -2618,6 +2745,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     inlineStepMethodDisplayName === displayPathLabel
       ? ''
       : inlineStepMethodDisplayName;
+  const showStepAddressAfterMethod = Boolean(isAddressNode && stepCallRecord && visibleInlineStepMethod);
   const promotedStepEntries =
     stepCallRecord && !Array.isArray(stepCallRecord)
       ? [
@@ -2634,35 +2762,35 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
       if (target?.closest('button')) return;
       event.preventDefault();
       event.stopPropagation();
-      if (draggableScriptStepNumber !== null) {
-        scriptStepDragState.beginDrag(draggableScriptStepNumber);
+      if (draggableScriptStepNumberWithLabel !== null) {
+        scriptStepDragState.beginDrag(draggableScriptStepNumberWithLabel);
       }
     },
-    [draggableScriptStepNumber, isDraggableScriptStep, scriptStepDragState],
+    [draggableScriptStepNumberWithLabel, isDraggableScriptStep, scriptStepDragState],
   );
   const handleScriptStepDoubleClick = useCallback((event?: React.MouseEvent<HTMLElement>) => {
     const target = event?.target as HTMLElement | null;
     if (target?.closest('button')) return;
-    if (!isDraggableScriptStep || !scriptStepDragState?.onStepDoubleClick || draggableScriptStepNumber === null) return;
-    scriptStepDragState.onStepDoubleClick(draggableScriptStepNumber, inlineStepMethod);
-  }, [draggableScriptStepNumber, inlineStepMethod, isDraggableScriptStep, scriptStepDragState]);
+    if (!isDraggableScriptStep || !scriptStepDragState?.onStepDoubleClick || draggableScriptStepNumberWithLabel === null) return;
+    scriptStepDragState.onStepDoubleClick(draggableScriptStepNumberWithLabel, inlineStepMethod);
+  }, [draggableScriptStepNumberWithLabel, inlineStepMethod, isDraggableScriptStep, scriptStepDragState]);
 
   const handleScriptStepLabelClick = useCallback(
     (event: React.MouseEvent<HTMLButtonElement>) => {
       event.stopPropagation();
-      if (!isDraggableScriptStep || !scriptStepDragState?.onStepDoubleClick || draggableScriptStepNumber === null) return;
-      scriptStepDragState.onStepDoubleClick(draggableScriptStepNumber, inlineStepMethod);
+      if (!isDraggableScriptStep || !scriptStepDragState?.onStepDoubleClick || draggableScriptStepNumberWithLabel === null) return;
+      scriptStepDragState.onStepDoubleClick(draggableScriptStepNumberWithLabel, inlineStepMethod);
     },
-    [draggableScriptStepNumber, inlineStepMethod, isDraggableScriptStep, scriptStepDragState],
+    [draggableScriptStepNumberWithLabel, inlineStepMethod, isDraggableScriptStep, scriptStepDragState],
   );
 
   const handleScriptStepMethodClick = useCallback(
     (event: React.MouseEvent<HTMLButtonElement>) => {
       event.stopPropagation();
-      if (!isDraggableScriptStep || !scriptStepDragState?.onStepMethodClick || draggableScriptStepNumber === null) return;
-      scriptStepDragState.onStepMethodClick(draggableScriptStepNumber, inlineStepMethod);
+      if (!isDraggableScriptStep || !scriptStepDragState?.onStepMethodClick || draggableScriptStepNumberWithLabel === null) return;
+      scriptStepDragState.onStepMethodClick(draggableScriptStepNumberWithLabel, inlineStepMethod);
     },
-    [draggableScriptStepNumber, inlineStepMethod, isDraggableScriptStep, scriptStepDragState],
+    [draggableScriptStepNumberWithLabel, inlineStepMethod, isDraggableScriptStep, scriptStepDragState],
   );
 
   const renderValue = (value: any, key: string) => {
@@ -2863,7 +2991,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
   return (
     <div className={`${level > 0 ? 'ml-2' : ''} font-mono leading-tight`}>
       <div
-        data-script-step-number={isDraggableScriptStep ? String(draggableScriptStepNumber) : undefined}
+        data-script-step-number={isDraggableScriptStep ? String(draggableScriptStepNumberWithLabel) : undefined}
         data-script-step-label={visibleStepLabel}
         data-script-step-path={path}
         data-script-step-draggable={isDraggableScriptStep ? 'true' : 'false'}
@@ -2907,6 +3035,17 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
           >
             {getDisplayLabel(path ?? '')}
           </button>
+        ) : isDraggableScriptStep && scriptStepDragState?.onStepDoubleClick && draggableScriptStepNumberWithLabel !== null ? (
+          <button
+            type="button"
+            className={`inline-flex bg-transparent p-0 text-left font-semibold underline-offset-2 transition-colors hover:text-white focus:outline-none ${
+              scriptStepDragState?.draggedStepNumber === draggableScriptStepNumberWithLabel ? 'opacity-70' : ''
+            } ${isHighlighted ? highlightColorClass : 'text-white'}`}
+            onClick={handleScriptStepLabelClick}
+            title={`Step ${draggableScriptStepNumberWithLabel} actions`}
+          >
+            {renderDisplayLabelWithStatusSuffix(visibleStepLabel)}
+          </button>
         ) : rerunnablePendingRewardsMethod ? (
           <>
             <button
@@ -2919,9 +3058,21 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
                 onTrace?.(
                   `[PENDING_REWARDS_TRACE] method label click path=${path ?? ''} method=${rerunnablePendingRewardsMethod} hasSummary=${String(hasPendingRewardsMethodSummary)}`,
                 );
+                if (
+                  isDraggableScriptStep &&
+                  scriptStepDragState?.onStepMethodClick &&
+                  draggableScriptStepNumberWithLabel !== null
+                ) {
+                  scriptStepDragState.onStepMethodClick(draggableScriptStepNumberWithLabel, rerunnablePendingRewardsMethod);
+                  return;
+                }
                 refreshPendingRewardsMethod();
               }}
-              title={refreshPendingRewardsTitle}
+              title={
+                isDraggableScriptStep && scriptStepDragState?.onStepMethodClick
+                  ? `Rerun ${rerunnablePendingRewardsMethodDisplayName}`
+                  : refreshPendingRewardsTitle
+              }
             >
               {hasPendingRewardsMethodSummary ? `${rerunnablePendingRewardsMethodDisplayName}:` : getDisplayLabel(path ?? '')}
             </button>
@@ -2934,7 +3085,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
               </>
             ) : null}
           </>
-        ) : isAddressNode && (typeof onAddressNodeClick === 'function' || isLazyAddressStub) ? (
+        ) : isAddressNode && !showStepAddressAfterMethod && (typeof onAddressNodeClick === 'function' || isLazyAddressStub) ? (
           <>
             <span className={`font-semibold ${isHighlighted ? highlightColorClass : 'text-white'}`}>
               {(() => {
@@ -2990,32 +3141,21 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
             }}
             title="Refresh pending rewards estimate"
           >
-            {visibleStepLabel}
-          </button>
-        ) : isDraggableScriptStep && scriptStepDragState?.onStepDoubleClick && draggableScriptStepNumber !== null ? (
-          <button
-            type="button"
-            className={`inline-flex bg-transparent p-0 text-left font-semibold underline-offset-2 transition-colors hover:text-white focus:outline-none ${
-              scriptStepDragState?.draggedStepNumber === draggableScriptStepNumber ? 'opacity-70' : ''
-            } ${isHighlighted ? highlightColorClass : 'text-white'}`}
-            onClick={handleScriptStepLabelClick}
-            title={`Step ${draggableScriptStepNumber} actions`}
-          >
-            {visibleStepLabel}
+            {renderDisplayLabelWithStatusSuffix(visibleStepLabel)}
           </button>
         ) : (
           <span
             style={isDraggableScriptStep ? { cursor: 'grab' } : undefined}
             className={`font-semibold ${isDraggableScriptStep ? 'cursor-pointer select-none active:cursor-grabbing' : ''} ${
-              scriptStepDragState?.draggedStepNumber === draggableScriptStepNumber ? 'opacity-70' : ''
+              scriptStepDragState?.draggedStepNumber === draggableScriptStepNumberWithLabel ? 'opacity-70' : ''
             } ${isHighlighted ? highlightColorClass : 'text-white'}`}
             title={isDraggableScriptStep ? 'Drag to reorder this step' : undefined}
           >
-            {visibleStepLabel}
+            {renderDisplayLabelWithStatusSuffix(visibleStepLabel)}
           </span>
         )}
         {visibleInlineStepMethod ? (
-          isDraggableScriptStep && scriptStepDragState?.onStepMethodClick && draggableScriptStepNumber !== null ? (
+          isDraggableScriptStep && scriptStepDragState?.onStepMethodClick && draggableScriptStepNumberWithLabel !== null ? (
             <button
               type="button"
               className={`ml-3 inline-flex bg-transparent p-0 text-left font-semibold transition-colors hover:text-white focus:outline-none ${
@@ -3031,6 +3171,31 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
               {formatDisplayScalar('method', visibleInlineStepMethod, false, tokenDecimals)}
             </span>
           )
+        ) : null}
+        {showStepAddressAfterMethod ? (
+          <>
+            {' '}
+            {typeof onAddressNodeClick === 'function' ? (
+              <button
+                type="button"
+                className={`inline-flex bg-transparent p-0 text-left font-semibold underline decoration-dotted underline-offset-2 transition-colors hover:text-white focus:outline-none ${
+                  isHighlighted ? highlightColorClass : 'text-white'
+                }`}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onTrace?.(
+                    `[JSON_INSPECTOR_TRACE] step address click path=${path ?? ''} key=${label || 'address'} value=${addressNode}`,
+                  );
+                  onAddressNodeClick(addressNode, path ?? '', label || 'address');
+                }}
+                title={`Show metadata for ${addressNode}`}
+              >
+                "{addressNode}"
+              </button>
+            ) : (
+              <span className={`font-semibold ${isHighlighted ? highlightColorClass : 'text-white'}`}>"{addressNode}"</span>
+            )}
+          </>
         ) : null}
         <div className={`mt-[2px] h-[2px] rounded-full ${activeDropPlacement === 'after' ? 'bg-[#8FA8FF]' : 'bg-transparent'}`} />
       </div>

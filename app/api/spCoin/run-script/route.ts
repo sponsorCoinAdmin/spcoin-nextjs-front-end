@@ -918,16 +918,6 @@ function getRoleSnapshotFields(snapshot: AccountRewardSnapshot | null | undefine
   };
 }
 
-function getAccountRolesDisplay(snapshot: AccountRewardSnapshot | null | undefined) {
-  if (!snapshot) return 'N/A';
-  const roles = [
-    toBigIntAmount(snapshot.sponsorCount) > 0n ? 'Sponsor' : '',
-    toBigIntAmount(snapshot.recipientCount) > 0n ? 'Recipient' : '',
-    toBigIntAmount(snapshot.agentCount) > 0n ? 'Agent' : '',
-  ].filter(Boolean);
-  return roles.length > 0 ? roles.join(' / ') : 'N/A';
-}
-
 function buildRewardsFormulaMeta() {
   return {
     rewardsNotations: REWARD_NOTATIONS,
@@ -1004,7 +994,6 @@ function buildRewardCalculationMeta(params: RewardCalculationMetaParams) {
     method: params.methodName,
     ...(params.accountKey ? { accountKey: params.accountKey } : {}),
     role,
-    'role(s)': getAccountRolesDisplay(accountSnapshot),
     ...buildRewardFormulaMeta(),
   };
 

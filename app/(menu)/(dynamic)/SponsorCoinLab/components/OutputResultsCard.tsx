@@ -130,12 +130,10 @@ function buildStepOnChainEntry(onChainCalls: Record<string, unknown>): Record<st
   const callBreakdown = buildOnChainCallBreakdown(calls);
   const totalOnChainMsValue = totalOnChainMs ?? getLocalOnChainCallsTotalMs(calls);
   return {
-    __forceExpanded: true,
     ...rest,
     totalOnChainMs:
       Object.keys(callBreakdown).length > 0
         ? {
-            __forceExpanded: true,
             totalOnChainMs: totalOnChainMsValue,
             ...callBreakdown,
           }
@@ -146,7 +144,6 @@ function buildStepOnChainEntry(onChainCalls: Record<string, unknown>): Record<st
 function buildHeaderMethodOnChainEntry(onChainCalls: Record<string, unknown>): Record<string, unknown> {
   const { calls: _calls, onChainCalls: _onChainCalls, ...totals } = onChainCalls;
   return {
-    __forceExpanded: true,
     ...totals,
   };
 }
@@ -193,14 +190,12 @@ function buildHeaderOnChainCalls(blocks: unknown[]): Record<string, unknown> | n
 
   return hasOnChainCalls
     ? {
-        __forceExpanded: true,
         methodOnChainCalls: `${totalOnChainMs}ms`,
         totalMethodsFeePaidEth: totalFeePaidWei > 0n ? formatWeiAsEth(totalFeePaidWei) : String(totalFeePaidEth),
         totalMethodsFeePaidWei: totalFeePaidWei.toLocaleString('en-US'),
         totalMethodsGasPriceWei: totalGasPriceWei.toLocaleString('en-US'),
         totalMethodsGasUsed: totalGasUsed.toLocaleString('en-US'),
         totalMethodsOnChainMs: {
-          __forceExpanded: true,
           totalMethodsOnChainMs: `${totalOnChainMs}ms`,
           ...entries,
         },
