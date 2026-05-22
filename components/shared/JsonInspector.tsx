@@ -976,7 +976,10 @@ function moveAccountUpdateTimestampsToMeta(value: any): any {
   };
 }
 
-function normalizeAccountRecordDisplayShape(value: any): any {
+function normalizeAccountRecordDisplayShape(
+  value: any,
+  options: { suppressPendingRewardsLift?: boolean } = {},
+): any {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
   const record = value as Record<string, unknown>;
   if (record.TYPE !== '--ACCOUNT--') return value;
@@ -991,7 +994,9 @@ function normalizeAccountRecordDisplayShape(value: any): any {
     totalSpCoinsRecord &&
     Object.prototype.hasOwnProperty.call(totalSpCoinsRecord, 'pendingRewards');
   const needsPendingRewardsLift =
-    nestedPendingRewards !== undefined && !Object.prototype.hasOwnProperty.call(record, 'pendingRewards');
+    !options.suppressPendingRewardsLift &&
+    nestedPendingRewards !== undefined &&
+    !Object.prototype.hasOwnProperty.call(record, 'pendingRewards');
 
   if (!hasStakingRewards && !needsTotalSpCoinsPrune && !needsPendingRewardsLift) return value;
 
@@ -1177,11 +1182,29 @@ function isRedundantLastClaimedRewardsField(key: string): boolean {
   return normalized === 'Last Claimed Rewards' || normalized === 'lastClaimedRewards';
 }
 
-function stripRedundantLastClaimedRewardsFields(value: unknown): unknown {
+function isRedundantPendingRewardResultField(key: string): boolean {
+  const normalized = String(key || '').trim();
+  return (
+    isRedundantLastClaimedRewardsField(normalized) ||
+    normalized === 'timeDifferenceMS' ||
+    normalized === 'formattedDifference'
+  );
+}
+
+function stripRedundantPendingRewardResultFields(value: unknown): unknown {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
   const next = { ...(value as Record<string, unknown>) };
+  if (
+    next.refreshedAccountRecord &&
+    typeof next.refreshedAccountRecord === 'object' &&
+    !Array.isArray(next.refreshedAccountRecord)
+  ) {
+    const refreshedAccountRecord = { ...(next.refreshedAccountRecord as Record<string, unknown>) };
+    delete refreshedAccountRecord.pendingRewards;
+    next.refreshedAccountRecord = refreshedAccountRecord;
+  }
   for (const key of Object.keys(next)) {
-    if (isRedundantLastClaimedRewardsField(key)) {
+    if (isRedundantPendingRewardResultField(key)) {
       delete next[key];
     }
   }
@@ -2042,11 +2065,32 @@ function getVisibleEntries(
     normalizedValue && typeof normalizedValue === 'object' && !Array.isArray(normalizedValue)
       ? addPendingRewardsTimingToStepResult(moveAccountUpdateTimestampsToMeta(normalizedValue))
       : addPendingRewardsTimingToStepResult(value);
+  const isRefreshedAccountRecordNode =
+    String(path || '').split('.').includes('refreshedAccountRecord') ||
+    String(label || '').startsWith('refreshedAccountRecord');
   const displayValue = normalizeRewardCalculationDisplayShape(
-    normalizeAccountRecordDisplayShape(stripRedundantLastClaimedRewardsFields(displayValueBeforeAccountShape)),
+    normalizeAccountRecordDisplayShape(
+      stripRedundantPendingRewardResultFields(displayValueBeforeAccountShape),
+      { suppressPendingRewardsLift: isRefreshedAccountRecordNode },
+    ),
     accountRoleCounts,
     label,
   );
+  const shouldDropRefreshedAccountPendingRewards = (childKey: string) => {
+    const shouldDrop =
+      childKey === 'pendingRewards' &&
+      (isRefreshedAccountRecordNode ||
+        (String(path || '').includes('claimOnChain') &&
+          displayValue &&
+          typeof displayValue === 'object' &&
+          !Array.isArray(displayValue) &&
+          (displayValue as Record<string, unknown>).TYPE === '--ACCOUNT--'));
+    return shouldDrop;
+  };
+  const shouldDropPendingRewardsClaimResultArtifact = (childKey: string) =>
+    (childKey === 'recipientKeys' || childKey === 'receipts') &&
+    String(path || '').includes('claimOnChain') &&
+    (String(path || '').split('.').includes('result') || String(label || '').startsWith('result'));
   const forceShowChildren = shouldShowEmptyChildren(displayValue);
   if (showAll || forceShowChildren) {
     if (Array.isArray(displayValue)) {
@@ -2069,6 +2113,8 @@ function getVisibleEntries(
           childKey !== '__forceExpanded' &&
           childKey !== '__showEmptyFields' &&
           childKey !== 'annualInflationRate' &&
+          !shouldDropRefreshedAccountPendingRewards(childKey) &&
+          !shouldDropPendingRewardsClaimResultArtifact(childKey) &&
           !(childKey === 'parameters' && typeof (displayValue as Record<string, unknown>).call === 'object') &&
           childKey !== 'accountKey' &&
           !isRedundantLastClaimedRewardsField(childKey) &&
@@ -2124,6 +2170,8 @@ function getVisibleEntries(
       if (childKey === '__forceExpanded') return false;
       if (childKey === '__showEmptyFields') return false;
       if (childKey === 'annualInflationRate') return false;
+      if (shouldDropRefreshedAccountPendingRewards(childKey)) return false;
+      if (shouldDropPendingRewardsClaimResultArtifact(childKey)) return false;
       if (childKey === 'parameters' && displayValue && typeof displayValue === 'object' && !Array.isArray(displayValue) && typeof (displayValue as Record<string, unknown>).call === 'object') return false;
       if (isLazyAccountRelationNode(displayValue) && ['accountKey', 'relation', 'count', 'method'].includes(childKey)) return false;
       if (isPendingRewardsContainerSummaryField(displayValue, childKey)) return false;
