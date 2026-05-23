@@ -15,11 +15,32 @@ async function resolveContractDecimals(context) {
 }
 
 export async function normalizeRawQuantityUnits(_context, value) {
-  const raw = BigInt(String(value ?? "0").replace(/,/g, "").trim() || "0");
-  if (raw < 0n) {
+  const input = String(value ?? "0").replace(/,/g, "").trim() || "0";
+  if (input.startsWith("-")) {
     throw new Error("SpCoin quantity cannot be negative.");
   }
-  return raw.toString();
+
+  const decimals = await resolveContractDecimals(_context);
+  const scale = 10n ** BigInt(decimals);
+  const isDecimalTokenAmount = input.includes(".");
+  const isLikelyRawInteger = !isDecimalTokenAmount && input.replace(/^0+/, "").length > decimals;
+
+  if (isLikelyRawInteger) {
+    return BigInt(input).toString();
+  }
+
+  const match = input.match(/^(\d*)(?:\.(\d*))?$/);
+  if (!match || (!match[1] && !match[2])) {
+    throw new Error("SpCoin quantity must be a valid token amount.");
+  }
+
+  const wholePart = BigInt(match[1] || "0");
+  const fractionalInput = match[2] || "";
+  if (fractionalInput.length > decimals) {
+    throw new Error(`SpCoin quantity cannot have more than ${decimals} decimal places.`);
+  }
+  const fractionalPart = BigInt(fractionalInput.padEnd(decimals, "0") || "0");
+  return (wholePart * scale + fractionalPart).toString();
 }
 
 export async function splitRawQuantityParts(context, value) {

@@ -93,7 +93,7 @@ export async function runErc20WriteMethod(args: RunArgs): Promise<{
 
   const addressA = writeAddressA.trim();
   const addressB = writeAddressB.trim();
-  const amount = writeAmountRaw.trim();
+  const amount = writeAmountRaw.trim().replace(/,/g, '');
 
   if (!addressA) throw new Error(`${activeWriteLabels.addressALabel} is required.`);
   if (activeWriteLabels.requiresAddressB && !addressB) {
@@ -108,9 +108,16 @@ export async function runErc20WriteMethod(args: RunArgs): Promise<{
       : `${selectedWriteMethod}(${addressA}, ${amount})`;
 
   setStatus(`Submitting ${callLabel}...`);
-  const tx = await executeWriteConnected(selectedWriteMethod, (contract) => fn.run(contract, addressA, addressB, amount), selectedHardhatAddress);
-  appendLog(`${selectedWriteMethod} tx sent: ${String(tx?.hash || '(no hash)')}`);
-  const receipt = await tx.wait();
+  const { tx, receipt } = await executeWriteConnected(
+    selectedWriteMethod,
+    async (contract) => {
+      const tx = await fn.run(contract, addressA, addressB, amount);
+      appendLog(`${selectedWriteMethod} tx sent: ${String(tx?.hash || '(no hash)')}`);
+      const receipt = await tx.wait();
+      return { tx, receipt };
+    },
+    selectedHardhatAddress,
+  );
   appendLog(`${selectedWriteMethod} mined: ${String(receipt?.hash || tx?.hash || '(no hash)')}`);
   setStatus(`${selectedWriteMethod} complete.`);
   return {

@@ -117,20 +117,6 @@
       "params": [
         {
           "key": "Account Key",
-          "value": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
-        }
-      ],
-      "breakpoint": false,
-      "hasMissingRequiredParams": false
-    },
-    {
-      "step": 8,
-      "name": "estimateOffChainAgentRewards",
-      "panel": "spcoin_rread",
-      "method": "estimateOffChainAgentRewards",
-      "params": [
-        {
-          "key": "Account Key",
           "value": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc"
         }
       ],
@@ -138,7 +124,7 @@
       "hasMissingRequiredParams": false
     },
     {
-      "step": 9,
+      "step": 8,
       "name": "balanceOf",
       "panel": "ecr20_read",
       "method": "balanceOf",
@@ -152,7 +138,7 @@
       "hasMissingRequiredParams": false
     },
     {
-      "step": 10,
+      "step": 9,
       "name": "claimOnChainSponsorRewards",
       "panel": "spcoin_write",
       "method": "claimOnChainSponsorRewards",

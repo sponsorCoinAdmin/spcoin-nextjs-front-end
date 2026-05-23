@@ -39,6 +39,16 @@ function addPending(target, key, value) {
     target[key] = (toBigIntValue(target[key]) + toBigIntValue(value)).toString();
 }
 
+function trackBucketLastUpdate(target, key, value) {
+    const next = toBigIntValue(value);
+    if (next <= 0n)
+        return;
+    const current = toBigIntValue(target[key]);
+    if (current <= 0n || next < current) {
+        target[key] = next.toString();
+    }
+}
+
 function normalizePendingRewardsOptions(optionsOrTimestampOverride = undefined, timestampOverride = undefined) {
     const options =
         optionsOrTimestampOverride &&
@@ -166,7 +176,7 @@ async function getAccountLinks(runtime, accountKey) {
 async function calculateRecipientSetRewards(runtime, sponsorKey, recipientKey, recipientRate, currentTimeStamp) {
     const setRecord = await getRecipientRateTransactionSetCached(runtime, sponsorKey, recipientKey, recipientRate);
     if (!setRecord?.inserted)
-        return { rewards: 0n, lastUpdate: "0" };
+        return { rewards: 0n, lastUpdate: "0", stakedQuantity: "0" };
     return {
         rewards: calculatePendingStakingRewards(
             setRecord.totalStaked,
@@ -175,13 +185,14 @@ async function calculateRecipientSetRewards(runtime, sponsorKey, recipientKey, r
             recipientRate,
         ),
         lastUpdate: String(setRecord.lastUpdateTimeStamp ?? "0"),
+        stakedQuantity: String(setRecord.totalStaked ?? "0"),
     };
 }
 
 async function calculateAgentSetRewards(runtime, sponsorKey, recipientKey, recipientRate, agentKey, agentRate, currentTimeStamp) {
     const setRecord = await getAgentRateTransactionSetCached(runtime, sponsorKey, recipientKey, recipientRate, agentKey, agentRate);
     if (!setRecord?.inserted)
-        return { rewards: 0n, lastUpdate: "0" };
+        return { rewards: 0n, lastUpdate: "0", stakedQuantity: "0" };
     return {
         rewards: calculatePendingStakingRewards(
             setRecord.totalStaked,
@@ -190,6 +201,7 @@ async function calculateAgentSetRewards(runtime, sponsorKey, recipientKey, recip
             agentRate,
         ),
         lastUpdate: String(setRecord.lastUpdateTimeStamp ?? "0"),
+        stakedQuantity: String(setRecord.totalStaked ?? "0"),
     };
 }
 
@@ -228,7 +240,9 @@ async function addSponsorPathPending(runtime, pending, accountKey, currentTimeSt
     for (const recipientKey of recipientKeys) {
             const recipientRates = await getRecipientRates(runtime, accountKey, recipientKey);
         for (const recipientRate of recipientRates) {
-            const { rewards: recipientRewards, lastUpdate } = await calculateRecipientSetRewards(runtime, accountKey, recipientKey, recipientRate, currentTimeStamp);
+            const { rewards: recipientRewards, lastUpdate, stakedQuantity } = await calculateRecipientSetRewards(runtime, accountKey, recipientKey, recipientRate, currentTimeStamp);
+            trackBucketLastUpdate(pending, "sponsorBucketLastUpdateTimeStamp", lastUpdate);
+            addPending(pending, "sponsorBucketStakedQuantity", stakedQuantity);
             const sponsorParentAmount = calculateParentRewardAmount(recipientRewards, recipientRate);
             addPending(pending, "pendingSponsorRewards", calculateSponsorDepositAmount(sponsorParentAmount, annualInflation));
 
@@ -236,7 +250,9 @@ async function addSponsorPathPending(runtime, pending, accountKey, currentTimeSt
             for (const agentKey of agentKeys) {
                 const agentRates = await getAgentRates(runtime, accountKey, recipientKey, recipientRate, agentKey);
                 for (const agentRate of agentRates) {
-                    const { rewards: agentRewards, lastUpdate: agentLastUpdate } = await calculateAgentSetRewards(runtime, accountKey, recipientKey, recipientRate, agentKey, agentRate, currentTimeStamp);
+                    const { rewards: agentRewards, lastUpdate: agentLastUpdate, stakedQuantity: agentStakedQuantity } = await calculateAgentSetRewards(runtime, accountKey, recipientKey, recipientRate, agentKey, agentRate, currentTimeStamp);
+                    trackBucketLastUpdate(pending, "sponsorBucketLastUpdateTimeStamp", agentLastUpdate);
+                    addPending(pending, "sponsorBucketStakedQuantity", agentStakedQuantity);
                     const recipientParentAmount = calculateParentRewardAmount(agentRewards, agentRate);
                     const sponsorAmount = calculateParentRewardAmount(recipientParentAmount, recipientRate);
                     addPending(pending, "pendingSponsorRewards", calculateSponsorDepositAmount(sponsorAmount, annualInflation));
@@ -251,14 +267,18 @@ async function addRecipientPathPending(runtime, pending, accountKey, currentTime
     for (const sponsorKey of sponsorKeys) {
         const recipientRates = await getRecipientRates(runtime, sponsorKey, accountKey);
         for (const recipientRate of recipientRates) {
-            const { rewards: recipientRewards, lastUpdate } = await calculateRecipientSetRewards(runtime, sponsorKey, accountKey, recipientRate, currentTimeStamp);
+            const { rewards: recipientRewards, lastUpdate, stakedQuantity } = await calculateRecipientSetRewards(runtime, sponsorKey, accountKey, recipientRate, currentTimeStamp);
+            trackBucketLastUpdate(pending, "recipientBucketLastUpdateTimeStamp", lastUpdate);
+            addPending(pending, "recipientBucketStakedQuantity", stakedQuantity);
             addPending(pending, "pendingRecipientRewards", recipientRewards);
 
             const agentKeys = await getRecipientRateAgents(runtime, sponsorKey, accountKey, recipientRate);
             for (const agentKey of agentKeys) {
                 const agentRates = await getAgentRates(runtime, sponsorKey, accountKey, recipientRate, agentKey);
                 for (const agentRate of agentRates) {
-                    const { rewards: agentRewards, lastUpdate: agentLastUpdate } = await calculateAgentSetRewards(runtime, sponsorKey, accountKey, recipientRate, agentKey, agentRate, currentTimeStamp);
+                    const { rewards: agentRewards, lastUpdate: agentLastUpdate, stakedQuantity: agentStakedQuantity } = await calculateAgentSetRewards(runtime, sponsorKey, accountKey, recipientRate, agentKey, agentRate, currentTimeStamp);
+                    trackBucketLastUpdate(pending, "recipientBucketLastUpdateTimeStamp", agentLastUpdate);
+                    addPending(pending, "recipientBucketStakedQuantity", agentStakedQuantity);
                     addPending(pending, "pendingRecipientRewards", calculateParentRewardAmount(agentRewards, agentRate));
                 }
             }
@@ -278,7 +298,9 @@ async function addAgentPathPending(runtime, pending, accountKey, currentTimeStam
                     continue;
                 const agentRates = await getAgentRates(runtime, sponsorKey, parentRecipientKey, recipientRate, accountKey);
                 for (const agentRate of agentRates) {
-                    const { rewards: agentRewards, lastUpdate } = await calculateAgentSetRewards(runtime, sponsorKey, parentRecipientKey, recipientRate, accountKey, agentRate, currentTimeStamp);
+                    const { rewards: agentRewards, lastUpdate, stakedQuantity } = await calculateAgentSetRewards(runtime, sponsorKey, parentRecipientKey, recipientRate, accountKey, agentRate, currentTimeStamp);
+                    trackBucketLastUpdate(pending, "agentBucketLastUpdateTimeStamp", lastUpdate);
+                    addPending(pending, "agentBucketStakedQuantity", stakedQuantity);
                     addPending(pending, "pendingAgentRewards", agentRewards);
                 }
             }
@@ -310,6 +332,12 @@ export async function computeOffChainRewardsEstimate(context, accountKey, option
             lastSponsorUpdate: String(accountRecord?.lastSponsorUpdateTimeStamp ?? "0"),
             lastRecipientUpdate: String(accountRecord?.lastRecipientUpdateTimeStamp ?? "0"),
             lastAgentUpdate: String(accountRecord?.lastAgentUpdateTimeStamp ?? "0"),
+            sponsorBucketLastUpdateTimeStamp: "0",
+            recipientBucketLastUpdateTimeStamp: "0",
+            agentBucketLastUpdateTimeStamp: "0",
+            sponsorBucketStakedQuantity: "0",
+            recipientBucketStakedQuantity: "0",
+            agentBucketStakedQuantity: "0",
             pendingRewards: "0",
             pendingSponsorRewards: "0",
             pendingRecipientRewards: "0",

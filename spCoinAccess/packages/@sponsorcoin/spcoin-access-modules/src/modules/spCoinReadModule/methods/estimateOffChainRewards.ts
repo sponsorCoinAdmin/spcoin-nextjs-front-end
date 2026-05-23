@@ -26,6 +26,8 @@ function selectRewards(result, role) {
             calculatedTimeStamp: String(pending.calculatedTimeStamp ?? "0"),
             calculatedFormatted: String(pending.calculatedFormatted ?? ""),
             lastSponsorUpdate: String(pending.lastSponsorUpdate ?? "0"),
+            sponsorBucketLastUpdateTimeStamp: String(pending.sponsorBucketLastUpdateTimeStamp ?? "0"),
+            steakedBalance: String(pending.sponsorBucketStakedQuantity ?? "0"),
             ...roleRewards,
             pendingTotalRewards,
         };
@@ -37,6 +39,8 @@ function selectRewards(result, role) {
             calculatedTimeStamp: String(pending.calculatedTimeStamp ?? "0"),
             calculatedFormatted: String(pending.calculatedFormatted ?? ""),
             lastRecipientUpdate: String(pending.lastRecipientUpdate ?? "0"),
+            recipientBucketLastUpdateTimeStamp: String(pending.recipientBucketLastUpdateTimeStamp ?? "0"),
+            steakedBalance: String(pending.recipientBucketStakedQuantity ?? "0"),
             ...roleRewards,
             pendingTotalRewards,
         };
@@ -48,6 +52,8 @@ function selectRewards(result, role) {
             calculatedTimeStamp: String(pending.calculatedTimeStamp ?? "0"),
             calculatedFormatted: String(pending.calculatedFormatted ?? ""),
             lastAgentUpdate: String(pending.lastAgentUpdate ?? "0"),
+            agentBucketLastUpdateTimeStamp: String(pending.agentBucketLastUpdateTimeStamp ?? "0"),
+            steakedBalance: String(pending.agentBucketStakedQuantity ?? "0"),
             ...roleRewards,
             pendingTotalRewards,
         };

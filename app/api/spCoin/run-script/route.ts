@@ -1094,7 +1094,7 @@ type PendingAccountRewardsReader = {
 };
 
 function toBigIntAmount(value: unknown) {
-  const text = String(value ?? '0').replace(/,/g, '').trim();
+  const text = String(value ?? '0').replace(/,/g, '').trim().match(/^-?\d+/)?.[0] ?? '';
   if (!text) return 0n;
   try {
     return BigInt(text);

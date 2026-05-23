@@ -346,6 +346,7 @@ function formatOutputValue(value: unknown, keyPath: string[] = []): unknown {
     const currentKey = keyPath[keyPath.length - 1] || '';
     if (!trimmed || isAddressLike(trimmed) || isHashLike(trimmed)) return value;
     if (keyPath.includes('meta')) return value;
+    if (currentKey === 'differenceFormatted') return value;
     if (isFormattedTimestampKey(currentKey)) return normalizeDisplayDateString(trimmed) ?? value;
     if (keyPath.includes('formatted')) return value;
     if (DURATION_KEYS.includes(currentKey) && /^\d{2}:\d{2}:\d{2}$/.test(trimmed)) {
