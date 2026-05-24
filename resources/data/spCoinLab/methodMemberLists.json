@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-24T04:48:33.573Z",
+  "updatedAt": "2026-05-24T09:07:55.428Z",
   "lists": {
     "serialization": {
       "Basic": {
@@ -573,6 +573,7 @@
     },
     "spCoinWrite": {
       "Basic": {
+        "getPendingRewards": true,
         "addRecipientTransaction": true,
         "addAgentTransaction": true,
         "deleteAccountTree": false,
@@ -612,6 +613,7 @@
         "setAgentRateIncrement": false
       },
       "Standard": {
+        "getPendingRewards": true,
         "addRecipientTransaction": true,
         "addAgentTransaction": true,
         "deleteAccountTree": false,
@@ -651,6 +653,7 @@
         "setAgentRateIncrement": false
       },
       "Test": {
+        "getPendingRewards": false,
         "addRecipientTransaction": false,
         "addAgentTransaction": false,
         "deleteAccountTree": true,
@@ -690,6 +693,7 @@
         "setAgentRateIncrement": true
       },
       "Todo": {
+        "getPendingRewards": false,
         "addRecipientTransaction": false,
         "addAgentTransaction": false,
         "deleteAccountTree": false,
@@ -729,6 +733,7 @@
         "setAgentRateIncrement": false
       },
       "Complete": {
+        "getPendingRewards": false,
         "addRecipientTransaction": false,
         "addAgentTransaction": false,
         "deleteAccountTree": false,
@@ -936,6 +941,7 @@
     "spCoinRead:totalStakedSPCoins": "admin_utils",
     "spCoinRead:totalStakingRewards": "admin_utils",
     "spCoinRead:version": "admin_utils",
+    "spCoinWrite:getPendingRewards": "spcoin_write",
     "spCoinWrite:addRecipientTransaction": "spcoin_write",
     "spCoinWrite:addAgentTransaction": "spcoin_write",
     "spCoinWrite:deleteAccountTree": "spcoin_write",

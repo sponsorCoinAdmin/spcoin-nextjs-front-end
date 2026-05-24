@@ -41,6 +41,11 @@ import {
   normalizeWriteResultForDisplay,
 } from './methodOutputFormatting';
 import { normalizeExecutionPayload } from './executionPayload';
+import {
+  buildLazyPendingRewardsMethod,
+  normalizePendingRewardsEstimateResult,
+  PENDING_REWARDS_INLINE_REFRESH_MS,
+} from './pendingRewardsTreeUtils';
 
 interface MethodParamEntry { key: string; value: string }
 type MethodDefMap = Record<string, MethodDef>;
@@ -752,6 +757,64 @@ export function useSponsorCoinLabMethodExecution({
         appendWriteTrace(
           `runMethod start; mode=${effectiveMode}; source=${useLocalSpCoinAccessPackage ? 'local' : 'node_modules'}; method=${selectedMethod}`,
         );
+        if (selectedMethod === 'getPendingRewards') {
+          const accountKey = signer || '';
+          const estimateMethod = 'estimateOffChainSponsorRewards';
+          setStatus(`Loading pending rewards for ${accountKey}...`);
+          appendWriteTrace(
+            `getPendingRewards pseudo-method; dispatching ${estimateMethod}; accountKey=${accountKey}`,
+          );
+          const estimateResult = await runSpCoinReadMethod({
+            selectedMethod: estimateMethod as SpCoinReadMethod,
+            spReadParams: [accountKey],
+            coerceParamValue,
+            stringifyResult,
+            spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
+            requireContractAddress,
+            ensureReadRunner: () => ensureReadRunner(effectiveMode),
+            appendLog,
+            setStatus,
+            useReadCache: false,
+            readCacheNamespace,
+          });
+          const refreshableEstimateResult = {
+            ...(normalizePendingRewardsEstimateResult(estimateResult) as Record<string, unknown>),
+            accountKey,
+            __pendingRewardsRefreshAction: true,
+            __pendingRewardsRefreshAtMs: Date.now() + PENDING_REWARDS_INLINE_REFRESH_MS,
+            __pendingRewardsRefreshActionName: 'estimate',
+            __pendingRewardsRefreshMethodName: estimateMethod,
+          };
+          const meta = finalizeMeta();
+          const { onChainCalls: metaOnChainCalls, ...metaRest } = (meta ?? {}) as Record<string, unknown>;
+          return {
+            call,
+            result: {
+              pendingRewards: {
+                accountKey,
+                __showEmptyFields: true,
+                __suppressPendingRewardsMethodInjection: true,
+                [estimateMethod]: {
+                  call: {
+                    method: estimateMethod,
+                    parameters: {
+                      'Account Key': accountKey,
+                    },
+                    selectedMethod: estimateMethod,
+                  },
+                  result: refreshableEstimateResult,
+                  meta: metaRest,
+                  ...(metaOnChainCalls ? { onChainCalls: metaOnChainCalls } : {}),
+                  __forceExpanded: true,
+                  __showEmptyFields: true,
+                },
+                claimOnChainSponsorRewards: buildLazyPendingRewardsMethod(accountKey, 'claimOnChainSponsorRewards'),
+              },
+            },
+            meta: metaRest as MethodExecutionPayloadMeta,
+            ...(metaOnChainCalls ? { onChainCalls: metaOnChainCalls as MethodExecutionMeta['onChainCalls'] } : {}),
+          };
+        }
         await assertSpCoinWriteAuthorization(selectedMethod, def, localParams, signer);
         const workflowWriteToUtilityMethod: Partial<Record<SpCoinWriteMethod, SerializationTestMethod>> = {
           deleteAccountTree: 'deleteAccountTree',

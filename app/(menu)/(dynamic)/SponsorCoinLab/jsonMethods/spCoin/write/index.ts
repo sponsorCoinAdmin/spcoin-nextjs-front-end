@@ -104,6 +104,7 @@ function decodeSpCoinError(error: unknown): string | null {
 }
 
 export type SpCoinWriteMethod =
+  | 'getPendingRewards'
   | 'addRecipientTransaction'
   | 'addAgentTransaction'
   | 'deleteAccountTree'
@@ -161,6 +162,7 @@ export const SPCOIN_ADMIN_WRITE_METHODS: SpCoinWriteMethod[] = [
 ];
 
 export const SPCOIN_SENDER_WRITE_METHODS: SpCoinWriteMethod[] = [
+  'getPendingRewards',
   'addRecipientTransaction',
   'addAgentTransaction',
   'backDateRecipientTransaction',

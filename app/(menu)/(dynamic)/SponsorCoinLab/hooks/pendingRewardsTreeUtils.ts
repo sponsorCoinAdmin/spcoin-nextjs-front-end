@@ -304,6 +304,19 @@ export function mergePendingRewardsSummaryNode(
     loadedMethod === method
       ? loadedMethodNode
       : existing[method] ?? buildLazyPendingRewardsMethod(normalizedAccount, method);
+  const suppressMethodInjection = existing.__suppressPendingRewardsMethodInjection === true;
+  if (suppressMethodInjection) {
+    return {
+      ...existing,
+      TYPE: existing.TYPE ?? '--PENDING_REWARDS--',
+      [loadedMethod]: loadedMethodNode,
+      pendingRewards: String(result.pendingRewards ?? existing.pendingRewards ?? '0'),
+      __pendingRewardsRefreshAction: true,
+      __pendingRewardsRefreshAtMs: refreshAtMs,
+      __pendingRewardsRefreshActionName: action,
+      __suppressPendingRewardsMethodInjection: true,
+    };
+  }
   const estimateOffChainTotalRewards = getMethodNode('estimateOffChainTotalRewards');
   const claimOnChainTotalRewards = getMethodNode('claimOnChainTotalRewards');
   const estimateOffChainSponsorRewards = getMethodNode('estimateOffChainSponsorRewards');

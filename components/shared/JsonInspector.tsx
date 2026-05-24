@@ -671,6 +671,19 @@ function getPendingRewardsRefreshAccountKey(data: any): string {
   return '';
 }
 
+function getPendingRewardsAccountKey(data: any): string {
+  const directAccount = getPendingRewardsRefreshAccountKey(data);
+  if (directAccount) return directAccount;
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return '';
+  const record = data as Record<string, unknown>;
+  for (const method of PENDING_REWARDS_METHOD_NAMES) {
+    const methodNode = record[method];
+    const methodAccount = getPendingRewardsRefreshAccountKey(methodNode);
+    if (methodAccount) return methodAccount;
+  }
+  return '';
+}
+
 function getPendingRewardsRefreshActionName(data: any): string {
   if (!data || typeof data !== 'object' || Array.isArray(data)) return 'estimate';
   const record = data as Record<string, unknown>;
@@ -708,6 +721,22 @@ function getPendingRewardsRefreshActionName(data: any): string {
   return 'estimate';
 }
 
+function getPendingRewardsRefreshMethodName(data: any): string {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return '';
+  const record = data as Record<string, unknown>;
+  const directMethod =
+    typeof record.__pendingRewardsRefreshMethodName === 'string'
+      ? record.__pendingRewardsRefreshMethodName.trim()
+      : '';
+  if (PENDING_REWARDS_METHOD_NAMES.has(directMethod)) return directMethod;
+  const call = record.call;
+  if (call && typeof call === 'object' && !Array.isArray(call)) {
+    const methodName = String((call as Record<string, unknown>).method || '').trim();
+    if (PENDING_REWARDS_METHOD_NAMES.has(methodName)) return methodName;
+  }
+  return '';
+}
+
 function isPendingRewardsRefreshNode(label: string | undefined, data: any): boolean {
   const normalizedLabel = String(label || '').trim();
   return Boolean(
@@ -719,6 +748,27 @@ function isPendingRewardsRefreshNode(label: string | undefined, data: any): bool
       ((data as Record<string, unknown>).__pendingRewardsRefreshAction === true ||
         Boolean((data as Record<string, unknown>).estimate)),
   );
+}
+
+function withPendingRewardsResultRefreshMetadata(
+  value: any,
+  methodName: string,
+  accountKey: string,
+): any {
+  if (!methodName || !PENDING_REWARDS_METHOD_NAMES.has(methodName)) return value;
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
+  return {
+    ...value,
+    accountKey,
+    __pendingRewardsRefreshAction: true,
+    __pendingRewardsRefreshActionName: PENDING_REWARDS_CLAIM_METHOD_NAMES.has(methodName) ? 'claim' : 'estimate',
+    __pendingRewardsRefreshMethodName: methodName,
+  };
+}
+
+function getPendingRewardsResultMethodPath(path: string | undefined): string {
+  const currentPath = String(path || '');
+  return currentPath.endsWith('.result') ? currentPath.slice(0, -'.result'.length) : currentPath;
 }
 
 function isPendingRewardsInternalField(parent: any, childKey: string): boolean {
@@ -815,12 +865,24 @@ function ensurePendingRewardsMethodEntries(entries: Array<[string, any]>): Array
   return nextEntries;
 }
 
+function ensureGetPendingRewardsParameterEntry(
+  entries: Array<[string, any]>,
+  pendingRewardsRecord: unknown,
+): Array<[string, any]> {
+  if (!isPendingRewardsRecord(pendingRewardsRecord)) return entries;
+  if (entries.some(([key]) => key === 'parameters')) return entries;
+  const accountKey = getPendingRewardsAccountKey(pendingRewardsRecord);
+  if (!accountKey) return entries;
+  return [['parameters', { 'Account Key': accountKey }], ...entries];
+}
+
 function shouldInjectPendingRewardsMethodEntries(
   label: string | undefined,
   path: string | undefined,
   value: any,
 ): boolean {
   if (!isPendingRewardsRecord(value)) return false;
+  if (hasSuppressedPendingRewardsMethodInjection(value)) return false;
   if (label !== 'pendingRewards') return false;
   const normalizedPath = String(path || '');
   if (
@@ -828,6 +890,15 @@ function shouldInjectPendingRewardsMethodEntries(
     normalizedPath.split('.').includes('rewardCalculations')
   ) return false;
   return true;
+}
+
+function hasSuppressedPendingRewardsMethodInjection(value: unknown): boolean {
+  return Boolean(
+    value &&
+      typeof value === 'object' &&
+      !Array.isArray(value) &&
+      (value as Record<string, unknown>).__suppressPendingRewardsMethodInjection === true,
+  );
 }
 
 function filterPendingRewardsRoleEntries(
@@ -1392,12 +1463,14 @@ function renderFormulaDisplayValue(displayValue: string): React.ReactNode {
 }
 
 function renderDisplayLabelWithStatusSuffix(label: string): React.ReactNode {
-  const match = label.match(/^(.*?)(\s+\((?:Last Estimate|Last Claimed)\))$/);
+  const match = label.match(/^(.*?)(\s*\((?:Last Estimate|Last Claimed)\))$/);
   if (!match) return label;
   return (
     <>
-      <span className="!text-white">{match[1]}</span>
-      <span className="!text-yellow-300">{match[2]}</span>
+      <span className="!text-white opacity-100" style={{ color: '#ffffff' }}>{match[1]}</span>
+      <span className="!text-yellow-300 opacity-100" style={{ color: '#fde047' }}>
+        {'\u00a0'}{match[2].trim()}
+      </span>
     </>
   );
 }
@@ -1446,12 +1519,12 @@ function getPendingRewardsMethodResultSummaryValue(
 
   if (methodName.startsWith('estimateOffChain') && methodName.endsWith('Rewards')) {
     const value = result.pendingTotalRewards ?? result.pendingRewards ?? result.totalRewards;
-    return value === undefined || value === null ? null : { key: 'pendingTotalRewards', value, suffix: '(Last Estimate)' };
+    return value === undefined || value === null ? null : { key: 'pendingTotalRewards', value, suffix: ' (Last Estimate)' };
   }
 
   if (methodName.startsWith('claimOnChain') && methodName.endsWith('Rewards')) {
     const value = result.totalRewardsClaimed ?? result.claimedAmount;
-    return value === undefined || value === null ? null : { key: 'totalRewardsClaimed', value, suffix: '(Last Claimed)' };
+    return value === undefined || value === null ? null : { key: 'totalRewardsClaimed', value, suffix: ' (Last Claimed)' };
   }
 
   return null;
@@ -2215,6 +2288,9 @@ function getVisibleEntries(
     accountRoleCounts,
     label,
   );
+  const suppressPendingRewardsMethodInjection =
+    hasSuppressedPendingRewardsMethodInjection(value) ||
+    hasSuppressedPendingRewardsMethodInjection(displayValue);
   const shouldDropRefreshedAccountPendingRewards = (childKey: string) => {
     const shouldDrop =
       childKey === 'pendingRewards' &&
@@ -2248,6 +2324,8 @@ function getVisibleEntries(
           childKey !== '__pendingRewardsRefreshAction' &&
           childKey !== '__pendingRewardsRefreshAtMs' &&
           childKey !== '__pendingRewardsRefreshActionName' &&
+          childKey !== '__pendingRewardsRefreshMethodName' &&
+          childKey !== '__suppressPendingRewardsMethodInjection' &&
           childKey !== '__lazyPendingRewardsMethod' &&
           childKey !== '__forceExpanded' &&
           childKey !== '__showEmptyFields' &&
@@ -2277,12 +2355,13 @@ function getVisibleEntries(
           (showStructureType || childKey !== 'TYPE'),
       )
       .sort(sortEntries);
-    return shouldInjectPendingRewardsMethodEntries(label, path, displayValue)
+    const entriesWithGetPendingRewardsParameters = ensureGetPendingRewardsParameterEntry(entries, displayValue);
+    return !suppressPendingRewardsMethodInjection && shouldInjectPendingRewardsMethodEntries(label, path, displayValue)
       ? filterPendingRewardsRoleEntries(
-          ensurePendingRewardsMethodEntries(entries),
+          ensurePendingRewardsMethodEntries(entriesWithGetPendingRewardsParameters),
           accountRoleCounts,
         )
-      : entries;
+      : entriesWithGetPendingRewardsParameters;
   }
 
   if (Array.isArray(displayValue)) {
@@ -2306,6 +2385,8 @@ function getVisibleEntries(
       if (childKey === '__pendingRewardsRefreshAction') return false;
       if (childKey === '__pendingRewardsRefreshAtMs') return false;
       if (childKey === '__pendingRewardsRefreshActionName') return false;
+      if (childKey === '__pendingRewardsRefreshMethodName') return false;
+      if (childKey === '__suppressPendingRewardsMethodInjection') return false;
       if (childKey === '__lazyPendingRewardsMethod') return false;
       if (childKey === '__forceExpanded') return false;
       if (childKey === '__showEmptyFields') return false;
@@ -2334,12 +2415,13 @@ function getVisibleEntries(
       return hasPopulatedContent(childValue, hiddenRules, showStructureType);
     })
     .sort(sortEntries);
-  return shouldInjectPendingRewardsMethodEntries(label, path, displayValue)
+  const entriesWithGetPendingRewardsParameters = ensureGetPendingRewardsParameterEntry(entries, displayValue);
+  return !suppressPendingRewardsMethodInjection && shouldInjectPendingRewardsMethodEntries(label, path, displayValue)
     ? filterPendingRewardsRoleEntries(
-        ensurePendingRewardsMethodEntries(entries),
+        ensurePendingRewardsMethodEntries(entriesWithGetPendingRewardsParameters),
         accountRoleCounts,
       )
-    : entries;
+    : entriesWithGetPendingRewardsParameters;
 }
 
 const JsonInspector: React.FC<JsonInspectorProps> = ({
@@ -2413,6 +2495,8 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
   const isLazySpCoinMetaData = isLazySpCoinMetaDataNode(data);
   const isLazyMasterAccountKeys = isLazyMasterAccountKeysNode(data);
   const isLazyAccountRelation = isLazyAccountRelationNode(data);
+  const isGetPendingRewardsNode = label === 'pendingRewards' && isPendingRewardsRecord(data);
+  const getPendingRewardsAccount = isGetPendingRewardsNode ? getPendingRewardsAccountKey(data) : '';
   const totalSpCoinsPendingRewardsAction = getTotalSpCoinsPendingRewardsAction(data);
   const isLazyTotalSpCoinsPendingRewards = Boolean(totalSpCoinsPendingRewardsAction);
   const refreshAtMs = getPendingRewardsRefreshAtMs(data);
@@ -2467,17 +2551,27 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
       return true;
     }
     if (isPendingRewardsRefreshReady) {
+      const pendingRewardsRefreshMethod = getPendingRewardsRefreshMethodName(data);
+      const pendingRewardsRefreshPath = pendingRewardsRefreshMethod
+        ? getPendingRewardsResultMethodPath(currentPath)
+        : currentPath;
       onTrace?.(
-        `[JSON_BRANCH_MATERIALIZE] kind=pending-rewards-refresh path=${currentPath} refreshAtMs=${String(refreshAtMs)} nowMs=${String(refreshClockMs)}`,
+        `[JSON_BRANCH_MATERIALIZE] kind=pending-rewards-refresh path=${currentPath} target=${pendingRewardsRefreshPath} refreshAtMs=${String(refreshAtMs)} nowMs=${String(refreshClockMs)} method=${pendingRewardsRefreshMethod}`,
       );
       onLeafValueClick?.(
-        JSON.stringify({
-          __loadPendingRewardsAction: true,
-          accountKey: getPendingRewardsRefreshAccountKey(data),
-          action: getPendingRewardsRefreshActionName(data),
-        }),
-        currentPath,
-        'result',
+        pendingRewardsRefreshMethod
+          ? JSON.stringify({
+              __loadPendingRewardsMethod: true,
+              accountKey: getPendingRewardsRefreshAccountKey(data),
+              method: pendingRewardsRefreshMethod,
+            })
+          : JSON.stringify({
+              __loadPendingRewardsAction: true,
+              accountKey: getPendingRewardsRefreshAccountKey(data),
+              action: getPendingRewardsRefreshActionName(data),
+            }),
+        pendingRewardsRefreshPath,
+        pendingRewardsRefreshMethod || 'result',
       );
       return true;
     }
@@ -2643,6 +2737,10 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     if (label && label.startsWith('onChainCalls')) return label;
     if (label && label.startsWith('childOnChainCalls')) return label;
     if (label && label.startsWith('result: ')) return label;
+    if (label === 'pendingRewards' && isPendingRewardsRecord(data)) {
+      const accountKey = getPendingRewardsAccountKey(data);
+      return accountKey ? `getPendingRewards "${accountKey}"` : 'getPendingRewards';
+    }
     if (label && PENDING_REWARDS_METHOD_NAMES.has(label)) {
       return getPendingRewardsMethodDisplayName(label);
     }
@@ -2770,7 +2868,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
         pendingRewardsMethodResultSummary.value,
         formatTokenAmounts,
         tokenDecimals,
-      )} ${pendingRewardsMethodResultSummary.suffix}`
+      ).replace(/"\s*$/, '" ')}${pendingRewardsMethodResultSummary.suffix.trim()}`
     : '';
   const hasPendingRewardsMethodSummary = Boolean(pendingRewardsMethodSummary);
   const pendingRewardsMethodAccountValue = String(
@@ -2904,10 +3002,18 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
       ) {
         return null;
       }
+      const inspectorData =
+        key === 'result' && pendingRewardsMethodResultSummaryDisplay
+          ? withPendingRewardsResultRefreshMetadata(
+              value,
+              pendingRewardsDisplayMethod,
+              pendingRewardsMethodAccountValue,
+            )
+          : value;
       return (
         <JsonInspector
           key={nextPath}
-          data={value}
+          data={inspectorData}
           collapsedKeys={collapsedKeys}
           updateCollapsedKeys={updateCollapsedKeys}
           level={level + 1}
@@ -3076,6 +3182,61 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
           >
             {getDisplayLabel(path ?? '')}
           </button>
+        ) : isGetPendingRewardsNode ? (
+          <>
+            <button
+              type="button"
+              className={`inline-flex bg-transparent p-0 text-left font-semibold underline decoration-dotted underline-offset-2 transition-colors hover:text-white focus:outline-none ${
+                isHighlighted ? highlightColorClass : 'text-white'
+              }`}
+              onClick={(event) => {
+                event.stopPropagation();
+                if (!getPendingRewardsAccount) return;
+                onTrace?.(
+                  `[PENDING_REWARDS_TRACE] getPendingRewards label click path=${path ?? ''} method=estimateOffChainSponsorRewards account=${getPendingRewardsAccount}`,
+                );
+                onLeafValueClick?.(
+                  JSON.stringify({
+                    __loadPendingRewardsMethod: true,
+                    accountKey: getPendingRewardsAccount,
+                    method: 'estimateOffChainSponsorRewards',
+                  }),
+                  `${path ?? ''}.estimateOffChainSponsorRewards`,
+                  'estimateOffChainSponsorRewards',
+                );
+              }}
+              title="Run estimateOffChainSponsorRewards"
+            >
+              getPendingRewards
+            </button>
+            {getPendingRewardsAccount ? (
+              <>
+                {' '}
+                {typeof onAddressNodeClick === 'function' ? (
+                  <button
+                    type="button"
+                    className={`inline-flex bg-transparent p-0 text-left font-semibold underline decoration-dotted underline-offset-2 transition-colors hover:text-white focus:outline-none ${
+                      isHighlighted ? highlightColorClass : 'text-green-400'
+                    }`}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onTrace?.(
+                        `[JSON_INSPECTOR_TRACE] getPendingRewards address click path=${path ?? ''} value=${getPendingRewardsAccount}`,
+                      );
+                      onAddressNodeClick(getPendingRewardsAccount, path ?? '', 'Account Key');
+                    }}
+                    title={`Show metadata for ${getPendingRewardsAccount}`}
+                  >
+                    "{getPendingRewardsAccount}"
+                  </button>
+                ) : (
+                  <span className={isHighlighted ? highlightColorClass : 'text-green-400'}>
+                    "{getPendingRewardsAccount}"
+                  </span>
+                )}
+              </>
+            ) : null}
+          </>
         ) : isDraggableScriptStep && scriptStepDragState?.onStepDoubleClick && draggableScriptStepNumberWithLabel !== null ? (
           <button
             type="button"
@@ -3200,20 +3361,30 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
             }`}
             onClick={(event) => {
               event.stopPropagation();
+              const pendingRewardsRefreshMethod = getPendingRewardsRefreshMethodName(data);
+              const pendingRewardsRefreshPath = pendingRewardsRefreshMethod
+                ? getPendingRewardsResultMethodPath(path)
+                : path ?? '';
               onTrace?.(
-                `[JSON_INSPECTOR_TRACE] pendingRewards label refresh click path=${path ?? ''} refreshAtMs=${String(refreshAtMs)} nowMs=${String(refreshClockMs)} accountKey=${getPendingRewardsRefreshAccountKey(data)}`,
+                `[JSON_INSPECTOR_TRACE] pendingRewards label refresh click path=${path ?? ''} target=${pendingRewardsRefreshPath} refreshAtMs=${String(refreshAtMs)} nowMs=${String(refreshClockMs)} accountKey=${getPendingRewardsRefreshAccountKey(data)} method=${pendingRewardsRefreshMethod}`,
               );
               onLeafValueClick?.(
-                JSON.stringify({
-                  __loadPendingRewardsAction: true,
-                  accountKey: getPendingRewardsRefreshAccountKey(data),
-                  action: getPendingRewardsRefreshActionName(data),
-                }),
-                path ?? '',
-                'pendingRewards',
+                pendingRewardsRefreshMethod
+                  ? JSON.stringify({
+                      __loadPendingRewardsMethod: true,
+                      accountKey: getPendingRewardsRefreshAccountKey(data),
+                      method: pendingRewardsRefreshMethod,
+                    })
+                  : JSON.stringify({
+                      __loadPendingRewardsAction: true,
+                      accountKey: getPendingRewardsRefreshAccountKey(data),
+                      action: getPendingRewardsRefreshActionName(data),
+                    }),
+                pendingRewardsRefreshPath,
+                pendingRewardsRefreshMethod || 'pendingRewards',
               );
             }}
-            title="Refresh pending rewards estimate"
+            title={`Refresh ${getPendingRewardsRefreshMethodName(data) || 'pending rewards'}`}
           >
             {renderDisplayLabelWithStatusSuffix(visibleStepLabel)}
           </button>
