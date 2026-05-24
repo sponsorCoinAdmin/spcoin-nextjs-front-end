@@ -18,6 +18,7 @@ import addBackDatedRecipientTransaction from './addBackDatedRecipientTransaction
 import addBackDatedAgentTransaction from './addBackDatedAgentTransaction';
 import backDateRecipientTransaction from './backDateRecipientTransaction';
 import backDateAgentTransaction from './backDateAgentTransaction';
+import backDateRateTransactionSet from './backDateRateTransactionSet';
 import deleteRecipientSponsorship from './deleteRecipientSponsorship';
 import deleteAccountRecord from './deleteAccountRecord';
 import deleteAccountRecords from './deleteAccountRecords';
@@ -56,6 +57,7 @@ export const SPCOIN_WRITE_METHOD_DEFS = {
   addBackDatedAgentTransaction,
   backDateRecipientTransaction,
   backDateAgentTransaction,
+  backDateRateTransactionSet,
   deleteRecipientSponsorship,
   deleteAccountRecord,
   deleteAccountRecords,

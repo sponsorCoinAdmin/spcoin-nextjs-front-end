@@ -104,6 +104,22 @@ contract Transactions is RewardsManager {
         recipientBox.agentRateTransactionSetKeys.push(_setKey);
     }
 
+    function _addAgentSponsorAgentRateTransactionSetKey(
+        address _agentKey,
+        address _sponsorKey,
+        bytes32 _setKey
+    )
+        internal
+    {
+        if (!agentHasSponsorKey[_agentKey][_sponsorKey]) {
+            agentHasSponsorKey[_agentKey][_sponsorKey] = true;
+            agentSponsorKeys[_agentKey].push(_sponsorKey);
+        }
+        if (agentSponsorHasAgentRateTransactionSetKey[_agentKey][_sponsorKey][_setKey]) return;
+        agentSponsorHasAgentRateTransactionSetKey[_agentKey][_sponsorKey][_setKey] = true;
+        agentSponsorAgentRateTransactionSetKeys[_agentKey][_sponsorKey].push(_setKey);
+    }
+
     function _registerRateTransactionSet(
         bytes32 _setKey,
         uint256 _rate,
@@ -233,6 +249,7 @@ contract Transactions is RewardsManager {
         if (rateTransactionSetCreated) {
             _addAgentRateTransactionSetKey(_agentKey, rateTransactionSetKey);
             _addSponsorAgentRateTransactionSetKey(_sponsorKey, _recipientKey, rateTransactionSetKey);
+            _addAgentSponsorAgentRateTransactionSetKey(_agentKey, _sponsorKey, rateTransactionSetKey);
         }
 
         TransactionRecordStruct storage transactionRecord = masterTransactionIdMap[transactionId];
@@ -348,6 +365,21 @@ contract Transactions is RewardsManager {
         if (!transactionRecord.inserted) return;
         transactionRecord.insertionTime = _transactionTimeStamp;
         _agentTransaction.agentTransactionSet.lastUpdateTransactionDate = _transactionTimeStamp;
+    }
+
+    function _updateSponsorshipAccountTimestamps(
+        address _sponsorKey,
+        address _recipientKey,
+        address _agentKey,
+        uint256 _transactionTimeStamp
+    )
+        internal
+    {
+        updateAccountRewardTimestamp(SPONSOR, _sponsorKey, _transactionTimeStamp);
+        updateAccountRewardTimestamp(RECIPIENT, _recipientKey, _transactionTimeStamp);
+        if (_agentKey != burnAddress) {
+            updateAccountRewardTimestamp(AGENT, _agentKey, _transactionTimeStamp);
+        }
     }
 
     function addSponsorship(address _recipientKey,
@@ -474,6 +506,13 @@ contract Transactions is RewardsManager {
                 transRec
             );
         }
+
+        _updateSponsorshipAccountTimestamps(
+            _sponsorKey,
+            _recipientKey,
+            _agentKey,
+            _transactionTimeStamp
+        );
 
         // console.log("BEFORE balanceOf     =", balanceOf[msg.sender]);
         // console.log("BEFORE _sponsorCoinQty ", sponsorAmount);
@@ -761,6 +800,25 @@ contract Transactions is RewardsManager {
             _offset,
             _limit
         );
+    }
+
+    function getAgentSponsorKeys(address _agentKey)
+        external
+        view
+        returns (address[] memory)
+    {
+        return agentSponsorKeys[_agentKey];
+    }
+
+    function getAgentSponsorAgentRateTransactionSetKeys(
+        address _agentKey,
+        address _sponsorKey
+    )
+        external
+        view
+        returns (bytes32[] memory)
+    {
+        return agentSponsorAgentRateTransactionSetKeys[_agentKey][_sponsorKey];
     }
 
     function getSponsorRecipientRateTransactionSetKeys(address _sponsorKey)

@@ -54,6 +54,8 @@ type ServerBackedTreeMethodRunner = (args: {
   method: string;
   params: { key: string; value: string }[];
   sender?: string;
+  cacheMode?: 'default' | 'refresh' | 'bypass' | 'only';
+  useCache?: boolean;
 }) => Promise<{
   result?: unknown;
   warning?: unknown;
@@ -296,6 +298,7 @@ export function usePendingRewardsInlineExpansion({
                 panel: 'spcoin_rread',
                 method: selectedEstimateMethod,
                 params: [{ key: 'Account Key', value: normalizedAccount }],
+                cacheMode: 'bypass',
               });
               return {
                 pendingResult: serverResult.result,
@@ -313,7 +316,7 @@ export function usePendingRewardsInlineExpansion({
                 ensureReadRunner,
                 appendLog: noop,
                 setStatus: noop,
-                useReadCache,
+                useReadCache: false,
                 readCacheNamespace,
               }),
             );

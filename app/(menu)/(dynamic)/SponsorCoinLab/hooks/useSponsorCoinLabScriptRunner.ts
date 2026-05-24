@@ -89,6 +89,13 @@ const PENDING_REWARDS_CLAIM_METHODS = new Set([
   'claimOnChainAgentRewards',
 ]);
 
+const PENDING_REWARDS_ESTIMATE_METHODS = new Set([
+  'estimateOffChainTotalRewards',
+  'estimateOffChainSponsorRewards',
+  'estimateOffChainRecipientRewards',
+  'estimateOffChainAgentRewards',
+]);
+
 function readClaimedRewardsAmount(value: unknown) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
   const record = value as Record<string, unknown>;
@@ -252,6 +259,15 @@ function findPendingRewardsSnapshotInOutput(formattedOutputBase: string | undefi
   return null;
 }
 
+function findAccountRecordInOutput(formattedOutputBase: string | undefined, accountKey: string): Record<string, unknown> | null {
+  const blocks = parseFormattedOutputBlocks(formattedOutputBase);
+  for (let index = blocks.length - 1; index >= 0; index -= 1) {
+    const accountRecord = findAccountRecordInPayload(blocks[index], accountKey);
+    if (accountRecord) return accountRecord;
+  }
+  return null;
+}
+
 function isAccountRecordLike(value: unknown): value is Record<string, unknown> {
   return Boolean(
     value &&
@@ -314,6 +330,112 @@ function isLoadedPendingRewardsMethodNode(value: unknown) {
   return Boolean(record.call || record.meta || record.result || record.onChainCalls);
 }
 
+function getPendingRewardsBranch(record: Record<string, unknown> | null | undefined) {
+  const totalSpCoins =
+    record?.totalSpCoins && typeof record.totalSpCoins === 'object' && !Array.isArray(record.totalSpCoins)
+      ? (record.totalSpCoins as Record<string, unknown>)
+      : null;
+  return totalSpCoins?.pendingRewards && typeof totalSpCoins.pendingRewards === 'object' && !Array.isArray(totalSpCoins.pendingRewards)
+    ? (totalSpCoins.pendingRewards as Record<string, unknown>)
+    : record?.pendingRewards && typeof record.pendingRewards === 'object' && !Array.isArray(record.pendingRewards)
+      ? (record.pendingRewards as Record<string, unknown>)
+      : null;
+}
+
+function getLoadedPendingRewardsEstimateMethods(record: Record<string, unknown> | null | undefined) {
+  const pendingRewards = getPendingRewardsBranch(record);
+  if (!pendingRewards) return [];
+  return Array.from(PENDING_REWARDS_ESTIMATE_METHODS).filter((method) =>
+    isLoadedPendingRewardsMethodNode(pendingRewards[method]),
+  );
+}
+
+function writePendingRewardsMethodNode(
+  accountRecord: Record<string, unknown>,
+  method: string,
+  methodNode: Record<string, unknown>,
+) {
+  const nextRecord: Record<string, unknown> = { ...accountRecord };
+  const totalSpCoins =
+    nextRecord.totalSpCoins && typeof nextRecord.totalSpCoins === 'object' && !Array.isArray(nextRecord.totalSpCoins)
+      ? { ...(nextRecord.totalSpCoins as Record<string, unknown>) }
+      : null;
+
+  if (totalSpCoins?.pendingRewards && typeof totalSpCoins.pendingRewards === 'object' && !Array.isArray(totalSpCoins.pendingRewards)) {
+    totalSpCoins.pendingRewards = {
+      ...(totalSpCoins.pendingRewards as Record<string, unknown>),
+      [method]: methodNode,
+    };
+    nextRecord.totalSpCoins = totalSpCoins;
+  }
+
+  if (nextRecord.pendingRewards && typeof nextRecord.pendingRewards === 'object' && !Array.isArray(nextRecord.pendingRewards)) {
+    nextRecord.pendingRewards = {
+      ...(nextRecord.pendingRewards as Record<string, unknown>),
+      [method]: methodNode,
+    };
+  }
+
+  return nextRecord;
+}
+
+function readPendingRewardsMethodAmount(pendingRewardsBranch: unknown, method: string) {
+  const normalized = normalizePendingRewardsDisplayResult(pendingRewardsBranch);
+  const record =
+    normalized && typeof normalized === 'object' && !Array.isArray(normalized)
+      ? (normalized as Record<string, unknown>)
+      : pendingRewardsBranch && typeof pendingRewardsBranch === 'object' && !Array.isArray(pendingRewardsBranch)
+        ? (pendingRewardsBranch as Record<string, unknown>)
+        : null;
+  if (!record) return null;
+
+  const keys =
+    method === 'estimateOffChainRecipientRewards'
+      ? ['pendingRecipientRewards', 'recipientRewards', 'pendingRewards']
+      : method === 'estimateOffChainAgentRewards'
+        ? ['pendingAgentRewards', 'agentRewards', 'pendingRewards']
+        : method === 'estimateOffChainSponsorRewards'
+          ? ['pendingSponsorRewards', 'sponsorRewards', 'pendingRewards']
+          : ['pendingTotalRewards', 'totalRewards', 'pendingRewards'];
+
+  for (const key of keys) {
+    const value = record[key];
+    if (value !== undefined && value !== null) return String(value);
+  }
+  return null;
+}
+
+function refreshLoadedEstimateMethodNode(methodNode: unknown, amount: string | null, method: string) {
+  if (amount === null || !PENDING_REWARDS_ESTIMATE_METHODS.has(method) || !isLoadedPendingRewardsMethodNode(methodNode)) {
+    return methodNode;
+  }
+  const record = methodNode as Record<string, unknown>;
+  const result =
+    record.result && typeof record.result === 'object' && !Array.isArray(record.result)
+      ? (record.result as Record<string, unknown>)
+      : null;
+  if (!result) return methodNode;
+
+  const nextResult = { ...result };
+  for (const key of ['pendingRewards', 'pendingTotalRewards', 'totalRewards']) {
+    if (key in nextResult) nextResult[key] = amount;
+  }
+  if (method === 'estimateOffChainSponsorRewards' && 'pendingSponsorRewards' in nextResult) {
+    nextResult.pendingSponsorRewards = amount;
+  }
+  if (method === 'estimateOffChainRecipientRewards' && 'pendingRecipientRewards' in nextResult) {
+    nextResult.pendingRecipientRewards = amount;
+  }
+  if (method === 'estimateOffChainAgentRewards' && 'pendingAgentRewards' in nextResult) {
+    nextResult.pendingAgentRewards = amount;
+  }
+
+  return {
+    ...record,
+    result: nextResult,
+  };
+}
+
 function mergePendingRewardsMethods(existing: unknown, refreshed: unknown) {
   const existingRecord =
     existing && typeof existing === 'object' && !Array.isArray(existing)
@@ -340,8 +462,19 @@ function mergePendingRewardsMethods(existing: unknown, refreshed: unknown) {
     ...refreshedRecord,
     ...Object.fromEntries(
       methodKeys
-        .filter((key) => isLoadedPendingRewardsMethodNode(existingRecord[key]))
-        .map((key) => [key, existingRecord[key]]),
+        .filter((key) => isLoadedPendingRewardsMethodNode(existingRecord[key]) || isLoadedPendingRewardsMethodNode(refreshedRecord[key]))
+        .map((key) => [
+          key,
+          isLoadedPendingRewardsMethodNode(refreshedRecord[key])
+            ? refreshedRecord[key]
+            : PENDING_REWARDS_ESTIMATE_METHODS.has(key)
+            ? refreshLoadedEstimateMethodNode(
+                existingRecord[key],
+                readPendingRewardsMethodAmount(refreshedRecord, key),
+                key,
+              )
+            : existingRecord[key],
+        ]),
     ),
   };
 }
@@ -553,8 +686,46 @@ export function useSponsorCoinLabScriptRunner({
           appendWriteTrace(`estimateOffChainTotalRewards no previous snapshot; running method; accountKey=${accountKey}`);
         }
         const { call, result, warning, meta, onChainCalls } = await executeMethodDescriptor(descriptor, { executionSignal: options?.executionSignal });
+        const refreshedResult =
+          descriptor.panel === 'spcoin_rread' && descriptor.method === 'getAccountRecord' && result && typeof result === 'object' && !Array.isArray(result)
+            ? await (async () => {
+                const accountRecord = result as Record<string, unknown>;
+                const accountKey =
+                  normalizeAddress(accountRecord.accountKey) ||
+                  normalizeAddress(descriptor.params.find((entry) => entry.key === 'Account Key')?.value);
+                const existingAccountRecord = accountKey ? findAccountRecordInOutput(formattedOutputBase, accountKey) : null;
+                const loadedEstimateMethods = getLoadedPendingRewardsEstimateMethods(existingAccountRecord);
+                if (!accountKey || loadedEstimateMethods.length === 0) return result;
+                appendWriteTrace(
+                  `getAccountRecord refreshing loaded pending reward estimates; accountKey=${accountKey}; methods=${loadedEstimateMethods.join(',')}`,
+                );
+                let nextAccountRecord = accountRecord;
+                for (const method of loadedEstimateMethods) {
+                  const estimateResult = await executeMethodDescriptor(
+                    {
+                      panel: 'spcoin_rread',
+                      method,
+                      params: [{ key: 'Account Key', value: accountKey }],
+                      mode: descriptor.mode,
+                    },
+                    { executionSignal: options?.executionSignal },
+                  );
+                  appendWriteTrace(`getAccountRecord refreshed pending reward estimate method=${method}`);
+                  nextAccountRecord = writePendingRewardsMethodNode(nextAccountRecord, method, {
+                    call: estimateResult.call,
+                    ...(estimateResult.meta ? { meta: estimateResult.meta } : {}),
+                    ...(estimateResult.onChainCalls ? { onChainCalls: estimateResult.onChainCalls } : {}),
+                    result: estimateResult.result,
+                    ...(estimateResult.warning ? { warning: estimateResult.warning } : {}),
+                    __forceExpanded: true,
+                    __showEmptyFields: true,
+                  });
+                }
+                return nextAccountRecord;
+              })()
+            : result;
         const claimedRewardsAmount = PENDING_REWARDS_CLAIM_METHODS.has(descriptor.method)
-          ? readClaimedRewardsAmount(result)
+          ? readClaimedRewardsAmount(refreshedResult)
           : undefined;
         const nextMeta =
           claimedRewardsAmount !== undefined
@@ -563,7 +734,7 @@ export function useSponsorCoinLabScriptRunner({
                 'Last Claimed Rewards': claimedRewardsAmount,
               }
             : meta;
-        return commitResult({ call, meta: nextMeta, ...(onChainCalls ? { onChainCalls } : {}), result, ...(warning ? { warning } : {}) }, true);
+        return commitResult({ call, meta: nextMeta, ...(onChainCalls ? { onChainCalls } : {}), result: refreshedResult, ...(warning ? { warning } : {}) }, true);
       } catch (error) {
         const message =
           error instanceof Error

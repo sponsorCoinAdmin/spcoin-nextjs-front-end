@@ -289,7 +289,6 @@ export const addAgentSponsorship = async (
       {
         methodNames: ["addAgentTransaction", "addAgentTransaction"],
         args: [
-          sponsorKey,
           _recipientKey,
           _recipientRateKey,
           _accountAgentKey,

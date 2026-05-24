@@ -249,11 +249,6 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_sponsorKey",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
         "name": "_recipientKey",
         "type": "address"
       },
@@ -291,11 +286,6 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "address",
-        "name": "_sponsorKey",
-        "type": "address"
-      },
       {
         "internalType": "address",
         "name": "_recipientKey",
@@ -401,6 +391,24 @@
         "type": "bool"
       }
     ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_setBucketRateKey",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_lastUpdateTimeStamp",
+        "type": "uint256"
+      }
+    ],
+    "name": "backDateRateTransactionSet",
+    "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },

@@ -15,7 +15,6 @@ export const BUILTIN_SYSTEM_TEST_SCRIPTS: LabScript[] = [
         method: 'addRecipientTransaction',
         'msg.sender': '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266',
         params: [
-          { key: 'Sponsor Key', value: '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266' },
           { key: 'Recipient Key', value: '0x70997970c51812dc3a010c7d01b50e0d17dc79c8' },
           { key: 'Recipient Rate Key', value: '10' },
           { key: 'Transaction Quantity', value: '1.25' },
@@ -30,7 +29,6 @@ export const BUILTIN_SYSTEM_TEST_SCRIPTS: LabScript[] = [
         method: 'addAgentTransaction',
         'msg.sender': '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266',
         params: [
-          { key: 'Sponsor Key', value: '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266' },
           { key: 'Recipient Key', value: '0x70997970c51812dc3a010c7d01b50e0d17dc79c8' },
           { key: 'Recipient Rate Key', value: '10' },
           { key: 'Agent Key', value: '0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc' },
@@ -71,7 +69,6 @@ export const BUILTIN_SYSTEM_TEST_SCRIPTS: LabScript[] = [
         method: 'addRecipientTransaction',
         'msg.sender': '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266',
         params: [
-          { key: 'Sponsor Key', value: '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266' },
           { key: 'Recipient Key', value: '0x90f79bf6eb2c4f870365e785982e1f101e93b906' },
           { key: 'Recipient Rate Key', value: '10' },
           { key: 'Transaction Quantity', value: '1.25' },
@@ -95,7 +92,7 @@ export const BUILTIN_SYSTEM_TEST_SCRIPTS: LabScript[] = [
   },
   {
     id: 'builtin-system-test-backdated-admin',
-    name: 'Backdated Agent Sponsorship Accepts Admin',
+    name: 'Backdated Agent Sponsorship',
     'Date Created': 'Mar-27-2026, 05:16:00',
     network: 'Hardhat EC2',
     isSystemScript: true,
@@ -107,7 +104,6 @@ export const BUILTIN_SYSTEM_TEST_SCRIPTS: LabScript[] = [
         method: 'addBackDatedAgentTransaction',
         'msg.sender': '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266',
         params: [
-          { key: 'Sponsor Key', value: '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266' },
           { key: 'Recipient Key', value: '0x70997970c51812dc3a010c7d01b50e0d17dc79c8' },
           { key: 'Recipient Rate Key', value: '10' },
           { key: 'Agent Key', value: '0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc' },
@@ -122,7 +118,7 @@ export const BUILTIN_SYSTEM_TEST_SCRIPTS: LabScript[] = [
   },
   {
     id: 'builtin-system-test-backdated-reject',
-    name: 'Backdated Sponsorship Rejects Non-Admin',
+    name: 'Backdated Recipient Sponsorship',
     'Date Created': 'Mar-27-2026, 05:15:00',
     network: 'Hardhat EC2',
     isSystemScript: true,
@@ -134,7 +130,6 @@ export const BUILTIN_SYSTEM_TEST_SCRIPTS: LabScript[] = [
         method: 'addBackDatedRecipientTransaction',
         'msg.sender': '0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc',
         params: [
-          { key: 'Sponsor Key', value: '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266' },
           { key: 'Recipient Key', value: '0x70997970c51812dc3a010c7d01b50e0d17dc79c8' },
           { key: 'Recipient Rate Key', value: '10' },
           { key: 'Transaction Quantity', value: '1.25' },
@@ -172,7 +167,6 @@ export const BUILTIN_SYSTEM_TEST_SCRIPTS: LabScript[] = [
         method: 'addBackDatedRecipientTransaction',
         'msg.sender': '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266',
         params: [
-          { key: 'Sponsor Key', value: '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266' },
           { key: 'Recipient Key', value: '0x70997970c51812dc3a010c7d01b50e0d17dc79c8' },
           { key: 'Recipient Rate Key', value: '100' },
           { key: 'Transaction Quantity', value: '100' },

@@ -1434,15 +1434,6 @@ export async function POST(request: NextRequest) {
               (ownerAddress ? ` Contract owner is ${ownerAddress}.` : ''),
           );
         };
-        const assertRootSigner = async (methodName: string) => {
-          const ownerAddress = await getContractOwnerAddress();
-          if (!ownerAddress || isSameAddress(senderAddress, ownerAddress)) return;
-          throw new Error(
-            `${methodName} requires the contract owner signer. ` +
-              `Actual signer is ${senderAddress}; contract owner is ${ownerAddress}.`,
-          );
-        };
-
         const result = await runWithMethodTimingCollector(timingCollector, async () => {
           let stepResult: unknown;
           if (step.panel === 'spcoin_rread') {
@@ -1969,17 +1960,15 @@ export async function POST(request: NextRequest) {
             case 'addAccountRecipientRate':
             case 'addAccountRecipient':
             case 'addSponsorship': {
-              const sponsorKey = findParam('Sponsor Key') || senderAddress;
+              const sponsorKey = senderAddress;
               const recipientKey = findParam('Recipient Key');
               const recipientRateKey = findParam('Recipient Rate Key');
               const transactionQty = findParam('Transaction Quantity');
-              await assertOwnerOrRootSigner(String(step.method), 'Sponsor Key', sponsorKey);
               const addRecipientTransaction = access.add.addRecipientTransaction ?? access.add.addRecipientTransaction;
               if (typeof addRecipientTransaction !== 'function') {
                 throw new Error('addRecipientTransaction is not available on the current SpCoin access path.');
               }
               const tx = await addRecipientTransaction(
-                sponsorKey,
                 recipientKey,
                 recipientRateKey,
                 transactionQty,
@@ -1994,19 +1983,17 @@ export async function POST(request: NextRequest) {
             case 'addAgentRateAmount':
             case 'addAccountAgentRate':
             case 'addAgentSponsorship': {
-              const sponsorKey = findParam('Sponsor Key') || senderAddress;
+              const sponsorKey = senderAddress;
               const recipientKey = findParam('Recipient Key');
               const recipientRateKey = findParam('Recipient Rate Key');
               const agentKey = findParam('Agent Key');
               const agentRateKey = findParam('Agent Rate Key');
               const transactionQty = findParam('Transaction Quantity');
-              await assertOwnerOrRootSigner(String(step.method), 'Sponsor Key', sponsorKey);
               const addAgentTransaction = access.add.addAgentTransaction ?? access.add.addAgentTransaction;
               if (typeof addAgentTransaction !== 'function') {
                 throw new Error('addAgentTransaction is not available on the current SpCoin access path.');
               }
               const tx = await addAgentTransaction(
-                sponsorKey,
                 recipientKey,
                 recipientRateKey,
                 agentKey,
@@ -2024,7 +2011,14 @@ export async function POST(request: NextRequest) {
             case 'addBackDatedRecipientSponsorship':
             case 'addBackDatedRecipientTransaction':
             case 'addAccountRecipientRateBackdated': {
-              const sponsorKey = findParam('Sponsor Key');
+              const ownerAddress = await getContractOwnerAddress();
+              if (ownerAddress && !isSameAddress(senderAddress, ownerAddress)) {
+                throw new Error(
+                  `${String(step.method)} requires the contract owner signer. ` +
+                    `Actual signer is ${senderAddress}; contract owner is ${ownerAddress}.`,
+                );
+              }
+              const sponsorKey = senderAddress;
               const recipientKey = findParam('Recipient Key');
               const recipientRateKey = findParam('Recipient Rate Key');
               const wholeAmount = findParam('Whole Amount');
@@ -2032,10 +2026,8 @@ export async function POST(request: NextRequest) {
               const explicitQty = findParam('Transaction Quantity');
               const backDate = findParam('Transaction Back Date');
               const transactionQty = explicitQty || `${wholeAmount}.${decimalAmount}`;
-              await assertRootSigner(String(step.method));
               const tx = await access.add.addBackDatedRecipientTransaction(
                 signer,
-                sponsorKey,
                 recipientKey,
                 recipientRateKey,
                 transactionQty,
@@ -2050,17 +2042,22 @@ export async function POST(request: NextRequest) {
             case 'addBackDatedAgentSponsorship':
             case 'addBackDatedAgentTransaction':
             case 'addAccountAgentRateBackdated': {
-              const sponsorKey = findParam('Sponsor Key');
+              const ownerAddress = await getContractOwnerAddress();
+              if (ownerAddress && !isSameAddress(senderAddress, ownerAddress)) {
+                throw new Error(
+                  `${String(step.method)} requires the contract owner signer. ` +
+                    `Actual signer is ${senderAddress}; contract owner is ${ownerAddress}.`,
+                );
+              }
+              const sponsorKey = senderAddress;
               const recipientKey = findParam('Recipient Key');
               const recipientRateKey = findParam('Recipient Rate Key');
               const agentKey = findParam('Agent Key');
               const agentRateKey = findParam('Agent Rate Key');
               const transactionQty = findParam('Transaction Quantity');
               const backDate = findParam('Transaction Back Date');
-              await assertRootSigner(String(step.method));
               const tx = await access.add.addBackDatedAgentTransaction(
                 signer,
-                sponsorKey,
                 recipientKey,
                 recipientRateKey,
                 agentKey,
@@ -2076,15 +2073,13 @@ export async function POST(request: NextRequest) {
               break;
             }
             case 'backDateRecipientTransaction': {
-              const sponsorKey = findParam('Sponsor Key');
+              const sponsorKey = senderAddress;
               const recipientKey = findParam('Recipient Key');
               const recipientRateKey = findParam('Recipient Rate Key');
               const transactionIndex = findParam('Transaction Row Id');
               const backDate = findParam('Transaction Back Date');
-              await assertRootSigner(String(step.method));
               const tx = await access.add.backDateRecipientTransaction(
                 signer,
-                sponsorKey,
                 recipientKey,
                 recipientRateKey,
                 transactionIndex,
@@ -2097,17 +2092,15 @@ export async function POST(request: NextRequest) {
               break;
             }
             case 'backDateAgentTransaction': {
-              const sponsorKey = findParam('Sponsor Key');
+              const sponsorKey = senderAddress;
               const recipientKey = findParam('Recipient Key');
               const recipientRateKey = findParam('Recipient Rate Key');
               const agentKey = findParam('Agent Key');
               const agentRateKey = findParam('Agent Rate Key');
               const transactionIndex = findParam('Transaction Row Id');
               const backDate = findParam('Transaction Back Date');
-              await assertRootSigner(String(step.method));
               const tx = await access.add.backDateAgentTransaction(
                 signer,
-                sponsorKey,
                 recipientKey,
                 recipientRateKey,
                 agentKey,
@@ -2120,6 +2113,98 @@ export async function POST(request: NextRequest) {
               invalidateCachedAccountRecord(contractAddress, sponsorKey);
               invalidateCachedAccountRecord(contractAddress, recipientKey);
               invalidateCachedAccountRecord(contractAddress, agentKey);
+              break;
+            }
+            case 'backDateRateTransactionSet': {
+              const ownerAddress = await getContractOwnerAddress();
+              if (ownerAddress && !isSameAddress(senderAddress, ownerAddress)) {
+                throw new Error(
+                  `backDateRateTransactionSet requires the contract owner signer. ` +
+                    `Actual signer is ${senderAddress}; contract owner is ${ownerAddress}.`,
+                );
+              }
+              let setBucketRateKey = findParam('Set Bucket Rate Key');
+              if (!setBucketRateKey) {
+                const sponsorKey = findParam('Sponsor Key');
+                const recipientKey = findParam('Recipient Key');
+                const recipientRateKey = findParam('Recipient Rate Key');
+                const agentKey = findParam('Agent Key');
+                const agentRateKey = findParam('Agent Rate Key');
+                const readMethods = access.read as unknown as {
+                  getRecipientRateTransactionSetKey?: (
+                    sponsorKey: string,
+                    recipientKey: string,
+                    recipientRateKey: string | number,
+                  ) => Promise<string | number | bigint>;
+                  getAgentRateTransactionSetKey?: (
+                    sponsorKey: string,
+                    recipientKey: string,
+                    recipientRateKey: string | number,
+                    agentKey: string,
+                    agentRateKey: string | number,
+                  ) => Promise<string | number | bigint>;
+                };
+                const isRecipientRateBucket =
+                  !agentKey ||
+                  /^0x0{40}$/i.test(agentKey) ||
+                  !agentRateKey;
+                if (isRecipientRateBucket) {
+                  if (typeof readMethods.getRecipientRateTransactionSetKey !== 'function') {
+                    throw new Error('getRecipientRateTransactionSetKey is not available on the current SpCoin access path.');
+                  }
+                  setBucketRateKey = String(await readMethods.getRecipientRateTransactionSetKey(
+                    sponsorKey,
+                    recipientKey,
+                    recipientRateKey,
+                  ));
+                } else {
+                  if (typeof readMethods.getAgentRateTransactionSetKey !== 'function') {
+                    throw new Error('getAgentRateTransactionSetKey is not available on the current SpCoin access path.');
+                  }
+                  setBucketRateKey = String(await readMethods.getAgentRateTransactionSetKey(
+                    sponsorKey,
+                    recipientKey,
+                    recipientRateKey,
+                    agentKey,
+                    agentRateKey,
+                  ));
+                }
+              }
+              const rawTimestamp = findParam('Last Update Timestamp');
+              const lastUpdateTimeStamp = /^\d+$/.test(rawTimestamp)
+                ? rawTimestamp
+                : (() => {
+                    const parsedTimestampMs = Date.parse(rawTimestamp);
+                    if (Number.isNaN(parsedTimestampMs)) {
+                      throw new Error(`Invalid Last Update Timestamp for backDateRateTransactionSet: ${rawTimestamp}`);
+                    }
+                    return String(Math.floor(parsedTimestampMs / 1000));
+                  })();
+              const method = (
+                writeContract as unknown as {
+                  backDateRateTransactionSet?: (
+                    setBucketRateKey: string,
+                    lastUpdateTimeStamp: string | number,
+                  ) => Promise<{
+                    wait: () => Promise<{
+                      hash?: string;
+                      blockNumber?: bigint | number | null;
+                      status?: number | bigint | null;
+                      gasUsed?: string | number | bigint | null;
+                      gasPrice?: string | number | bigint | null;
+                      effectiveGasPrice?: string | number | bigint | null;
+                      fee?: string | number | bigint | null;
+                    }>;
+                    hash?: string;
+                  }>;
+                }
+              ).backDateRateTransactionSet;
+              if (typeof method !== 'function') {
+                throw new Error('backDateRateTransactionSet is not available on the current SpCoin contract access path.');
+              }
+              const tx = await method(setBucketRateKey, lastUpdateTimeStamp);
+              const receipt = await tx.wait();
+              stepResult = formatReceiptResult('backDateRateTransactionSet', tx, receipt, timingCollector);
               break;
             }
             case 'deleteRecipient': {

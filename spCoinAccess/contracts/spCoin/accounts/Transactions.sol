@@ -401,17 +401,15 @@ contract Transactions is RewardsManager {
     }
 
     function addRecipientTransaction(
-        address _sponsorKey,
         address _recipientKey,
         uint _recipientRateKey,
         uint256 _amount
     )
         external
-        onlyOwnerOrRootAdmin(_sponsorKey)
         returns (uint256 transactionIndex)
     {
         return _addSponsorshipForSponsor(
-            _sponsorKey,
+            msg.sender,
             _recipientKey,
             _recipientRateKey,
             burnAddress,
@@ -422,7 +420,6 @@ contract Transactions is RewardsManager {
     }
 
     function addAgentTransaction(
-        address _sponsorKey,
         address _recipientKey,
         uint _recipientRateKey,
         address _agentKey,
@@ -430,11 +427,10 @@ contract Transactions is RewardsManager {
         uint256 _amount
     )
         external
-        onlyOwnerOrRootAdmin(_sponsorKey)
         returns (uint256 transactionIndex)
     {
         return _addSponsorshipForSponsor(
-            _sponsorKey,
+            msg.sender,
             _recipientKey,
             _recipientRateKey,
             _agentKey,
@@ -598,8 +594,8 @@ contract Transactions is RewardsManager {
         uint256 _transactionTimeStamp
     )
         external
-        onlyRootAdmin
     {
+        if (msg.sender != _sponsorKey) revert SpCoinError(OWNER_OR_ROOT);
         if (_agentKey == burnAddress) {
             RecipientRateStruct storage recipientTransaction =
                 getRecipientTransactionByKeys(_sponsorKey, _recipientKey, _recipientRateKey);
@@ -617,6 +613,18 @@ contract Transactions is RewardsManager {
             agentTransaction.transactionList[_transactionIndex].insertionTime = _transactionTimeStamp;
             _syncAgentRateTransactionTimestamp(agentTransaction, _transactionIndex, _transactionTimeStamp);
         }
+    }
+
+    function backDateRateTransactionSet(
+        bytes32 _setBucketRateKey,
+        uint256 _lastUpdateTimeStamp
+    )
+        external
+        onlyRootAdmin
+    {
+        RateTransactionSetStruct storage rateTransactionSet = rateTransactionSetMap[_setBucketRateKey];
+        if (!rateTransactionSet.inserted) revert SpCoinError(RECIP_RATE_NOT_FOUND);
+        rateTransactionSet.lastUpdateTimeStamp = _lastUpdateTimeStamp;
     }
 
     function getAgentTransactionCount(

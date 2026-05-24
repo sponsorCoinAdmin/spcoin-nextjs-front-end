@@ -1,8 +1,13 @@
 // @ts-nocheck
+import {
+    BURN_ADDRESS,
+    getSignerAddress,
+    requireBackDateRateTransactionSetOwner,
+} from "../shared";
+
 export const addBackDatedRecipientTransaction = async (
     context,
     _adminSigner,
-    _sponsorKey,
     _recipientKey,
     _recipientRateKey,
     _transactionQty,
@@ -10,34 +15,44 @@ export const addBackDatedRecipientTransaction = async (
 ) => {
     context.spCoinLogger.logFunctionHeader("addBackDatedRecipientTransaction = async(" +
         _adminSigner + ", " +
-        _sponsorKey + ", " +
         _recipientKey + ", " +
         _recipientRateKey + ", " +
         _transactionQty + ", " +
         _transactionBackDate + ")");
     _transactionBackDate = Math.trunc(_transactionBackDate);
-    const ownerAddress = await context.spCoinContractDeployed.owner();
-    const signerAddress = typeof _adminSigner?.getAddress === "function"
-        ? await _adminSigner.getAddress()
-        : _adminSigner?.address;
-    if (!signerAddress || String(signerAddress).toLowerCase() !== String(ownerAddress).toLowerCase()) {
-        throw new Error("backdated sponsorship methods require the owner signer.");
+    const signerAddress = await getSignerAddress(_adminSigner);
+    if (!signerAddress) {
+        throw new Error("backdated recipient add requires an owner signer.");
     }
+    await requireBackDateRateTransactionSetOwner(context, signerAddress);
     const transactionIndex = await context.spCoinContractDeployed.getRecipientTransactionCount(
-        _sponsorKey,
+        signerAddress,
         _recipientKey,
         _recipientRateKey
     );
-    const addTx = await context.addRecipientTransaction(_sponsorKey, _recipientKey, _recipientRateKey, _transactionQty);
+    const rateTransactionSetKey = await context.spCoinContractDeployed.getRecipientRateTransactionSetKey(
+        signerAddress,
+        _recipientKey,
+        _recipientRateKey
+    );
+    const addTx = await context.addRecipientTransaction(_recipientKey, _recipientRateKey, _transactionQty);
     if (addTx && typeof addTx.wait === "function") {
         await addTx.wait();
     }
-    const tx = await context.backDateRecipientTransaction(
-        _adminSigner,
-        _sponsorKey,
+    const backDateTx = await context.spCoinContractDeployed.backDateTransaction(
+        signerAddress,
         _recipientKey,
         _recipientRateKey,
+        BURN_ADDRESS,
+        0,
         transactionIndex,
+        _transactionBackDate
+    );
+    if (backDateTx && typeof backDateTx.wait === "function") {
+        await backDateTx.wait();
+    }
+    const tx = await context.spCoinContractDeployed.backDateRateTransactionSet(
+        rateTransactionSetKey,
         _transactionBackDate
     );
     context.spCoinLogger.logExitFunction();

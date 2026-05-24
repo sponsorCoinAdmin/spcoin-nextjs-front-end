@@ -1,6 +1,31 @@
 // @ts-nocheck
 export const BURN_ADDRESS = "0x0000000000000000000000000000000000000000";
 
+export function isSameAddress(left, right) {
+  return String(left || "").trim().toLowerCase() === String(right || "").trim().toLowerCase();
+}
+
+export async function getSignerAddress(_signer) {
+  return typeof _signer?.getAddress === "function"
+    ? await _signer.getAddress()
+    : _signer?.address;
+}
+
+export async function requireBackDateRateTransactionSetOwner(context, signerAddress) {
+  if (typeof context?.spCoinContractDeployed?.backDateRateTransactionSet !== "function") {
+    throw new Error("backDateRateTransactionSet is not available on the current SpCoin contract access path.");
+  }
+  const ownerAddress = typeof context?.spCoinContractDeployed?.owner === "function"
+    ? await context.spCoinContractDeployed.owner()
+    : "";
+  if (ownerAddress && !isSameAddress(signerAddress, ownerAddress)) {
+    throw new Error(
+      `backDateRateTransactionSet requires the contract owner signer. ` +
+      `Actual signer is ${signerAddress}; contract owner is ${ownerAddress}.`
+    );
+  }
+}
+
 async function resolveContractDecimals(context) {
   try {
     const decimals =

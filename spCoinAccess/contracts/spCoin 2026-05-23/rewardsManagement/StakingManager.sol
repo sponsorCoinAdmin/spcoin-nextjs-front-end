@@ -8,6 +8,19 @@ contract StakingManager is AgentRates{
     constructor() {
     }
 
+    function updateAccountRewardTimestamp(uint _accountType, address _accountKey, uint256 _updateTimeStamp)
+        internal
+    {
+        AccountStruct storage accountRec = accountMap[_accountKey];
+        if (_accountType == SPONSOR) {
+            accountRec.lastSponsorUpdateTimeStamp = _updateTimeStamp;
+        } else if (_accountType == RECIPIENT) {
+            accountRec.lastRecipientUpdateTimeStamp = _updateTimeStamp;
+        } else if (_accountType == AGENT) {
+            accountRec.lastAgentUpdateTimeStamp = _updateTimeStamp;
+        }
+    }
+
     // SPONSOR   ~ Deposit Sponsor Rewards means as a SPONSOR deposit rewards baser on my source(Recipient)
     //             ~ _sourceKey  = RECIPIENT ADDRESS
     //             ~ _depositKey = SPONSOR ADDRESS
@@ -21,7 +34,7 @@ contract StakingManager is AgentRates{
     function depositStakingRewards( uint _accountType, address _sponsorKey,
                                     address _recipientKey, uint _recipientRate,
                                     address _agentKey, uint _agentRate, uint _amount)
-        public returns ( uint ) {
+        internal returns ( uint ) {
         // console.log(" _accountType, address _sponsorKey, _recipientKey, _recipientRate, _agentKey, _agentRate, _amount");
         // console.log("SOL=>2.1 _accountType   = ", getAccountTypeString(_accountType));
         // console.log("SOL=>2.1 _sponsorKey    = ", _sponsorKey);
@@ -36,12 +49,9 @@ contract StakingManager is AgentRates{
         uint rate = 0;
         uint percentDiviser = decimalMultiplier/100;
         // console.log("decimalMultiplier", decimalMultiplier);
-        string memory errMsg = "";
-
         if (_accountType == SPONSOR) { 
             _recipientRate  = annualInflation;
-            errMsg = buildErrString(_accountType, _recipientKey, " NOT FOUND FOR SPONSOR ACCOUNT ",  _sponsorKey);
-            require (sponsorHasRecipient( _recipientKey, _sponsorKey ), errMsg);
+            if (!sponsorHasRecipient( _recipientKey, _sponsorKey )) revert SpCoinError(RECIPIENT_NOT_FOUND);
 // console.log("SPONSOR BEFORE _amount",  _amount );
             _amount -= (_amount * annualInflation) / 100;
 // console.log("SPONSOR AFTER _amount",  _amount );
@@ -49,8 +59,7 @@ contract StakingManager is AgentRates{
             depositKey = _sponsorKey;
             rate = _recipientRate;
          } else if (_accountType == RECIPIENT) { 
-             errMsg = buildErrString(_accountType, _recipientKey, " NOT FOUND FOR SPONSOR ACCOUNT ", _sponsorKey);
-             require (recipientHasSponsor( _sponsorKey, _recipientKey ), errMsg);
+             if (!recipientHasSponsor( _sponsorKey, _recipientKey )) revert SpCoinError(RECIPIENT_NOT_FOUND);
             uint sponsorAmount = ((_amount * decimalMultiplier)/_recipientRate) / percentDiviser;
 // console.log("RECIPIENT BEFORE _amount", _amount );
 //             _amount -= (_amount * decimalMultiplier) / ( _recipientRate * decimalMultiplier );
@@ -62,8 +71,7 @@ contract StakingManager is AgentRates{
             depositKey = _recipientKey;   
             rate = _recipientRate;
          } else if (_accountType == AGENT) {
-             errMsg = buildErrString(_accountType,  _recipientKey, " NOT FOUND FOR AGENT ACCOUNT ",  _agentKey);
-             require (agentHasRecipient( _recipientKey, _agentKey ), errMsg);
+             if (!agentHasRecipient( _recipientKey, _agentKey )) revert SpCoinError(AGENT_NOT_FOUND);
             uint recipientAmount = ((_amount * decimalMultiplier)/_agentRate) / percentDiviser;
 // console.log("AGENT _amount", _amount );
             depositStakingRewards(RECIPIENT, _sponsorKey,
@@ -74,12 +82,6 @@ contract StakingManager is AgentRates{
             rate = _agentRate;
          }
         return depositAccountStakingRewards( _accountType, sourceKey, depositKey, rate, _amount );
-    }
-
-    function buildErrString( uint _accountType, address _key1, string memory str1, address _key2)
-    internal view returns(string memory errMsg) {
-        errMsg = concat(getAccountTypeString(_accountType), " ACCOUNT ", toString(_key1), str1,  toString(_key2));
-        return errMsg;
     }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -98,11 +100,12 @@ contract StakingManager is AgentRates{
         RewardTypeStruct storage rewardsRecord = depositAccount.rewardsMap[getAccountTypeString(_accountType)];
 
         balanceOf[_depositKey] += _amount;
-        totalBalanceOf += _amount;
+        totalUnstakedSpCoins += _amount;
         totalSupply += _amount;
         totalStakingRewards += _amount;
         depositAccount.stakingRewards += _amount;
         rewardsRecord.stakingRewards += _amount;
+        updateAccountRewardTimestamp(_accountType, _depositKey, block.timestamp);
         // mapping(address => RewardAccountStruct) storage rewardsMap = rewardsRecord.rewardsMap;
 
         RewardAccountStruct storage rewardAccountRecord;
@@ -148,7 +151,7 @@ contract StakingManager is AgentRates{
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     function getAccountRewardTotals(address _accountKey)
-        public
+        external
         view
         accountExists(_accountKey)
         returns (

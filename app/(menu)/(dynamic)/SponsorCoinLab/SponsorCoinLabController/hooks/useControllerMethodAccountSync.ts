@@ -1,8 +1,62 @@
 'use client';
 
 import { useCallback } from 'react';
+import { AbiCoder, getAddress, id, keccak256, ZeroAddress } from 'ethers';
 import type { ControllerParamDef } from '../types';
 import { normalizeAddressValue, normalizeParamLabel } from '../utils';
+
+const abiCoder = AbiCoder.defaultAbiCoder();
+const RECIPIENT_RATE_TRANSACTION_SET_DOMAIN = id('RECIPIENT_RATE');
+const AGENT_RATE_TRANSACTION_SET_DOMAIN = id('AGENT_RATE');
+
+function isZeroOrBlankAddress(value: string) {
+  const trimmed = String(value || '').trim();
+  return !trimmed || normalizeAddressValue(trimmed) === ZeroAddress;
+}
+
+function buildRateTransactionSetKey({
+  sponsorKey,
+  recipientKey,
+  recipientRateKey,
+  agentKey,
+  agentRateKey,
+}: {
+  sponsorKey: string;
+  recipientKey: string;
+  recipientRateKey: string;
+  agentKey: string;
+  agentRateKey: string;
+}) {
+  if (!sponsorKey || !recipientKey || !recipientRateKey) return '';
+  try {
+    const normalizedSponsorKey = getAddress(sponsorKey);
+    const normalizedRecipientKey = getAddress(recipientKey);
+    if (isZeroOrBlankAddress(agentKey) || !String(agentRateKey || '').trim()) {
+      return keccak256(abiCoder.encode(
+        ['bytes32', 'address', 'address', 'uint256'],
+        [
+          RECIPIENT_RATE_TRANSACTION_SET_DOMAIN,
+          normalizedSponsorKey,
+          normalizedRecipientKey,
+          BigInt(recipientRateKey),
+        ],
+      ));
+    }
+    return keccak256(abiCoder.encode(
+      ['bytes32', 'address', 'address', 'uint256', 'address', 'uint256'],
+      [
+        AGENT_RATE_TRANSACTION_SET_DOMAIN,
+        normalizedSponsorKey,
+        normalizedRecipientKey,
+        BigInt(recipientRateKey),
+        getAddress(agentKey),
+        BigInt(agentRateKey),
+      ],
+    ));
+  } catch {
+    return '';
+  }
+}
 
 type Params = {
   selectedWriteSenderAddress: string;
@@ -38,23 +92,39 @@ export function useControllerMethodAccountSync({
   setDefaultAgentRateKey,
 }: Params) {
   const populateMethodParamsFromActiveAccounts = useCallback(
-    (params: ControllerParamDef[]) =>
-      params.map((param) => {
+    (params: ControllerParamDef[]) => {
+      const sponsorKey = sponsorAccountAddress;
+      const recipientKey = recipientAccountAddress;
+      const recipientRateKey = String(defaultRecipientRateKey || effectiveRecipientRateRange[0] || '');
+      const agentKey = agentAccountAddress;
+      const agentRateKey = String(defaultAgentRateKey || effectiveAgentRateRange[0] || '');
+      const setBucketRateKey = buildRateTransactionSetKey({
+        sponsorKey,
+        recipientKey,
+        recipientRateKey,
+        agentKey,
+        agentRateKey,
+      });
+      return params.map((param) => {
         const label = normalizeParamLabel(param.label);
         if (label === 'msg.sender') return selectedWriteSenderAddress;
-        if (label === 'sponsor key' || label === 'sponsor account') return sponsorAccountAddress;
-        if (label === 'recipient key' || label === 'recipient account') return recipientAccountAddress;
+        if (label === 'sponsor key' || label === 'sponsor account') return sponsorKey;
+        if (label === 'recipient key' || label === 'recipient account') return recipientKey;
         if (label === 'agent key' || label === 'agent account' || label === 'account agent key') {
-          return agentAccountAddress;
+          return agentKey;
         }
         if (label === 'recipient rate key' || label === 'recipient rate') {
-          return String(defaultRecipientRateKey || effectiveRecipientRateRange[0] || '');
+          return recipientRateKey;
         }
         if (label === 'agent rate key' || label === 'agent rate') {
-          return String(defaultAgentRateKey || effectiveAgentRateRange[0] || '');
+          return agentRateKey;
+        }
+        if (label === 'set bucket rate key') {
+          return setBucketRateKey;
         }
         return '';
-      }),
+      });
+    },
     [
       agentAccountAddress,
       defaultAgentRateKey,

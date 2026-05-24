@@ -3,7 +3,6 @@ import { normalizeRawQuantityUnits } from "../shared";
 
 export const addAgentTransaction = async (
     context,
-    _sponsorKey,
     _recipientKey,
     _recipientRateKey,
     _accountAgentKey,
@@ -12,7 +11,6 @@ export const addAgentTransaction = async (
 ) => {
     context.spCoinLogger.logFunctionHeader(
         "addAgentTransaction = async(" +
-            _sponsorKey + ", " +
             _recipientKey + ", " +
             _recipientRateKey + ", " +
             _accountAgentKey + ", " +
@@ -23,7 +21,6 @@ export const addAgentTransaction = async (
     const contractMethod = context.spCoinContractDeployed.addAgentTransaction
         ?? context.spCoinContractDeployed.addAgentTransaction;
     const tx = await contractMethod(
-        _sponsorKey,
         _recipientKey,
         _recipientRateKey,
         _accountAgentKey,

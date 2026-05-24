@@ -123,6 +123,7 @@ export type SpCoinWriteMethod =
   | 'addBackDatedAgentTransaction'
   | 'backDateRecipientTransaction'
   | 'backDateAgentTransaction'
+  | 'backDateRateTransactionSet'
   | 'deleteRecipientSponsorship'
   | 'deleteAccountRecord'
   | 'deleteAccountRecords'
@@ -147,8 +148,7 @@ export const SPCOIN_ADMIN_WRITE_METHODS: SpCoinWriteMethod[] = [
   'updateMasterStakingRewards',
   'addBackDatedRecipientTransaction',
   'addBackDatedAgentTransaction',
-  'backDateRecipientTransaction',
-  'backDateAgentTransaction',
+  'backDateRateTransactionSet',
   'setInflationRate',
   'setLowerRecipientRate',
   'setUpperRecipientRate',
@@ -163,6 +163,8 @@ export const SPCOIN_ADMIN_WRITE_METHODS: SpCoinWriteMethod[] = [
 export const SPCOIN_SENDER_WRITE_METHODS: SpCoinWriteMethod[] = [
   'addRecipientTransaction',
   'addAgentTransaction',
+  'backDateRecipientTransaction',
+  'backDateAgentTransaction',
   'claimOnChainTotalRewards',
   'claimOnChainSponsorRewards',
   'claimOnChainRecipientRewards',
@@ -208,8 +210,6 @@ const SPCOIN_HIDDEN_WRITE_METHODS = new Set<SpCoinWriteMethod>([
 ]);
 
 const OWNER_OR_SPONSOR_WRITE_METHODS = new Set<SpCoinWriteMethod>([
-  'addRecipientTransaction',
-  'addAgentTransaction',
   'deleteSponsor',
   'deleteRecipient',
   'deleteRecipientRate',
@@ -224,8 +224,7 @@ const OWNER_OR_SPONSOR_WRITE_METHODS = new Set<SpCoinWriteMethod>([
 const OWNER_ONLY_WRITE_METHODS = new Set<SpCoinWriteMethod>([
   'addBackDatedRecipientTransaction',
   'addBackDatedAgentTransaction',
-  'backDateRecipientTransaction',
-  'backDateAgentTransaction',
+  'backDateRateTransactionSet',
   'setInflationRate',
   'setLowerRecipientRate',
   'setUpperRecipientRate',
@@ -471,6 +470,12 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       (def) => String(def.label || '').trim().toLowerCase() === String(label || '').trim().toLowerCase(),
     );
     return index >= 0 ? String(spWriteParams[index] || '').trim() : '';
+  };
+  const findMethodArgValue = (label: string) => {
+    const index = activeDef.params.findIndex(
+      (def) => String(def.label || '').trim().toLowerCase() === String(label || '').trim().toLowerCase(),
+    );
+    return index >= 0 ? methodArgs[index] : '';
   };
   let receipts: any = [];
   const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -871,31 +876,29 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
       break;
     }
     case 'addBackDatedRecipientTransaction': {
-      const qty = String(methodArgs[3]);
+      const qty = String(methodArgs[2]);
       await submitWrite(activeDef.title, (access, signer) =>
         access.add.addBackDatedRecipientTransaction(
           signer,
           asString(methodArgs[0]),
-          asString(methodArgs[1]),
-          asStringOrNumber(methodArgs[2]),
+          asStringOrNumber(methodArgs[1]),
           qty,
-          Number(methodArgs[4]),
+          Number(methodArgs[3]),
         ),
       );
       break;
     }
     case 'addBackDatedAgentTransaction': {
-      const qty = String(methodArgs[5]);
+      const qty = String(methodArgs[4]);
       await submitWrite(activeDef.title, (access, signer) =>
         access.add.addBackDatedAgentTransaction(
           signer,
           asString(methodArgs[0]),
-          asString(methodArgs[1]),
-          asStringOrNumber(methodArgs[2]),
-          asString(methodArgs[3]),
-          asStringOrNumber(methodArgs[4]),
+          asStringOrNumber(methodArgs[1]),
+          asString(methodArgs[2]),
+          asStringOrNumber(methodArgs[3]),
           qty,
-          Number(methodArgs[6]),
+          Number(methodArgs[5]),
         ),
       );
       break;
@@ -905,10 +908,9 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
         access.add.backDateRecipientTransaction(
           signer,
           asString(methodArgs[0]),
-          asString(methodArgs[1]),
+          asStringOrNumber(methodArgs[1]),
           asStringOrNumber(methodArgs[2]),
-          asStringOrNumber(methodArgs[3]),
-          Number(methodArgs[4]),
+          Number(methodArgs[3]),
         ),
       );
       break;
@@ -918,28 +920,60 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
         access.add.backDateAgentTransaction(
           signer,
           asString(methodArgs[0]),
-          asString(methodArgs[1]),
-          asStringOrNumber(methodArgs[2]),
-          asString(methodArgs[3]),
+          asStringOrNumber(methodArgs[1]),
+          asString(methodArgs[2]),
+          asStringOrNumber(methodArgs[3]),
           asStringOrNumber(methodArgs[4]),
-          asStringOrNumber(methodArgs[5]),
-          Number(methodArgs[6]),
+          Number(methodArgs[5]),
         ),
       );
       break;
     }
+    case 'backDateRateTransactionSet': {
+      await submitWrite(activeDef.title, async (access) => {
+        const method = access.contract.backDateRateTransactionSet;
+        if (typeof method !== 'function') {
+          throw new Error('backDateRateTransactionSet is not available on the current SpCoin contract access path.');
+        }
+        let setBucketRateKey = findParamValue('Set Bucket Rate Key');
+        if (!setBucketRateKey) {
+          const sponsorKey = findParamValue('Sponsor Key');
+          const recipientKey = findParamValue('Recipient Key');
+          const recipientRateKey = findParamValue('Recipient Rate Key');
+          const agentKey = findParamValue('Agent Key');
+          const agentRateKey = findParamValue('Agent Rate Key');
+          const isRecipientRateBucket =
+            !agentKey ||
+            /^0x0{40}$/i.test(agentKey) ||
+            !agentRateKey;
+          if (isRecipientRateBucket) {
+            setBucketRateKey = String(await access.read.getRecipientRateTransactionSetKey(
+              sponsorKey,
+              recipientKey,
+              asStringOrNumber(recipientRateKey),
+            ));
+          } else {
+            setBucketRateKey = String(await access.read.getAgentRateTransactionSetKey(
+              sponsorKey,
+              recipientKey,
+              asStringOrNumber(recipientRateKey),
+              agentKey,
+              asStringOrNumber(agentRateKey),
+            ));
+          }
+        }
+        return method(setBucketRateKey, asStringOrNumber(findMethodArgValue('Last Update Timestamp')));
+      });
+      break;
+    }
     case 'addRecipientTransaction': {
-      const qty = String(methodArgs[3]);
+      const qty = String(methodArgs[2]);
       await submitWrite(activeDef.title, (access, signer) => {
-        const sponsorKey = asString(methodArgs[0]);
-        const signerAddress = asString(signer?.address || selectedHardhatAddress || '');
-        const sponsorMatchesSigner =
-          sponsorKey.trim().toLowerCase() === signerAddress.trim().toLowerCase();
-        if (sponsorMatchesSigner && typeof access.add.addSponsorship === 'function') {
+        if (typeof access.add.addSponsorship === 'function') {
           return access.add.addSponsorship(
             signer,
-            asString(methodArgs[1]),
-            asStringOrNumber(methodArgs[2]),
+            asString(methodArgs[0]),
+            asStringOrNumber(methodArgs[1]),
             qty,
           );
         }
@@ -948,28 +982,23 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
           throw new Error('addRecipientTransaction is not available on the current SpCoin access path.');
         }
         return addRecipientTransaction(
-          sponsorKey,
-          asString(methodArgs[1]),
-          asStringOrNumber(methodArgs[2]),
+          asString(methodArgs[0]),
+          asStringOrNumber(methodArgs[1]),
           qty,
         );
       });
       break;
     }
     case 'addAgentTransaction': {
-      const qty = String(methodArgs[5]);
+      const qty = String(methodArgs[4]);
       await submitWriteWithFetchRetry(activeDef.title, (access, signer) => {
-        const sponsorKey = asString(methodArgs[0]);
-        const signerAddress = asString(signer?.address || selectedHardhatAddress || '');
-        const sponsorMatchesSigner =
-          sponsorKey.trim().toLowerCase() === signerAddress.trim().toLowerCase();
-        if (sponsorMatchesSigner && typeof access.add.addAgentSponsorship === 'function') {
+        if (typeof access.add.addAgentSponsorship === 'function') {
           return access.add.addAgentSponsorship(
             signer,
-            asString(methodArgs[1]),
-            asStringOrNumber(methodArgs[2]),
-            asString(methodArgs[3]),
-            asStringOrNumber(methodArgs[4]),
+            asString(methodArgs[0]),
+            asStringOrNumber(methodArgs[1]),
+            asString(methodArgs[2]),
+            asStringOrNumber(methodArgs[3]),
             qty,
           );
         }
@@ -978,11 +1007,10 @@ export async function runSpCoinWriteMethod(args: RunArgs): Promise<
           throw new Error('addAgentTransaction is not available on the current SpCoin access path.');
         }
         return addAgentTransaction(
-          sponsorKey,
-          asString(methodArgs[1]),
-          asStringOrNumber(methodArgs[2]),
-          asString(methodArgs[3]),
-          asStringOrNumber(methodArgs[4]),
+          asString(methodArgs[0]),
+          asStringOrNumber(methodArgs[1]),
+          asString(methodArgs[2]),
+          asStringOrNumber(methodArgs[3]),
           qty,
         );
       });

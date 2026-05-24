@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-23T07:46:29.907Z",
+  "updatedAt": "2026-05-24T04:48:33.573Z",
   "lists": {
     "serialization": {
       "Basic": {
@@ -592,6 +592,7 @@
         "addBackDatedAgentTransaction": false,
         "backDateRecipientTransaction": false,
         "backDateAgentTransaction": false,
+        "backDateRateTransactionSet": false,
         "deleteRecipientSponsorship": true,
         "deleteAccountRecord": true,
         "deleteAccountRecords": false,
@@ -630,6 +631,7 @@
         "addBackDatedAgentTransaction": false,
         "backDateRecipientTransaction": false,
         "backDateAgentTransaction": false,
+        "backDateRateTransactionSet": false,
         "deleteRecipientSponsorship": true,
         "deleteAccountRecord": true,
         "deleteAccountRecords": false,
@@ -668,6 +670,7 @@
         "addBackDatedAgentTransaction": true,
         "backDateRecipientTransaction": true,
         "backDateAgentTransaction": true,
+        "backDateRateTransactionSet": false,
         "deleteRecipientSponsorship": false,
         "deleteAccountRecord": true,
         "deleteAccountRecords": true,
@@ -706,6 +709,7 @@
         "addBackDatedAgentTransaction": false,
         "backDateRecipientTransaction": false,
         "backDateAgentTransaction": false,
+        "backDateRateTransactionSet": false,
         "deleteRecipientSponsorship": false,
         "deleteAccountRecord": false,
         "deleteAccountRecords": true,
@@ -744,6 +748,7 @@
         "addBackDatedAgentTransaction": false,
         "backDateRecipientTransaction": false,
         "backDateAgentTransaction": false,
+        "backDateRateTransactionSet": false,
         "deleteRecipientSponsorship": false,
         "deleteAccountRecord": true,
         "deleteAccountRecords": false,
@@ -950,6 +955,7 @@
     "spCoinWrite:addBackDatedAgentTransaction": "admin_utils",
     "spCoinWrite:backDateRecipientTransaction": "admin_utils",
     "spCoinWrite:backDateAgentTransaction": "admin_utils",
+    "spCoinWrite:backDateRateTransactionSet": "admin_utils",
     "spCoinWrite:deleteRecipientSponsorship": "spcoin_write",
     "spCoinWrite:deleteAccountRecord": "spcoin_write",
     "spCoinWrite:deleteAccountRecords": "todos",

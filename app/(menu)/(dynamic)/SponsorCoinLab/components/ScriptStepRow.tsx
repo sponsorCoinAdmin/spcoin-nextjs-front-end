@@ -1,6 +1,27 @@
 import type React from 'react';
 import type { LabScriptParam, LabScriptStep } from '../scriptBuilder/types';
 
+const TOKEN_DECIMALS = 18;
+
+function isQuantityParam(label: string) {
+  const normalized = String(label || '').trim().toLowerCase();
+  return normalized.includes('quantity') || normalized.includes('amount');
+}
+
+function formatRawTokenQuantity(value: string) {
+  const normalized = String(value || '').replace(/,/g, '').trim();
+  if (!/^\d+$/.test(normalized) || normalized.length <= TOKEN_DECIMALS) return value;
+  const whole = normalized.slice(0, -TOKEN_DECIMALS) || '0';
+  const fractional = normalized.slice(-TOKEN_DECIMALS).padStart(TOKEN_DECIMALS, '0');
+  return `${whole}.${fractional}`;
+}
+
+function formatParamValueForDisplay(param: LabScriptParam) {
+  const value = String(param.value ?? '');
+  if (!isQuantityParam(param.key)) return value;
+  return formatRawTokenQuantity(value);
+}
+
 interface Props {
   step: LabScriptStep;
   isExpanded: boolean;
@@ -101,7 +122,7 @@ export default function ScriptStepRow({
           {params.length > 0
             ? params.map((param, idx) => (
                 <div key={`step-${step.step}-param-${idx}`}>
-                  {`${param.key}: ${param.value};`}
+                  {`${param.key}: ${formatParamValueForDisplay(param)};`}
                 </div>
               ))
             : null}

@@ -116,8 +116,7 @@ const OWNER_OR_SPONSOR_WRITE_METHODS = new Set<string>([
 const OWNER_ONLY_WRITE_METHODS = new Set<string>([
   'addBackDatedRecipientTransaction',
   'addBackDatedAgentTransaction',
-  'backDateRecipientTransaction',
-  'backDateAgentTransaction',
+  'backDateRateTransactionSet',
   'setInflationRate',
   'setLowerRecipientRate',
   'setUpperRecipientRate',

@@ -293,6 +293,46 @@ function getPendingRewardsMethodDisplayName(methodName: string): string {
   return PENDING_REWARDS_METHOD_DISPLAY_NAMES[methodName] || methodName;
 }
 
+function readCallParameterValue(callRecord: Record<string, unknown> | null, keys: string[]): string {
+  const parameters = callRecord?.parameters;
+  if (Array.isArray(parameters)) {
+    for (const key of keys) {
+      const match = parameters.find((entry) => {
+        if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return false;
+        const record = entry as Record<string, unknown>;
+        return String(record.label ?? record.key ?? '').trim() === key;
+      });
+      if (match && typeof match === 'object' && !Array.isArray(match)) {
+        const value = (match as Record<string, unknown>).value;
+        if (value !== undefined && value !== null && String(value).trim()) return String(value).trim();
+      }
+    }
+    return '';
+  }
+  if (!parameters || typeof parameters !== 'object') return '';
+  const record = parameters as Record<string, unknown>;
+  for (const key of keys) {
+    const value = record[key];
+    if (value !== undefined && value !== null && String(value).trim()) return String(value).trim();
+  }
+  return '';
+}
+
+function getMethodDisplayParameterValue(methodName: string, callRecord: Record<string, unknown> | null): string {
+  const parameterKeys: Record<string, string[]> = {
+    getAccountRecord: ['Account Key', 'Account'],
+    addRecipientTransaction: ['Recipient Key', 'Recipient'],
+    addAgentTransaction: ['Agent Key', 'Agent'],
+    estimateOffChainSponsorRewards: ['Account Key', 'Account'],
+    estimateOffChainRecipientRewards: ['Account Key', 'Account'],
+  };
+  return readCallParameterValue(callRecord, parameterKeys[methodName] ?? ['Account Key', 'Account']);
+}
+
+function isAddressText(value: string): boolean {
+  return /^0x[0-9a-fA-F]{40}$/.test(String(value || '').trim());
+}
+
 interface JsonInspectorProps {
   data: any;
   collapsedKeys: string[];
@@ -401,16 +441,6 @@ function hasRoleCountForPendingRewardsKey(key: string, counts: AccountRoleCounts
     return roleSource.isAgent;
   }
   return true;
-}
-
-function getScriptStepNumberFromPath(path: string): number | null {
-  const normalizedPath = String(path || '').trim();
-  const indexedMatch = normalizedPath.match(/(?:^|\.)(?:steps\.(\d+)|step-(\d+)|script-(\d+))(?:\.|$)/);
-  if (!indexedMatch) return null;
-  const rawStepNumber = indexedMatch[1] ?? indexedMatch[2] ?? indexedMatch[3];
-  if (rawStepNumber == null) return null;
-  const parsed = Number(rawStepNumber);
-  return Number.isInteger(parsed) && parsed >= 0 ? parsed + 1 : null;
 }
 
 function getScriptStepNumberFromLabel(label: string): number | null {
@@ -2673,9 +2703,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     .at(-1) || '';
   const draggableScriptStepNumber =
     getScriptStepNumberFromExactSegment(label || '') ??
-    getScriptStepNumberFromExactSegment(lastPathSegment) ??
-    getScriptStepNumberFromLabel(label || '') ??
-    getScriptStepNumberFromPath(path);
+    getScriptStepNumberFromExactSegment(lastPathSegment);
   const methodLabelScriptStepMethod =
     draggableScriptStepNumber !== null &&
     label &&
@@ -2712,7 +2740,15 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
         ? methodLabelScriptStepMethod
       : '';
   const isAccountRelationInlineMethod = Boolean(getAccountRelationMethodLabel(inlineStepMethod));
-  const inlineStepMethodDisplayName = getPendingRewardsMethodDisplayName(inlineStepMethod);
+  const inlineStepMethodDisplayName = PENDING_REWARDS_METHOD_NAMES.has(inlineStepMethod)
+    ? getPendingRewardsMethodDisplayName(inlineStepMethod)
+    : inlineStepMethod;
+  const inlineStepMethodParameterValue = getMethodDisplayParameterValue(inlineStepMethod, stepCallRecord);
+  const inlineStepMethodAddress = isAddressText(inlineStepMethodParameterValue)
+    ? inlineStepMethodParameterValue
+    : isAddressNode
+      ? addressNode
+      : '';
   const displayPathLabel =
     stepCallRecord && draggableScriptStepNumber !== null
       ? `Step ${draggableScriptStepNumber}`
@@ -2745,7 +2781,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     inlineStepMethodDisplayName === displayPathLabel
       ? ''
       : inlineStepMethodDisplayName;
-  const showStepAddressAfterMethod = Boolean(isAddressNode && stepCallRecord && visibleInlineStepMethod);
+  const showStepAddressAfterMethod = Boolean(inlineStepMethodAddress && stepCallRecord && visibleInlineStepMethod);
   const promotedStepEntries =
     stepCallRecord && !Array.isArray(stepCallRecord)
       ? [
@@ -3079,9 +3115,40 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
             {hasPendingRewardsMethodSummary ? (
               <>
                 {' '}
-                <span className={isHighlighted ? highlightColorClass : 'text-green-400'}>
-                  {pendingRewardsMethodSummaryDisplay}
-                </span>
+                {isAddressText(String(pendingRewardsMethodSummary?.value ?? '')) && typeof onAddressNodeClick === 'function' ? (
+                  (() => {
+                    const summary = pendingRewardsMethodSummary;
+                    if (!summary) return null;
+                    return (
+                      <button
+                        type="button"
+                        className={`inline-flex bg-transparent p-0 text-left font-semibold underline decoration-dotted underline-offset-2 transition-colors hover:text-white focus:outline-none ${
+                          isHighlighted ? highlightColorClass : 'text-green-400'
+                        }`}
+                        onClick={(event) => {
+                          const accountValue = String(summary.value ?? '').trim();
+                          event.stopPropagation();
+                          onTrace?.(
+                            `[JSON_INSPECTOR_TRACE] pending rewards method address click path=${path ?? ''} method=${rerunnablePendingRewardsMethod} value=${accountValue}`,
+                          );
+                          onAddressNodeClick(accountValue, path ?? '', summary.key);
+                        }}
+                        title={`Show metadata for ${String(summary.value ?? '').trim()}`}
+                      >
+                        {formatDisplayScalar(
+                          summary.key,
+                          summary.value,
+                          formatTokenAmounts,
+                          tokenDecimals,
+                        )}
+                      </button>
+                    );
+                  })()
+                ) : (
+                  <span className={isHighlighted ? highlightColorClass : 'text-green-400'}>
+                    {pendingRewardsMethodSummaryDisplay}
+                  </span>
+                )}
               </>
             ) : null}
           </>
@@ -3164,11 +3231,11 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
               onClick={handleScriptStepMethodClick}
               title={`Rerun ${visibleInlineStepMethod}`}
             >
-              {formatDisplayScalar('method', visibleInlineStepMethod, false, tokenDecimals)}
+              {visibleInlineStepMethod}
             </button>
           ) : (
             <span className={`ml-3 ${isHighlighted ? highlightColorClass : 'text-green-400'}`}>
-              {formatDisplayScalar('method', visibleInlineStepMethod, false, tokenDecimals)}
+              {visibleInlineStepMethod}
             </span>
           )
         ) : null}
@@ -3184,16 +3251,16 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
                 onClick={(event) => {
                   event.stopPropagation();
                   onTrace?.(
-                    `[JSON_INSPECTOR_TRACE] step address click path=${path ?? ''} key=${label || 'address'} value=${addressNode}`,
+                    `[JSON_INSPECTOR_TRACE] step address click path=${path ?? ''} key=${label || 'address'} value=${inlineStepMethodAddress}`,
                   );
-                  onAddressNodeClick(addressNode, path ?? '', label || 'address');
+                  onAddressNodeClick(inlineStepMethodAddress, path ?? '', label || 'address');
                 }}
-                title={`Show metadata for ${addressNode}`}
+                title={`Show metadata for ${inlineStepMethodAddress}`}
               >
-                "{addressNode}"
+                "{inlineStepMethodAddress}"
               </button>
             ) : (
-              <span className={`font-semibold ${isHighlighted ? highlightColorClass : 'text-white'}`}>"{addressNode}"</span>
+              <span className={`font-semibold ${isHighlighted ? highlightColorClass : 'text-white'}`}>"{inlineStepMethodAddress}"</span>
             )}
           </>
         ) : null}

@@ -7,6 +7,8 @@ export type ServerBackedTreeSpCoinMethodArgs = {
   method: string;
   params: { key: string; value: string }[];
   sender?: string;
+  cacheMode?: 'default' | 'refresh' | 'bypass' | 'only';
+  useCache?: boolean;
 };
 
 export type ServerBackedTreeSpCoinMethodResult = {
@@ -48,6 +50,8 @@ export function useServerBackedTreeSpCoinMethod({
       method,
       params,
       sender,
+      cacheMode,
+      useCache,
     }: ServerBackedTreeSpCoinMethodArgs): Promise<ServerBackedTreeSpCoinMethodResult> => {
       const target = requireContractAddress();
       appendWriteTrace?.(
@@ -60,7 +64,7 @@ export function useServerBackedTreeSpCoinMethod({
           contractAddress: target,
           rpcUrl,
           spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
-          ...(useReadCache === undefined ? {} : { useCache: useReadCache }),
+          ...(cacheMode ? { cacheMode } : useCache !== undefined ? { useCache } : useReadCache === undefined ? {} : { useCache: useReadCache }),
           cacheNamespace: readCacheNamespace,
           script: {
             id: `tree-${method}-${Date.now()}`,

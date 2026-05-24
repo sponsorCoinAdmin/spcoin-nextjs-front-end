@@ -1,4 +1,4 @@
-import { formatUnits, parseUnits } from 'ethers';
+import { parseUnits } from 'ethers';
 import type { ParamDef } from '../jsonMethods/shared/types';
 
 export type AmountUnit = 'RAW' | 'TOKEN';
@@ -31,6 +31,16 @@ export function normalizeTokenAmountInput(value: string) {
     .replace(/\./g, '')}`;
 }
 
+function formatRawAmountWithFixedDecimals(value: string, decimals: number) {
+  const rawAmount = normalizeRawAmountInput(value);
+  if (!rawAmount) return '';
+  if (decimals <= 0) return rawAmount;
+  const padded = rawAmount.padStart(decimals + 1, '0');
+  const whole = padded.slice(0, -decimals) || '0';
+  const fractional = padded.slice(-decimals);
+  return `${whole}.${fractional}`;
+}
+
 export function convertAmountDisplayValue(
   value: string,
   fromUnit: AmountUnit,
@@ -47,5 +57,5 @@ export function convertAmountDisplayValue(
 
   const rawAmount = normalizeRawAmountInput(trimmed);
   if (!rawAmount) return '';
-  return formatUnits(BigInt(rawAmount), safeDecimals);
+  return formatRawAmountWithFixedDecimals(rawAmount, safeDecimals);
 }
