@@ -2753,8 +2753,9 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     stepCallRecord && draggableScriptStepNumber !== null
       ? `Step ${draggableScriptStepNumber}`
       : getDisplayLabel(path ?? '');
-  const pendingRewardsMethodSummary = getPendingRewardsMethodSummaryValue(inlineStepMethod, data);
-  const pendingRewardsMethodResultSummary = getPendingRewardsMethodResultSummaryValue(inlineStepMethod, data);
+  const pendingRewardsDisplayMethod = rerunnablePendingRewardsMethod || inlineStepMethod;
+  const pendingRewardsMethodSummary = getPendingRewardsMethodSummaryValue(pendingRewardsDisplayMethod, data);
+  const pendingRewardsMethodResultSummary = getPendingRewardsMethodResultSummaryValue(pendingRewardsDisplayMethod, data);
   const pendingRewardsMethodSummaryDisplay = pendingRewardsMethodSummary
     ? formatDisplayScalar(
         pendingRewardsMethodSummary.key,
@@ -2772,6 +2773,10 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
       )} ${pendingRewardsMethodResultSummary.suffix}`
     : '';
   const hasPendingRewardsMethodSummary = Boolean(pendingRewardsMethodSummary);
+  const pendingRewardsMethodAccountValue = String(
+    pendingRewardsMethodSummary?.value ?? getPendingRewardsRefreshAccountKey(data),
+  ).trim();
+  const pendingRewardsMethodLabel = rerunnablePendingRewardsMethodDisplayName;
   const visibleInlineStepMethod =
     (hasPendingRewardsMethodSummary && !isDraggableScriptStep) ||
     isAccountRelationInlineMethod ||
@@ -3110,15 +3115,17 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
                   : refreshPendingRewardsTitle
               }
             >
-              {hasPendingRewardsMethodSummary ? `${rerunnablePendingRewardsMethodDisplayName}:` : getDisplayLabel(path ?? '')}
+              {pendingRewardsMethodAccountValue ? `${pendingRewardsMethodLabel}:` : pendingRewardsMethodLabel || getDisplayLabel(path ?? '')}
             </button>
-            {hasPendingRewardsMethodSummary ? (
+            {pendingRewardsMethodAccountValue ? (
               <>
                 {' '}
-                {isAddressText(String(pendingRewardsMethodSummary?.value ?? '')) && typeof onAddressNodeClick === 'function' ? (
+                {isAddressText(pendingRewardsMethodAccountValue) && typeof onAddressNodeClick === 'function' ? (
                   (() => {
-                    const summary = pendingRewardsMethodSummary;
-                    if (!summary) return null;
+                    const summary = pendingRewardsMethodSummary ?? {
+                      key: 'Account Key',
+                      value: pendingRewardsMethodAccountValue,
+                    };
                     return (
                       <button
                         type="button"
