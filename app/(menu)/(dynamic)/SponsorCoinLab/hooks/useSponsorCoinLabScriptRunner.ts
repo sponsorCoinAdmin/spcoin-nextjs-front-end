@@ -1,6 +1,9 @@
 import { useCallback } from 'react';
 import type { ConnectionMode, LabScriptStep, MethodPanelMode } from '../scriptBuilder/types';
 import {
+  withPendingRewardsRoleMeta,
+} from './pendingRewardsTreeUtils';
+import {
   getErrorDebugTrace,
   getExecutionMetaFromError,
   type MethodExecutionMeta,
@@ -727,13 +730,16 @@ export function useSponsorCoinLabScriptRunner({
         const claimedRewardsAmount = PENDING_REWARDS_CLAIM_METHODS.has(descriptor.method)
           ? readClaimedRewardsAmount(refreshedResult)
           : undefined;
-        const nextMeta =
+        const nextMeta = withPendingRewardsRoleMeta(
           claimedRewardsAmount !== undefined
             ? {
                 ...(meta ?? {}),
                 'Last Claimed Rewards': claimedRewardsAmount,
               }
-            : meta;
+            : meta,
+          descriptor.method,
+          refreshedResult,
+        );
         return commitResult({ call, meta: nextMeta, ...(onChainCalls ? { onChainCalls } : {}), result: refreshedResult, ...(warning ? { warning } : {}) }, true);
       } catch (error) {
         const message =

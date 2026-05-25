@@ -565,6 +565,102 @@ function hasAccountRecordCounts(result: unknown) {
   );
 }
 
+async function withAccountRoleFlags(
+  result: unknown,
+  requestedAccountKey: unknown,
+  readSource: unknown,
+) {
+  if (!result || typeof result !== 'object' || Array.isArray(result)) return result;
+  const record = result as Record<string, unknown>;
+  const toAccountRoleLabel = (values: { isSponsor?: unknown; isRecipient?: unknown; isAgent?: unknown }) => {
+    const roles = [
+      Boolean(values.isSponsor) ? 'Sponsor' : '',
+      Boolean(values.isRecipient) ? 'Recipient' : '',
+      Boolean(values.isAgent) ? 'Agent' : '',
+    ].filter(Boolean);
+    return roles.join(' / ');
+  };
+  const withAccountRole = (role: string) => {
+    if (!role) return record;
+    const {
+      TYPE,
+      accountKey: existingAccountKey,
+      isSponsor: _isSponsor,
+      isRecipient: _isRecipient,
+      isRecipiet: _isRecipiet,
+      isAgent: _isAgent,
+      accountRoleSummary: _accountRoleSummary,
+      ...rest
+    } = record;
+    return {
+      ...(TYPE !== undefined ? { TYPE } : {}),
+      accountKey: normalizeAddressDisplay(existingAccountKey || requestedAccountKey),
+      role,
+      ...rest,
+    };
+  };
+  const hasRoleFlags =
+    Object.prototype.hasOwnProperty.call(record, 'isSponsor') &&
+    (Object.prototype.hasOwnProperty.call(record, 'isRecipient') ||
+      Object.prototype.hasOwnProperty.call(record, 'isRecipiet')) &&
+    Object.prototype.hasOwnProperty.call(record, 'isAgent');
+  if (hasRoleFlags) {
+    return withAccountRole(
+      toAccountRoleLabel({
+        isSponsor: record.isSponsor,
+        isRecipient: record.isRecipient ?? record.isRecipiet,
+        isAgent: record.isAgent,
+      }),
+    );
+  }
+
+  const source =
+    readSource && typeof readSource === 'object' && !Array.isArray(readSource)
+      ? (readSource as Record<string, unknown>)
+      : {};
+  const accountKey = normalizeAddressDisplay(record.accountKey || requestedAccountKey);
+  const getAccountRoleSummary = source.getAccountRoleSummary;
+  if (typeof getAccountRoleSummary === 'function') {
+    const roleSummary = await (getAccountRoleSummary as (accountKey: string) => Promise<unknown>)(accountKey);
+    if (roleSummary && typeof roleSummary === 'object' && !Array.isArray(roleSummary)) {
+      const summaryRecord = roleSummary as Record<string, unknown>;
+      return withAccountRole(toAccountRoleLabel(summaryRecord));
+    }
+  }
+
+  const isSponsor = source.isSponsor;
+  const isRecipient = source.isRecipient;
+  const isAgent = source.isAgent;
+  if (
+    typeof isSponsor !== 'function' ||
+    typeof isRecipient !== 'function' ||
+    typeof isAgent !== 'function'
+  ) {
+    return record;
+  }
+
+  const [sponsorResult, recipientResult, agentResult] = await Promise.allSettled([
+    (isSponsor as (accountKey: string) => Promise<unknown>)(accountKey),
+    (isRecipient as (accountKey: string) => Promise<unknown>)(accountKey),
+    (isAgent as (accountKey: string) => Promise<unknown>)(accountKey),
+  ]);
+  if (
+    sponsorResult.status !== 'fulfilled' ||
+    recipientResult.status !== 'fulfilled' ||
+    agentResult.status !== 'fulfilled'
+  ) {
+    return record;
+  }
+
+  return withAccountRole(
+    toAccountRoleLabel({
+      isSponsor: sponsorResult.value,
+      isRecipient: recipientResult.value,
+      isAgent: agentResult.value,
+    }),
+  );
+}
+
 function withLazyAccountRelationBuckets(result: unknown, requestedAccountKey: unknown) {
   if (!hasAccountRecordCounts(result) || !result || typeof result !== 'object' || Array.isArray(result)) {
     return result;
@@ -1502,14 +1598,21 @@ export async function POST(request: NextRequest) {
                 if (typeof (access.read as Record<string, unknown>).getAccountRecord === 'function') {
                   appendTrace('getAccountRecord using access.read.getAccountRecord');
                   stepResult = withLazyAccountRelationBuckets(
-                    await access.read.getAccountRecord(accountKey, readCacheOptions),
+                    await withAccountRoleFlags(
+                      await access.read.getAccountRecord(accountKey, readCacheOptions),
+                      accountKey,
+                      access.read,
+                    ),
                     accountKey,
                   );
                 } else if (typeof (contract as Record<string, unknown>).getAccountRecord === 'function') {
                   const cachedRecord = cacheMode === 'bypass' ? null : getCachedAccountRecord(contractAddress, accountKey);
                   if (cachedRecord !== null && hasAccountRecordCounts(cachedRecord)) {
                     appendTrace('getAccountRecord using cached normalized contract record');
-                    stepResult = withLazyAccountRelationBuckets(cachedRecord, accountKey);
+                    stepResult = withLazyAccountRelationBuckets(
+                      await withAccountRoleFlags(cachedRecord, accountKey, access.read),
+                      accountKey,
+                    );
                   } else {
                     if (cachedRecord !== null) {
                       appendTrace('getAccountRecord invalidating incomplete cached record');
@@ -1519,9 +1622,13 @@ export async function POST(request: NextRequest) {
                     }
                     appendTrace('getAccountRecord using direct contract fallback');
                     stepResult = withLazyAccountRelationBuckets(
-                      normalizeOnChainAccountRecordResult(await (
-                        contract as unknown as { getAccountRecord: (accountKey: string) => Promise<unknown> }
-                      ).getAccountRecord(accountKey), accountKey),
+                      await withAccountRoleFlags(
+                        normalizeOnChainAccountRecordResult(await (
+                          contract as unknown as { getAccountRecord: (accountKey: string) => Promise<unknown> }
+                        ).getAccountRecord(accountKey), accountKey),
+                        accountKey,
+                        access.read,
+                      ),
                       accountKey,
                     );
                     if (cacheMode !== 'bypass') {
@@ -2462,8 +2569,16 @@ export async function POST(request: NextRequest) {
               }
             : undefined;
 
+        const rewardCalculationRecord = stepRewardCalculationMeta as Record<string, unknown> | null;
+        const rewardCalculationRole =
+          rewardCalculationRecord &&
+          typeof rewardCalculationRecord.role === 'string' &&
+          rewardCalculationRecord.role !== 'Total'
+            ? rewardCalculationRecord.role
+            : null;
         const meta = {
           ...buildMethodTimingMeta(timingCollector),
+          ...(rewardCalculationRole ? { Role: rewardCalculationRole } : {}),
           ...(stepRewardCalculationMeta ? { rewardCalculation: stepRewardCalculationMeta } : {}),
         };
         const sanitizedResult = sanitizeJsonValue(result);

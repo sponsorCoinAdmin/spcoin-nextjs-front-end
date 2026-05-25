@@ -1,0 +1,11 @@
+{
+  "name": "Sponsor Coin V0",
+  "website": "N/A",
+  "description": "Sponsor Coin Token, Version 0 created on 2026-05-25T07:34:45.083Z",
+  "explorer": "N/A",
+  "symbol": "SPCOIN_V0",
+  "decimals": 18,
+  "status": "active",
+  "logoURL": "public/assets/blockchains/31337/contracts/0X70E2CA848B71C47F90E9BE35D7E81A1C027295EA/logo.png",
+  "address": "0x70e2Ca848b71c47f90e9bE35d7e81A1C027295EA"
+}

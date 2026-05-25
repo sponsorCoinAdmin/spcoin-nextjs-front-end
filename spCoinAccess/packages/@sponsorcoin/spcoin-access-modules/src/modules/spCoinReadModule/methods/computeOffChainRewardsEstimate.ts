@@ -39,6 +39,32 @@ function addPending(target, key, value) {
     target[key] = (toBigIntValue(target[key]) + toBigIntValue(value)).toString();
 }
 
+function normalizeAccountKey(value) {
+    return String(value ?? "").trim().toLowerCase();
+}
+
+function addPendingForAccount(target, accountKey, key, value) {
+    const normalizedAccountKey = normalizeAccountKey(accountKey);
+    if (!normalizedAccountKey)
+        return;
+    if (!target.__pendingRewardsByAccount || typeof target.__pendingRewardsByAccount !== "object") {
+        target.__pendingRewardsByAccount = {};
+    }
+    const entry = target.__pendingRewardsByAccount[normalizedAccountKey] || {
+        accountKey: String(accountKey ?? "").trim(),
+        pendingSponsorRewards: "0",
+        pendingRecipientRewards: "0",
+        pendingAgentRewards: "0",
+    };
+    entry[key] = (toBigIntValue(entry[key]) + toBigIntValue(value)).toString();
+    entry.pendingRewards = (
+        toBigIntValue(entry.pendingSponsorRewards) +
+        toBigIntValue(entry.pendingRecipientRewards) +
+        toBigIntValue(entry.pendingAgentRewards)
+    ).toString();
+    target.__pendingRewardsByAccount[normalizedAccountKey] = entry;
+}
+
 function trackBucketLastUpdate(target, key, value) {
     const next = toBigIntValue(value);
     if (next <= 0n)
@@ -244,7 +270,10 @@ async function addSponsorPathPending(runtime, pending, accountKey, currentTimeSt
             trackBucketLastUpdate(pending, "sponsorBucketLastUpdateTimeStamp", lastUpdate);
             addPending(pending, "sponsorBucketStakedQuantity", stakedQuantity);
             const sponsorParentAmount = calculateParentRewardAmount(recipientRewards, recipientRate);
-            addPending(pending, "pendingSponsorRewards", calculateSponsorDepositAmount(sponsorParentAmount, annualInflation));
+            const sponsorRewards = calculateSponsorDepositAmount(sponsorParentAmount, annualInflation);
+            addPending(pending, "pendingSponsorRewards", sponsorRewards);
+            addPendingForAccount(pending, accountKey, "pendingSponsorRewards", sponsorRewards);
+            addPendingForAccount(pending, recipientKey, "pendingRecipientRewards", recipientRewards);
 
             const agentKeys = await getRecipientRateAgents(runtime, accountKey, recipientKey, recipientRate);
             for (const agentKey of agentKeys) {
@@ -255,14 +284,18 @@ async function addSponsorPathPending(runtime, pending, accountKey, currentTimeSt
                     addPending(pending, "sponsorBucketStakedQuantity", agentStakedQuantity);
                     const recipientParentAmount = calculateParentRewardAmount(agentRewards, agentRate);
                     const sponsorAmount = calculateParentRewardAmount(recipientParentAmount, recipientRate);
-                    addPending(pending, "pendingSponsorRewards", calculateSponsorDepositAmount(sponsorAmount, annualInflation));
+                    const sponsorAgentRewards = calculateSponsorDepositAmount(sponsorAmount, annualInflation);
+                    addPending(pending, "pendingSponsorRewards", sponsorAgentRewards);
+                    addPendingForAccount(pending, accountKey, "pendingSponsorRewards", sponsorAgentRewards);
+                    addPendingForAccount(pending, recipientKey, "pendingRecipientRewards", recipientParentAmount);
+                    addPendingForAccount(pending, agentKey, "pendingAgentRewards", agentRewards);
                 }
             }
         }
     }
 }
 
-async function addRecipientPathPending(runtime, pending, accountKey, currentTimeStamp) {
+async function addRecipientPathPending(runtime, pending, accountKey, currentTimeStamp, annualInflation) {
     const { sponsorKeys } = await getAccountLinks(runtime, accountKey);
     for (const sponsorKey of sponsorKeys) {
         const recipientRates = await getRecipientRates(runtime, sponsorKey, accountKey);
@@ -271,6 +304,9 @@ async function addRecipientPathPending(runtime, pending, accountKey, currentTime
             trackBucketLastUpdate(pending, "recipientBucketLastUpdateTimeStamp", lastUpdate);
             addPending(pending, "recipientBucketStakedQuantity", stakedQuantity);
             addPending(pending, "pendingRecipientRewards", recipientRewards);
+            addPendingForAccount(pending, accountKey, "pendingRecipientRewards", recipientRewards);
+            const sponsorParentAmount = calculateParentRewardAmount(recipientRewards, recipientRate);
+            addPendingForAccount(pending, sponsorKey, "pendingSponsorRewards", calculateSponsorDepositAmount(sponsorParentAmount, annualInflation));
 
             const agentKeys = await getRecipientRateAgents(runtime, sponsorKey, accountKey, recipientRate);
             for (const agentKey of agentKeys) {
@@ -279,14 +315,19 @@ async function addRecipientPathPending(runtime, pending, accountKey, currentTime
                     const { rewards: agentRewards, lastUpdate: agentLastUpdate, stakedQuantity: agentStakedQuantity } = await calculateAgentSetRewards(runtime, sponsorKey, accountKey, recipientRate, agentKey, agentRate, currentTimeStamp);
                     trackBucketLastUpdate(pending, "recipientBucketLastUpdateTimeStamp", agentLastUpdate);
                     addPending(pending, "recipientBucketStakedQuantity", agentStakedQuantity);
-                    addPending(pending, "pendingRecipientRewards", calculateParentRewardAmount(agentRewards, agentRate));
+                    const recipientAgentRewards = calculateParentRewardAmount(agentRewards, agentRate);
+                    addPending(pending, "pendingRecipientRewards", recipientAgentRewards);
+                    addPendingForAccount(pending, accountKey, "pendingRecipientRewards", recipientAgentRewards);
+                    const sponsorAgentAmount = calculateParentRewardAmount(recipientAgentRewards, recipientRate);
+                    addPendingForAccount(pending, sponsorKey, "pendingSponsorRewards", calculateSponsorDepositAmount(sponsorAgentAmount, annualInflation));
+                    addPendingForAccount(pending, agentKey, "pendingAgentRewards", agentRewards);
                 }
             }
         }
     }
 }
 
-async function addAgentPathPending(runtime, pending, accountKey, currentTimeStamp) {
+async function addAgentPathPending(runtime, pending, accountKey, currentTimeStamp, annualInflation) {
     const { parentRecipientKeys } = await getAccountLinks(runtime, accountKey);
     for (const parentRecipientKey of parentRecipientKeys) {
         const { sponsorKeys } = await getAccountLinks(runtime, parentRecipientKey);
@@ -302,6 +343,11 @@ async function addAgentPathPending(runtime, pending, accountKey, currentTimeStam
                     trackBucketLastUpdate(pending, "agentBucketLastUpdateTimeStamp", lastUpdate);
                     addPending(pending, "agentBucketStakedQuantity", stakedQuantity);
                     addPending(pending, "pendingAgentRewards", agentRewards);
+                    addPendingForAccount(pending, accountKey, "pendingAgentRewards", agentRewards);
+                    const recipientParentAmount = calculateParentRewardAmount(agentRewards, agentRate);
+                    addPendingForAccount(pending, parentRecipientKey, "pendingRecipientRewards", recipientParentAmount);
+                    const sponsorAmount = calculateParentRewardAmount(recipientParentAmount, recipientRate);
+                    addPendingForAccount(pending, sponsorKey, "pendingSponsorRewards", calculateSponsorDepositAmount(sponsorAmount, annualInflation));
                 }
             }
         }
@@ -345,8 +391,8 @@ export async function computeOffChainRewardsEstimate(context, accountKey, option
         };
 
         await addSponsorPathPending(runtime, pending, accountKey, currentTimeStamp, annualInflation);
-        await addRecipientPathPending(runtime, pending, accountKey, currentTimeStamp);
-        await addAgentPathPending(runtime, pending, accountKey, currentTimeStamp);
+        await addRecipientPathPending(runtime, pending, accountKey, currentTimeStamp, annualInflation);
+        await addAgentPathPending(runtime, pending, accountKey, currentTimeStamp, annualInflation);
         pending.pendingRewards = (
             toBigIntValue(pending.pendingSponsorRewards) +
             toBigIntValue(pending.pendingRecipientRewards) +

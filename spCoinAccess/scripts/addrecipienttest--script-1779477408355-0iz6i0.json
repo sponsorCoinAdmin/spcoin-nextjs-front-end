@@ -26,7 +26,7 @@
       "params": [
         {
           "key": "Account Key",
-          "value": "0x9965507d1a55bcc2695c58ba16fb37d819b0a4dc"
+          "value": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc"
         }
       ],
       "breakpoint": false,
@@ -40,7 +40,7 @@
       "params": [
         {
           "key": "Account Key",
-          "value": "0x9965507d1a55bcc2695c58ba16fb37d819b0a4dc"
+          "value": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8"
         }
       ],
       "breakpoint": false,
@@ -48,33 +48,6 @@
     },
     {
       "step": 4,
-      "name": "addRecipientTransaction",
-      "panel": "spcoin_write",
-      "method": "addRecipientTransaction",
-      "msg.sender": "0x9965507d1a55bcc2695c58ba16fb37d819b0a4dc",
-      "params": [
-        {
-          "key": "Sponsor Key",
-          "value": "0x9965507d1a55bcc2695c58ba16fb37d819b0a4dc"
-        },
-        {
-          "key": "Recipient Key",
-          "value": "0x976ea74026e726554db657fa54763abd0c3a0aa9"
-        },
-        {
-          "key": "Recipient Rate Key",
-          "value": "50"
-        },
-        {
-          "key": "Transaction Quantity",
-          "value": "100000000000000000000"
-        }
-      ],
-      "breakpoint": false,
-      "hasMissingRequiredParams": false
-    },
-    {
-      "step": 5,
       "name": "addAgentTransaction",
       "panel": "spcoin_write",
       "method": "addAgentTransaction",
@@ -105,7 +78,7 @@
       "hasMissingRequiredParams": false
     },
     {
-      "step": 6,
+      "step": 5,
       "name": "estimateOffChainSponsorRewards",
       "panel": "spcoin_rread",
       "method": "estimateOffChainSponsorRewards",
@@ -119,7 +92,7 @@
       "hasMissingRequiredParams": false
     },
     {
-      "step": 7,
+      "step": 6,
       "name": "estimateOffChainRecipientRewards",
       "panel": "spcoin_rread",
       "method": "estimateOffChainRecipientRewards",
@@ -129,16 +102,6 @@
           "value": "0x976ea74026e726554db657fa54763abd0c3a0aa9"
         }
       ],
-      "breakpoint": false,
-      "hasMissingRequiredParams": false
-    },
-    {
-      "step": 8,
-      "name": "getPendingRewards",
-      "panel": "spcoin_write",
-      "method": "getPendingRewards",
-      "msg.sender": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
-      "params": [],
       "breakpoint": false,
       "hasMissingRequiredParams": false
     }

@@ -18,12 +18,18 @@ import {
 import {
   asRecord,
   buildAccountRecordMetaPatch,
+  buildClaimedRewardsByAccount,
   buildClaimedBalanceSummary,
   buildLazyPendingRewardsMethod,
   buildZeroPendingRewardsEstimateResult,
+  buildZeroClaimedRewardsByAccount,
+  buildZeroPendingRewardsByAccount,
+  findPendingRewardsByAccount,
   hasLazyPendingRewardsAction,
   hasLazyPendingRewardsMethod,
   hasPendingRewardsRefreshAction,
+  mergeClaimedRewardsByAccountIntoTree,
+  mergePendingRewardsByAccountIntoTree,
   mergePendingRewardsBranchForAccountRefresh,
   mergePendingRewardsSummaryNode,
   normalizePendingRewardsEstimateResult,
@@ -32,9 +38,12 @@ import {
   PENDING_REWARDS_ESTIMATE_METHODS,
   PENDING_REWARDS_INLINE_REFRESH_MS,
   readAccountRecordBalanceOf,
+  readClaimedRewardsByAccount,
+  readPendingRewardsByAccount,
   readPendingRewardsAmount,
   readRefreshedAccountRecordFromClaim,
   toRewardsBigInt,
+  withPendingRewardsRoleMeta,
   type PendingRewardsActionClick,
 } from './pendingRewardsTreeUtils';
 import {
@@ -135,6 +144,17 @@ function resolveTargetPath(targetNode: unknown, payloadPath: string[]) {
   return payloadPath;
 }
 
+function resolveLiftedPendingRewardsPayloadPath(payload: unknown, payloadPath: string[]) {
+  const pendingRewardsIndex = payloadPath.findIndex((segment) => segment === 'pendingRewards');
+  if (pendingRewardsIndex < 1 || payloadPath[pendingRewardsIndex - 1] === 'totalSpCoins') return payloadPath;
+  const storedPath = [
+    ...payloadPath.slice(0, pendingRewardsIndex),
+    'totalSpCoins',
+    ...payloadPath.slice(pendingRewardsIndex),
+  ];
+  return readPathValue(payload, storedPath) === undefined ? payloadPath : storedPath;
+}
+
 function replaceDisplayBlock(
   blocks: string[],
   blockIndex: number,
@@ -228,8 +248,9 @@ export function usePendingRewardsInlineExpansion({
           continue;
         }
 
-        const targetNode = readDisplayPathValue(payload, payloadPath);
-        const targetPath = resolveTargetPath(targetNode, payloadPath);
+        const storedPayloadPath = resolveLiftedPendingRewardsPayloadPath(payload, payloadPath);
+        const targetNode = readDisplayPathValue(payload, payloadPath) ?? readPathValue(payload, storedPayloadPath);
+        const targetPath = resolveTargetPath(targetNode, storedPayloadPath);
         const actionNode = readPathValue(payload, targetPath) ?? readPathValue(payload, payloadPath);
         const targetLeaf = targetPath.at(-1);
         const isPendingRewardsMethodLeaf =
@@ -440,12 +461,16 @@ export function usePendingRewardsInlineExpansion({
               ? readClaimedRewardsAmount(pendingResult)
               : undefined;
           const expandedMeta =
-            lastUpdatedRewardsClaim !== undefined
-              ? {
-                  ...(asRecord(pendingMeta) ?? {}),
-                  'Last Claimed Rewards': lastUpdatedRewardsClaim,
-                }
-              : pendingMeta;
+            withPendingRewardsRoleMeta(
+              lastUpdatedRewardsClaim !== undefined
+                ? {
+                    ...(asRecord(pendingMeta) ?? {}),
+                    'Last Claimed Rewards': lastUpdatedRewardsClaim,
+                  }
+                : pendingMeta,
+              expandedCallMethod,
+              pendingResult,
+            );
           const expandedNode = {
             call: {
               method: expandedCallMethod,
@@ -479,6 +504,7 @@ export function usePendingRewardsInlineExpansion({
                 },
                 selectedMethod: pairedEstimateMethod,
               },
+              meta: withPendingRewardsRoleMeta(existingPairedEstimateNode?.meta, pairedEstimateMethod, pairedEstimatePendingResult),
               result: pairedEstimatePendingResult,
               ...(existingPairedEstimateNode?.__forceExpanded === true ? { __forceExpanded: true } : {}),
               ...(existingPairedEstimateNode?.__showEmptyFields === true ? { __showEmptyFields: true } : {}),
@@ -494,6 +520,12 @@ export function usePendingRewardsInlineExpansion({
               : targetLeaf === 'pendingRewards'
                 ? targetPath
                 : [];
+          const pendingRewardsByAccountBeforePairedWrite =
+            readPendingRewardsByAccount(expandedNode) ??
+            readPendingRewardsByAccount(pendingResult) ??
+            readPendingRewardsByAccount(pairedEstimateNode) ??
+            findPendingRewardsByAccount(readPathValue(payload, pendingRewardsPath)) ??
+            findPendingRewardsByAccount(payload);
           const shouldPreservePendingRewardsShape =
             targetLeaf === 'estimate' ||
             targetLeaf === 'claim' ||
@@ -529,6 +561,11 @@ export function usePendingRewardsInlineExpansion({
                   return payloadWithExpandedNode;
                 })();
           const existingPendingRewardsNode = readPathValue(payloadWithRefreshedPairedEstimate, pendingRewardsPath);
+          const summaryLoadedMethod =
+            pairedEstimateExpandedNode && pairedEstimateMethod
+              ? pairedEstimateMethod
+              : expandedCallMethod;
+          const summaryLoadedNode = pairedEstimateExpandedNode ?? expandedNode;
           const payloadWithPendingRewardsSummary =
             pendingRewardsAmount !== null &&
             pendingRewardsPath.length > 0 &&
@@ -544,11 +581,63 @@ export function usePendingRewardsInlineExpansion({
                     normalizedAccount,
                     click.action,
                     pendingRewardsRefreshAtMs,
-                    expandedCallMethod,
-                    expandedNode,
+                    summaryLoadedMethod,
+                    summaryLoadedNode,
                   ),
                 )
               : payloadWithRefreshedPairedEstimate;
+          const pendingRewardsByAccount =
+            readPendingRewardsByAccount(expandedNode) ??
+            readPendingRewardsByAccount(summaryPendingResult) ??
+            readPendingRewardsByAccount(pairedEstimateExpandedNode) ??
+            pendingRewardsByAccountBeforePairedWrite ??
+            findPendingRewardsByAccount(existingPendingRewardsNode);
+          const pendingRewardsByAccountForDisplay = isEstimatePendingRewardsRequest
+            ? pendingRewardsByAccount
+            : buildZeroPendingRewardsByAccount(pendingRewardsByAccount);
+          if (!isEstimatePendingRewardsRequest) {
+            appendLog(
+              `[PENDING_REWARDS_TRACE] claim pending-estimates zero map accounts=${Object.keys(pendingRewardsByAccountForDisplay ?? {}).join(',') || 'none'} sourceAccounts=${Object.keys(pendingRewardsByAccount ?? {}).join(',') || 'none'}`,
+            );
+          }
+          const claimedRewardsByAccount =
+            readClaimedRewardsByAccount(expandedNode) ??
+            readClaimedRewardsByAccount(pendingResult) ??
+            (!isEstimatePendingRewardsRequest && lastUpdatedRewardsClaim !== undefined
+              ? buildClaimedRewardsByAccount(normalizedAccount, expandedCallMethod, lastUpdatedRewardsClaim)
+              : null);
+          const claimedRewardsByAccountForDisplay = (() => {
+            const zeroClaimedRewardsByAccount =
+              !isEstimatePendingRewardsRequest && pendingRewardsByAccount
+                ? buildZeroClaimedRewardsByAccount(pendingRewardsByAccount)
+                : null;
+            if (!zeroClaimedRewardsByAccount && !claimedRewardsByAccount) return null;
+
+            const mergedClaimedRewardsByAccount = { ...(zeroClaimedRewardsByAccount ?? {}) };
+            for (const [accountKey, accountClaims] of Object.entries(claimedRewardsByAccount ?? {})) {
+              mergedClaimedRewardsByAccount[accountKey] = {
+                ...(mergedClaimedRewardsByAccount[accountKey] ?? {}),
+                ...accountClaims,
+              };
+            }
+            return Object.keys(mergedClaimedRewardsByAccount).length > 0
+              ? mergedClaimedRewardsByAccount
+              : null;
+          })();
+          if (claimedRewardsByAccountForDisplay) {
+            appendLog(
+              `[PENDING_REWARDS_TRACE] claimed-rewards propagate method=${expandedCallMethod} accounts=${Object.keys(claimedRewardsByAccountForDisplay).join(',')} sourceAccounts=${Object.keys(claimedRewardsByAccount ?? {}).join(',') || 'none'}`,
+            );
+          }
+          const payloadWithPropagatedPendingRewards = mergePendingRewardsByAccountIntoTree(
+            payloadWithPendingRewardsSummary,
+            pendingRewardsByAccountForDisplay,
+            pendingRewardsRefreshAtMs,
+          );
+          const payloadWithPropagatedClaimedRewards = mergeClaimedRewardsByAccountIntoTree(
+            payloadWithPropagatedPendingRewards,
+            claimedRewardsByAccountForDisplay,
+          );
           const owningAccountRecordKey = readTopLevelGetAccountRecordKey(payload, normalizeAddressValue);
           const shouldReplaceOwningAccountRecord =
             click.action === 'claim' &&
@@ -573,7 +662,7 @@ export function usePendingRewardsInlineExpansion({
                   result: refreshedAccountRecord,
                 };
                 const existingPendingRewardsForDisplay = readPathValue(
-                  payloadWithPendingRewardsSummary,
+                  payloadWithPropagatedClaimedRewards,
                   pendingRewardsPath,
                 );
                 const refreshedPendingRewardsForDisplay = readPathValue(refreshedPayloadBase, pendingRewardsPath);
@@ -587,8 +676,8 @@ export function usePendingRewardsInlineExpansion({
                           existingPendingRewardsForDisplay,
                           refreshedPendingRewardsForDisplay,
                           normalizedAccount,
-                          expandedCallMethod,
-                          expandedNode,
+                          summaryLoadedMethod,
+                          summaryLoadedNode,
                           click.action,
                           pendingRewardsRefreshAtMs,
                         ),
@@ -598,8 +687,18 @@ export function usePendingRewardsInlineExpansion({
                   ? writePathValue(refreshedPayload, targetPath, expandedNode)
                   : refreshedPayload;
               })()
-            : payloadWithPendingRewardsSummary;
-          const nextRootPayload = normalizeExecutionPayload(payloadAfterAccountRefresh) as Record<string, unknown>;
+            : payloadWithPropagatedClaimedRewards;
+          const payloadAfterFinalPairedEstimateWrite =
+            pairedEstimateExpandedNode && pairedEstimatePath.length > 0
+              ? writePathValue(payloadAfterAccountRefresh, pairedEstimatePath, pairedEstimateExpandedNode)
+              : payloadAfterAccountRefresh;
+          if (pairedEstimateMethod && pairedEstimatePath.length > 0) {
+            const finalPairedEstimateNode = readPathValue(payloadAfterFinalPairedEstimateWrite, pairedEstimatePath);
+            appendLog(
+              `[PENDING_REWARDS_TRACE] paired-estimate final path=${pairedEstimatePath.join('.')} method=${pairedEstimateMethod} amount=${String(readPendingRewardsAmount(finalPairedEstimateNode) ?? 'null')}`,
+            );
+          }
+          const nextRootPayload = normalizeExecutionPayload(payloadAfterFinalPairedEstimateWrite) as Record<string, unknown>;
           const nextPayload = formatFormattedPanelPayload(nextRootPayload);
           replaceDisplayBlock(
             blocks,

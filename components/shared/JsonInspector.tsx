@@ -6,6 +6,12 @@ import {
   calculateFormattedDT,
   normalizePendingRewardsDisplayResult,
 } from '@/lib/spCoinLab/pendingRewards';
+import {
+  resolveSpCoinAccountRoleLabel,
+  resolveSpCoinAccountRoles,
+  resolveSpCoinMethodRole,
+  type SpCoinAccountRole,
+} from '@/lib/spCoinLab/accountRoles';
 
 const PENDING_REWARDS_REFRESH_MS = 10_000;
 const PENDING_REWARDS_METHOD_NAMES = new Set([
@@ -37,10 +43,11 @@ const PENDING_REWARDS_METHOD_DISPLAY_NAMES: Record<string, string> = {
   claimOnChainAgentRewards: 'claimOnChainAgentRewards',
 };
 
-type DisplayAccountRole = 'Sponsor' | 'Recipient' | 'Agent';
+type DisplayAccountRole = SpCoinAccountRole;
 
 type RoleSingleSource = {
   role: DisplayAccountRole | '';
+  roleLabel: string;
   isSponsor: boolean;
   isRecipient: boolean;
   isAgent: boolean;
@@ -91,20 +98,105 @@ function getRoleSingleSource(counts: AccountRoleCounts | null | undefined): Role
   if (!counts) {
     return {
       role: '',
+      roleLabel: '',
       isSponsor: false,
       isRecipient: false,
       isAgent: false,
     };
   }
-  const isSponsor = counts.isSponsor ?? counts.recipientCount > 0;
-  const isRecipient = counts.isRecipient ?? (counts.sponsorCount > 0 || counts.agentCount > 0);
-  const isAgent = counts.isAgent ?? counts.parentRecipientCount > 0;
-  const role = isAgent ? 'Agent' : isRecipient ? 'Recipient' : isSponsor ? 'Sponsor' : '';
+  const roles = resolveSpCoinAccountRoles(counts);
+  const isSponsor = roles.includes('Sponsor');
+  const isRecipient = roles.includes('Recipient');
+  const isAgent = roles.includes('Agent');
+  const role = roles[0] ?? '';
   return {
     role,
+    roleLabel: roles.join(' / '),
     isSponsor,
     isRecipient,
     isAgent,
+  };
+}
+
+function inferPendingRewardsRoleFromMethod(methodValue: unknown): DisplayAccountRole | '' {
+  return resolveSpCoinMethodRole(methodValue);
+}
+
+function inferDisplayRoleFromValue(value: unknown, accountRoleCounts?: AccountRoleCounts | null): string {
+  const accountRoleLabel = resolveSpCoinAccountRoleLabel(value) || resolveSpCoinAccountRoleLabel(accountRoleCounts);
+  if (accountRoleLabel) return accountRoleLabel;
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return '';
+  const record = value as Record<string, unknown>;
+  const methodRole =
+    inferPendingRewardsRoleFromMethod(record.method) ||
+    inferPendingRewardsRoleFromMethod(record.selectedMethod);
+  if (methodRole) return methodRole;
+  const callRecord =
+    record.call && typeof record.call === 'object' && !Array.isArray(record.call)
+      ? (record.call as Record<string, unknown>)
+      : null;
+  const callRole =
+    inferPendingRewardsRoleFromMethod(callRecord?.method) ||
+    inferPendingRewardsRoleFromMethod(callRecord?.selectedMethod);
+  if (callRole) return callRole;
+  const explicitRole = String(record.Role ?? record.role ?? '').trim();
+  if (explicitRole) return explicitRole;
+  const rewardCalculation =
+    record.rewardCalculation && typeof record.rewardCalculation === 'object' && !Array.isArray(record.rewardCalculation)
+      ? (record.rewardCalculation as Record<string, unknown>)
+      : record.rewardCalculations && typeof record.rewardCalculations === 'object' && !Array.isArray(record.rewardCalculations)
+        ? (record.rewardCalculations as Record<string, unknown>)
+        : null;
+  const rewardCalculationRole = String(rewardCalculation?.role ?? rewardCalculation?.Role ?? '').trim();
+  if (rewardCalculationRole) return rewardCalculationRole;
+  const resultRecord =
+    record.result && typeof record.result === 'object' && !Array.isArray(record.result)
+      ? (record.result as Record<string, unknown>)
+      : null;
+  if (resultRecord) {
+    const resultRole = inferDisplayRoleFromValue(resultRecord, accountRoleCounts);
+    if (resultRole) return resultRole;
+  }
+  for (const methodName of PENDING_REWARDS_METHOD_NAMES) {
+    const methodNode = record[methodName];
+    if (!methodNode || typeof methodNode !== 'object' || Array.isArray(methodNode)) continue;
+    const loadedMethodNode = methodNode as Record<string, unknown>;
+    if (!loadedMethodNode.result && !loadedMethodNode.meta && !loadedMethodNode.call) continue;
+    const role = inferDisplayRoleFromValue(loadedMethodNode, accountRoleCounts);
+    if (role) return role;
+  }
+  return '';
+}
+
+function addDisplayRoleToMeta(
+  parent: unknown,
+  metaValue: unknown,
+  accountRoleCounts?: AccountRoleCounts | null,
+): unknown {
+  if (!metaValue || typeof metaValue !== 'object' || Array.isArray(metaValue)) return metaValue;
+  const metaRecord = metaValue as Record<string, unknown>;
+  const parentRecord =
+    parent && typeof parent === 'object' && !Array.isArray(parent)
+      ? (parent as Record<string, unknown>)
+      : null;
+  const accountRoleLabel =
+    resolveSpCoinAccountRoleLabel(parent) ||
+    resolveSpCoinAccountRoleLabel(parentRecord?.result) ||
+    resolveSpCoinAccountRoleLabel(accountRoleCounts);
+  if (accountRoleLabel) {
+    return {
+      ...metaRecord,
+      Role: accountRoleLabel,
+    };
+  }
+  if (metaRecord.Role !== undefined) return metaValue;
+  const role =
+    inferDisplayRoleFromValue(parent, accountRoleCounts) ||
+    inferDisplayRoleFromValue(metaValue, accountRoleCounts);
+  if (!role) return metaValue;
+  return {
+    Role: role,
+    ...metaRecord,
   };
 }
 
@@ -399,9 +491,36 @@ function parseBooleanValue(value: unknown): boolean | undefined {
   return undefined;
 }
 
+function parseRoleCountsFromLabel(value: unknown): AccountRoleCounts | null {
+  const normalized = String(value ?? '').trim().toLowerCase();
+  if (!normalized) return null;
+  const roles = normalized.split('/').map((role) => role.trim());
+  const isSponsor = roles.includes('sponsor');
+  const isRecipient = roles.includes('recipient');
+  const isAgent = roles.includes('agent');
+  if (!isSponsor && !isRecipient && !isAgent) return null;
+  return {
+    sponsorCount: 0,
+    recipientCount: 0,
+    agentCount: 0,
+    parentRecipientCount: 0,
+    isSponsor,
+    isRecipient,
+    isAgent,
+  };
+}
+
 function getAccountRoleCounts(data: any): AccountRoleCounts | null {
   if (!data || typeof data !== 'object' || Array.isArray(data)) return null;
   const record = data as Record<string, unknown>;
+  const metaRecord =
+    record.meta && typeof record.meta === 'object' && !Array.isArray(record.meta)
+      ? (record.meta as Record<string, unknown>)
+      : null;
+  const explicitRoleCounts =
+    parseRoleCountsFromLabel(record.Role ?? record.role) ??
+    parseRoleCountsFromLabel(metaRecord?.Role ?? metaRecord?.role);
+  if (explicitRoleCounts) return explicitRoleCounts;
   const hasCount =
     Object.prototype.hasOwnProperty.call(record, 'sponsorCount') ||
     Object.prototype.hasOwnProperty.call(record, 'recipientCount') ||
@@ -424,12 +543,31 @@ function getAccountRoleCounts(data: any): AccountRoleCounts | null {
   };
 }
 
+function hasExplicitAccountRoleSource(counts: AccountRoleCounts | null | undefined): boolean {
+  return Boolean(
+    counts &&
+      (counts.isSponsor !== undefined ||
+        counts.isRecipient !== undefined ||
+        counts.isAgent !== undefined),
+  );
+}
+
+function resolveEffectiveAccountRoleCounts(
+  current: AccountRoleCounts | null | undefined,
+  inherited: AccountRoleCounts | null | undefined,
+): AccountRoleCounts | null {
+  if (hasExplicitAccountRoleSource(current)) return current ?? null;
+  if (hasExplicitAccountRoleSource(inherited)) return inherited ?? null;
+  return current ?? inherited ?? null;
+}
+
 function hasRoleCountForPendingRewardsKey(key: string, counts: AccountRoleCounts | null | undefined): boolean {
   const normalizedKey = String(key || '').trim();
   if (/^update.*AccountRewards$/.test(normalizedKey) || /^get.*PendingRewards$/.test(normalizedKey)) {
     return false;
   }
   if (!counts) return true;
+  if (!hasExplicitAccountRoleSource(counts)) return true;
   const roleSource = getRoleSingleSource(counts);
   if (/SponsorRewards$/.test(normalizedKey) || normalizedKey === 'pendingSponsorRewards') {
     return roleSource.isSponsor;
@@ -824,7 +962,12 @@ function isAccountRoleCountDisplayField(parent: any, childKey: string): boolean 
     childKey === 'sponsorCount' ||
     childKey === 'recipientCount' ||
     childKey === 'agentCount' ||
-    childKey === 'parentRecipientCount'
+    childKey === 'parentRecipientCount' ||
+    childKey === 'isSponsor' ||
+    childKey === 'isRecipient' ||
+    childKey === 'isRecipiet' ||
+    childKey === 'isAgent' ||
+    childKey === 'accountRoleSummary'
   );
 }
 
@@ -1246,7 +1389,7 @@ function isLiftedAccountPendingRewardsDisplayEntry(parent: any, key: string, val
 
 function getDisplayEntryPath(parentPath: string, parent: any, key: string, value: any): string {
   if (isLiftedAccountPendingRewardsDisplayEntry(parent, key, value)) {
-    return `${parentPath}.totalSpCoins.pendingRewards`;
+    return `${parentPath}.pendingRewards`;
   }
   return `${parentPath}.${key}`;
 }
@@ -1451,6 +1594,17 @@ function formatDisplayScalar(
   return typeof value === 'string' ? `"${String(value)}"` : String(renderedValue);
 }
 
+function getScalarFormattingKey(parent: unknown, key: string): string {
+  if (key !== 'result' || !parent || typeof parent !== 'object' || Array.isArray(parent)) return key;
+  const parentRecord = parent as Record<string, unknown>;
+  const callRecord =
+    parentRecord.call && typeof parentRecord.call === 'object' && !Array.isArray(parentRecord.call)
+      ? (parentRecord.call as Record<string, unknown>)
+      : null;
+  const methodName = String(callRecord?.method ?? parentRecord.method ?? '').trim();
+  return methodName && isTokenAmountKey(methodName) ? methodName : key;
+}
+
 function renderFormulaDisplayValue(displayValue: string): React.ReactNode {
   if (!displayValue.includes('Σ')) return displayValue;
   const parts = displayValue.split('Σ');
@@ -1507,7 +1661,7 @@ function getPendingRewardsMethodSummaryValue(
 function getPendingRewardsMethodResultSummaryValue(
   methodName: string,
   data: unknown,
-): { key: string; value: unknown; suffix: string } | null {
+): { key: string; value: unknown; suffix: string; methodName: string } | null {
   if (!PENDING_REWARDS_METHOD_NAMES.has(methodName)) return null;
   if (!data || typeof data !== 'object' || Array.isArray(data)) return null;
   const record = data as Record<string, unknown>;
@@ -1519,25 +1673,77 @@ function getPendingRewardsMethodResultSummaryValue(
 
   if (methodName.startsWith('estimateOffChain') && methodName.endsWith('Rewards')) {
     const value = result.pendingTotalRewards ?? result.pendingRewards ?? result.totalRewards;
-    return value === undefined || value === null ? null : { key: 'pendingTotalRewards', value, suffix: ' (Last Estimate)' };
+    return value === undefined || value === null
+      ? null
+      : { key: 'pendingTotalRewards', value, suffix: ' (Last Estimate)', methodName };
   }
 
   if (methodName.startsWith('claimOnChain') && methodName.endsWith('Rewards')) {
     const value = result.totalRewardsClaimed ?? result.claimedAmount;
-    return value === undefined || value === null ? null : { key: 'totalRewardsClaimed', value, suffix: ' (Last Claimed)' };
+    return value === undefined || value === null
+      ? null
+      : { key: 'totalRewardsClaimed', value, suffix: ' (Last Claimed)', methodName };
   }
 
   return null;
 }
 
-function roleFromPendingRewardsMethod(methodName: string): DisplayAccountRole | '' {
-  if (/SponsorRewards$/i.test(methodName)) return 'Sponsor';
-  if (/RecipientRewards$/i.test(methodName)) return 'Recipient';
-  if (/AgentRewards$/i.test(methodName)) return 'Agent';
-  return '';
+function isZeroSummaryValue(value: unknown): boolean {
+  const normalized = String(value ?? '').replace(/,/g, '').trim();
+  return /^0+(?:\.0+)?$/.test(normalized);
 }
 
-function normalizeVisibleEntry(parent: any, childKey: string, childValue: any): [string, any] {
+function getPendingRewardsRecordResultSummaryValue(
+  data: unknown,
+): { key: string; value: unknown; suffix: string; methodName: string } | null {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return null;
+  const record = data as Record<string, unknown>;
+  const estimateSummaries: Array<{ key: string; value: unknown; suffix: string; methodName: string }> = [];
+  for (const methodName of PENDING_REWARDS_ESTIMATE_METHOD_NAMES) {
+    const summary = getPendingRewardsMethodResultSummaryValue(methodName, record[methodName]);
+    if (summary) estimateSummaries.push(summary);
+  }
+  const nonZeroEstimateSummary = estimateSummaries.find((summary) => !isZeroSummaryValue(summary.value));
+  if (nonZeroEstimateSummary) return nonZeroEstimateSummary;
+  if (estimateSummaries[0]) return estimateSummaries[0];
+
+  const claimSummaries: Array<{ key: string; value: unknown; suffix: string; methodName: string }> = [];
+  for (const methodName of PENDING_REWARDS_CLAIM_METHOD_NAMES) {
+    const summary = getPendingRewardsMethodResultSummaryValue(methodName, record[methodName]);
+    if (summary) claimSummaries.push(summary);
+  }
+  const nonZeroClaimSummary = claimSummaries.find((summary) => !isZeroSummaryValue(summary.value));
+  if (nonZeroClaimSummary) return nonZeroClaimSummary;
+  if (claimSummaries[0]) return claimSummaries[0];
+  return null;
+}
+
+function getPendingRewardsDefaultEstimateMethod(data: unknown): string {
+  const summaryMethod = getPendingRewardsRecordResultSummaryValue(data)?.methodName;
+  if (summaryMethod && PENDING_REWARDS_ESTIMATE_METHOD_NAMES.has(summaryMethod)) return summaryMethod;
+  if (summaryMethod && PENDING_REWARDS_CLAIM_METHOD_NAMES.has(summaryMethod)) {
+    return summaryMethod.replace(/^claimOnChain/, 'estimateOffChain');
+  }
+  const counts = getAccountRoleCounts(data);
+  const roleSource = getRoleSingleSource(counts);
+  if (roleSource.isAgent) return 'estimateOffChainAgentRewards';
+  if (roleSource.isRecipient) return 'estimateOffChainRecipientRewards';
+  return 'estimateOffChainSponsorRewards';
+}
+
+function roleFromPendingRewardsMethod(methodName: string): DisplayAccountRole | '' {
+  return resolveSpCoinMethodRole(methodName);
+}
+
+function normalizeVisibleEntry(
+  parent: any,
+  childKey: string,
+  childValue: any,
+  accountRoleCounts?: AccountRoleCounts | null,
+): [string, any] {
+  if (childKey === 'meta') {
+    return [childKey, addDisplayRoleToMeta(parent, childValue, accountRoleCounts)];
+  }
   const parentRecord =
     parent && typeof parent === 'object' && !Array.isArray(parent)
       ? (parent as Record<string, unknown>)
@@ -1567,6 +1773,23 @@ function normalizeVisibleEntry(parent: any, childKey: string, childValue: any): 
     return [childKey, calculateFormattedDT((parent as Record<string, unknown>).calculatedTimeStamp)];
   }
   return [childKey, childValue];
+}
+
+function ensurePendingRewardsMetaEntry(
+  entries: [string, any][],
+  displayValue: unknown,
+  accountRoleCounts?: AccountRoleCounts | null,
+): [string, any][] {
+  if (!isPendingRewardsRecord(displayValue)) return entries;
+  if (entries.some(([childKey]) => childKey === 'meta')) return entries;
+  const role =
+    resolveSpCoinAccountRoleLabel(accountRoleCounts) ||
+    inferDisplayRoleFromValue(displayValue, accountRoleCounts);
+  if (!role) return entries;
+  const nextEntries = [...entries];
+  const parametersIndex = nextEntries.findIndex(([childKey]) => childKey === 'parameters');
+  nextEntries.splice(parametersIndex >= 0 ? parametersIndex + 1 : 0, 0, ['meta', { Role: role }]);
+  return nextEntries;
 }
 
 const rewardFormulaFields = [
@@ -2166,6 +2389,7 @@ function shouldHideByDropdownRules(
 
 function getAccountRecordEntryOrder(key: string): number {
   const order: Record<string, number> = {
+    role: 1,
     sponsorCount: 10,
     recipientCount: 11,
     agentCount: 12,
@@ -2288,6 +2512,10 @@ function getVisibleEntries(
     accountRoleCounts,
     label,
   );
+  const effectiveAccountRoleCounts = resolveEffectiveAccountRoleCounts(
+    getAccountRoleCounts(displayValue),
+    accountRoleCounts,
+  );
   const suppressPendingRewardsMethodInjection =
     hasSuppressedPendingRewardsMethodInjection(value) ||
     hasSuppressedPendingRewardsMethodInjection(displayValue);
@@ -2312,7 +2540,9 @@ function getVisibleEntries(
       return displayValue.map((entry, index) => [String(index), entry] as [string, any]);
     }
     const entries = Object.entries(displayValue)
-      .map(([childKey, childValue]) => normalizeVisibleEntry(displayValue, childKey, childValue))
+      .map(([childKey, childValue]) =>
+        normalizeVisibleEntry(displayValue, childKey, childValue, effectiveAccountRoleCounts),
+      )
       .filter(
         ([childKey, childValue]) =>
           childKey !== 'address' &&
@@ -2325,6 +2555,16 @@ function getVisibleEntries(
           childKey !== '__pendingRewardsRefreshAtMs' &&
           childKey !== '__pendingRewardsRefreshActionName' &&
           childKey !== '__pendingRewardsRefreshMethodName' &&
+          childKey !== '__pendingRewardsAllRoles' &&
+          childKey !== '__pendingRewardsByAccount' &&
+          childKey !== '__pendingRewardsTotalNode' &&
+          !(
+            childKey === 'total' &&
+            displayValue &&
+            typeof displayValue === 'object' &&
+            !Array.isArray(displayValue) &&
+            (displayValue as Record<string, unknown>).__pendingRewardsTotalNode === true
+          ) &&
           childKey !== '__suppressPendingRewardsMethodInjection' &&
           childKey !== '__lazyPendingRewardsMethod' &&
           childKey !== '__forceExpanded' &&
@@ -2355,13 +2595,19 @@ function getVisibleEntries(
           (showStructureType || childKey !== 'TYPE'),
       )
       .sort(sortEntries);
-    const entriesWithGetPendingRewardsParameters = ensureGetPendingRewardsParameterEntry(entries, displayValue);
+    const entriesWithGetPendingRewardsParameters = ensureGetPendingRewardsParameterEntry(
+      ensurePendingRewardsMetaEntry(entries, displayValue, effectiveAccountRoleCounts),
+      displayValue,
+    );
+    const pendingRewardsRoleFilteredEntries = isPendingRewardsRecord(displayValue)
+      ? filterPendingRewardsRoleEntries(entriesWithGetPendingRewardsParameters, effectiveAccountRoleCounts)
+      : entriesWithGetPendingRewardsParameters;
     return !suppressPendingRewardsMethodInjection && shouldInjectPendingRewardsMethodEntries(label, path, displayValue)
       ? filterPendingRewardsRoleEntries(
-          ensurePendingRewardsMethodEntries(entriesWithGetPendingRewardsParameters),
-          accountRoleCounts,
+          ensurePendingRewardsMethodEntries(pendingRewardsRoleFilteredEntries),
+          effectiveAccountRoleCounts,
         )
-      : entriesWithGetPendingRewardsParameters;
+      : pendingRewardsRoleFilteredEntries;
   }
 
   if (Array.isArray(displayValue)) {
@@ -2374,7 +2620,9 @@ function getVisibleEntries(
   }
 
   const entries = Object.entries(displayValue)
-    .map(([childKey, childValue]) => normalizeVisibleEntry(displayValue, childKey, childValue))
+    .map(([childKey, childValue]) =>
+      normalizeVisibleEntry(displayValue, childKey, childValue, effectiveAccountRoleCounts),
+    )
     .filter(([childKey, childValue]) => {
       if (childKey === 'address') return false;
       if (shouldHideByDropdownRules(childValue, showAll, hiddenRules, showStructureType)) return false;
@@ -2386,6 +2634,16 @@ function getVisibleEntries(
       if (childKey === '__pendingRewardsRefreshAtMs') return false;
       if (childKey === '__pendingRewardsRefreshActionName') return false;
       if (childKey === '__pendingRewardsRefreshMethodName') return false;
+      if (childKey === '__pendingRewardsAllRoles') return false;
+      if (childKey === '__pendingRewardsByAccount') return false;
+      if (childKey === '__pendingRewardsTotalNode') return false;
+      if (
+        childKey === 'total' &&
+        displayValue &&
+        typeof displayValue === 'object' &&
+        !Array.isArray(displayValue) &&
+        (displayValue as Record<string, unknown>).__pendingRewardsTotalNode === true
+      ) return false;
       if (childKey === '__suppressPendingRewardsMethodInjection') return false;
       if (childKey === '__lazyPendingRewardsMethod') return false;
       if (childKey === '__forceExpanded') return false;
@@ -2415,13 +2673,19 @@ function getVisibleEntries(
       return hasPopulatedContent(childValue, hiddenRules, showStructureType);
     })
     .sort(sortEntries);
-  const entriesWithGetPendingRewardsParameters = ensureGetPendingRewardsParameterEntry(entries, displayValue);
+  const entriesWithGetPendingRewardsParameters = ensureGetPendingRewardsParameterEntry(
+    ensurePendingRewardsMetaEntry(entries, displayValue, effectiveAccountRoleCounts),
+    displayValue,
+  );
+  const pendingRewardsRoleFilteredEntries = isPendingRewardsRecord(displayValue)
+    ? filterPendingRewardsRoleEntries(entriesWithGetPendingRewardsParameters, effectiveAccountRoleCounts)
+    : entriesWithGetPendingRewardsParameters;
   return !suppressPendingRewardsMethodInjection && shouldInjectPendingRewardsMethodEntries(label, path, displayValue)
     ? filterPendingRewardsRoleEntries(
-        ensurePendingRewardsMethodEntries(entriesWithGetPendingRewardsParameters),
-        accountRoleCounts,
+        ensurePendingRewardsMethodEntries(pendingRewardsRoleFilteredEntries),
+        effectiveAccountRoleCounts,
       )
-    : entriesWithGetPendingRewardsParameters;
+    : pendingRewardsRoleFilteredEntries;
 }
 
 const JsonInspector: React.FC<JsonInspectorProps> = ({
@@ -2455,7 +2719,10 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
   accountRoleCounts = null,
   scriptStepDragState,
 }) => {
-  const effectiveAccountRoleCounts = getAccountRoleCounts(data) ?? accountRoleCounts;
+  const effectiveAccountRoleCounts = resolveEffectiveAccountRoleCounts(
+    getAccountRoleCounts(data),
+    accountRoleCounts,
+  );
   const effectiveHideEntryKeys = [...hideEntryKeys];
   if (
     label &&
@@ -2484,7 +2751,11 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
       ? String((data as Record<string, unknown>).address || (data as Record<string, unknown>).accountKey || '').trim()
       : '';
   const isPendingRewardsResultSummaryLabel = String(label || '').startsWith('result: ');
-  const isAddressNode = !isPendingRewardsResultSummaryLabel && /^0x[0-9a-fA-F]{40}$/.test(addressNode);
+  const suppressInlineAddressNode = label === 'result';
+  const isAddressNode =
+    !isPendingRewardsResultSummaryLabel &&
+    !suppressInlineAddressNode &&
+    /^0x[0-9a-fA-F]{40}$/.test(addressNode);
   const isAddressFieldBackedNode =
     data &&
     typeof data === 'object' &&
@@ -2497,6 +2768,20 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
   const isLazyAccountRelation = isLazyAccountRelationNode(data);
   const isGetPendingRewardsNode = label === 'pendingRewards' && isPendingRewardsRecord(data);
   const getPendingRewardsAccount = isGetPendingRewardsNode ? getPendingRewardsAccountKey(data) : '';
+  const getPendingRewardsResultSummary = isGetPendingRewardsNode
+    ? getPendingRewardsRecordResultSummaryValue(data)
+    : null;
+  const getPendingRewardsEstimateMethod = isGetPendingRewardsNode
+    ? getPendingRewardsDefaultEstimateMethod(data)
+    : '';
+  const getPendingRewardsResultSummaryDisplay = getPendingRewardsResultSummary
+    ? `${formatDisplayScalar(
+        getPendingRewardsResultSummary.key,
+        getPendingRewardsResultSummary.value,
+        formatTokenAmounts,
+        tokenDecimals,
+      ).replace(/"\s*$/, '" ')}${getPendingRewardsResultSummary.suffix.trim()}`
+    : '';
   const totalSpCoinsPendingRewardsAction = getTotalSpCoinsPendingRewardsAction(data);
   const isLazyTotalSpCoinsPendingRewards = Boolean(totalSpCoinsPendingRewardsAction);
   const refreshAtMs = getPendingRewardsRefreshAtMs(data);
@@ -2737,8 +3022,32 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     if (label && label.startsWith('onChainCalls')) return label;
     if (label && label.startsWith('childOnChainCalls')) return label;
     if (label && label.startsWith('result: ')) return label;
+    if (label === 'result') return label;
+    if (
+      label === 'pendingTotalRewards' &&
+      data &&
+      typeof data === 'object' &&
+      !Array.isArray(data) &&
+      (data as Record<string, unknown>).__pendingRewardsTotalNode === true
+    ) {
+      return `pendingTotalRewards: ${formatDisplayScalar(
+        'pendingTotalRewards',
+        (data as Record<string, unknown>).total,
+        formatTokenAmounts,
+        tokenDecimals,
+      )}`;
+    }
     if (label === 'pendingRewards' && isPendingRewardsRecord(data)) {
       const accountKey = getPendingRewardsAccountKey(data);
+      const summary = getPendingRewardsRecordResultSummaryValue(data);
+      if (summary) {
+        return `getPendingRewards ${formatDisplayScalar(
+          summary.key,
+          summary.value,
+          formatTokenAmounts,
+          tokenDecimals,
+        ).replace(/"\s*$/, '" ')}${summary.suffix.trim()}`;
+      }
       return accountKey ? `getPendingRewards "${accountKey}"` : 'getPendingRewards';
     }
     if (label && PENDING_REWARDS_METHOD_NAMES.has(label)) {
@@ -2871,9 +3180,12 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
       ).replace(/"\s*$/, '" ')}${pendingRewardsMethodResultSummary.suffix.trim()}`
     : '';
   const hasPendingRewardsMethodSummary = Boolean(pendingRewardsMethodSummary);
+  const hasPendingRewardsMethodResultSummary = Boolean(pendingRewardsMethodResultSummaryDisplay);
   const pendingRewardsMethodAccountValue = String(
     pendingRewardsMethodSummary?.value ?? getPendingRewardsRefreshAccountKey(data),
   ).trim();
+  const pendingRewardsMethodHeaderSummaryDisplay =
+    pendingRewardsMethodResultSummaryDisplay || pendingRewardsMethodSummaryDisplay;
   const pendingRewardsMethodLabel = rerunnablePendingRewardsMethodDisplayName;
   const visibleInlineStepMethod =
     (hasPendingRewardsMethodSummary && !isDraggableScriptStep) ||
@@ -2959,9 +3271,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
               }, 0);
               return `childOnChainCalls: ${totalMs}ms`;
             })()
-        : key === 'result' && pendingRewardsMethodResultSummaryDisplay
-          ? `result: ${pendingRewardsMethodResultSummaryDisplay}`
-          : key;
+        : key;
     if (key === 'creationTime' || key === 'creationDate' || key === 'Date Created') {
       if (!showAll && hiddenRules.creationDates) return null;
       const normalizedDate = normalizeLegacyDateDisplay(value);
@@ -3048,7 +3358,12 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     const valueHighlighted = highlightPathPrefixes.some(
       (prefix) => nextPath === prefix || nextPath.startsWith(`${prefix}.`),
     );
-    const scalarDisplayValue = formatDisplayScalar(key, value, formatTokenAmounts, tokenDecimals);
+    const scalarDisplayValue = formatDisplayScalar(
+      getScalarFormattingKey(data, key),
+      value,
+      formatTokenAmounts,
+      tokenDecimals,
+    );
     const isRewardFormulaEntry =
       key !== 'indexNotation' &&
       key !== 'rewardsNotations' &&
@@ -3193,23 +3508,30 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
                 event.stopPropagation();
                 if (!getPendingRewardsAccount) return;
                 onTrace?.(
-                  `[PENDING_REWARDS_TRACE] getPendingRewards label click path=${path ?? ''} method=estimateOffChainSponsorRewards account=${getPendingRewardsAccount}`,
+                  `[PENDING_REWARDS_TRACE] getPendingRewards label click path=${path ?? ''} method=${getPendingRewardsEstimateMethod} account=${getPendingRewardsAccount}`,
                 );
                 onLeafValueClick?.(
                   JSON.stringify({
                     __loadPendingRewardsMethod: true,
                     accountKey: getPendingRewardsAccount,
-                    method: 'estimateOffChainSponsorRewards',
+                    method: getPendingRewardsEstimateMethod,
                   }),
-                  `${path ?? ''}.estimateOffChainSponsorRewards`,
-                  'estimateOffChainSponsorRewards',
+                  `${path ?? ''}.${getPendingRewardsEstimateMethod}`,
+                  getPendingRewardsEstimateMethod,
                 );
               }}
-              title="Run estimateOffChainSponsorRewards"
+              title={`Run ${getPendingRewardsEstimateMethod || 'pending rewards estimate'}`}
             >
               getPendingRewards
             </button>
-            {getPendingRewardsAccount ? (
+            {getPendingRewardsResultSummaryDisplay ? (
+              <>
+                {' '}
+                <span className={isHighlighted ? highlightColorClass : 'text-green-400'}>
+                  {renderDisplayLabelWithStatusSuffix(getPendingRewardsResultSummaryDisplay)}
+                </span>
+              </>
+            ) : getPendingRewardsAccount ? (
               <>
                 {' '}
                 {typeof onAddressNodeClick === 'function' ? (
@@ -3276,12 +3598,18 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
                   : refreshPendingRewardsTitle
               }
             >
-              {pendingRewardsMethodAccountValue ? `${pendingRewardsMethodLabel}:` : pendingRewardsMethodLabel || getDisplayLabel(path ?? '')}
+              {pendingRewardsMethodHeaderSummaryDisplay
+                ? `${pendingRewardsMethodLabel}:`
+                : pendingRewardsMethodLabel || getDisplayLabel(path ?? '')}
             </button>
-            {pendingRewardsMethodAccountValue ? (
+            {pendingRewardsMethodHeaderSummaryDisplay ? (
               <>
                 {' '}
-                {isAddressText(pendingRewardsMethodAccountValue) && typeof onAddressNodeClick === 'function' ? (
+                {hasPendingRewardsMethodResultSummary ? (
+                  <span className={isHighlighted ? highlightColorClass : 'text-green-400'}>
+                    {renderDisplayLabelWithStatusSuffix(pendingRewardsMethodResultSummaryDisplay)}
+                  </span>
+                ) : isAddressText(pendingRewardsMethodAccountValue) && typeof onAddressNodeClick === 'function' ? (
                   (() => {
                     const summary = pendingRewardsMethodSummary ?? {
                       key: 'Account Key',

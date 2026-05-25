@@ -11,6 +11,15 @@ function selectRewards(result, role) {
     const pendingRecipientRewards = String(pending.pendingRecipientRewards ?? "0");
     const pendingAgentRewards = String(pending.pendingAgentRewards ?? "0");
     const pendingTotalRewards = String(pending.pendingRewards ?? "0");
+    const pendingRewardsAllRoles = {
+            pendingSponsorRewards,
+            pendingRecipientRewards,
+            pendingAgentRewards,
+        };
+    const pendingRewardsByAccount =
+        pending.__pendingRewardsByAccount && typeof pending.__pendingRewardsByAccount === "object"
+            ? pending.__pendingRewardsByAccount
+            : undefined;
     const roleRewards =
         role === "sponsor"
             ? { pendingSponsorRewards }
@@ -30,6 +39,8 @@ function selectRewards(result, role) {
             steakedBalance: String(pending.sponsorBucketStakedQuantity ?? "0"),
             ...roleRewards,
             pendingTotalRewards,
+            __pendingRewardsAllRoles: pendingRewardsAllRoles,
+            ...(pendingRewardsByAccount ? { __pendingRewardsByAccount: pendingRewardsByAccount } : {}),
         };
     }
     if (role === "recipient") {
@@ -43,6 +54,8 @@ function selectRewards(result, role) {
             steakedBalance: String(pending.recipientBucketStakedQuantity ?? "0"),
             ...roleRewards,
             pendingTotalRewards,
+            __pendingRewardsAllRoles: pendingRewardsAllRoles,
+            ...(pendingRewardsByAccount ? { __pendingRewardsByAccount: pendingRewardsByAccount } : {}),
         };
     }
     if (role === "agent") {
@@ -56,12 +69,16 @@ function selectRewards(result, role) {
             steakedBalance: String(pending.agentBucketStakedQuantity ?? "0"),
             ...roleRewards,
             pendingTotalRewards,
+            __pendingRewardsAllRoles: pendingRewardsAllRoles,
+            ...(pendingRewardsByAccount ? { __pendingRewardsByAccount: pendingRewardsByAccount } : {}),
         };
     }
     return {
         ...pending,
         TYPE: "--ACCOUNT_PENDING_TOTAL_REWARDS--",
         pendingTotalRewards: String(pending.pendingRewards ?? "0"),
+        __pendingRewardsAllRoles: pendingRewardsAllRoles,
+        ...(pendingRewardsByAccount ? { __pendingRewardsByAccount: pendingRewardsByAccount } : {}),
     };
 }
 

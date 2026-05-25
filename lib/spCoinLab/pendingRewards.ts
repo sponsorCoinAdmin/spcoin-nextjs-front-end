@@ -114,6 +114,90 @@ function getVisiblePendingRewardComponents(
   return { pendingAgentRewards };
 }
 
+function buildPendingRecipientDistributions(
+  role: 'Sponsor' | 'Recipient' | 'Agent',
+  allRoles: unknown,
+  rewardsByAccount: unknown,
+  accountKey: unknown,
+): { distributions: Record<string, string>; total: bigint } | null {
+  const allRoleRecord =
+    allRoles && typeof allRoles === 'object' && !Array.isArray(allRoles)
+      ? (allRoles as Record<string, unknown>)
+      : {};
+  const accountRewardsRecord =
+    rewardsByAccount && typeof rewardsByAccount === 'object' && !Array.isArray(rewardsByAccount)
+      ? (rewardsByAccount as Record<string, unknown>)
+      : {};
+  const normalizedAccountKey = String(accountKey ?? '').trim().toLowerCase();
+  const summedAccountRewards = Object.values(accountRewardsRecord).reduce<{
+    pendingRecipientRewards: bigint;
+    pendingAgentRewards: bigint;
+  }>(
+    (acc, entry) => {
+      if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return acc;
+      const rewardEntry = entry as Record<string, unknown>;
+      const entryAccountKey = String(rewardEntry.accountKey ?? '').trim().toLowerCase();
+      if (entryAccountKey && entryAccountKey === normalizedAccountKey) return acc;
+      if (Object.prototype.hasOwnProperty.call(rewardEntry, 'pendingRecipientRewards')) {
+        acc.pendingRecipientRewards += toPendingRewardsBigInt(rewardEntry.pendingRecipientRewards);
+      }
+      if (Object.prototype.hasOwnProperty.call(rewardEntry, 'pendingAgentRewards')) {
+        acc.pendingAgentRewards += toPendingRewardsBigInt(rewardEntry.pendingAgentRewards);
+      }
+      return acc;
+    },
+    { pendingRecipientRewards: 0n, pendingAgentRewards: 0n },
+  );
+  const recipientDistributionValue =
+    summedAccountRewards.pendingRecipientRewards > 0n
+      ? summedAccountRewards.pendingRecipientRewards.toString()
+      : allRoleRecord.pendingRecipientRewards;
+  const agentDistributionValue =
+    summedAccountRewards.pendingAgentRewards > 0n
+      ? summedAccountRewards.pendingAgentRewards.toString()
+      : allRoleRecord.pendingAgentRewards;
+  const distributionEntries: Array<[string, unknown]> =
+    role === 'Sponsor'
+      ? [
+          ['pendingRecipientRewards', recipientDistributionValue],
+          ['pendingAgentRewards', agentDistributionValue],
+        ]
+      : role === 'Recipient'
+        ? [['pendingAgentRewards', agentDistributionValue]]
+        : [];
+  const availableEntries = distributionEntries.filter(([, value]) => value !== undefined && value !== null);
+  if (availableEntries.length === 0) return null;
+  const distributions = Object.fromEntries(
+    availableEntries.map(([key, value]) => [key, toPendingRewardsBigInt(value).toString()]),
+  );
+  const total = Object.values(distributions).reduce(
+    (sum, value) => sum + toPendingRewardsBigInt(value),
+    0n,
+  );
+  return { distributions, total };
+}
+
+function buildPendingTotalRewardsDisplay(
+  totalRewards: string,
+  visiblePendingRewardComponents: Record<string, string>,
+  pendingRecipientDistributions: { distributions: Record<string, string>; total: bigint } | null,
+): Record<string, unknown> {
+  const visibleRewardTotal = Object.values(visiblePendingRewardComponents).reduce(
+    (sum, value) => sum + toPendingRewardsBigInt(value),
+    0n,
+  );
+  const computedTotal = visibleRewardTotal + (pendingRecipientDistributions?.total ?? 0n);
+  const total = computedTotal > 0n ? computedTotal.toString() : totalRewards;
+  return {
+    __pendingRewardsTotalNode: true,
+    total,
+    ...visiblePendingRewardComponents,
+    ...(pendingRecipientDistributions
+      ? { pendingRecipientDistributions: pendingRecipientDistributions.distributions }
+      : {}),
+  };
+}
+
 function isScalarRewardValue(value: unknown): boolean {
   return value == null || ['string', 'number', 'bigint', 'boolean'].includes(typeof value);
 }
@@ -257,6 +341,12 @@ export function normalizePendingRewardsDisplayResult(value: unknown): unknown {
   void sponsorBucketStakedQuantity;
   void recipientBucketStakedQuantity;
   void agentBucketStakedQuantity;
+  const pendingRecipientDistributions = buildPendingRecipientDistributions(
+    role,
+    restRecord.__pendingRewardsAllRoles,
+    restRecord.__pendingRewardsByAccount,
+    restRecord.accountKey,
+  );
   if (isClaimSummary) {
     return {
       ...restRecord,
@@ -264,7 +354,11 @@ export function normalizePendingRewardsDisplayResult(value: unknown): unknown {
       accountKey: String(restRecord.accountKey ?? ''),
       calculatedFormatted,
       ...visiblePendingRewardComponents,
-      pendingTotalRewards: pendingRewards,
+      pendingTotalRewards: buildPendingTotalRewardsDisplay(
+        pendingRewards,
+        visiblePendingRewardComponents,
+        pendingRecipientDistributions,
+      ),
       __showEmptyFields: true,
     };
   }
@@ -288,11 +382,21 @@ export function normalizePendingRewardsDisplayResult(value: unknown): unknown {
     timeStampDifference: formatSecondsValue(timeStampDifference),
     differenceFormatted: formatTimestampDifference(timeStampDifference),
     ...visiblePendingRewardComponents,
-    pendingTotalRewards: pendingRewards,
+    pendingTotalRewards: buildPendingTotalRewardsDisplay(
+      pendingRewards,
+      visiblePendingRewardComponents,
+      pendingRecipientDistributions,
+    ),
     __showEmptyFields: true,
   };
   if (__pendingRewardsRefreshAction !== undefined) normalizedResult.__pendingRewardsRefreshAction = __pendingRewardsRefreshAction;
   if (__pendingRewardsRefreshAtMs !== undefined) normalizedResult.__pendingRewardsRefreshAtMs = __pendingRewardsRefreshAtMs;
   if (__pendingRewardsRefreshActionName !== undefined) normalizedResult.__pendingRewardsRefreshActionName = __pendingRewardsRefreshActionName;
+  if (restRecord.__pendingRewardsAllRoles !== undefined) {
+    normalizedResult.__pendingRewardsAllRoles = restRecord.__pendingRewardsAllRoles;
+  }
+  if (restRecord.__pendingRewardsByAccount !== undefined) {
+    normalizedResult.__pendingRewardsByAccount = restRecord.__pendingRewardsByAccount;
+  }
   return normalizedResult;
 }
