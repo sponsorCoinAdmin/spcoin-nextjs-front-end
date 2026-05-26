@@ -499,7 +499,7 @@ export default function OutputResultsCard({
     todoValues: true,
     emptyCollections: true,
     creationDates: true,
-    formattedAmounts: false,
+    formattedAmounts: true,
   });
   const [showStructureType, setShowStructureType] = useState(false);
   const [showPayloadFields, setShowPayloadFields] = useState<Record<PayloadFieldOptionKey, boolean>>({

@@ -2794,9 +2794,13 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
   const currentPath = path ?? '';
   const expandedPathKey = getExpandedPathKey(currentPath);
   const forceExpandedDismissedKey = `__force_expanded_dismissed__:${currentPath}`;
+  const isExplicitlyTargetedForExpansion = collapsedKeys.includes(expandedPathKey);
   const forceExpandedIsActive =
-    shouldForceExpand && !isPendingRewardsRefreshReady && !collapsedKeys.includes(forceExpandedDismissedKey);
-  const isExplicitlyExpanded = forceExpandedIsActive || collapsedKeys.includes(expandedPathKey);
+    shouldForceExpand &&
+    isExplicitlyTargetedForExpansion &&
+    !isPendingRewardsRefreshReady &&
+    !collapsedKeys.includes(forceExpandedDismissedKey);
+  const isExplicitlyExpanded = forceExpandedIsActive || isExplicitlyTargetedForExpansion;
   const isDefaultCollapsed = (level > 0 || /^script-header-\d+$/.test(currentPath)) && !isExplicitlyExpanded && !isLazyAccountRelation;
   const isCollapsed =
     !forceExpandedIsActive &&

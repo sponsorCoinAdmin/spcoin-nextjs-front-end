@@ -1187,7 +1187,144 @@ type PendingAccountRewardsReader = {
     optionsOrTimestampOverride?: unknown,
     timestampOverride?: string | number | bigint,
   ) => Promise<unknown>;
+  estimateOffChainSponsorRewards?: (accountKey: string, optionsOrTimestampOverride?: unknown) => Promise<unknown>;
+  estimateOffChainRecipientRewards?: (accountKey: string, optionsOrTimestampOverride?: unknown) => Promise<unknown>;
+  estimateOffChainAgentRewards?: (accountKey: string, optionsOrTimestampOverride?: unknown) => Promise<unknown>;
 };
+
+type ClaimedRewardsByAccount = Record<string, {
+  accountKey: string;
+  claimedSponsorRewards: string;
+  claimedRecipientRewards: string;
+  claimedAgentRewards: string;
+  claimedRewards: string;
+  balanceBefore?: string;
+  balanceAfter?: string;
+}>;
+
+type RefreshedAccountRecordsByAccount = Record<string, unknown>;
+
+const CLAIM_TO_ESTIMATE_METHOD: Record<RewardUpdateWriteMethod, keyof PendingAccountRewardsReader> = {
+  claimOnChainTotalRewards: 'estimateOffChainTotalRewards',
+  claimOnChainSponsorRewards: 'estimateOffChainSponsorRewards',
+  claimOnChainRecipientRewards: 'estimateOffChainRecipientRewards',
+  claimOnChainAgentRewards: 'estimateOffChainAgentRewards',
+};
+
+function readPendingRewardsByAccount(value: unknown): Record<string, Record<string, unknown>> | null {
+  const normalized = normalizePendingRewardsDisplayResult(value);
+  const record = normalized && typeof normalized === 'object' && !Array.isArray(normalized)
+    ? (normalized as Record<string, unknown>)
+    : value && typeof value === 'object' && !Array.isArray(value)
+      ? (value as Record<string, unknown>)
+      : null;
+  const rewardsByAccount = record?.__pendingRewardsByAccount;
+  return rewardsByAccount && typeof rewardsByAccount === 'object' && !Array.isArray(rewardsByAccount)
+    ? (rewardsByAccount as Record<string, Record<string, unknown>>)
+    : null;
+}
+
+async function getClaimAffectedPendingRewardsByAccount(
+  pendingRewardsReader: PendingAccountRewardsReader,
+  methodName: RewardUpdateWriteMethod,
+  accountKey: string,
+  readCacheOptions: unknown,
+) {
+  const estimateMethodName = CLAIM_TO_ESTIMATE_METHOD[methodName];
+  const estimateMethod = pendingRewardsReader[estimateMethodName];
+  if (typeof estimateMethod !== 'function') return null;
+  return readPendingRewardsByAccount(await estimateMethod(accountKey, { ...(readCacheOptions as Record<string, unknown>), cache: false }));
+}
+
+function getClaimRoleForAffectedAccount(
+  pendingRewards: Record<string, unknown> | null | undefined,
+  methodName: RewardUpdateWriteMethod,
+): RewardRole {
+  const nonZeroRoles = [
+    toBigIntAmount(pendingRewards?.pendingSponsorRewards) > 0n ? 'Sponsor' : '',
+    toBigIntAmount(pendingRewards?.pendingRecipientRewards) > 0n ? 'Recipient' : '',
+    toBigIntAmount(pendingRewards?.pendingAgentRewards) > 0n ? 'Agent' : '',
+  ].filter(Boolean) as RewardRole[];
+  if (nonZeroRoles.length === 1) return nonZeroRoles[0];
+  return getRewardRoleForMethod(methodName);
+}
+
+function buildClaimedRewardsByAccountFromBalanceDeltas(params: {
+  affectedPendingRewardsByAccount: Record<string, Record<string, unknown>> | null;
+  accountKey: string;
+  methodName: RewardUpdateWriteMethod;
+  balancesBefore: Record<string, string>;
+  balancesAfter: Record<string, string>;
+}): ClaimedRewardsByAccount {
+  const affectedEntries = params.affectedPendingRewardsByAccount && Object.keys(params.affectedPendingRewardsByAccount).length > 0
+    ? params.affectedPendingRewardsByAccount
+    : {
+        [normalizeAddressDisplay(params.accountKey)]: {
+          accountKey: params.accountKey,
+        },
+      };
+  const claimedRewardsByAccount: ClaimedRewardsByAccount = {};
+  for (const [mapKey, pendingRewards] of Object.entries(affectedEntries)) {
+    const normalizedAccountKey = normalizeAddressDisplay(pendingRewards.accountKey ?? mapKey);
+    if (!normalizedAccountKey) continue;
+    const balanceBefore = params.balancesBefore[normalizedAccountKey] ?? '0';
+    const balanceAfter = params.balancesAfter[normalizedAccountKey] ?? balanceBefore;
+    const claimedRewards = (toBigIntAmount(balanceAfter) - toBigIntAmount(balanceBefore)).toString();
+    const role = getClaimRoleForAffectedAccount(pendingRewards, params.methodName);
+    claimedRewardsByAccount[normalizedAccountKey] = {
+      accountKey: String(pendingRewards.accountKey ?? normalizedAccountKey),
+      claimedSponsorRewards: role === 'Sponsor' || role === 'Total' ? claimedRewards : '0',
+      claimedRecipientRewards: role === 'Recipient' || role === 'Total' ? claimedRewards : '0',
+      claimedAgentRewards: role === 'Agent' || role === 'Total' ? claimedRewards : '0',
+      claimedRewards,
+      balanceBefore,
+      balanceAfter,
+    };
+  }
+  return claimedRewardsByAccount;
+}
+
+async function refreshAccountRecordsByAccount(params: {
+  affectedAccountKeys: string[];
+  accessRead: Record<string, unknown>;
+  contract: Contract;
+  contractAddress: string;
+  readCacheOptions: unknown;
+}): Promise<RefreshedAccountRecordsByAccount> {
+  const refreshedEntries = await Promise.all(
+    params.affectedAccountKeys.map(async (affectedAccountKey) => {
+      invalidateCachedAccountRecord(params.contractAddress, affectedAccountKey);
+      const refreshedAccountRecordRaw =
+        typeof params.accessRead.getAccountRecord === 'function'
+          ? await (params.accessRead.getAccountRecord as (accountKey: string, options?: unknown) => Promise<unknown>)(
+              affectedAccountKey,
+              {
+                ...(params.readCacheOptions as Record<string, unknown>),
+                cache: 'refresh',
+              },
+            )
+          : typeof (params.contract as Record<string, unknown>).getAccountRecord === 'function'
+            ? normalizeOnChainAccountRecordResult(
+                await (
+                  params.contract as unknown as { getAccountRecord: (accountKey: string) => Promise<unknown> }
+                ).getAccountRecord(affectedAccountKey),
+                affectedAccountKey,
+              )
+            : null;
+      const refreshedAccountRecord = refreshedAccountRecordRaw
+        ? withLazyAccountRelationBuckets(
+            await withAccountRoleFlags(refreshedAccountRecordRaw, affectedAccountKey, params.accessRead),
+            affectedAccountKey,
+          )
+        : null;
+      if (refreshedAccountRecord) {
+        setCachedAccountRecord(params.contractAddress, affectedAccountKey, refreshedAccountRecord);
+      }
+      return [affectedAccountKey, refreshedAccountRecord] as const;
+    }),
+  );
+  return Object.fromEntries(refreshedEntries.filter(([, record]) => Boolean(record)));
+}
 
 function toBigIntAmount(value: unknown) {
   const text = String(value ?? '0').replace(/,/g, '').trim().match(/^-?\d+/)?.[0] ?? '';
@@ -2450,11 +2587,32 @@ export async function POST(request: NextRequest) {
                 includeOfflineComparison && typeof pendingRewardsReader.estimateOffChainTotalRewards === 'function'
                   ? await pendingRewardsReader.estimateOffChainTotalRewards(accountKey)
                   : null;
+              const affectedPendingRewardsByAccount = await getClaimAffectedPendingRewardsByAccount(
+                pendingRewardsReader,
+                methodName,
+                accountKey,
+                readCacheOptions,
+              );
+              const affectedAccountKeys = Array.from(
+                new Set([
+                  normalizeAddressDisplay(accountKey),
+                  ...Object.entries(affectedPendingRewardsByAccount ?? {}).map(([mapKey, rewards]) =>
+                    normalizeAddressDisplay(rewards.accountKey ?? mapKey),
+                  ),
+                ]),
+              ).filter(Boolean);
               const rewardSnapshotBefore = await readAccountRewardSnapshot(contract, accountKey);
               appendTrace(
                 `[REWARD_CALC_TRACE] claim before method=${methodName} account=${accountKey} sponsorTs=${rewardSnapshotBefore.lastSponsorUpdateTimeStamp} recipientTs=${rewardSnapshotBefore.lastRecipientUpdateTimeStamp} agentTs=${rewardSnapshotBefore.lastAgentUpdateTimeStamp}`,
               );
-              const balanceBefore = await readAccountBalanceOf(contract, accountKey);
+              const balancesBeforeEntries = await Promise.all(
+                affectedAccountKeys.map(async (affectedAccountKey) => [
+                  affectedAccountKey,
+                  await readAccountBalanceOf(contract, affectedAccountKey),
+                ] as const),
+              );
+              const balancesBeforeByAccount = Object.fromEntries(balancesBeforeEntries);
+              const balanceBefore = balancesBeforeByAccount[normalizeAddressDisplay(accountKey)] ?? '0';
               const tx = await sendSignedContractTransaction({
                 label: methodName,
                 contract: writeContract,
@@ -2473,33 +2631,37 @@ export async function POST(request: NextRequest) {
                 includeOfflineComparison && settlementTimestamp && typeof pendingRewardsReader.estimateOffChainTotalRewards === 'function'
                   ? await pendingRewardsReader.estimateOffChainTotalRewards(accountKey, settlementTimestamp)
                   : null;
-              invalidateCachedAccountRecord(contractAddress, accountKey);
+              const refreshedAccountRecordsByAccount = await refreshAccountRecordsByAccount({
+                affectedAccountKeys,
+                accessRead: access.read as Record<string, unknown>,
+                contract,
+                contractAddress,
+                readCacheOptions,
+              });
               const refreshedAccountRecord =
-                typeof (access.read as Record<string, unknown>).getAccountRecord === 'function'
-                  ? withLazyAccountRelationBuckets(
-                      await access.read.getAccountRecord(accountKey, {
-                        ...readCacheOptions,
-                        cache: 'refresh',
-                      }),
-                      accountKey,
-                    )
-                  : typeof (contract as Record<string, unknown>).getAccountRecord === 'function'
-                    ? withLazyAccountRelationBuckets(
-                        normalizeOnChainAccountRecordResult(
-                          await (
-                            contract as unknown as { getAccountRecord: (accountKey: string) => Promise<unknown> }
-                          ).getAccountRecord(accountKey),
-                          accountKey,
-                        ),
-                        accountKey,
-                      )
-                    : null;
-              if (refreshedAccountRecord) {
-                setCachedAccountRecord(contractAddress, accountKey, refreshedAccountRecord);
-              }
+                refreshedAccountRecordsByAccount[normalizeAddressDisplay(accountKey)] ?? null;
               const rewardSnapshotAfter = await readAccountRewardSnapshot(contract, accountKey);
-              const balanceAfter = readAccountRecordBalanceOf(refreshedAccountRecord) ?? await readAccountBalanceOf(contract, accountKey);
+              const balancesAfterEntries = await Promise.all(
+                affectedAccountKeys.map(async (affectedAccountKey) => {
+                  const refreshedBalance = affectedAccountKey === normalizeAddressDisplay(accountKey)
+                    ? readAccountRecordBalanceOf(refreshedAccountRecord)
+                    : null;
+                  return [
+                    affectedAccountKey,
+                    refreshedBalance ?? await readAccountBalanceOf(contract, affectedAccountKey),
+                  ] as const;
+                }),
+              );
+              const balancesAfterByAccount = Object.fromEntries(balancesAfterEntries);
+              const balanceAfter = balancesAfterByAccount[normalizeAddressDisplay(accountKey)] ?? balanceBefore;
               const claimedAmount = (toBigIntAmount(balanceAfter) - toBigIntAmount(balanceBefore)).toString();
+              const claimedRewardsByAccount = buildClaimedRewardsByAccountFromBalanceDeltas({
+                affectedPendingRewardsByAccount,
+                accountKey,
+                methodName,
+                balancesBefore: balancesBeforeByAccount,
+                balancesAfter: balancesAfterByAccount,
+              });
               const settlementOfflineDelta = pendingRewardsToSnapshot(settlementOfflinePreview);
               stepRewardCalculationMeta = buildClaimRewardCalculationMeta({
                 methodName,
@@ -2522,6 +2684,9 @@ export async function POST(request: NextRequest) {
                   balanceBefore,
                   balanceAfter,
                   claimedAmount,
+                  __claimedRewardsByAccount: claimedRewardsByAccount,
+                  __claimedRewardsAllRoles: claimedRewardsByAccount[normalizeAddressDisplay(accountKey)],
+                  __refreshedAccountRecordsByAccount: refreshedAccountRecordsByAccount,
                   rewardCalculation: stepRewardCalculationMeta,
                   ...(refreshedAccountRecord ? { refreshedAccountRecord } : {}),
                   ...(includeOfflineComparison

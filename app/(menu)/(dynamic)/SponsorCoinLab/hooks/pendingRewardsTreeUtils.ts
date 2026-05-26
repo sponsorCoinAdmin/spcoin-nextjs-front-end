@@ -810,6 +810,149 @@ export function readRefreshedAccountRecordFromClaim(value: unknown): unknown | n
   return visit(value);
 }
 
+export function readRefreshedAccountRecordsByAccountFromClaim(value: unknown): Record<string, unknown> | null {
+  const visit = (entry: unknown): Record<string, unknown> | null => {
+    if (!entry || typeof entry !== 'object') return null;
+    if (Array.isArray(entry)) {
+      for (const item of entry) {
+        const found = visit(item);
+        if (found) return found;
+      }
+      return null;
+    }
+    const record = entry as Record<string, unknown>;
+    const direct = asRecord(record.__refreshedAccountRecordsByAccount);
+    if (direct) return direct;
+    if (record.result) {
+      const found = visit(record.result);
+      if (found) return found;
+    }
+    if (record.receipts) {
+      const found = visit(record.receipts);
+      if (found) return found;
+    }
+    return null;
+  };
+  return visit(value);
+}
+
+function readAccountRecordKey(value: unknown) {
+  const record = asRecord(value);
+  return normalizeAccountKeyValue(record?.accountKey);
+}
+
+const ACCOUNT_RELATION_BRANCH_KEYS = [
+  'recipientKeys',
+  'agentKeys',
+  'sponsorKeys',
+  'parentRecipientKeys',
+  'recipientRates',
+  'agentRates',
+] as const;
+
+function isLazyAccountRelation(value: unknown) {
+  const record = asRecord(value);
+  return record?.__lazyAccountRelation === true;
+}
+
+function isEmptyRecord(value: unknown) {
+  const record = asRecord(value);
+  return Boolean(record && Object.keys(record).length === 0);
+}
+
+function shouldPreserveAccountRelationBranch(existing: unknown, refreshed: unknown) {
+  if (existing === undefined || existing === null) return false;
+  if (isLazyAccountRelation(existing) || isEmptyRecord(existing)) return false;
+  return refreshed === undefined || refreshed === null || isLazyAccountRelation(refreshed) || isEmptyRecord(refreshed);
+}
+
+function getPreservedAccountRelationBranches(
+  existingAccount: Record<string, unknown>,
+  refreshedAccount: Record<string, unknown>,
+) {
+  const preserved: Record<string, unknown> = {};
+  for (const key of ACCOUNT_RELATION_BRANCH_KEYS) {
+    if (shouldPreserveAccountRelationBranch(existingAccount[key], refreshedAccount[key])) {
+      preserved[key] = existingAccount[key];
+    }
+  }
+  return preserved;
+}
+
+export function mergeRefreshedAccountRecordsByAccountIntoTree(
+  value: unknown,
+  refreshedAccountRecordsByAccount: Record<string, unknown> | null,
+  loadedMethod: string,
+  loadedMethodNode: unknown,
+  action: PendingRewardsActionClick['action'],
+  refreshAtMs: number,
+): unknown {
+  if (!refreshedAccountRecordsByAccount || !value || typeof value !== 'object') return value;
+  if (Array.isArray(value)) {
+    return value.map((entry) =>
+      mergeRefreshedAccountRecordsByAccountIntoTree(
+        entry,
+        refreshedAccountRecordsByAccount,
+        loadedMethod,
+        loadedMethodNode,
+        action,
+        refreshAtMs,
+      ),
+    );
+  }
+
+  const record = value as Record<string, unknown>;
+  const accountKey = readAccountRecordKey(record);
+  const refreshedRecord = accountKey
+    ? refreshedAccountRecordsByAccount[accountKey] ?? refreshedAccountRecordsByAccount[accountKey.toLowerCase()]
+    : null;
+  if (refreshedRecord && record.TYPE === '--ACCOUNT--') {
+    const refreshedAccount = asRecord(refreshedRecord) ?? {};
+    const existingTotalSpCoins = asRecord(record.totalSpCoins);
+    const refreshedTotalSpCoins = asRecord(refreshedAccount.totalSpCoins);
+    const existingPendingRewards = existingTotalSpCoins?.pendingRewards;
+    const refreshedPendingRewards = refreshedTotalSpCoins?.pendingRewards;
+    const mergedPendingRewards =
+      existingPendingRewards || refreshedPendingRewards
+        ? mergePendingRewardsBranchForAccountRefresh(
+            existingPendingRewards,
+            refreshedPendingRewards,
+            accountKey,
+            loadedMethod,
+            loadedMethodNode,
+            action,
+            refreshAtMs,
+          )
+        : undefined;
+    const preservedRelationBranches = getPreservedAccountRelationBranches(record, refreshedAccount);
+    return {
+      ...refreshedAccount,
+      ...preservedRelationBranches,
+      ...(mergedPendingRewards
+        ? {
+            totalSpCoins: {
+              ...(refreshedTotalSpCoins ?? {}),
+              pendingRewards: mergedPendingRewards,
+            },
+          }
+        : {}),
+    };
+  }
+
+  const next: Record<string, unknown> = {};
+  for (const [key, entry] of Object.entries(record)) {
+    next[key] = mergeRefreshedAccountRecordsByAccountIntoTree(
+      entry,
+      refreshedAccountRecordsByAccount,
+      loadedMethod,
+      loadedMethodNode,
+      action,
+      refreshAtMs,
+    );
+  }
+  return next;
+}
+
 function getClaimBalanceRecord(value: unknown): Record<string, unknown> | null {
   const entries = Array.isArray(value)
     ? value
@@ -842,5 +985,10 @@ export function buildClaimedBalanceSummary(updateResult: unknown, fallback?: {
     balanceAfter,
     claimedAmount,
     totalRewardsClaimed: claimedAmount,
+    ...(balanceRecord?.__claimedRewardsByAccount ? { __claimedRewardsByAccount: balanceRecord.__claimedRewardsByAccount } : {}),
+    ...(balanceRecord?.__claimedRewardsAllRoles ? { __claimedRewardsAllRoles: balanceRecord.__claimedRewardsAllRoles } : {}),
+    ...(balanceRecord?.__refreshedAccountRecordsByAccount
+      ? { __refreshedAccountRecordsByAccount: balanceRecord.__refreshedAccountRecordsByAccount }
+      : {}),
   };
 }

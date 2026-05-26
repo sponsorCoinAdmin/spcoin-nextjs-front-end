@@ -31,6 +31,7 @@ import {
   mergeClaimedRewardsByAccountIntoTree,
   mergePendingRewardsByAccountIntoTree,
   mergePendingRewardsBranchForAccountRefresh,
+  mergeRefreshedAccountRecordsByAccountIntoTree,
   mergePendingRewardsSummaryNode,
   normalizePendingRewardsEstimateResult,
   PENDING_REWARDS_CLAIM_METHODS,
@@ -42,6 +43,7 @@ import {
   readPendingRewardsByAccount,
   readPendingRewardsAmount,
   readRefreshedAccountRecordFromClaim,
+  readRefreshedAccountRecordsByAccountFromClaim,
   toRewardsBigInt,
   withPendingRewardsRoleMeta,
   type PendingRewardsActionClick,
@@ -437,9 +439,19 @@ export function usePendingRewardsInlineExpansion({
           const { pendingResult, pendingMeta } = loadedPending;
           const refreshedAccountRecord =
             click.action === 'claim' ? readRefreshedAccountRecordFromClaim(pendingResult) : null;
+          const refreshedAccountRecordsByAccount =
+            click.action === 'claim' ? readRefreshedAccountRecordsByAccountFromClaim(pendingResult) : null;
           if (refreshedAccountRecord) {
             treeAccountRecordCacheRef.current.set(normalizedAccount, refreshedAccountRecord);
             setSpCoinLabAccountRecord(normalizedAccount, refreshedAccountRecord);
+          }
+          if (refreshedAccountRecordsByAccount) {
+            for (const [accountKey, accountRecord] of Object.entries(refreshedAccountRecordsByAccount)) {
+              const normalizedRefreshedAccount = normalizeAddressValue(accountKey);
+              if (!/^0x[0-9a-f]{40}$/.test(normalizedRefreshedAccount)) continue;
+              treeAccountRecordCacheRef.current.set(normalizedRefreshedAccount, accountRecord);
+              setSpCoinLabAccountRecord(normalizedRefreshedAccount, accountRecord);
+            }
           }
           const methodName = click.method
             ? click.method
@@ -638,6 +650,14 @@ export function usePendingRewardsInlineExpansion({
             payloadWithPropagatedPendingRewards,
             claimedRewardsByAccountForDisplay,
           );
+          const payloadWithRefreshedAffectedAccounts = mergeRefreshedAccountRecordsByAccountIntoTree(
+            payloadWithPropagatedClaimedRewards,
+            refreshedAccountRecordsByAccount,
+            summaryLoadedMethod,
+            summaryLoadedNode,
+            click.action,
+            pendingRewardsRefreshAtMs,
+          );
           const owningAccountRecordKey = readTopLevelGetAccountRecordKey(payload, normalizeAddressValue);
           const shouldReplaceOwningAccountRecord =
             click.action === 'claim' &&
@@ -662,7 +682,7 @@ export function usePendingRewardsInlineExpansion({
                   result: refreshedAccountRecord,
                 };
                 const existingPendingRewardsForDisplay = readPathValue(
-                  payloadWithPropagatedClaimedRewards,
+                  payloadWithRefreshedAffectedAccounts,
                   pendingRewardsPath,
                 );
                 const refreshedPendingRewardsForDisplay = readPathValue(refreshedPayloadBase, pendingRewardsPath);
@@ -687,7 +707,7 @@ export function usePendingRewardsInlineExpansion({
                   ? writePathValue(refreshedPayload, targetPath, expandedNode)
                   : refreshedPayload;
               })()
-            : payloadWithPropagatedClaimedRewards;
+            : payloadWithRefreshedAffectedAccounts;
           const payloadAfterFinalPairedEstimateWrite =
             pairedEstimateExpandedNode && pairedEstimatePath.length > 0
               ? writePathValue(payloadAfterAccountRefresh, pairedEstimatePath, pairedEstimateExpandedNode)
