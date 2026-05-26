@@ -16,12 +16,14 @@ interface UseMasterSponsorListInlineExpansionParams {
   callAccessMethod?: AccessMethodCaller;
   formatFormattedPanelPayload: (payload: unknown) => string;
   formattedOutputDisplayRef: MutableRefObject<string>;
+  treeOutputDisplayRef?: MutableRefObject<string>;
   loadAccountRecordForAddress: (
     account: string,
     options?: { force?: boolean; signal?: AbortSignal },
   ) => Promise<unknown>;
   normalizeAddressValue: (value: string) => string;
   setFormattedOutputDisplay: (value: string) => void;
+  setTrackedTreeOutputDisplay?: (value: string) => void;
   setStatus: (value: string) => void;
   showValidationPopup: (
     fieldIds: string[],
@@ -103,9 +105,11 @@ export function useMasterSponsorListInlineExpansion({
   callAccessMethod,
   formatFormattedPanelPayload,
   formattedOutputDisplayRef,
+  treeOutputDisplayRef,
   loadAccountRecordForAddress,
   normalizeAddressValue,
   setFormattedOutputDisplay,
+  setTrackedTreeOutputDisplay,
   setStatus,
   showValidationPopup,
 }: UseMasterSponsorListInlineExpansionParams) {
@@ -113,7 +117,12 @@ export function useMasterSponsorListInlineExpansion({
     async (account: string, pathHint?: string): Promise<InlineExpansionResult> => {
       const normalizedAccount = normalizeAddressValue(account);
       if (!/^0x[0-9a-f]{40}$/.test(normalizedAccount)) return 'unhandled';
-      const trimmedDisplay = String(formattedOutputDisplayRef.current ?? '').trim();
+      const inTreePanel = /^tree-/i.test(String(pathHint ?? '').trim());
+      const trimmedDisplay = String(
+        inTreePanel
+          ? treeOutputDisplayRef?.current ?? ''
+          : formattedOutputDisplayRef.current ?? '',
+      ).trim();
       if (!trimmedDisplay) return 'unhandled';
       const normalizedPathHint = String(pathHint ?? '').trim();
       const pathSegments = normalizedPathHint.split('.').filter(Boolean);
@@ -269,7 +278,12 @@ export function useMasterSponsorListInlineExpansion({
               writePathValue(payload, target.path, nextAccountEntry),
             ) as Record<string, unknown>;
             const nextPayload = formatFormattedPanelPayload(nextRootPayload);
-            replaceDisplayBlock(blocks, entry.index, nextPayload, setFormattedOutputDisplay);
+            replaceDisplayBlock(
+              blocks,
+              entry.index,
+              nextPayload,
+              inTreePanel && setTrackedTreeOutputDisplay ? setTrackedTreeOutputDisplay : setFormattedOutputDisplay,
+            );
             setStatus(`Loaded account record for ${normalizedAccount}.`);
             appendLog(`Inline account record loaded for ${normalizedAccount}`);
             return 'expanded';
@@ -299,8 +313,10 @@ export function useMasterSponsorListInlineExpansion({
       loadAccountRecordForAddress,
       normalizeAddressValue,
       setFormattedOutputDisplay,
+      setTrackedTreeOutputDisplay,
       setStatus,
       showValidationPopup,
+      treeOutputDisplayRef,
     ],
   );
 }

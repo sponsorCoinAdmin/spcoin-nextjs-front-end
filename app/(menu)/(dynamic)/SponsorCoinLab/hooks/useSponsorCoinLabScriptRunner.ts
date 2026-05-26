@@ -690,7 +690,11 @@ export function useSponsorCoinLabScriptRunner({
         }
         const { call, result, warning, meta, onChainCalls } = await executeMethodDescriptor(descriptor, { executionSignal: options?.executionSignal });
         const refreshedResult =
-          descriptor.panel === 'spcoin_rread' && descriptor.method === 'getAccountRecord' && result && typeof result === 'object' && !Array.isArray(result)
+          descriptor.panel === 'spcoin_rread' &&
+          (descriptor.method === 'getAccountRecord' || descriptor.method === 'getSummaryRecord') &&
+          result &&
+          typeof result === 'object' &&
+          !Array.isArray(result)
             ? await (async () => {
                 const accountRecord = result as Record<string, unknown>;
                 const accountKey =
@@ -700,7 +704,7 @@ export function useSponsorCoinLabScriptRunner({
                 const loadedEstimateMethods = getLoadedPendingRewardsEstimateMethods(existingAccountRecord);
                 if (!accountKey || loadedEstimateMethods.length === 0) return result;
                 appendWriteTrace(
-                  `getAccountRecord refreshing loaded pending reward estimates; accountKey=${accountKey}; methods=${loadedEstimateMethods.join(',')}`,
+                  `${descriptor.method} refreshing loaded pending reward estimates; accountKey=${accountKey}; methods=${loadedEstimateMethods.join(',')}`,
                 );
                 let nextAccountRecord = accountRecord;
                 for (const method of loadedEstimateMethods) {
@@ -713,7 +717,7 @@ export function useSponsorCoinLabScriptRunner({
                     },
                     { executionSignal: options?.executionSignal },
                   );
-                  appendWriteTrace(`getAccountRecord refreshed pending reward estimate method=${method}`);
+                  appendWriteTrace(`${descriptor.method} refreshed pending reward estimate method=${method}`);
                   nextAccountRecord = writePendingRewardsMethodNode(nextAccountRecord, method, {
                     call: estimateResult.call,
                     ...(estimateResult.meta ? { meta: estimateResult.meta } : {}),

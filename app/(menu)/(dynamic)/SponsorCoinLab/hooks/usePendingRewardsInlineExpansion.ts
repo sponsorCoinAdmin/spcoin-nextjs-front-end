@@ -125,7 +125,9 @@ function readTopLevelGetAccountRecordKey(
 ) {
   const record = asRecord(candidate);
   const call = asRecord(record?.call);
-  if (!call || String(call.method || '').trim() !== 'getAccountRecord') return '';
+  if (!call) return '';
+  const methodName = String(call.method || '').trim();
+  if (methodName !== 'getAccountRecord' && methodName !== 'getSummaryRecord') return '';
   const parameters = asRecord(call.parameters);
   if (!parameters) return '';
   return normalizeAddressValue(

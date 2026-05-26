@@ -344,11 +344,15 @@ export function useLazyAccountRelationExpansion({
           !Array.isArray(responsePayload.call.parameters)
             ? (responsePayload.call.parameters as Record<string, string>)
             : { 'Account Key': accountKey };
+        const displayCallParameters = {
+          ...(callParameters['msg.sender'] ? { 'msg.sender': callParameters['msg.sender'] } : {}),
+          ...(!callParameters['msg.sender'] ? { 'msg.sender': callParameters['Account Key'] ?? accountKey } : {}),
+        };
         return {
           keys: normalized,
           call: {
             method: String(responsePayload?.call?.method || resolvedMethod),
-            parameters: callParameters,
+            parameters: displayCallParameters,
           },
           ...(responseMeta ? { meta: responseMeta } : {}),
           ...(responseOnChainCalls ? { onChainCalls: responseOnChainCalls } : {}),

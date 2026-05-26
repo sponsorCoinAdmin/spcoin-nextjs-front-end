@@ -104,6 +104,20 @@
       ],
       "breakpoint": false,
       "hasMissingRequiredParams": false
+    },
+    {
+      "step": 7,
+      "name": "getSummaryRecord",
+      "panel": "spcoin_rread",
+      "method": "getSummaryRecord",
+      "params": [
+        {
+          "key": "Account Key",
+          "value": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
+        }
+      ],
+      "breakpoint": false,
+      "hasMissingRequiredParams": false
     }
   ]
 }

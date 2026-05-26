@@ -593,6 +593,7 @@ export function useSponsorCoinLabMethodExecution({
             effectiveMode === 'hardhat' &&
             [
               'getAccountRecord',
+              'getSummaryRecord',
               'getMasterAccountKeys',
               'getMasterAccountList',
               'getMasterAccountKeyCount',

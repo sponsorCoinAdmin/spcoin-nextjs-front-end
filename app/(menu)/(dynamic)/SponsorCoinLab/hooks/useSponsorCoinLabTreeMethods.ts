@@ -489,9 +489,11 @@ export function useSponsorCoinLabTreeMethods({
     callAccessMethod,
     formatFormattedPanelPayload,
     formattedOutputDisplayRef,
+    treeOutputDisplayRef,
     loadAccountRecordForAddress,
     normalizeAddressValue,
     setFormattedOutputDisplay,
+    setTrackedTreeOutputDisplay,
     setStatus,
     showValidationPopup,
   });
@@ -564,7 +566,7 @@ export function useSponsorCoinLabTreeMethods({
       const inTreePanel = /^tree-/i.test(String(pathHint ?? '').trim());
       const inlineResult = await expandMasterSponsorListAccountInline(account, pathHint);
       if (inlineResult === 'expanded' || inlineResult === 'handled') {
-        setOutputPanelMode('formatted');
+        setOutputPanelMode(inTreePanel ? 'tree' : 'formatted');
         return;
       }
       const normalizedAccount = normalizeAddressValue(account);

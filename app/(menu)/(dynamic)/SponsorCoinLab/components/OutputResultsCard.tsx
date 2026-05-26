@@ -503,10 +503,10 @@ export default function OutputResultsCard({
   });
   const [showStructureType, setShowStructureType] = useState(false);
   const [showPayloadFields, setShowPayloadFields] = useState<Record<PayloadFieldOptionKey, boolean>>({
-    meta: true,
-    parameters: true,
+    meta: false,
+    parameters: false,
     result: true,
-    onChainCalls: true,
+    onChainCalls: false,
   });
   const [isShowAllMenuOpen, setIsShowAllMenuOpen] = useState(false);
   const showAllMenuRef = useRef<HTMLDivElement | null>(null);
@@ -1148,8 +1148,19 @@ export default function OutputResultsCard({
   const noShownRulesSelected = shownBulkRuleCount === 0;
   const aggregateShownRuleLabel = noShownRulesSelected ? 'All' : 'None';
 
+  const outputArticleStyle = isShowAllMenuOpen
+    ? {
+        ...style,
+        height: 'auto',
+        minHeight: '42rem',
+      }
+    : style;
+
   return (
-    <article className={className} style={style}>
+    <article
+      className={`${className} ${isShowAllMenuOpen ? 'overflow-visible' : ''}`.trim()}
+      style={outputArticleStyle}
+    >
       <LabCardHeader
         title="Console Display"
         isExpanded={isExpanded}
@@ -1273,7 +1284,7 @@ export default function OutputResultsCard({
           </div>
         }
       />
-      <div className="min-h-0 flex flex-1 flex-col overflow-hidden">
+      <div className={`min-h-0 flex flex-1 flex-col ${isShowAllMenuOpen ? 'overflow-visible' : 'overflow-hidden'}`}>
         {controls.outputPanelMode === 'tree' ? (
           <>
             <div className="mt-4 flex flex-wrap gap-2">
@@ -1369,7 +1380,11 @@ export default function OutputResultsCard({
             </div>
           </>
         ) : null}
-        <div className="relative mt-4 min-h-0 flex-1 overflow-hidden rounded-lg border border-[#334155] bg-[#0B1220]">
+        <div
+          className={`relative mt-4 flex-1 rounded-lg border border-[#334155] bg-[#0B1220] ${
+            isShowAllMenuOpen ? 'min-h-[28rem] overflow-visible' : 'min-h-0 overflow-hidden'
+          }`}
+        >
           {controls.outputPanelMode === 'formatted' || controls.outputPanelMode === 'tree' ? (
             <div className="absolute right-3 top-3 z-10 flex items-center gap-3 rounded-md bg-[#0B1220]/90 px-2 py-1 text-xs text-slate-200">
               {!controls.formattedJsonViewEnabled ? (

@@ -604,6 +604,10 @@ function isScriptStepDisplayLabel(value: string): boolean {
 function getAddressNodeLabel(data: any, fallbackLabel: string): string {
   if (!data || typeof data !== 'object' || Array.isArray(data)) return fallbackLabel;
   if (isScriptStepDisplayLabel(fallbackLabel)) return fallbackLabel;
+  if (isAccountRelationItemDisplayLabel(fallbackLabel)) {
+    const relationAddress = readRelationEntryAddress(data);
+    if (relationAddress) return `${fallbackLabel}: "${relationAddress}"`;
+  }
   if (data.call && typeof data.call === 'object' && !Array.isArray(data.call)) return fallbackLabel;
   const address = typeof data.address === 'string' ? data.address.trim() : '';
   if (/^0x[0-9a-fA-F]{40}$/.test(address)) return `${fallbackLabel}: "${address}"`;
@@ -669,6 +673,25 @@ function getLazyAccountRelationName(data: any, fallback: string): string {
   return `${baseRelation}[${displayCount}]`;
 }
 
+function getLazyAccountRelationDisplayParts(data: any, fallback: string): { label: string; suffix: string } {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return { label: fallback, suffix: '' };
+  const record = data as Record<string, unknown>;
+  const callRecord =
+    record.call && typeof record.call === 'object' && !Array.isArray(record.call)
+      ? (record.call as Record<string, unknown>)
+      : null;
+  const relationFromCall = getAccountRelationMethodLabel(String(callRecord?.method || ''));
+  const relation = String(record.relation || relationFromCall || fallback).trim();
+  const resultCount = Array.isArray(record.result) ? record.result.length : undefined;
+  const count = Number(resultCount ?? record.count ?? 0);
+  const displayCount = Number.isFinite(count) && count >= 0 ? count : 0;
+  const baseRelation = relation.endsWith('[]') ? relation.slice(0, -2) : relation;
+  return {
+    label: baseRelation,
+    suffix: ` (${displayCount} Record${displayCount === 1 ? '' : 's'})`,
+  };
+}
+
 function getAccountRelationMethodLabel(method: string): string {
   const normalizedMethod = String(method || '').trim();
   if (normalizedMethod === 'getSponsorKeys') return 'sponsorKeys';
@@ -676,6 +699,55 @@ function getAccountRelationMethodLabel(method: string): string {
   if (normalizedMethod === 'getAgentKeys') return 'agentKeys';
   if (normalizedMethod === 'getParentRecipientKeys') return 'parentRecipientKeys';
   return '';
+}
+
+function getAccountRelationItemLabel(method: string): string {
+  const normalizedMethod = String(method || '').trim();
+  if (normalizedMethod === 'getSponsorKeys') return 'sponsorKey';
+  if (normalizedMethod === 'getRecipientKeys') return 'recipientKey';
+  if (normalizedMethod === 'getAgentKeys') return 'agentKey';
+  if (normalizedMethod === 'getParentRecipientKeys') return 'parentRecipientKey';
+  return '';
+}
+
+function isAccountRelationItemDisplayLabel(value: unknown): boolean {
+  return /^(?:sponsor|recipient|agent|parentRecipient)Key\[\d+\](?::|$)/i.test(String(value || '').trim());
+}
+
+function readRelationEntryAddress(entry: unknown): string {
+  if (typeof entry === 'string' && isAddressText(entry)) return entry.trim();
+  if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return '';
+  const record = entry as Record<string, unknown>;
+  const directAddress = String(record.accountKey ?? record.address ?? '').trim();
+  if (isAddressText(directAddress)) return directAddress;
+
+  const call = record.call && typeof record.call === 'object' && !Array.isArray(record.call)
+    ? (record.call as Record<string, unknown>)
+    : null;
+  const parameters =
+    call?.parameters && typeof call.parameters === 'object' && !Array.isArray(call.parameters)
+      ? (call.parameters as Record<string, unknown>)
+      : null;
+  const parameterAddress = String(parameters?.['Account Key'] ?? parameters?.Account ?? parameters?.['msg.sender'] ?? '').trim();
+  if (isAddressText(parameterAddress)) return parameterAddress;
+
+  const result = record.result && typeof record.result === 'object' && !Array.isArray(record.result)
+    ? (record.result as Record<string, unknown>)
+    : null;
+  const resultAddress = String(result?.accountKey ?? result?.address ?? '').trim();
+  return isAddressText(resultAddress) ? resultAddress : '';
+}
+
+function getAccountRelationResultEntries(value: unknown): Array<[string, any]> | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const record = value as Record<string, unknown>;
+  const callRecord =
+    record.call && typeof record.call === 'object' && !Array.isArray(record.call)
+      ? (record.call as Record<string, unknown>)
+      : null;
+  const itemLabel = getAccountRelationItemLabel(String(callRecord?.method || ''));
+  if (!itemLabel || !Array.isArray(record.result)) return null;
+  return record.result.map((entry, index) => [`${itemLabel}[${index}]`, entry] as [string, any]);
 }
 
 function isTotalSpCoinsRecord(data: any): boolean {
@@ -1011,8 +1083,10 @@ function ensurePendingRewardsMethodEntries(entries: Array<[string, any]>): Array
 function ensureGetPendingRewardsParameterEntry(
   entries: Array<[string, any]>,
   pendingRewardsRecord: unknown,
+  hideEntryKeys: string[] = [],
 ): Array<[string, any]> {
   if (!isPendingRewardsRecord(pendingRewardsRecord)) return entries;
+  if (hideEntryKeys.includes('parameters')) return entries;
   if (entries.some(([key]) => key === 'parameters')) return entries;
   const accountKey = getPendingRewardsAccountKey(pendingRewardsRecord);
   if (!accountKey) return entries;
@@ -1391,6 +1465,37 @@ function getDisplayEntryPath(parentPath: string, parent: any, key: string, value
   if (isLiftedAccountPendingRewardsDisplayEntry(parent, key, value)) {
     return `${parentPath}.pendingRewards`;
   }
+  const relationItemMatch = String(key || '').match(/^(sponsor|recipient|agent|parentRecipient)Key\[(\d+)\]$/i);
+  if (relationItemMatch) {
+    const index = Number(relationItemMatch[2]);
+    if (
+      Number.isInteger(index) &&
+      parent &&
+      typeof parent === 'object' &&
+      !Array.isArray(parent) &&
+      getAccountRelationResultEntries(parent)
+    ) {
+      return `${parentPath}.result.${index}`;
+    }
+    const relationKeyByItemLabel: Record<string, string> = {
+      sponsor: 'sponsorKeys',
+      recipient: 'recipientKeys',
+      agent: 'agentKeys',
+      parentrecipient: 'parentRecipientKeys',
+    };
+    const relationKey = relationKeyByItemLabel[String(relationItemMatch[1] || '').toLowerCase()];
+    if (relationKey && Number.isInteger(index) && parent && typeof parent === 'object' && !Array.isArray(parent)) {
+      const relationNode = (parent as Record<string, unknown>)[relationKey];
+      if (
+        relationNode &&
+        typeof relationNode === 'object' &&
+        !Array.isArray(relationNode) &&
+        Array.isArray((relationNode as Record<string, unknown>).result)
+      ) {
+        return `${parentPath}.${relationKey}.result.${index}`;
+      }
+    }
+  }
   return `${parentPath}.${key}`;
 }
 
@@ -1650,12 +1755,10 @@ function formatPathSegmentLabel(nextPath: string): string {
 }
 
 function getPendingRewardsMethodSummaryValue(
-  methodName: string,
-  data: unknown,
+  _methodName: string,
+  _data: unknown,
 ): { key: string; value: unknown } | null {
-  if (!PENDING_REWARDS_METHOD_NAMES.has(methodName)) return null;
-  const accountKey = getPendingRewardsRefreshAccountKey(data);
-  return accountKey ? { key: 'accountKey', value: accountKey } : null;
+  return null;
 }
 
 function getPendingRewardsMethodResultSummaryValue(
@@ -1779,8 +1882,10 @@ function ensurePendingRewardsMetaEntry(
   entries: [string, any][],
   displayValue: unknown,
   accountRoleCounts?: AccountRoleCounts | null,
+  hideEntryKeys: string[] = [],
 ): [string, any][] {
   if (!isPendingRewardsRecord(displayValue)) return entries;
+  if (hideEntryKeys.includes('meta')) return entries;
   if (entries.some(([childKey]) => childKey === 'meta')) return entries;
   const role =
     resolveSpCoinAccountRoleLabel(accountRoleCounts) ||
@@ -1856,6 +1961,7 @@ function normalizeRewardCalculationDisplayShape(
 ): any {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
   const record = value as Record<string, unknown>;
+  if (record.TYPE === '--ACCOUNT--') return value;
   if (label === 'rewardNotations') {
     const nextNotations = { ...record };
     delete nextNotations.rewardsFormula;
@@ -2519,6 +2625,9 @@ function getVisibleEntries(
   const suppressPendingRewardsMethodInjection =
     hasSuppressedPendingRewardsMethodInjection(value) ||
     hasSuppressedPendingRewardsMethodInjection(displayValue);
+  const relationResultEntries = (() => {
+    return getAccountRelationResultEntries(displayValue);
+  })();
   const shouldDropRefreshedAccountPendingRewards = (childKey: string) => {
     const shouldDrop =
       childKey === 'pendingRewards' &&
@@ -2536,6 +2645,7 @@ function getVisibleEntries(
     (String(path || '').split('.').includes('result') || String(label || '').startsWith('result'));
   const forceShowChildren = shouldShowEmptyChildren(displayValue);
   if (showAll || forceShowChildren) {
+    if (relationResultEntries) return relationResultEntries;
     if (Array.isArray(displayValue)) {
       return displayValue.map((entry, index) => [String(index), entry] as [string, any]);
     }
@@ -2596,8 +2706,9 @@ function getVisibleEntries(
       )
       .sort(sortEntries);
     const entriesWithGetPendingRewardsParameters = ensureGetPendingRewardsParameterEntry(
-      ensurePendingRewardsMetaEntry(entries, displayValue, effectiveAccountRoleCounts),
+      ensurePendingRewardsMetaEntry(entries, displayValue, effectiveAccountRoleCounts, hideEntryKeys),
       displayValue,
+      hideEntryKeys,
     );
     const pendingRewardsRoleFilteredEntries = isPendingRewardsRecord(displayValue)
       ? filterPendingRewardsRoleEntries(entriesWithGetPendingRewardsParameters, effectiveAccountRoleCounts)
@@ -2608,6 +2719,13 @@ function getVisibleEntries(
           effectiveAccountRoleCounts,
         )
       : pendingRewardsRoleFilteredEntries;
+  }
+
+  if (relationResultEntries) {
+    return relationResultEntries.filter(([, entry]) => {
+      if (!entry || typeof entry !== 'object') return true;
+      return hasPopulatedContent(entry, hiddenRules, showStructureType);
+    });
   }
 
   if (Array.isArray(displayValue)) {
@@ -2674,8 +2792,9 @@ function getVisibleEntries(
     })
     .sort(sortEntries);
   const entriesWithGetPendingRewardsParameters = ensureGetPendingRewardsParameterEntry(
-    ensurePendingRewardsMetaEntry(entries, displayValue, effectiveAccountRoleCounts),
+    ensurePendingRewardsMetaEntry(entries, displayValue, effectiveAccountRoleCounts, hideEntryKeys),
     displayValue,
+    hideEntryKeys,
   );
   const pendingRewardsRoleFilteredEntries = isPendingRewardsRecord(displayValue)
     ? filterPendingRewardsRoleEntries(entriesWithGetPendingRewardsParameters, effectiveAccountRoleCounts)
@@ -2750,6 +2869,19 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     data && typeof data === 'object' && !Array.isArray(data)
       ? String((data as Record<string, unknown>).address || (data as Record<string, unknown>).accountKey || '').trim()
       : '';
+  const relationItemAddress =
+    isAccountRelationItemDisplayLabel(label) && data && typeof data === 'object' && !Array.isArray(data)
+      ? readRelationEntryAddress(data)
+      : '';
+  const relationItemDisplayParts = (() => {
+    if (!relationItemAddress) return null;
+    const displayText = String(label || '').trim();
+    const match = displayText.match(/^(.*?):\s*"([^"]+)"$/);
+    return {
+      label: String(match?.[1] || displayText).trim(),
+      address: String(match?.[2] || relationItemAddress).trim(),
+    };
+  })();
   const isPendingRewardsResultSummaryLabel = String(label || '').startsWith('result: ');
   const suppressInlineAddressNode = label === 'result';
   const isAddressNode =
@@ -2766,6 +2898,11 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
   const isLazySpCoinMetaData = isLazySpCoinMetaDataNode(data);
   const isLazyMasterAccountKeys = isLazyMasterAccountKeysNode(data);
   const isLazyAccountRelation = isLazyAccountRelationNode(data);
+  const accountRelationResultEntries = getAccountRelationResultEntries(data);
+  const isLoadedAccountRelation = Boolean(accountRelationResultEntries);
+  const accountRelationDisplayParts = isLazyAccountRelation || isLoadedAccountRelation
+    ? getLazyAccountRelationDisplayParts(data, String(label || path || ''))
+    : null;
   const isGetPendingRewardsNode = label === 'pendingRewards' && isPendingRewardsRecord(data);
   const getPendingRewardsAccount = isGetPendingRewardsNode ? getPendingRewardsAccountKey(data) : '';
   const getPendingRewardsResultSummary = isGetPendingRewardsNode
@@ -2907,6 +3044,13 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
       );
       return false;
     }
+    if (relationItemAddress) {
+      onTrace?.(
+        `[JSON_BRANCH_MATERIALIZE] kind=relation-item-record path=${currentPath} label=${String(label || '')} account=${relationItemAddress}`,
+      );
+      onLeafValueClick?.(relationItemAddress, currentPath, label || 'address');
+      return true;
+    }
     return false;
   }, [
     addressNode,
@@ -2927,6 +3071,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     onTrace,
     refreshAtMs,
     refreshClockMs,
+    relationItemAddress,
     totalSpCoinsPendingRewardsAction,
   ]);
 
@@ -3191,8 +3336,10 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
   const pendingRewardsMethodHeaderSummaryDisplay =
     pendingRewardsMethodResultSummaryDisplay || pendingRewardsMethodSummaryDisplay;
   const pendingRewardsMethodLabel = rerunnablePendingRewardsMethodDisplayName;
+  const isAccountRelationItemNode = isAccountRelationItemDisplayLabel(visibleStepLabel || label);
   const visibleInlineStepMethod =
     (hasPendingRewardsMethodSummary && !isDraggableScriptStep) ||
+    isAccountRelationItemNode ||
     isAccountRelationInlineMethod ||
     inlineStepMethod === visibleStepLabel ||
     inlineStepMethod === displayPathLabel ||
@@ -3499,15 +3646,22 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
                 : `${getLazyAccountRelationName(data, visibleStepLabel)} has no entries`
             }
           >
-            {getDisplayLabel(path ?? '')}
+            {accountRelationDisplayParts?.label ?? getDisplayLabel(path ?? '')}
+            {accountRelationDisplayParts?.suffix ? (
+              <span className="text-yellow-300">
+                {'\u00a0'}
+                {accountRelationDisplayParts.suffix.trimStart()}
+              </span>
+            ) : null}
           </button>
         ) : isGetPendingRewardsNode ? (
           <>
             <button
               type="button"
               className={`inline-flex bg-transparent p-0 text-left font-semibold underline decoration-dotted underline-offset-2 transition-colors hover:text-white focus:outline-none ${
-                isHighlighted ? highlightColorClass : 'text-white'
+                isHighlighted ? highlightColorClass : 'text-cyan-400'
               }`}
+              style={isHighlighted ? undefined : { color: '#22d3ee' }}
               onClick={(event) => {
                 event.stopPropagation();
                 if (!getPendingRewardsAccount) return;
@@ -3535,32 +3689,6 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
                   {renderDisplayLabelWithStatusSuffix(getPendingRewardsResultSummaryDisplay)}
                 </span>
               </>
-            ) : getPendingRewardsAccount ? (
-              <>
-                {' '}
-                {typeof onAddressNodeClick === 'function' ? (
-                  <button
-                    type="button"
-                    className={`inline-flex bg-transparent p-0 text-left font-semibold underline decoration-dotted underline-offset-2 transition-colors hover:text-white focus:outline-none ${
-                      isHighlighted ? highlightColorClass : 'text-green-400'
-                    }`}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onTrace?.(
-                        `[JSON_INSPECTOR_TRACE] getPendingRewards address click path=${path ?? ''} value=${getPendingRewardsAccount}`,
-                      );
-                      onAddressNodeClick(getPendingRewardsAccount, path ?? '', 'Account Key');
-                    }}
-                    title={`Show metadata for ${getPendingRewardsAccount}`}
-                  >
-                    "{getPendingRewardsAccount}"
-                  </button>
-                ) : (
-                  <span className={isHighlighted ? highlightColorClass : 'text-green-400'}>
-                    "{getPendingRewardsAccount}"
-                  </span>
-                )}
-              </>
             ) : null}
           </>
         ) : isDraggableScriptStep && scriptStepDragState?.onStepDoubleClick && draggableScriptStepNumberWithLabel !== null ? (
@@ -3579,8 +3707,9 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
             <button
               type="button"
               className={`inline-flex bg-transparent p-0 text-left font-semibold underline decoration-dotted underline-offset-2 transition-colors hover:text-white focus:outline-none ${
-                isHighlighted ? highlightColorClass : 'text-white'
+                isHighlighted ? highlightColorClass : 'text-cyan-400'
               }`}
+              style={isHighlighted ? undefined : { color: '#22d3ee' }}
               onClick={(event) => {
                 event.stopPropagation();
                 onTrace?.(
@@ -3651,6 +3780,71 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
                 )}
               </>
             ) : null}
+          </>
+        ) : isLoadedAccountRelation && accountRelationDisplayParts ? (
+          <button
+            type="button"
+            className={`inline-flex bg-transparent p-0 text-left font-semibold underline decoration-dotted underline-offset-2 transition-colors hover:text-white focus:outline-none ${
+              isHighlighted ? highlightColorClass : 'text-white'
+            }`}
+            onClick={(event) => {
+              event.stopPropagation();
+              onTrace?.(
+                `[JSON_INSPECTOR_TRACE] loaded relation node click path=${path ?? ''} method=${inlineStepMethod} count=${String(accountRelationResultEntries?.length ?? 0)}`,
+              );
+              toggleBranch();
+            }}
+            title={accountRelationDisplayParts.suffix ? `${accountRelationDisplayParts.label}${accountRelationDisplayParts.suffix}` : accountRelationDisplayParts.label}
+          >
+            {accountRelationDisplayParts.label}
+            {accountRelationDisplayParts.suffix ? (
+              <span className="text-yellow-300">
+                {'\u00a0'}
+                {accountRelationDisplayParts.suffix.trimStart()}
+              </span>
+            ) : null}
+          </button>
+        ) : relationItemDisplayParts ? (
+          <>
+            <button
+              type="button"
+              className={`inline-flex bg-transparent p-0 text-left font-semibold underline decoration-dotted underline-offset-2 transition-colors hover:text-white focus:outline-none ${
+                isHighlighted ? highlightColorClass : 'text-green-400'
+              }`}
+              onClick={(event) => {
+                event.stopPropagation();
+                onTrace?.(
+                  `[JSON_INSPECTOR_TRACE] relation item label click path=${path ?? ''} label=${relationItemDisplayParts.label} value=${relationItemAddress}`,
+                );
+                openBranch('label');
+              }}
+              title={`Open account record ${relationItemAddress}`}
+            >
+              {relationItemDisplayParts.label}
+            </button>
+            <span className={`font-semibold ${isHighlighted ? highlightColorClass : 'text-white'}`}>: </span>
+            {typeof onAddressNodeClick === 'function' ? (
+              <button
+                type="button"
+                className={`inline-flex bg-transparent p-0 text-left font-semibold underline decoration-dotted underline-offset-2 transition-colors hover:text-white focus:outline-none ${
+                  isHighlighted ? highlightColorClass : 'text-white'
+                }`}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onTrace?.(
+                    `[JSON_INSPECTOR_TRACE] relation item address click path=${path ?? ''} label=${relationItemDisplayParts.label} value=${relationItemAddress}`,
+                  );
+                  onAddressNodeClick(relationItemAddress, path ?? '', 'address');
+                }}
+                title={`Show metadata for ${relationItemAddress}`}
+              >
+                "{relationItemDisplayParts.address}"
+              </button>
+            ) : (
+              <span className={`font-semibold ${isHighlighted ? highlightColorClass : 'text-white'}`}>
+                "{relationItemDisplayParts.address}"
+              </span>
+            )}
           </>
         ) : isAddressNode && !showStepAddressAfterMethod && (typeof onAddressNodeClick === 'function' || isLazyAddressStub) ? (
           <>

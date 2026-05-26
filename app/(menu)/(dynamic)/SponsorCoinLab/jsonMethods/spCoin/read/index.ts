@@ -40,6 +40,7 @@ export type SpCoinReadMethod =
   | 'getAccountLinks'
   | 'getAccountRecord'
   | 'getAccountRecordShallow'
+  | 'getSummaryRecord'
   | 'getAccountRewardUpdateTimestamps'
   | 'getAccountRoleSummary'
   | 'getAccountRoles'

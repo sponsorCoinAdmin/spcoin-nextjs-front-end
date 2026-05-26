@@ -107,7 +107,7 @@ export function deriveReadWarningPayload(
     }
   }
   if (
-    selectedMethodName === 'getAccountRecord' &&
+    (selectedMethodName === 'getAccountRecord' || selectedMethodName === 'getSummaryRecord') &&
     result &&
     typeof result === 'object' &&
     !Array.isArray(result)

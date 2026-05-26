@@ -682,6 +682,126 @@ function withLazyAccountRelationBuckets(result: unknown, requestedAccountKey: un
   };
 }
 
+function getRecordValue(record: unknown, key: string) {
+  return record && typeof record === 'object' && !Array.isArray(record)
+    ? (record as Record<string, unknown>)[key]
+    : undefined;
+}
+
+function getRecordObject(record: unknown, key: string): Record<string, unknown> | null {
+  const value = getRecordValue(record, key);
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function getRoleRewardMethods(roleValue: unknown) {
+  const role = String(roleValue || '').trim();
+  if (role.includes('Recipient')) {
+    return {
+      estimate: 'estimateOffChainRecipientRewards',
+      claim: 'claimOnChainRecipientRewards',
+    };
+  }
+  if (role.includes('Agent')) {
+    return {
+      estimate: 'estimateOffChainAgentRewards',
+      claim: 'claimOnChainAgentRewards',
+    };
+  }
+  return {
+    estimate: 'estimateOffChainSponsorRewards',
+    claim: 'claimOnChainSponsorRewards',
+  };
+}
+
+function getRewardCalculationFormulaNode(pendingRewards: Record<string, unknown> | null, roleValue: unknown) {
+  const methods = getRoleRewardMethods(roleValue);
+  const estimate = getRecordObject(pendingRewards, methods.estimate);
+  const meta = getRecordObject(estimate, 'meta');
+  const rewardCalculation = getRecordObject(meta, 'rewardCalculation');
+  return getRecordObject(rewardCalculation, 'rewardsFormula');
+}
+
+function buildSummaryPendingRewards(record: Record<string, unknown>, accountKey: string) {
+  const totalSpCoins = getRecordObject(record, 'totalSpCoins');
+  const sourcePendingRewards = getRecordObject(totalSpCoins, 'pendingRewards') ?? getRecordObject(record, 'pendingRewards');
+  const methods = getRoleRewardMethods(record.role);
+  const pendingRewards: Record<string, unknown> = {
+    TYPE: '--PENDING_REWARDS--',
+    pendingRewards: sourcePendingRewards?.pendingRewards ?? record.pendingRewards ?? '0',
+    __showEmptyFields: true,
+  };
+
+  const estimate = getRecordObject(sourcePendingRewards, methods.estimate);
+  const claim = getRecordObject(sourcePendingRewards, methods.claim);
+  pendingRewards[methods.estimate] =
+    estimate ?? buildLazyPendingRewardsMethod(accountKey, methods.estimate);
+  pendingRewards[methods.claim] =
+    claim ?? buildLazyPendingRewardsMethod(accountKey, methods.claim);
+  return pendingRewards;
+}
+
+function buildSummaryTotalSpCoins(record: Record<string, unknown>) {
+  const totalSpCoins = getRecordObject(record, 'totalSpCoins');
+  return {
+    TYPE: '--TOTAL_SP_COINS--',
+    totalSpCoins:
+      totalSpCoins?.totalSpCoins ??
+      record.totalSpCoins ??
+      (() => {
+        try {
+          return (
+            BigInt(String(totalSpCoins?.balanceOf ?? record.balanceOf ?? record.accountBalance ?? '0').replace(/,/g, '')) +
+            BigInt(String(totalSpCoins?.stakedBalance ?? record.stakedBalance ?? record.stakedAccountSPCoins ?? '0').replace(/,/g, ''))
+          ).toString();
+        } catch {
+          return '0';
+        }
+      })(),
+  };
+}
+
+function buildSummaryAccountRecord(record: unknown, requestedAccountKey: string, options: { expandRecipients?: boolean } = {}) {
+  if (!record || typeof record !== 'object' || Array.isArray(record)) return record;
+  const source = record as Record<string, unknown>;
+  const accountKey = normalizeAddressDisplay(source.accountKey || requestedAccountKey);
+  const pendingRewards = buildSummaryPendingRewards(source, accountKey);
+  const rewardsFormula = getRewardCalculationFormulaNode(
+    getRecordObject(getRecordObject(source, 'totalSpCoins'), 'pendingRewards') ?? getRecordObject(source, 'pendingRewards'),
+    source.role,
+  );
+  const summary: Record<string, unknown> = {
+    TYPE: '--ACCOUNT--',
+    accountKey,
+    role: source.role,
+    rewardsEarned: source.stakingRewards ?? source.accountStakingRewards ?? source.rewardsEarned ?? '0',
+    totalSpCoins: buildSummaryTotalSpCoins(source),
+    pendingRewards,
+    sponsorCount: String(source.sponsorCount ?? '0'),
+    recipientCount: String(source.recipientCount ?? '0'),
+    agentCount: String(source.agentCount ?? '0'),
+    parentRecipientCount: String(source.parentRecipientCount ?? '0'),
+    recipientKeys: options.expandRecipients
+      ? source.recipientKeys
+      : buildLazyAccountRelation(accountKey, 'recipientKeys', source.recipientCount),
+    agentKeys: buildLazyAccountRelation(accountKey, 'agentKeys', source.agentCount),
+    sponsorKeys: buildLazyAccountRelation(accountKey, 'sponsorKeys', source.sponsorCount),
+    parentRecipientKeys: buildLazyAccountRelation(accountKey, 'parentRecipientKeys', source.parentRecipientCount),
+    __showEmptyFields: true,
+  };
+
+  if (rewardsFormula) {
+    const rewardNotations = getRecordObject(rewardsFormula, 'rewardsNotations') ?? getRecordObject(rewardsFormula, 'rewardNotations');
+    if (rewardNotations) {
+      summary.rewardNotations = rewardNotations;
+    }
+    summary.rewardFormulas = rewardsFormula;
+  }
+
+  return summary;
+}
+
 function normalizeOnChainAccountRecordResult(result: unknown, requestedAccountKey: unknown) {
   if (!Array.isArray(result) || result.length < 12) return result;
   const [
@@ -1728,12 +1848,102 @@ export async function POST(request: NextRequest) {
                 throw new Error('getActiveAccountKeyAt is not available on the current SpCoin contract.');
               }
               break;
+            case 'getSummaryRecord':
+              {
+                const accountKey = requireAddressParam('Account Key', 'getSummaryRecord');
+                appendTrace(`getSummaryRecord path start; accountKey=${accountKey}`);
+                const loadAccountRecord = async (targetAccountKey: string) => {
+                  let accountRecord: unknown;
+                  if (typeof (access.read as Record<string, unknown>).getAccountRecord === 'function') {
+                    appendTrace(`getSummaryRecord loading account via access.read.getAccountRecord; accountKey=${targetAccountKey}`);
+                    accountRecord = await access.read.getAccountRecord(targetAccountKey, readCacheOptions);
+                  } else if (typeof (contract as Record<string, unknown>).getAccountRecord === 'function') {
+                    const cachedRecord = cacheMode === 'bypass' ? null : getCachedAccountRecord(contractAddress, targetAccountKey);
+                    if (cachedRecord !== null && hasAccountRecordCounts(cachedRecord)) {
+                      appendTrace(`getSummaryRecord loading cached account record; accountKey=${targetAccountKey}`);
+                      accountRecord = cachedRecord;
+                    } else {
+                      if (cachedRecord !== null) {
+                        invalidateCachedAccountRecord(contractAddress, targetAccountKey);
+                      }
+                      appendTrace(`getSummaryRecord loading account via direct contract fallback; accountKey=${targetAccountKey}`);
+                      accountRecord = normalizeOnChainAccountRecordResult(await (
+                        contract as unknown as { getAccountRecord: (accountKey: string) => Promise<unknown> }
+                      ).getAccountRecord(targetAccountKey), targetAccountKey);
+                      if (cacheMode !== 'bypass' && !isEmptyNormalizedAccountRecord(accountRecord)) {
+                        setCachedAccountRecord(contractAddress, targetAccountKey, accountRecord);
+                      }
+                    }
+                  } else {
+                    throw new Error('getSummaryRecord requires getAccountRecord on the current SpCoin access path.');
+                  }
+
+                  return withLazyAccountRelationBuckets(
+                    await withAccountRoleFlags(accountRecord, targetAccountKey, access.read),
+                    targetAccountKey,
+                  );
+                };
+                const loadRelationKeys = async (targetAccountKey: string, methodName: 'getRecipientKeys' | 'getAgentKeys' | 'getSponsorKeys') => {
+                  const contractMethod = (contract as Record<string, unknown>)[methodName];
+                  if (typeof contractMethod === 'function') {
+                    return normalizeAddressListResult(await (contractMethod as (key: string) => Promise<unknown>)(targetAccountKey));
+                  }
+                  const accessMethod = (access.read as Record<string, unknown>)[methodName];
+                  if (typeof accessMethod === 'function') {
+                    return normalizeAddressListResult(await (accessMethod as (key: string) => Promise<unknown>)(targetAccountKey));
+                  }
+                  return [];
+                };
+
+                const rootRecord = await loadAccountRecord(accountKey);
+                const rootSummary = buildSummaryAccountRecord(rootRecord, accountKey, { expandRecipients: true }) as Record<string, unknown>;
+                const recipientKeys = await loadRelationKeys(accountKey, 'getRecipientKeys');
+                rootSummary.recipientCount = String(recipientKeys.length || rootSummary.recipientCount || '0');
+                rootSummary.recipientKeys = {
+                  call: {
+                    method: 'getRecipientKeys',
+                    parameters: {
+                      'msg.sender': normalizeAddressDisplay(accountKey),
+                    },
+                  },
+                  meta: {},
+                  result: await Promise.all(recipientKeys.map(async (recipientKey) => {
+                    const childRecord = await loadAccountRecord(recipientKey);
+                    const childSummary = buildSummaryAccountRecord(childRecord, recipientKey) as Record<string, unknown>;
+                    const [childAgentKeys, childSponsorKeys] = await Promise.all([
+                      loadRelationKeys(recipientKey, 'getAgentKeys'),
+                      loadRelationKeys(recipientKey, 'getSponsorKeys'),
+                    ]);
+                    childSummary.agentCount = String(childAgentKeys.length || childSummary.agentCount || '0');
+                    childSummary.sponsorCount = String(childSponsorKeys.length || childSummary.sponsorCount || '0');
+                    childSummary.agentKeys = buildLazyAccountRelation(normalizeAddressDisplay(recipientKey), 'agentKeys', childAgentKeys.length);
+                    childSummary.sponsorKeys = buildLazyAccountRelation(normalizeAddressDisplay(recipientKey), 'sponsorKeys', childSponsorKeys.length);
+                    return {
+                      call: {
+                        method: 'getAccountRecord',
+                        parameters: {
+                          'Account Key': normalizeAddressDisplay(recipientKey),
+                        },
+                      },
+                      meta: {},
+                      result: childSummary,
+                      __forceExpanded: true,
+                      __showEmptyFields: true,
+                    };
+                  })),
+                  __forceExpanded: true,
+                  __showEmptyFields: true,
+                };
+                stepResult = rootSummary;
+              }
+              break;
             case 'getAccountRecord':
               {
-                const accountKey = requireAddressParam('Account Key', 'getAccountRecord');
-                appendTrace(`getAccountRecord path start; accountKey=${accountKey}`);
+                const methodLabel = 'getAccountRecord';
+                const accountKey = requireAddressParam('Account Key', methodLabel);
+                appendTrace(`${methodLabel} path start; accountKey=${accountKey}`);
                 if (typeof (access.read as Record<string, unknown>).getAccountRecord === 'function') {
-                  appendTrace('getAccountRecord using access.read.getAccountRecord');
+                  appendTrace(`${methodLabel} using access.read.getAccountRecord`);
                   stepResult = withLazyAccountRelationBuckets(
                     await withAccountRoleFlags(
                       await access.read.getAccountRecord(accountKey, readCacheOptions),
@@ -1745,19 +1955,19 @@ export async function POST(request: NextRequest) {
                 } else if (typeof (contract as Record<string, unknown>).getAccountRecord === 'function') {
                   const cachedRecord = cacheMode === 'bypass' ? null : getCachedAccountRecord(contractAddress, accountKey);
                   if (cachedRecord !== null && hasAccountRecordCounts(cachedRecord)) {
-                    appendTrace('getAccountRecord using cached normalized contract record');
+                    appendTrace(`${methodLabel} using cached normalized contract record`);
                     stepResult = withLazyAccountRelationBuckets(
                       await withAccountRoleFlags(cachedRecord, accountKey, access.read),
                       accountKey,
                     );
                   } else {
                     if (cachedRecord !== null) {
-                      appendTrace('getAccountRecord invalidating incomplete cached record');
+                      appendTrace(`${methodLabel} invalidating incomplete cached record`);
                       invalidateCachedAccountRecord(contractAddress, accountKey);
                     } else if (cacheMode === 'bypass') {
-                      appendTrace('getAccountRecord persistent normalized contract cache bypassed');
+                      appendTrace(`${methodLabel} persistent normalized contract cache bypassed`);
                     }
-                    appendTrace('getAccountRecord using direct contract fallback');
+                    appendTrace(`${methodLabel} using direct contract fallback`);
                     stepResult = withLazyAccountRelationBuckets(
                       await withAccountRoleFlags(
                         normalizeOnChainAccountRecordResult(await (
@@ -1773,7 +1983,7 @@ export async function POST(request: NextRequest) {
                     }
                   }
                 } else {
-                  throw new Error('getAccountRecord is not available on the current SpCoin access path.');
+                  throw new Error(`${methodLabel} is not available on the current SpCoin access path.`);
                 }
               }
               break;
@@ -2720,7 +2930,7 @@ export async function POST(request: NextRequest) {
         }
 
         const warning =
-          step.method === 'getAccountRecord' &&
+          (step.method === 'getAccountRecord' || step.method === 'getSummaryRecord') &&
           step.panel === 'spcoin_rread' &&
           isEmptyNormalizedAccountRecord(result)
             ? {

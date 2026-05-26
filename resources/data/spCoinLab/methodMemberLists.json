@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-26T07:06:13.649Z",
+  "updatedAt": "2026-05-26T20:48:01.874Z",
   "lists": {
     "serialization": {
       "Basic": {
@@ -151,6 +151,7 @@
         "getAccountLinks": true,
         "getAccountRecord": true,
         "getAccountRecordShallow": true,
+        "getSummaryRecord": true,
         "getAccountRewardUpdateTimestamps": false,
         "getAccountRoleSummary": true,
         "getAccountRoles": true,
@@ -241,6 +242,7 @@
         "getAccountLinks": true,
         "getAccountRecord": true,
         "getAccountRecordShallow": true,
+        "getSummaryRecord": true,
         "getAccountRewardUpdateTimestamps": false,
         "getAccountRoleSummary": true,
         "getAccountRoles": true,
@@ -331,6 +333,7 @@
         "getAccountLinks": false,
         "getAccountRecord": false,
         "getAccountRecordShallow": false,
+        "getSummaryRecord": false,
         "getAccountRewardUpdateTimestamps": true,
         "getAccountRoleSummary": false,
         "getAccountRoles": false,
@@ -421,6 +424,7 @@
         "getAccountLinks": false,
         "getAccountRecord": false,
         "getAccountRecordShallow": false,
+        "getSummaryRecord": false,
         "getAccountRewardUpdateTimestamps": false,
         "getAccountRoleSummary": false,
         "getAccountRoles": false,
@@ -511,6 +515,7 @@
         "getAccountLinks": false,
         "getAccountRecord": false,
         "getAccountRecordShallow": false,
+        "getSummaryRecord": false,
         "getAccountRewardUpdateTimestamps": false,
         "getAccountRoleSummary": false,
         "getAccountRoles": false,
@@ -883,6 +888,7 @@
     "spCoinRead:getAccountLinks": "spcoin_rread",
     "spCoinRead:getAccountRecord": "spcoin_rread",
     "spCoinRead:getAccountRecordShallow": "spcoin_rread",
+    "spCoinRead:getSummaryRecord": "spcoin_rread",
     "spCoinRead:getAccountRewardUpdateTimestamps": "spcoin_rread",
     "spCoinRead:getAccountRoleSummary": "spcoin_rread",
     "spCoinRead:getAccountRoles": "spcoin_rread",

@@ -17,6 +17,7 @@ import getAgentListSize from './getAgentListSize';
 import getAccountLinks from './getAccountLinks';
 import getAccountRecord from './getAccountRecord';
 import getAccountRecordShallow from './getAccountRecordShallow';
+import getSummaryRecord from './getSummaryRecord';
 import getAccountRewardUpdateTimestamps from './getAccountRewardUpdateTimestamps';
 import getAccountRoleSummary from './getAccountRoleSummary';
 import getAccountRoles from './getAccountRoles';
@@ -96,6 +97,7 @@ export const SPCOIN_READ_METHOD_DEFS = {
   getAccountLinks,
   getAccountRecord,
   getAccountRecordShallow,
+  getSummaryRecord,
   getAccountRewardUpdateTimestamps,
   getAccountRoleSummary,
   getAccountRoles,
