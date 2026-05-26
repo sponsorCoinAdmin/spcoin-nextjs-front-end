@@ -714,6 +714,14 @@ function isAccountRelationItemDisplayLabel(value: unknown): boolean {
   return /^(?:sponsor|recipient|agent|parentRecipient)Key\[\d+\](?::|$)/i.test(String(value || '').trim());
 }
 
+function isAccountRelationIndexDisplayLabel(value: unknown): boolean {
+  return /^\d+(?::|$)/.test(String(value || '').trim());
+}
+
+function isAccountRelationResultItemPath(value: unknown): boolean {
+  return /(?:^|\.)(?:sponsorKeys|recipientKeys|agentKeys|parentRecipientKeys)\.result\.\d+$/i.test(String(value || '').trim());
+}
+
 function readRelationEntryAddress(entry: unknown): string {
   if (typeof entry === 'string' && isAddressText(entry)) return entry.trim();
   if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return '';
@@ -747,7 +755,7 @@ function getAccountRelationResultEntries(value: unknown): Array<[string, any]> |
       : null;
   const itemLabel = getAccountRelationItemLabel(String(callRecord?.method || ''));
   if (!itemLabel || !Array.isArray(record.result)) return null;
-  return record.result.map((entry, index) => [`${itemLabel}[${index}]`, entry] as [string, any]);
+  return record.result.map((entry, index) => [String(index), entry] as [string, any]);
 }
 
 function isTotalSpCoinsRecord(data: any): boolean {
@@ -1464,6 +1472,17 @@ function isLiftedAccountPendingRewardsDisplayEntry(parent: any, key: string, val
 function getDisplayEntryPath(parentPath: string, parent: any, key: string, value: any): string {
   if (isLiftedAccountPendingRewardsDisplayEntry(parent, key, value)) {
     return `${parentPath}.pendingRewards`;
+  }
+  const relationIndex = Number(String(key || '').trim());
+  if (
+    Number.isInteger(relationIndex) &&
+    relationIndex >= 0 &&
+    parent &&
+    typeof parent === 'object' &&
+    !Array.isArray(parent) &&
+    getAccountRelationResultEntries(parent)
+  ) {
+    return `${parentPath}.result.${relationIndex}`;
   }
   const relationItemMatch = String(key || '').match(/^(sponsor|recipient|agent|parentRecipient)Key\[(\d+)\]$/i);
   if (relationItemMatch) {
@@ -2838,10 +2857,17 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
   accountRoleCounts = null,
   scriptStepDragState,
 }) => {
-  const effectiveAccountRoleCounts = resolveEffectiveAccountRoleCounts(
-    getAccountRoleCounts(data),
-    accountRoleCounts,
-  );
+  const currentAccountRoleCounts = getAccountRoleCounts(data);
+  const shouldPreferInheritedAccountRoleCounts =
+    hasExplicitAccountRoleSource(accountRoleCounts) &&
+    label === 'pendingRewards' &&
+    isPendingRewardsRecord(data);
+  const effectiveAccountRoleCounts = shouldPreferInheritedAccountRoleCounts
+    ? accountRoleCounts
+    : resolveEffectiveAccountRoleCounts(
+        currentAccountRoleCounts,
+        accountRoleCounts,
+      );
   const effectiveHideEntryKeys = [...hideEntryKeys];
   if (
     label &&
@@ -2870,7 +2896,11 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
       ? String((data as Record<string, unknown>).address || (data as Record<string, unknown>).accountKey || '').trim()
       : '';
   const relationItemAddress =
-    isAccountRelationItemDisplayLabel(label) && data && typeof data === 'object' && !Array.isArray(data)
+    (isAccountRelationItemDisplayLabel(label) ||
+      (isAccountRelationIndexDisplayLabel(label) && isAccountRelationResultItemPath(path))) &&
+    data &&
+    typeof data === 'object' &&
+    !Array.isArray(data)
       ? readRelationEntryAddress(data)
       : '';
   const relationItemDisplayParts = (() => {
@@ -3336,7 +3366,9 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
   const pendingRewardsMethodHeaderSummaryDisplay =
     pendingRewardsMethodResultSummaryDisplay || pendingRewardsMethodSummaryDisplay;
   const pendingRewardsMethodLabel = rerunnablePendingRewardsMethodDisplayName;
-  const isAccountRelationItemNode = isAccountRelationItemDisplayLabel(visibleStepLabel || label);
+  const isAccountRelationItemNode =
+    isAccountRelationItemDisplayLabel(visibleStepLabel || label) ||
+    (isAccountRelationIndexDisplayLabel(visibleStepLabel || label) && isAccountRelationResultItemPath(path));
   const visibleInlineStepMethod =
     (hasPendingRewardsMethodSummary && !isDraggableScriptStep) ||
     isAccountRelationItemNode ||
