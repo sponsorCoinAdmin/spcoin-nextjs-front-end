@@ -645,7 +645,9 @@ export default function OutputResultsCard({
     () =>
       Object.entries(showPayloadFields).flatMap(([key, visible]) => {
         if (visible) return [];
-        return key === 'onChainCalls' ? ['onChainCalls', 'methodOnChainCalls'] : [key];
+        return key === 'onChainCalls'
+          ? ['onChainCalls', 'methodOnChainCalls', 'totalOnChainMs', 'totalMethodsOnChainMs', 'childOnChainCalls']
+          : [key];
       }),
     [showPayloadFields],
   );

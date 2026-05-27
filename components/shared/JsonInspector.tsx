@@ -1423,6 +1423,75 @@ function getDirectOnChainCallsMs(value: unknown): number {
   }, 0);
 }
 
+function getChildOnChainCallsMs(value: unknown): number {
+  if (!Array.isArray(value)) return 0;
+  return value.reduce((sum, entry) => {
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return sum;
+    return sum + toOnChainMsNumber((entry as Record<string, unknown>).totalOnChainMs);
+  }, 0);
+}
+
+function buildOnChainCallBreakdownEntries(calls: unknown): Record<string, unknown> {
+  if (!Array.isArray(calls)) return {};
+  return calls.reduce<Record<string, unknown>>((entries, entry, index) => {
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return entries;
+    const entryRecord = entry as Record<string, unknown>;
+    const method = String(entryRecord.method || 'onChainCall').trim();
+    const totalMs = toOnChainMsNumber(entryRecord.onChainRunTimeMs);
+    const { method: _method, onChainRunTimeMs: _onChainRunTimeMs, ...rest } = entryRecord;
+    entries[`${index + 1} ${method}: ${totalMs}ms`] = {
+      __forceExpanded: true,
+      ...rest,
+      totalOnChainMs: totalMs,
+    };
+    void _method;
+    void _onChainRunTimeMs;
+    return entries;
+  }, {});
+}
+
+function getChildOnChainCallEntryLabel(index: string, value: unknown): string {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return index;
+  const record = value as Record<string, unknown>;
+  const method = String(record.method || '').trim();
+  const totalMs = toOnChainMsNumber(record.totalOnChainMs ?? record.onChainRunTimeMs);
+  if (!method && totalMs <= 0) return index;
+  if (!method) return `${index}: ${totalMs}ms`;
+  return `${index} ${method}: ${totalMs}ms`;
+}
+
+function normalizeOnChainTimingDisplayShape(value: any): any {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
+  const record = value as Record<string, unknown>;
+  const calls = Array.isArray(record.calls) ? record.calls : null;
+  const childOnChainCalls = Array.isArray(record.childOnChainCalls) ? record.childOnChainCalls : null;
+  if (!calls && !childOnChainCalls) return value;
+
+  const existingTotalRecord =
+    record.totalOnChainMs && typeof record.totalOnChainMs === 'object' && !Array.isArray(record.totalOnChainMs)
+      ? (record.totalOnChainMs as Record<string, unknown>)
+      : null;
+  const totalOnChainMs =
+    record.totalOnChainMs !== undefined && !existingTotalRecord
+      ? record.totalOnChainMs
+      : existingTotalRecord?.totalOnChainMs ??
+        getDirectOnChainCallsMs(record) + getChildOnChainCallsMs(childOnChainCalls);
+  const { calls: _calls, childOnChainCalls: _childOnChainCalls, totalOnChainMs: _totalOnChainMs, ...rest } = record;
+  void _calls;
+  void _childOnChainCalls;
+  void _totalOnChainMs;
+
+  return {
+    ...rest,
+    totalOnChainMs: {
+      ...(existingTotalRecord ?? {}),
+      totalOnChainMs,
+      ...buildOnChainCallBreakdownEntries(calls),
+      ...(childOnChainCalls ? { childOnChainCalls } : {}),
+    },
+  };
+}
+
 function withPendingRewardsTiming(record: Record<string, unknown>, pendingRewardsMs: number): Record<string, unknown> {
   if (pendingRewardsMs <= 0) return record;
   const pendingRewards = record.pendingRewards;
@@ -2652,6 +2721,8 @@ function getVisibleEntries(
       leftKey !== 'methodOnChainCalls' &&
       leftKey !== 'totalMethodsOnChainMs'
     ) return -1;
+    if (leftKey.startsWith('childOnChainCalls') && rightKey !== 'totalOnChainMs') return -1;
+    if (rightKey.startsWith('childOnChainCalls') && leftKey !== 'totalOnChainMs') return 1;
     if (leftKey === 'totalOnChainMs' && rightKey !== 'totalOnChainMs') return 1;
     if (rightKey === 'totalOnChainMs' && leftKey !== 'totalOnChainMs') return -1;
     if (leftKey === 'claim' && rightKey === 'update') return -1;
@@ -2682,9 +2753,14 @@ function getVisibleEntries(
   const isRefreshedAccountRecordNode =
     String(path || '').split('.').includes('refreshedAccountRecord') ||
     String(label || '').startsWith('refreshedAccountRecord');
+  const displayValueAfterRewardStrip = stripRedundantPendingRewardResultFields(displayValueBeforeAccountShape, path);
+  const displayValueAfterTimingShape =
+    label === 'totalOnChainMs' || String(label || '').startsWith('totalOnChainMs:')
+      ? displayValueAfterRewardStrip
+      : normalizeOnChainTimingDisplayShape(displayValueAfterRewardStrip);
   const displayValue = normalizeRewardCalculationDisplayShape(
     normalizeAccountRecordDisplayShape(
-      stripRedundantPendingRewardResultFields(displayValueBeforeAccountShape, path),
+      displayValueAfterTimingShape,
       { suppressPendingRewardsLift: isRefreshedAccountRecordNode },
     ),
     accountRoleCounts,
@@ -2753,6 +2829,7 @@ function getVisibleEntries(
           childKey !== '__showEmptyFields' &&
           childKey !== 'annualInflationRate' &&
           childKey !== 'role(s)' &&
+          !(childKey === 'onChainCalls' && isAccountRelationResultItemPath(path)) &&
           !shouldDropRefreshedAccountPendingRewards(childKey) &&
           !shouldDropPendingRewardsClaimResultArtifact(childKey) &&
           !(childKey === 'parameters' && typeof (displayValue as Record<string, unknown>).call === 'object') &&
@@ -2840,6 +2917,7 @@ function getVisibleEntries(
       if (childKey === '__showEmptyFields') return false;
       if (childKey === 'annualInflationRate') return false;
       if (childKey === 'role(s)') return false;
+      if (childKey === 'onChainCalls' && isAccountRelationResultItemPath(path)) return false;
       if (shouldDropRefreshedAccountPendingRewards(childKey)) return false;
       if (shouldDropPendingRewardsClaimResultArtifact(childKey)) return false;
       if (childKey === 'parameters' && displayValue && typeof displayValue === 'object' && !Array.isArray(displayValue) && typeof (displayValue as Record<string, unknown>).call === 'object') return false;
@@ -2986,6 +3064,8 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
   const accountRelationDisplayParts = isLazyAccountRelation || isLoadedAccountRelation
     ? getLazyAccountRelationDisplayParts(data, String(label || path || ''))
     : null;
+  const showOnChainCallsField = !effectiveHideEntryKeys.includes('onChainCalls');
+  const shouldShowLoadedRelationTimingMarker = isLoadedAccountRelation && showOnChainCallsField;
   const isGetPendingRewardsNode = label === 'pendingRewards' && isPendingRewardsRecord(data);
   const getPendingRewardsAccount = isGetPendingRewardsNode ? getPendingRewardsAccountKey(data) : '';
   const getPendingRewardsResultSummary = isGetPendingRewardsNode
@@ -3510,14 +3590,13 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
               }, 0);
               return `onChainCalls: ${totalMs}ms`;
             })()
-        : key === 'childOnChainCalls' && String(path || '').endsWith('.onChainCalls') && Array.isArray(value)
+        : key === 'childOnChainCalls' && Array.isArray(value)
           ? (() => {
-              const totalMs = (value as unknown[]).reduce((sum: number, entry: unknown) => {
-                const ms = Number(String((entry as Record<string, unknown>)?.totalOnChainMs ?? '0').replace(/,/g, ''));
-                return sum + (Number.isFinite(ms) ? ms : 0);
-              }, 0);
+              const totalMs = getChildOnChainCallsMs(value);
               return `childOnChainCalls: ${totalMs}ms`;
             })()
+        : /^\d+$/.test(String(key)) && String(path || '').includes('childOnChainCalls')
+          ? getChildOnChainCallEntryLabel(String(key), value)
         : key;
     if (key === 'creationTime' || key === 'creationDate' || key === 'Date Created') {
       if (!showAll && hiddenRules.creationDates) return null;
@@ -3890,7 +3969,9 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
               );
               toggleBranch();
             }}
-            title={accountRelationDisplayParts.suffix ? `${accountRelationDisplayParts.label}${accountRelationDisplayParts.suffix}` : accountRelationDisplayParts.label}
+            title={`${accountRelationDisplayParts.label}${accountRelationDisplayParts.suffix || ''}${
+              shouldShowLoadedRelationTimingMarker ? ':' : ''
+            }`}
           >
             {accountRelationDisplayParts.label}
             {accountRelationDisplayParts.suffix ? (
@@ -3899,6 +3980,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
                 {accountRelationDisplayParts.suffix.trimStart()}
               </span>
             ) : null}
+            {shouldShowLoadedRelationTimingMarker ? ':' : null}
           </button>
         ) : relationItemDisplayParts ? (
           <>
