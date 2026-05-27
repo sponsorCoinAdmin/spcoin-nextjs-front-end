@@ -496,6 +496,34 @@ function mergePendingRewardsBranch(existing: unknown, refreshed: unknown) {
   return mergePendingRewardsMethods(existingRecord, refreshedRecord);
 }
 
+const ACCOUNT_RELATION_BRANCH_KEYS = [
+  'recipientKeys',
+  'agentKeys',
+  'sponsorKeys',
+  'parentRecipientKeys',
+  'recipientRates',
+  'agentRates',
+] as const;
+
+function isLazyAccountRelation(value: unknown) {
+  return Boolean(
+    value &&
+      typeof value === 'object' &&
+      !Array.isArray(value) &&
+      (value as Record<string, unknown>).__lazyAccountRelation === true,
+  );
+}
+
+function isEmptyRecord(value: unknown) {
+  return Boolean(value && typeof value === 'object' && !Array.isArray(value) && Object.keys(value as Record<string, unknown>).length === 0);
+}
+
+function shouldPreserveAccountRelationBranch(existing: unknown, refreshed: unknown) {
+  if (existing === undefined || existing === null) return false;
+  if (isLazyAccountRelation(existing) || isEmptyRecord(existing)) return false;
+  return refreshed === undefined || refreshed === null || isLazyAccountRelation(refreshed) || isEmptyRecord(refreshed);
+}
+
 function mergeAccountRecordForOutput(existing: Record<string, unknown>, refreshed: Record<string, unknown>) {
   const existingTotal =
     existing.totalSpCoins && typeof existing.totalSpCoins === 'object' && !Array.isArray(existing.totalSpCoins)
@@ -509,6 +537,11 @@ function mergeAccountRecordForOutput(existing: Record<string, unknown>, refreshe
     ...existing,
     ...refreshed,
   };
+  for (const key of ACCOUNT_RELATION_BRANCH_KEYS) {
+    if (shouldPreserveAccountRelationBranch(existing[key], refreshed[key])) {
+      nextRecord[key] = existing[key];
+    }
+  }
 
   if (
     existing.pendingRewards &&
