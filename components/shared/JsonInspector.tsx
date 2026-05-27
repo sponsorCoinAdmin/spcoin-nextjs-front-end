@@ -2776,6 +2776,23 @@ function getVisibleEntries(
   const relationResultEntries = (() => {
     return getAccountRelationResultEntries(displayValue);
   })();
+  const shouldShowRelationOnChainCalls = !hideEntryKeys.includes('onChainCalls');
+  const getRelationResultEntriesWithTiming = () => {
+    if (!relationResultEntries) return null;
+    if (
+      !shouldShowRelationOnChainCalls ||
+      !displayValue ||
+      typeof displayValue !== 'object' ||
+      Array.isArray(displayValue) ||
+      !Object.prototype.hasOwnProperty.call(displayValue, 'onChainCalls')
+    ) {
+      return relationResultEntries;
+    }
+    return [
+      ...relationResultEntries,
+      ['onChainCalls', (displayValue as Record<string, unknown>).onChainCalls] as [string, any],
+    ];
+  };
   const shouldDropRefreshedAccountPendingRewards = (childKey: string) => {
     const shouldDrop =
       childKey === 'pendingRewards' &&
@@ -2793,7 +2810,8 @@ function getVisibleEntries(
     (String(path || '').split('.').includes('result') || String(label || '').startsWith('result'));
   const forceShowChildren = shouldShowEmptyChildren(displayValue);
   if (showAll || forceShowChildren) {
-    if (relationResultEntries) return relationResultEntries;
+    const relationEntries = getRelationResultEntriesWithTiming();
+    if (relationEntries) return relationEntries;
     if (Array.isArray(displayValue)) {
       return displayValue.map((entry, index) => [String(index), entry] as [string, any]);
     }
@@ -2871,7 +2889,7 @@ function getVisibleEntries(
   }
 
   if (relationResultEntries) {
-    return relationResultEntries.filter(([, entry]) => {
+    return getRelationResultEntriesWithTiming()!.filter(([, entry]) => {
       if (!entry || typeof entry !== 'object') return true;
       return hasPopulatedContent(entry, hiddenRules, showStructureType);
     });
