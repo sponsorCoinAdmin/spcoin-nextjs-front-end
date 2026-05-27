@@ -352,6 +352,7 @@ function normalizeRewardFormulsValuesDisplayShape(
     'pendingSponsorRewards',
     'pendingRecipientRewards',
     'pendingAgentRewards',
+    'pendingRecipientDistributions',
     'pendingTotalRewards',
     'exactClaimedAmountFormula',
     'exactClaimedAmountSource',
@@ -1023,6 +1024,7 @@ function isPendingRewardsContainerSummaryField(parent: any, childKey: string): b
     'pendingSponsorRewards',
     'pendingRecipientRewards',
     'pendingAgentRewards',
+    'pendingRecipientDistributions',
     'pendingTotalRewards',
     'totalRewards',
   ].includes(childKey);
@@ -1578,6 +1580,7 @@ function isTokenAmountKey(key: string): boolean {
     'pendingSponsorRewards',
     'pendingRecipientRewards',
     'pendingAgentRewards',
+    'pendingRecipientDistributions',
     'pendingTotalRewards',
     'totalRewards',
     'totalRewardsClaimed',
@@ -1716,6 +1719,56 @@ function formatDisplayScalar(
     return displayFormattedAmount(renderedValue, tokenDecimals) ?? String(renderedValue);
   }
   return typeof value === 'string' ? `"${String(value)}"` : String(renderedValue);
+}
+
+function parseTokenAmountBigInt(value: unknown): bigint | null {
+  const normalized = String(value ?? '').replace(/,/g, '').trim();
+  if (!/^-?\d+$/.test(normalized)) return null;
+  try {
+    return BigInt(normalized);
+  } catch {
+    return null;
+  }
+}
+
+function addDecimalStrings(left: string, right: string): string {
+  const normalize = (value: string) => {
+    const trimmed = value.replace(/,/g, '').trim();
+    const negative = trimmed.startsWith('-');
+    const unsigned = negative ? trimmed.slice(1) : trimmed;
+    const [whole = '0', fraction = ''] = unsigned.split('.');
+    return {
+      negative,
+      whole: whole.replace(/^0+(?=\d)/, '') || '0',
+      fraction,
+    };
+  };
+  const a = normalize(left);
+  const b = normalize(right);
+  if (a.negative || b.negative) return String(Number(left) + Number(right));
+  const scale = Math.max(a.fraction.length, b.fraction.length);
+  const aUnits = BigInt(`${a.whole}${a.fraction.padEnd(scale, '0')}` || '0');
+  const bUnits = BigInt(`${b.whole}${b.fraction.padEnd(scale, '0')}` || '0');
+  const sum = String(aUnits + bUnits).padStart(scale + 1, '0');
+  if (scale === 0) return sum;
+  const whole = sum.slice(0, -scale).replace(/^0+(?=\d)/, '') || '0';
+  const fraction = sum.slice(-scale).replace(/0+$/, '');
+  return fraction ? `${whole}.${fraction}` : whole;
+}
+
+function getPendingRecipientDistributionsTotal(data: unknown): string | null {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return null;
+  const record = data as Record<string, unknown>;
+  if (record.total !== undefined && record.total !== null) return String(record.total);
+  const recipientText = String(record.pendingRecipientRewards ?? '').replace(/,/g, '').trim();
+  const agentText = String(record.pendingAgentRewards ?? '').replace(/,/g, '').trim();
+  if (/^-?\d+\.\d+$/.test(recipientText) || /^-?\d+\.\d+$/.test(agentText)) {
+    return addDecimalStrings(recipientText || '0', agentText || '0');
+  }
+  const recipientRewards = parseTokenAmountBigInt(record.pendingRecipientRewards);
+  const agentRewards = parseTokenAmountBigInt(record.pendingAgentRewards);
+  if (recipientRewards === null && agentRewards === null) return null;
+  return String((recipientRewards ?? 0n) + (agentRewards ?? 0n));
 }
 
 function getScalarFormattingKey(parent: unknown, key: string): string {
@@ -3215,6 +3268,17 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
         formatTokenAmounts,
         tokenDecimals,
       )}`;
+    }
+    if (label === 'pendingRecipientDistributions') {
+      const pendingRecipientDistributionsTotal = getPendingRecipientDistributionsTotal(data);
+      if (pendingRecipientDistributionsTotal !== null) {
+        return `pendingRecipientDistributions: ${formatDisplayScalar(
+          'pendingRecipientDistributions',
+          pendingRecipientDistributionsTotal,
+          formatTokenAmounts,
+          tokenDecimals,
+        )}`;
+      }
     }
     if (label === 'pendingRewards' && isPendingRewardsRecord(data)) {
       const accountKey = getPendingRewardsAccountKey(data);

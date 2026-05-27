@@ -193,7 +193,12 @@ function buildPendingTotalRewardsDisplay(
     total,
     ...visiblePendingRewardComponents,
     ...(pendingRecipientDistributions
-      ? { pendingRecipientDistributions: pendingRecipientDistributions.distributions }
+      ? {
+          pendingRecipientDistributions: {
+            total: pendingRecipientDistributions.total.toString(),
+            ...pendingRecipientDistributions.distributions,
+          },
+        }
       : {}),
   };
 }
