@@ -511,11 +511,21 @@ export function useSponsorCoinLabMethodExecution({
             throw new Error(`SpCoin read method ${String(selectedMethod || '')} is not registered.`);
           }
           const localParams = def.params.map((param) => findParamValue(param.label));
+          const resolvedReadParams =
+            (normalizedSelectedMethod === 'getAccountRecord' || normalizedSelectedMethod === 'getSummaryRecord') &&
+            def.params.some((param) => param.label === 'Account Key') &&
+            !localParams[def.params.findIndex((param) => param.label === 'Account Key')]
+              ? def.params.map((param, idx) =>
+                  param.label === 'Account Key'
+                    ? String(sender || defaultSender || localParams[idx] || '').trim()
+                    : localParams[idx],
+                )
+              : localParams;
           const call = buildMethodCallEntry(
             selectedMethod,
             def.params.map((param, idx) => ({
               label: param.label,
-              value: localParams[idx] || '',
+              value: resolvedReadParams[idx] || '',
             })),
           );
           const debugTrace = [
@@ -523,8 +533,13 @@ export function useSponsorCoinLabMethodExecution({
             `normalizedMethod=${normalizedSelectedMethod}`,
             `source=${useLocalSpCoinAccessPackage ? 'local' : 'node_modules'}`,
             `mode=${effectiveMode}`,
-            `params=${JSON.stringify(def.params.map((param, idx) => ({ key: param.label, value: localParams[idx] || '' })))}`,
+            `params=${JSON.stringify(def.params.map((param, idx) => ({ key: param.label, value: resolvedReadParams[idx] || '' })))}`,
           ];
+          if (resolvedReadParams !== localParams) {
+            debugTrace.push(
+              `${normalizedSelectedMethod} recovered missing Account Key from ${sender ? 'msg.sender' : 'default account'}`,
+            );
+          }
           debugTrace.forEach((line) => appendWriteTrace(line));
           let serverBackedMeta: MethodExecutionPayloadMeta | undefined;
           let warning: unknown;
@@ -611,7 +626,7 @@ export function useSponsorCoinLabMethodExecution({
                 normalizedSelectedMethod,
                 def.params.map((param, idx) => ({
                   key: param.label,
-                  value: localParams[idx] || '',
+                  value: resolvedReadParams[idx] || '',
                 })),
                 undefined,
                 effectiveMode,

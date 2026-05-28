@@ -53,6 +53,46 @@ function parseDisplayedOutputParameters(value: unknown): { label: string; value:
   }));
 }
 
+function findDisplayedOutputAccountKey(value: unknown, visited = new WeakSet<object>()): string {
+  if (!value || typeof value !== 'object') return '';
+  if (visited.has(value)) return '';
+  visited.add(value);
+
+  if (Array.isArray(value)) {
+    for (const entry of value) {
+      const found = findDisplayedOutputAccountKey(entry, visited);
+      if (found) return found;
+    }
+    return '';
+  }
+
+  const record = value as Record<string, unknown>;
+  const direct = toDisplayString(record.accountKey ?? record['Account Key'] ?? record.Account).trim();
+  if (direct) return direct;
+
+  for (const entry of Object.values(record)) {
+    const found = findDisplayedOutputAccountKey(entry, visited);
+    if (found) return found;
+  }
+  return '';
+}
+
+function repairDisplayedOutputParameters(method: string, parameters: { label: string; value: string }[], parsedBlock: unknown) {
+  if (method !== 'getAccountRecord' && method !== 'getSummaryRecord') return parameters;
+  const existingIndex = parameters.findIndex((entry) => ['Account Key', 'Account', 'accountKey'].includes(entry.label));
+  const existingValue = existingIndex >= 0 ? parameters[existingIndex]?.value.trim() : '';
+  if (existingValue) return parameters;
+
+  const accountKey = findDisplayedOutputAccountKey(parsedBlock);
+  if (!accountKey) return parameters;
+  if (existingIndex >= 0) {
+    return parameters.map((entry, index) =>
+      index === existingIndex ? { label: 'Account Key', value: accountKey } : entry,
+    );
+  }
+  return [{ label: 'Account Key', value: accountKey }, ...parameters];
+}
+
 function resolveDisplayedOutputPanel(
   call: DisplayedOutputCall,
   methodDefs: {
@@ -203,7 +243,11 @@ export function useControllerScriptExecution({
           };
           const method = toDisplayString(parsed?.call?.method).trim();
           if (!method) return null;
-          const parameters = parseDisplayedOutputParameters(parsed?.call?.parameters);
+          const parameters = repairDisplayedOutputParameters(
+            method,
+            parseDisplayedOutputParameters(parsed?.call?.parameters),
+            parsed,
+          );
           return { method, parameters };
         } catch {
           return null;

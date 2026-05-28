@@ -2,7 +2,6 @@ import { useCallback, type MutableRefObject } from 'react';
 import type { ParamDef } from '../jsonMethods/shared/types';
 import { runSpCoinReadMethod, type SpCoinReadMethod } from '../jsonMethods/spCoin/read';
 import { runSpCoinWriteMethod, type SpCoinWriteMethod } from '../jsonMethods/spCoin/write';
-import { createSpCoinContract } from '../jsonMethods/shared';
 import {
   createMethodTimingCollector,
   runWithMethodTimingCollector,
@@ -12,14 +11,13 @@ import { buildExecutionMeta, type MethodExecutionMeta } from './methodExecutionH
 import type { AccessMethodCaller } from './useAccessMethodCaller';
 import { normalizeExecutionPayload } from './executionPayload';
 import {
-  invalidateSpCoinLabAccountRecord,
   setSpCoinLabAccountRecord,
 } from '@/lib/spCoinLab/accountRecordStore';
 import {
   asRecord,
-  buildAccountRecordMetaPatch,
   buildClaimedRewardsByAccount,
-  buildClaimedBalanceSummary,
+  buildClaimedRewardsSummary,
+  buildClaimedRewardsByAccountFromPendingRewards,
   buildLazyPendingRewardsMethod,
   buildZeroPendingRewardsEstimateResult,
   buildZeroClaimedRewardsByAccount,
@@ -30,23 +28,18 @@ import {
   hasPendingRewardsRefreshAction,
   mergeClaimedRewardsByAccountIntoTree,
   mergePendingRewardsByAccountIntoTree,
-  mergePendingRewardsBranchForAccountRefresh,
-  mergeRefreshedAccountRecordsByAccountIntoTree,
   mergePendingRewardsSummaryNode,
   normalizePendingRewardsEstimateResult,
   PENDING_REWARDS_CLAIM_METHODS,
   PENDING_REWARDS_CLAIM_TO_ESTIMATE_METHOD,
   PENDING_REWARDS_ESTIMATE_METHODS,
   PENDING_REWARDS_INLINE_REFRESH_MS,
-  readAccountRecordBalanceOf,
   readClaimedRewardsByAccount,
   readPendingRewardsByAccount,
   readPendingRewardsAmount,
-  readRefreshedAccountRecordFromClaim,
-  readRefreshedAccountRecordsByAccountFromClaim,
-  toRewardsBigInt,
   withPendingRewardsRoleMeta,
   type PendingRewardsActionClick,
+  type PendingRewardsByAccount,
 } from './pendingRewardsTreeUtils';
 import {
   buildTreePayloadBlockEntries,
@@ -59,6 +52,24 @@ import {
 const noop = () => undefined;
 
 type InlineExpansionResult = 'expanded' | 'handled' | 'unhandled';
+
+function mergeRewardsByAccountMaps(
+  ...maps: (PendingRewardsByAccount | null | undefined)[]
+): PendingRewardsByAccount | null {
+  const merged: PendingRewardsByAccount = {};
+  for (const map of maps) {
+    if (!map) continue;
+    for (const [accountKey, accountRewards] of Object.entries(map)) {
+      const normalizedAccountKey = toDisplayString(accountRewards.accountKey, accountKey).trim().toLowerCase() || accountKey;
+      merged[normalizedAccountKey] = {
+        ...(merged[normalizedAccountKey] ?? {}),
+        ...accountRewards,
+        accountKey: accountRewards.accountKey ?? merged[normalizedAccountKey]?.accountKey ?? accountKey,
+      };
+    }
+  }
+  return Object.keys(merged).length > 0 ? merged : null;
+}
 
 type ServerBackedTreeMethodRunner = (args: {
   panel: 'spcoin_rread' | 'spcoin_write';
@@ -119,22 +130,6 @@ function getErrorMessage(error: unknown, fallback: string) {
   return toDisplayString(error, fallback).trim() || fallback;
 }
 
-function readTopLevelGetAccountRecordKey(
-  candidate: unknown,
-  normalizeAddressValue: (value: string) => string,
-) {
-  const record = asRecord(candidate);
-  const call = asRecord(record?.call);
-  if (!call) return '';
-  const methodName = String(call.method || '').trim();
-  if (methodName !== 'getAccountRecord' && methodName !== 'getSummaryRecord') return '';
-  const parameters = asRecord(call.parameters);
-  if (!parameters) return '';
-  return normalizeAddressValue(
-    toDisplayString(parameters['Account Key'] ?? parameters.Account ?? parameters.accountKey),
-  );
-}
-
 function resolveTargetPath(targetNode: unknown, payloadPath: string[]) {
   if (hasPendingRewardsRefreshAction(targetNode) && payloadPath.at(-1) === 'result') {
     return payloadPath.slice(0, -1);
@@ -180,7 +175,48 @@ function replaceDisplayBlock(
 function readClaimedRewardsAmount(value: unknown) {
   const record = asRecord(value);
   if (!record) return undefined;
-  return record.totalRewardsClaimed ?? record.claimedAmount;
+  const result = asRecord(record.result);
+  return record.totalRewardsClaimed ?? record.claimedAmount ?? result?.totalRewardsClaimed ?? result?.claimedAmount;
+}
+
+function describeRewardsByAccountMap(map: PendingRewardsByAccount | null | undefined) {
+  if (!map) return 'none';
+  return Object.entries(map)
+    .map(([accountKey, accountRewards]) => {
+      const normalizedAccountKey = toDisplayString(accountRewards.accountKey, accountKey).trim().toLowerCase() || accountKey;
+      return [
+        normalizedAccountKey,
+        `claimed=${toDisplayString(accountRewards.claimedRewards)}`,
+        `s=${toDisplayString(accountRewards.claimedSponsorRewards)}`,
+        `r=${toDisplayString(accountRewards.claimedRecipientRewards)}`,
+        `a=${toDisplayString(accountRewards.claimedAgentRewards)}`,
+      ].join(' ');
+    })
+    .join(' | ') || 'none';
+}
+
+function cacheAccountRecordsFromPayload(
+  value: unknown,
+  affectedAccounts: Set<string>,
+  normalizeAddressValue: (value: string) => string,
+  treeAccountRecordCacheRef: MutableRefObject<Map<string, unknown>>,
+) {
+  if (!value || typeof value !== 'object') return;
+  if (Array.isArray(value)) {
+    for (const entry of value) {
+      cacheAccountRecordsFromPayload(entry, affectedAccounts, normalizeAddressValue, treeAccountRecordCacheRef);
+    }
+    return;
+  }
+  const record = value as Record<string, unknown>;
+  const accountKey = normalizeAddressValue(toDisplayString(record.accountKey));
+  if (record.TYPE === '--ACCOUNT--' && affectedAccounts.has(accountKey)) {
+    treeAccountRecordCacheRef.current.set(accountKey, record);
+    setSpCoinLabAccountRecord(accountKey, record);
+  }
+  for (const entry of Object.values(record)) {
+    cacheAccountRecordsFromPayload(entry, affectedAccounts, normalizeAddressValue, treeAccountRecordCacheRef);
+  }
 }
 
 export function usePendingRewardsInlineExpansion({
@@ -226,7 +262,7 @@ export function usePendingRewardsInlineExpansion({
         rawDisplayOverride ?? (inTreePanel ? treeOutputDisplayRef.current : formattedOutputDisplayRef.current),
       ).trim();
       appendLog(
-        `[PENDING_REWARDS_TRACE] expand start account=${normalizedAccount} action=${click.action} method=${String(click.method || '')} path=${normalizedPathHint} tree=${String(inTreePanel)} rawOverride=${String(rawDisplayOverride !== undefined)} rawLength=${String(rawDisplay.length)}`,
+        `[PENDING_REWARDS_TRACE] expand start account=${normalizedAccount} action=${click.action} method=${String(click.method ?? '')} path=${normalizedPathHint} tree=${String(inTreePanel)} rawOverride=${String(rawDisplayOverride !== undefined)} rawLength=${String(rawDisplay.length)}`,
       );
       if (!rawDisplay || rawDisplay === '(no tree yet)' || rawDisplay === '(no output yet)') {
         appendLog(`[PENDING_REWARDS_TRACE] expand stop empty-display path=${normalizedPathHint}`);
@@ -284,13 +320,13 @@ export function usePendingRewardsInlineExpansion({
         );
 
         appendLog(
-          `[PENDING_REWARDS_TRACE] paired-estimate decision action=${click.action} claimMethod=${String(click.method || '')} target=${targetPath.join('.')} pairedMethod=${String(pairedEstimateMethod || '')} pairedPath=${pairedEstimatePath.join('.')} pairedExists=${String(pairedEstimateNode !== undefined)} shouldRefresh=${String(shouldRefreshPairedEstimate)}`,
+          `[PENDING_REWARDS_TRACE] paired-estimate decision action=${click.action} claimMethod=${String(click.method ?? '')} target=${targetPath.join('.')} pairedMethod=${String(pairedEstimateMethod ?? '')} pairedPath=${pairedEstimatePath.join('.')} pairedExists=${String(pairedEstimateNode !== undefined)} shouldRefresh=${String(shouldRefreshPairedEstimate)}`,
         );
         const fallbackActionNode = pendingRewardsRecord
           ? pendingRewardsRecord[click.action] ?? pendingRewardsRecord.estimate ?? pendingRewardsRecord.claim
           : null;
         appendLog(
-          `[PENDING_REWARDS_TRACE] candidate target=${targetPath.join('.')} leaf=${String(targetLeaf || '')} method=${String(click.method || '')} action=${click.action} rerun=${String(isRerunnablePendingRewardsMethod)} lazy=${String(hasLazyPendingRewardsAction(actionNode) || hasLazyPendingRewardsMethod(actionNode))}`,
+          `[PENDING_REWARDS_TRACE] candidate target=${targetPath.join('.')} leaf=${String(targetLeaf ?? '')} method=${String(click.method ?? '')} action=${click.action} rerun=${String(isRerunnablePendingRewardsMethod)} lazy=${String(hasLazyPendingRewardsAction(actionNode) || hasLazyPendingRewardsMethod(actionNode))}`,
         );
         if (
           !hasLazyPendingRewardsAction(actionNode) &&
@@ -305,7 +341,7 @@ export function usePendingRewardsInlineExpansion({
         }
 
         try {
-          const actionLabel = click.method || (click.action === 'estimate' ? 'pending rewards estimate' : 'pending rewards claim');
+          const actionLabel = click.method ?? (click.action === 'estimate' ? 'pending rewards estimate' : 'pending rewards claim');
           setStatus(`Loading ${actionLabel} for ${normalizedAccount}...`);
           const loadPendingRewardsEstimate = async (methodOverride?: PendingRewardsActionClick['method']) => {
             const pendingTimingCollector = createMethodTimingCollector();
@@ -360,25 +396,13 @@ export function usePendingRewardsInlineExpansion({
             appendLog(
               `[PENDING_REWARDS_TRACE] run claim method=${selectedClaimMethod} account=${normalizedAccount} target=${targetPath.join('.')}`,
             );
-            const readBalanceOf = async () =>
-              runWithMethodTimingCollector(claimTimingCollector, async () => {
-                const target = requireContractAddress();
-                const runner = await ensureReadRunner();
-                const contract = createSpCoinContract(target, runner) as unknown as {
-                  balanceOf?: (accountKey: string) => Promise<unknown>;
-                };
-                if (typeof contract.balanceOf !== 'function') {
-                  throw new Error('balanceOf is not available on the current SpCoin contract.');
-                }
-                return String(await contract.balanceOf(normalizedAccount));
-              });
-            const balanceBefore = mode === 'hardhat' ? undefined : await readBalanceOf();
+            const claimSender = selectedHardhatAddress?.trim() ? selectedHardhatAddress : normalizedAccount;
             const updateResult =
               mode === 'hardhat'
                 ? await runServerBackedTreeSpCoinMethod({
                     panel: 'spcoin_write',
                     method: selectedClaimMethod,
-                    sender: selectedHardhatAddress || normalizedAccount,
+                    sender: claimSender,
                     params: [{ key: 'Account Key', value: normalizedAccount }],
                   })
                 : await runSpCoinWriteMethod({
@@ -386,80 +410,48 @@ export function usePendingRewardsInlineExpansion({
                     spWriteParams: [normalizedAccount],
                     coerceParamValue,
                     executeWriteConnected,
-                    selectedHardhatAddress: selectedHardhatAddress || normalizedAccount,
+                    selectedHardhatAddress: claimSender,
                     appendLog,
                     appendWriteTrace,
                     spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
                     setStatus: noop,
                     timingCollector: claimTimingCollector,
                   });
-            let refreshedAccountRecord: unknown | null = null;
-            if (mode !== 'hardhat') {
-              treeAccountRecordCacheRef.current.delete(normalizedAccount);
-              invalidateSpCoinLabAccountRecord(normalizedAccount);
-              refreshedAccountRecord = await loadAccountRecordForAddress(normalizedAccount, { force: true });
-            }
-            const balanceAfter =
+            const balanceClaimSummary =
               mode === 'hardhat'
-                ? undefined
-                : readAccountRecordBalanceOf(refreshedAccountRecord) ?? await readBalanceOf();
-            const balanceClaimSummary = buildClaimedBalanceSummary(
-              mode === 'hardhat' ? (updateResult as { result?: unknown }).result : updateResult,
-              balanceBefore !== undefined && balanceAfter !== undefined
-                ? {
-                    balanceBefore,
-                    balanceAfter,
-                    claimedAmount: (toRewardsBigInt(balanceAfter) - toRewardsBigInt(balanceBefore)).toString(),
-                  }
-                : undefined,
-            );
-            const serverClaimResult = mode === 'hardhat' ? (updateResult as { result?: unknown }).result : null;
-            const effectiveRefreshedAccountRecord =
-              refreshedAccountRecord ?? readRefreshedAccountRecordFromClaim(serverClaimResult);
+                ? buildClaimedRewardsSummary((updateResult as { result?: unknown }).result)
+                : {};
             return {
               pendingResult: {
                 ...balanceClaimSummary,
-                ...(effectiveRefreshedAccountRecord ? { refreshedAccountRecord: effectiveRefreshedAccountRecord } : {}),
-                receipts: mode === 'hardhat' ? serverClaimResult : (updateResult as { receipts?: unknown }).receipts,
+                receipts: mode === 'hardhat' ? (updateResult as { result?: unknown }).result : (updateResult as { receipts?: unknown }).receipts,
               },
               pendingMeta:
                 (updateResult as { meta?: MethodExecutionMeta }).meta ?? buildExecutionMeta(claimTimingCollector),
             };
           };
 
+          const isEstimateMethod = click.method
+            ? PENDING_REWARDS_ESTIMATE_METHODS.has(click.method)
+            : false;
           const isEstimatePendingRewardsRequest =
-            (click.method && PENDING_REWARDS_ESTIMATE_METHODS.has(click.method)) || click.action === 'estimate';
+            isEstimateMethod || click.action === 'estimate';
           const loadedPending = isEstimatePendingRewardsRequest
             ? callAccessMethod
-              ? await callAccessMethod(click.method || 'estimateOffChainTotalRewards', () => loadPendingRewardsEstimate())
+              ? await callAccessMethod(click.method ?? 'estimateOffChainTotalRewards', () => loadPendingRewardsEstimate())
               : await loadPendingRewardsEstimate()
             : callAccessMethod
-              ? await callAccessMethod(click.method || 'claimOnChainTotalRewards', () => claimPendingRewards())
+              ? await callAccessMethod(click.method ?? 'claimOnChainTotalRewards', () => claimPendingRewards())
               : await claimPendingRewards();
           if (!loadedPending) return 'handled';
 
           const { pendingResult, pendingMeta } = loadedPending;
-          const refreshedAccountRecord =
-            click.action === 'claim' ? readRefreshedAccountRecordFromClaim(pendingResult) : null;
-          const refreshedAccountRecordsByAccount =
-            click.action === 'claim' ? readRefreshedAccountRecordsByAccountFromClaim(pendingResult) : null;
-          if (refreshedAccountRecord) {
-            treeAccountRecordCacheRef.current.set(normalizedAccount, refreshedAccountRecord);
-            setSpCoinLabAccountRecord(normalizedAccount, refreshedAccountRecord);
-          }
-          if (refreshedAccountRecordsByAccount) {
-            for (const [accountKey, accountRecord] of Object.entries(refreshedAccountRecordsByAccount)) {
-              const normalizedRefreshedAccount = normalizeAddressValue(accountKey);
-              if (!/^0x[0-9a-f]{40}$/.test(normalizedRefreshedAccount)) continue;
-              treeAccountRecordCacheRef.current.set(normalizedRefreshedAccount, accountRecord);
-              setSpCoinLabAccountRecord(normalizedRefreshedAccount, accountRecord);
-            }
-          }
           const methodName = click.method
-            ? click.method
-            : click.action === 'claim'
-              ? 'claimPendingRewards'
-              : 'estimateOffChainTotalRewards';
+            ?? (
+              click.action === 'claim'
+                ? 'claimPendingRewards'
+                : 'estimateOffChainTotalRewards'
+            );
           const expandedCallMethod = click.method ?? methodName;
           const refreshablePendingResult =
             click.action === 'estimate' && pendingResult && typeof pendingResult === 'object' && !Array.isArray(pendingResult)
@@ -470,16 +462,16 @@ export function usePendingRewardsInlineExpansion({
                   __pendingRewardsRefreshActionName: 'estimate',
                 }
               : pendingResult;
-          const lastUpdatedRewardsClaim =
+          const directLastUpdatedRewardsClaim =
             !isEstimatePendingRewardsRequest && click.action === 'claim'
               ? readClaimedRewardsAmount(pendingResult)
               : undefined;
           const expandedMeta =
             withPendingRewardsRoleMeta(
-              lastUpdatedRewardsClaim !== undefined
+              directLastUpdatedRewardsClaim !== undefined
                 ? {
                     ...(asRecord(pendingMeta) ?? {}),
-                    'Last Claimed Rewards': lastUpdatedRewardsClaim,
+                    'Last Claimed Rewards': directLastUpdatedRewardsClaim,
                   }
                 : pendingMeta,
               expandedCallMethod,
@@ -564,7 +556,7 @@ export function usePendingRewardsInlineExpansion({
             pairedEstimateExpandedNode && pairedEstimatePath.length > 0
               ? (() => {
                   appendLog(
-                    `[PENDING_REWARDS_TRACE] paired-estimate write path=${pairedEstimatePath.join('.')} method=${String(pairedEstimateMethod || '')}`,
+                    `[PENDING_REWARDS_TRACE] paired-estimate write path=${pairedEstimatePath.join('.')} method=${String(pairedEstimateMethod ?? '')}`,
                   );
                   return writePathValue(payloadWithExpandedNode, pairedEstimatePath, pairedEstimateExpandedNode);
                 })()
@@ -606,24 +598,28 @@ export function usePendingRewardsInlineExpansion({
             readPendingRewardsByAccount(pairedEstimateExpandedNode) ??
             pendingRewardsByAccountBeforePairedWrite ??
             findPendingRewardsByAccount(existingPendingRewardsNode);
+          const claimedRewardsByAccount = isEstimatePendingRewardsRequest
+            ? null
+            : mergeRewardsByAccountMaps(
+                buildClaimedRewardsByAccountFromPendingRewards(pendingRewardsByAccount, expandedCallMethod),
+                readClaimedRewardsByAccount(expandedNode),
+                readClaimedRewardsByAccount(pendingResult),
+                directLastUpdatedRewardsClaim !== undefined
+                  ? buildClaimedRewardsByAccount(normalizedAccount, expandedCallMethod, directLastUpdatedRewardsClaim)
+                  : null,
+              );
           const pendingRewardsByAccountForDisplay = isEstimatePendingRewardsRequest
             ? pendingRewardsByAccount
-            : buildZeroPendingRewardsByAccount(pendingRewardsByAccount);
+            : buildZeroPendingRewardsByAccount(pendingRewardsByAccount ?? claimedRewardsByAccount);
           if (!isEstimatePendingRewardsRequest) {
             appendLog(
-              `[PENDING_REWARDS_TRACE] claim pending-estimates zero map accounts=${Object.keys(pendingRewardsByAccountForDisplay ?? {}).join(',') || 'none'} sourceAccounts=${Object.keys(pendingRewardsByAccount ?? {}).join(',') || 'none'}`,
+              `[PENDING_REWARDS_TRACE] claim pending-estimates zero map accounts=${Object.keys(pendingRewardsByAccountForDisplay ?? {}).join(',') || 'none'} sourceAccounts=${Object.keys(pendingRewardsByAccount ?? {}).join(',') || 'none'} claimedSourceAccounts=${Object.keys(claimedRewardsByAccount ?? {}).join(',') || 'none'}`,
             );
           }
-          const claimedRewardsByAccount =
-            readClaimedRewardsByAccount(expandedNode) ??
-            readClaimedRewardsByAccount(pendingResult) ??
-            (!isEstimatePendingRewardsRequest && lastUpdatedRewardsClaim !== undefined
-              ? buildClaimedRewardsByAccount(normalizedAccount, expandedCallMethod, lastUpdatedRewardsClaim)
-              : null);
           const claimedRewardsByAccountForDisplay = (() => {
             const zeroClaimedRewardsByAccount =
-              !isEstimatePendingRewardsRequest && pendingRewardsByAccount
-                ? buildZeroClaimedRewardsByAccount(pendingRewardsByAccount)
+              !isEstimatePendingRewardsRequest
+                ? buildZeroClaimedRewardsByAccount(pendingRewardsByAccount ?? claimedRewardsByAccount)
                 : null;
             if (!zeroClaimedRewardsByAccount && !claimedRewardsByAccount) return null;
 
@@ -642,6 +638,9 @@ export function usePendingRewardsInlineExpansion({
             appendLog(
               `[PENDING_REWARDS_TRACE] claimed-rewards propagate method=${expandedCallMethod} accounts=${Object.keys(claimedRewardsByAccountForDisplay).join(',')} sourceAccounts=${Object.keys(claimedRewardsByAccount ?? {}).join(',') || 'none'}`,
             );
+            appendLog(
+              `[PENDING_REWARDS_TRACE] claimed-rewards amounts method=${expandedCallMethod} direct=${toDisplayString(directLastUpdatedRewardsClaim, 'undefined')} values=${describeRewardsByAccountMap(claimedRewardsByAccountForDisplay)}`,
+            );
           }
           const payloadWithPropagatedPendingRewards = mergePendingRewardsByAccountIntoTree(
             payloadWithPendingRewardsSummary,
@@ -652,68 +651,15 @@ export function usePendingRewardsInlineExpansion({
             payloadWithPropagatedPendingRewards,
             claimedRewardsByAccountForDisplay,
           );
-          const payloadWithRefreshedAffectedAccounts = mergeRefreshedAccountRecordsByAccountIntoTree(
-            payloadWithPropagatedClaimedRewards,
-            refreshedAccountRecordsByAccount,
-            summaryLoadedMethod,
-            summaryLoadedNode,
-            click.action,
-            pendingRewardsRefreshAtMs,
-          );
-          const owningAccountRecordKey = readTopLevelGetAccountRecordKey(payload, normalizeAddressValue);
-          const shouldReplaceOwningAccountRecord =
-            click.action === 'claim' &&
-            refreshedAccountRecord &&
-            owningAccountRecordKey === normalizedAccount &&
-            targetPath[0] === 'result';
           if (click.action === 'claim') {
             appendLog(
-              `[PENDING_REWARDS_TRACE] account refresh replace=${String(Boolean(shouldReplaceOwningAccountRecord))} owner=${owningAccountRecordKey} account=${normalizedAccount} hasRecord=${String(Boolean(refreshedAccountRecord))}`,
+              `[PENDING_REWARDS_TRACE] local claim update account=${normalizedAccount} claimedKeys=${Object.keys(claimedRewardsByAccountForDisplay ?? {}).join(',') || 'none'}`,
             );
           }
-          const payloadAfterAccountRefresh = shouldReplaceOwningAccountRecord
-            ? (() => {
-                setSpCoinLabAccountRecord(normalizedAccount, refreshedAccountRecord);
-                treeAccountRecordCacheRef.current.set(normalizedAccount, refreshedAccountRecord);
-                const refreshedPayloadBase = {
-                  ...(payload as Record<string, unknown>),
-                  meta: {
-                    ...(asRecord(asRecord(payload)?.meta) ?? {}),
-                    ...buildAccountRecordMetaPatch(refreshedAccountRecord),
-                  },
-                  result: refreshedAccountRecord,
-                };
-                const existingPendingRewardsForDisplay = readPathValue(
-                  payloadWithRefreshedAffectedAccounts,
-                  pendingRewardsPath,
-                );
-                const refreshedPendingRewardsForDisplay = readPathValue(refreshedPayloadBase, pendingRewardsPath);
-                const refreshedPayload =
-                  pendingRewardsPath.length > 0 &&
-                  (existingPendingRewardsForDisplay || refreshedPendingRewardsForDisplay)
-                    ? writePathValue(
-                        refreshedPayloadBase,
-                        pendingRewardsPath,
-                        mergePendingRewardsBranchForAccountRefresh(
-                          existingPendingRewardsForDisplay,
-                          refreshedPendingRewardsForDisplay,
-                          normalizedAccount,
-                          summaryLoadedMethod,
-                          summaryLoadedNode,
-                          click.action,
-                          pendingRewardsRefreshAtMs,
-                        ),
-                      )
-                    : refreshedPayloadBase;
-                return isPendingRewardsMethodLeaf
-                  ? writePathValue(refreshedPayload, targetPath, expandedNode)
-                  : refreshedPayload;
-              })()
-            : payloadWithRefreshedAffectedAccounts;
           const payloadAfterFinalPairedEstimateWrite =
             pairedEstimateExpandedNode && pairedEstimatePath.length > 0
-              ? writePathValue(payloadAfterAccountRefresh, pairedEstimatePath, pairedEstimateExpandedNode)
-              : payloadAfterAccountRefresh;
+              ? writePathValue(payloadWithPropagatedClaimedRewards, pairedEstimatePath, pairedEstimateExpandedNode)
+              : payloadWithPropagatedClaimedRewards;
           if (pairedEstimateMethod && pairedEstimatePath.length > 0) {
             const finalPairedEstimateNode = readPathValue(payloadAfterFinalPairedEstimateWrite, pairedEstimatePath);
             appendLog(
@@ -721,6 +667,20 @@ export function usePendingRewardsInlineExpansion({
             );
           }
           const nextRootPayload = normalizeExecutionPayload(payloadAfterFinalPairedEstimateWrite) as Record<string, unknown>;
+          const locallyAffectedAccounts = new Set(
+            [
+              ...Object.keys(pendingRewardsByAccountForDisplay ?? {}),
+              ...Object.keys(claimedRewardsByAccountForDisplay ?? {}),
+            ].map((accountKey) => normalizeAddressValue(accountKey)),
+          );
+          if (locallyAffectedAccounts.size > 0) {
+            cacheAccountRecordsFromPayload(
+              nextRootPayload,
+              locallyAffectedAccounts,
+              normalizeAddressValue,
+              treeAccountRecordCacheRef,
+            );
+          }
           const nextPayload = formatFormattedPanelPayload(nextRootPayload);
           replaceDisplayBlock(
             blocks,
@@ -741,7 +701,7 @@ export function usePendingRewardsInlineExpansion({
           setStatus(`Unable to load pending rewards for ${normalizedAccount}.`);
           appendLog(`Inline pending rewards ${click.action} failed for ${normalizedAccount}: ${message}`);
           appendLog(
-            `[PENDING_REWARDS_TRACE] expand error action=${click.action} method=${String(click.method || '')} account=${normalizedAccount} target=${targetPath.join('.')} message=${message}`,
+            `[PENDING_REWARDS_TRACE] expand error action=${click.action} method=${String(click.method ?? '')} account=${normalizedAccount} target=${targetPath.join('.')} message=${message}`,
           );
           return 'handled';
         }

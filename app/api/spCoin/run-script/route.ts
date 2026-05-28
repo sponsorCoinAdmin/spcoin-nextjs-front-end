@@ -63,7 +63,6 @@ type RunScriptRequest = {
   startIndex?: number;
   stopAfterCurrentStep?: boolean;
   spCoinAccessSource?: SpCoinAccessSource;
-  compareOfflineRewards?: boolean;
   useCache?: boolean;
   cacheMode?: 'default' | 'refresh' | 'bypass' | 'only';
   cacheNamespace?: string;
@@ -1067,6 +1066,9 @@ type AccountRewardSnapshot = {
 };
 
 const STAKING_REWARD_YEAR_SECONDS = '31556925';
+const STAKING_REWARD_YEAR_SECONDS_BIGINT = 31556925n;
+const REWARD_DECIMAL_MULTIPLIER = 10n ** 18n;
+const REWARD_PERCENT_DIVISOR = REWARD_DECIMAL_MULTIPLIER / 100n;
 const REWARD_NOTATIONS = {
   yearsInSeconds: `365.25 Days = ${STAKING_REWARD_YEAR_SECONDS}`,
   secondsInYear: `${STAKING_REWARD_YEAR_SECONDS} seconds = 365.2421875 days`,
@@ -1171,8 +1173,6 @@ type RewardCalculationMetaParams = {
   accountSnapshot?: AccountRewardSnapshot | null;
   beforeSnapshot?: AccountRewardSnapshot | null;
   afterSnapshot?: AccountRewardSnapshot | null;
-  balanceBefore?: string;
-  balanceAfter?: string;
   claimedAmount?: string;
   settlementTimestamp?: string | null;
 };
@@ -1242,12 +1242,12 @@ function buildRewardCalculationMeta(params: RewardCalculationMetaParams) {
       ...baseMeta.rewardsFormula,
       rewardFormulsValues: {
         Note:
-          'Claim executes the Solidity settlement formula on chain. The returned claimed amount is audited here by balance delta.',
+          'Claim executes the Solidity settlement formula on chain. The returned claimed amount is replayed from pre-claim bucket inputs and the receipt block timestamp.',
         ...buildRewardFormulaValuesMeta(),
-        exactClaimedAmountFormula: 'claimedAmount = balanceAfter - balanceBefore',
-        exactClaimedAmountSource: 'ERC20 balanceOf(account) before and after the claim transaction',
-        balanceBefore: params.balanceBefore ?? '',
-        balanceAfter: params.balanceAfter ?? '',
+        exactClaimedAmountFormula:
+          'claimedAmount = replay(preClaimBucketState, receiptBlockTimestamp)',
+        exactClaimedAmountSource:
+          'calculateClaimedRewards formula trace captured before claim plus receipt block timestamp',
         claimedAmount: params.claimedAmount ?? '',
         settlementTimestamp: params.settlementTimestamp ?? '',
         accountSnapshotBefore: {
@@ -1281,8 +1281,6 @@ function getEstimateRewardCalculationMeta(
 function buildClaimRewardCalculationMeta(params: {
   methodName: RewardUpdateWriteMethod;
   accountKey: string;
-  balanceBefore: string;
-  balanceAfter: string;
   claimedAmount: string;
   settlementTimestamp: string | null;
   beforeSnapshot: AccountRewardSnapshot | null;
@@ -1292,8 +1290,6 @@ function buildClaimRewardCalculationMeta(params: {
     source: 'onChainClaim',
     methodName: params.methodName,
     accountKey: params.accountKey,
-    balanceBefore: params.balanceBefore,
-    balanceAfter: params.balanceAfter,
     claimedAmount: params.claimedAmount,
     settlementTimestamp: params.settlementTimestamp,
     beforeSnapshot: params.beforeSnapshot,
@@ -1307,9 +1303,21 @@ type PendingAccountRewardsReader = {
     optionsOrTimestampOverride?: unknown,
     timestampOverride?: string | number | bigint,
   ) => Promise<unknown>;
-  estimateOffChainSponsorRewards?: (accountKey: string, optionsOrTimestampOverride?: unknown) => Promise<unknown>;
-  estimateOffChainRecipientRewards?: (accountKey: string, optionsOrTimestampOverride?: unknown) => Promise<unknown>;
-  estimateOffChainAgentRewards?: (accountKey: string, optionsOrTimestampOverride?: unknown) => Promise<unknown>;
+  estimateOffChainSponsorRewards?: (
+    accountKey: string,
+    optionsOrTimestampOverride?: unknown,
+    timestampOverride?: string | number | bigint,
+  ) => Promise<unknown>;
+  estimateOffChainRecipientRewards?: (
+    accountKey: string,
+    optionsOrTimestampOverride?: unknown,
+    timestampOverride?: string | number | bigint,
+  ) => Promise<unknown>;
+  estimateOffChainAgentRewards?: (
+    accountKey: string,
+    optionsOrTimestampOverride?: unknown,
+    timestampOverride?: string | number | bigint,
+  ) => Promise<unknown>;
 };
 
 type ClaimedRewardsByAccount = Record<string, {
@@ -1318,11 +1326,7 @@ type ClaimedRewardsByAccount = Record<string, {
   claimedRecipientRewards: string;
   claimedAgentRewards: string;
   claimedRewards: string;
-  balanceBefore?: string;
-  balanceAfter?: string;
 }>;
-
-type RefreshedAccountRecordsByAccount = Record<string, unknown>;
 
 const CLAIM_TO_ESTIMATE_METHOD: Record<RewardUpdateWriteMethod, keyof PendingAccountRewardsReader> = {
   claimOnChainTotalRewards: 'estimateOffChainTotalRewards',
@@ -1344,7 +1348,7 @@ function readPendingRewardsByAccount(value: unknown): Record<string, Record<stri
     : null;
 }
 
-async function getClaimAffectedPendingRewardsByAccount(
+async function getClaimAffectedPendingRewardsResult(
   pendingRewardsReader: PendingAccountRewardsReader,
   methodName: RewardUpdateWriteMethod,
   accountKey: string,
@@ -1353,7 +1357,11 @@ async function getClaimAffectedPendingRewardsByAccount(
   const estimateMethodName = CLAIM_TO_ESTIMATE_METHOD[methodName];
   const estimateMethod = pendingRewardsReader[estimateMethodName];
   if (typeof estimateMethod !== 'function') return null;
-  return readPendingRewardsByAccount(await estimateMethod(accountKey, { ...(readCacheOptions as Record<string, unknown>), cache: false }));
+  return await estimateMethod(accountKey, {
+    ...(readCacheOptions as Record<string, unknown>),
+    cache: false,
+    traceRewardFormula: true,
+  });
 }
 
 function getClaimRoleForAffectedAccount(
@@ -1369,12 +1377,10 @@ function getClaimRoleForAffectedAccount(
   return getRewardRoleForMethod(methodName);
 }
 
-function buildClaimedRewardsByAccountFromBalanceDeltas(params: {
+function buildClaimedRewardsByAccountFromPendingRewards(params: {
   affectedPendingRewardsByAccount: Record<string, Record<string, unknown>> | null;
   accountKey: string;
   methodName: RewardUpdateWriteMethod;
-  balancesBefore: Record<string, string>;
-  balancesAfter: Record<string, string>;
 }): ClaimedRewardsByAccount {
   const affectedEntries = params.affectedPendingRewardsByAccount && Object.keys(params.affectedPendingRewardsByAccount).length > 0
     ? params.affectedPendingRewardsByAccount
@@ -1387,63 +1393,164 @@ function buildClaimedRewardsByAccountFromBalanceDeltas(params: {
   for (const [mapKey, pendingRewards] of Object.entries(affectedEntries)) {
     const normalizedAccountKey = normalizeAddressDisplay(pendingRewards.accountKey ?? mapKey);
     if (!normalizedAccountKey) continue;
-    const balanceBefore = params.balancesBefore[normalizedAccountKey] ?? '0';
-    const balanceAfter = params.balancesAfter[normalizedAccountKey] ?? balanceBefore;
-    const claimedRewards = (toBigIntAmount(balanceAfter) - toBigIntAmount(balanceBefore)).toString();
     const role = getClaimRoleForAffectedAccount(pendingRewards, params.methodName);
+    const claimedSponsorRewards = String(pendingRewards.pendingSponsorRewards ?? '0');
+    const claimedRecipientRewards = String(pendingRewards.pendingRecipientRewards ?? '0');
+    const claimedAgentRewards = String(pendingRewards.pendingAgentRewards ?? '0');
+    const claimedRewards = (
+      toBigIntAmount(claimedSponsorRewards) +
+      toBigIntAmount(claimedRecipientRewards) +
+      toBigIntAmount(claimedAgentRewards)
+    ).toString();
     claimedRewardsByAccount[normalizedAccountKey] = {
       accountKey: String(pendingRewards.accountKey ?? normalizedAccountKey),
-      claimedSponsorRewards: role === 'Sponsor' || role === 'Total' ? claimedRewards : '0',
-      claimedRecipientRewards: role === 'Recipient' || role === 'Total' ? claimedRewards : '0',
-      claimedAgentRewards: role === 'Agent' || role === 'Total' ? claimedRewards : '0',
+      claimedSponsorRewards: role === 'Sponsor' || role === 'Total' ? claimedSponsorRewards : '0',
+      claimedRecipientRewards: role === 'Recipient' || role === 'Total' ? claimedRecipientRewards : '0',
+      claimedAgentRewards: role === 'Agent' || role === 'Total' ? claimedAgentRewards : '0',
       claimedRewards,
-      balanceBefore,
-      balanceAfter,
     };
   }
   return claimedRewardsByAccount;
 }
 
-async function refreshAccountRecordsByAccount(params: {
-  affectedAccountKeys: string[];
-  accessRead: Record<string, unknown>;
-  contract: Contract;
-  contractAddress: string;
-  readCacheOptions: unknown;
-}): Promise<RefreshedAccountRecordsByAccount> {
-  const refreshedEntries = await Promise.all(
-    params.affectedAccountKeys.map(async (affectedAccountKey) => {
-      invalidateCachedAccountRecord(params.contractAddress, affectedAccountKey);
-      const refreshedAccountRecordRaw =
-        typeof params.accessRead.getAccountRecord === 'function'
-          ? await (params.accessRead.getAccountRecord as (accountKey: string, options?: unknown) => Promise<unknown>)(
-              affectedAccountKey,
-              {
-                ...(params.readCacheOptions as Record<string, unknown>),
-                cache: 'refresh',
-              },
-            )
-          : typeof (params.contract as Record<string, unknown>).getAccountRecord === 'function'
-            ? normalizeOnChainAccountRecordResult(
-                await (
-                  params.contract as unknown as { getAccountRecord: (accountKey: string) => Promise<unknown> }
-                ).getAccountRecord(affectedAccountKey),
-                affectedAccountKey,
-              )
-            : null;
-      const refreshedAccountRecord = refreshedAccountRecordRaw
-        ? withLazyAccountRelationBuckets(
-            await withAccountRoleFlags(refreshedAccountRecordRaw, affectedAccountKey, params.accessRead),
-            affectedAccountKey,
-          )
-        : null;
-      if (refreshedAccountRecord) {
-        setCachedAccountRecord(params.contractAddress, affectedAccountKey, refreshedAccountRecord);
-      }
-      return [affectedAccountKey, refreshedAccountRecord] as const;
-    }),
-  );
-  return Object.fromEntries(refreshedEntries.filter(([, record]) => Boolean(record)));
+function calculateReplayedBucketRewards(entry: Record<string, unknown>, settlementTimestamp: string | null): bigint {
+  const settlement = toBigIntAmount(settlementTimestamp);
+  const lastUpdate = toBigIntAmount(entry.lastUpdateTimeStamp);
+  if (settlement <= 0n || lastUpdate > settlement) return 0n;
+  const timeDiff = settlement - lastUpdate;
+  return (
+    timeDiff *
+    toBigIntAmount(entry.totalStaked) *
+    toBigIntAmount(entry.rate)
+  ) / 100n / STAKING_REWARD_YEAR_SECONDS_BIGINT;
+}
+
+function calculateSponsorDepositAmount(amount: bigint, annualInflation: bigint) {
+  return amount - ((amount * annualInflation) / 100n);
+}
+
+function calculateParentRewardAmount(amount: bigint, rate: unknown) {
+  const normalizedRate = toBigIntAmount(rate);
+  if (normalizedRate <= 0n) return 0n;
+  return ((amount * REWARD_DECIMAL_MULTIPLIER) / normalizedRate) / REWARD_PERCENT_DIVISOR;
+}
+
+function addReplayedClaimedReward(
+  target: ClaimedRewardsByAccount,
+  accountKey: unknown,
+  field: 'claimedSponsorRewards' | 'claimedRecipientRewards' | 'claimedAgentRewards',
+  amount: bigint,
+) {
+  const normalizedAccountKey = normalizeAddressDisplay(accountKey);
+  if (!normalizedAccountKey || amount <= 0n) return;
+  const current = target[normalizedAccountKey] ?? {
+    accountKey: String(accountKey ?? normalizedAccountKey),
+    claimedSponsorRewards: '0',
+    claimedRecipientRewards: '0',
+    claimedAgentRewards: '0',
+    claimedRewards: '0',
+  };
+  current[field] = (toBigIntAmount(current[field]) + amount).toString();
+  current.claimedRewards = (
+    toBigIntAmount(current.claimedSponsorRewards) +
+    toBigIntAmount(current.claimedRecipientRewards) +
+    toBigIntAmount(current.claimedAgentRewards)
+  ).toString();
+  target[normalizedAccountKey] = current;
+}
+
+function buildClaimedRewardsByAccountFromSettlementReplay(params: {
+  preClaimCalculatedRewardsResult: unknown;
+  settlementTimestamp: string | null;
+}): ClaimedRewardsByAccount | null {
+  const entries = readRewardFormulaTraceEntries(params.preClaimCalculatedRewardsResult);
+  if (!params.settlementTimestamp || entries.length === 0) return null;
+  const resultRecord =
+    params.preClaimCalculatedRewardsResult &&
+    typeof params.preClaimCalculatedRewardsResult === 'object' &&
+    !Array.isArray(params.preClaimCalculatedRewardsResult)
+      ? (params.preClaimCalculatedRewardsResult as Record<string, unknown>)
+      : {};
+  const annualInflation = toBigIntAmount(resultRecord.annualInflation ?? 10);
+  const claimedRewardsByAccount: ClaimedRewardsByAccount = {};
+
+  for (const entry of entries) {
+    const rewards = calculateReplayedBucketRewards(entry, params.settlementTimestamp);
+    if (String(entry.kind ?? '') === 'recipient') {
+      addReplayedClaimedReward(
+        claimedRewardsByAccount,
+        entry.recipientKey,
+        'claimedRecipientRewards',
+        rewards,
+      );
+      const sponsorParentAmount = calculateParentRewardAmount(rewards, entry.recipientRate ?? entry.rate);
+      addReplayedClaimedReward(
+        claimedRewardsByAccount,
+        entry.sponsorKey,
+        'claimedSponsorRewards',
+        calculateSponsorDepositAmount(sponsorParentAmount, annualInflation),
+      );
+      continue;
+    }
+    if (String(entry.kind ?? '') === 'agent') {
+      addReplayedClaimedReward(
+        claimedRewardsByAccount,
+        entry.agentKey,
+        'claimedAgentRewards',
+        rewards,
+      );
+      const recipientParentAmount = calculateParentRewardAmount(rewards, entry.agentRate ?? entry.rate);
+      addReplayedClaimedReward(
+        claimedRewardsByAccount,
+        entry.recipientKey,
+        'claimedRecipientRewards',
+        recipientParentAmount,
+      );
+      const sponsorAmount = calculateParentRewardAmount(recipientParentAmount, entry.recipientRate);
+      addReplayedClaimedReward(
+        claimedRewardsByAccount,
+        entry.sponsorKey,
+        'claimedSponsorRewards',
+        calculateSponsorDepositAmount(sponsorAmount, annualInflation),
+      );
+    }
+  }
+
+  return Object.keys(claimedRewardsByAccount).length > 0 ? claimedRewardsByAccount : null;
+}
+
+function readRewardFormulaTraceEntries(value: unknown): Record<string, unknown>[] {
+  const rawRecord = value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+  const rawEntries = rawRecord?.__rewardFormulaTrace;
+  if (Array.isArray(rawEntries)) {
+    return rawEntries.filter((entry): entry is Record<string, unknown> =>
+      Boolean(entry && typeof entry === 'object' && !Array.isArray(entry)),
+    );
+  }
+  const normalized = normalizePendingRewardsDisplayResult(value);
+  const record = normalized && typeof normalized === 'object' && !Array.isArray(normalized)
+    ? (normalized as Record<string, unknown>)
+    : rawRecord;
+  const entries = record?.__rewardFormulaTrace;
+  return Array.isArray(entries)
+    ? entries.filter((entry): entry is Record<string, unknown> => Boolean(entry && typeof entry === 'object' && !Array.isArray(entry)))
+    : [];
+}
+
+function traceRewardFormulaEntries(
+  phase: string,
+  value: unknown,
+  appendTrace: (line: string) => void,
+) {
+  const entries = readRewardFormulaTraceEntries(value);
+  appendTrace(`[REWARD_FORMULA_TRACE] phase=${phase} entries=${entries.length}`);
+  for (const [index, entry] of entries.entries()) {
+    appendTrace(
+      `[REWARD_FORMULA_TRACE] phase=${phase} index=${index} kind=${String(entry.kind ?? '')} sponsor=${String(entry.sponsorKey ?? '')} recipient=${String(entry.recipientKey ?? '')} recipientRate=${String(entry.recipientRate ?? '')} agent=${String(entry.agentKey ?? '')} agentRate=${String(entry.agentRate ?? '')} totalStaked=${String(entry.totalStaked ?? '')} lastUpdate=${String(entry.lastUpdateTimeStamp ?? '')} timestamp=${String(entry.currentTimeStamp ?? '')} timeDiff=${String(entry.timeDiff ?? '')} rate=${String(entry.rate ?? '')} yearSeconds=${String(entry.yearSeconds ?? '')} rewards=${String(entry.rewards ?? '')}`,
+    );
+  }
 }
 
 function toBigIntAmount(value: unknown) {
@@ -1551,26 +1658,6 @@ function readRewardRoleFormattedUpdate(
   return formatUnixSecondsTimestamp(timestamp);
 }
 
-function pendingRewardsToSnapshot(value: unknown): AccountRewardSnapshot {
-  const normalized = normalizePendingRewardsDisplayResult(value);
-  const record = normalized && typeof normalized === 'object' && !Array.isArray(normalized)
-    ? (normalized as Record<string, unknown>)
-    : {};
-  return {
-    accountStakingRewards: toBigIntAmount(record.pendingRewards).toString(),
-    sponsorRewards: toBigIntAmount(record.pendingSponsorRewards).toString(),
-    recipientRewards: toBigIntAmount(record.pendingRecipientRewards).toString(),
-    agentRewards: toBigIntAmount(record.pendingAgentRewards).toString(),
-    sponsorCount: '0',
-    recipientCount: '0',
-    agentCount: '0',
-    parentRecipientCount: '0',
-    lastSponsorUpdateTimeStamp: String(record.lastSponsorUpdate ?? '0'),
-    lastRecipientUpdateTimeStamp: String(record.lastRecipientUpdate ?? '0'),
-    lastAgentUpdateTimeStamp: String(record.lastAgentUpdate ?? '0'),
-  };
-}
-
 function normalizePendingRewardsResult(value: unknown): unknown {
   return normalizePendingRewardsDisplayResult(value);
 }
@@ -1623,28 +1710,6 @@ async function readAccountRewardSnapshot(contract: Contract, accountKey: string)
   };
 }
 
-async function readAccountBalanceOf(contract: Contract, accountKey: string): Promise<string> {
-  const readableContract = contract as unknown as {
-    balanceOf?: (accountKey: string) => Promise<unknown>;
-  };
-  if (typeof readableContract.balanceOf !== 'function') {
-    throw new Error('balanceOf is not available on the current SpCoin contract access path.');
-  }
-  return toBigIntAmount(await readableContract.balanceOf(accountKey)).toString();
-}
-
-function readAccountRecordBalanceOf(record: unknown): string | null {
-  if (!record || typeof record !== 'object' || Array.isArray(record)) return null;
-  const accountRecord = record as Record<string, unknown>;
-  const totalSpCoins = accountRecord.totalSpCoins;
-  if (totalSpCoins && typeof totalSpCoins === 'object' && !Array.isArray(totalSpCoins)) {
-    const balanceOf = (totalSpCoins as Record<string, unknown>).balanceOf;
-    if (balanceOf !== undefined && balanceOf !== null) return toBigIntAmount(balanceOf).toString();
-  }
-  const balanceOf = accountRecord.balanceOf ?? accountRecord.accountBalance;
-  return balanceOf === undefined || balanceOf === null ? null : toBigIntAmount(balanceOf).toString();
-}
-
 function resolveStepMode(step: LabScriptStep, script: LabScript) {
   if (step.mode === 'hardhat') return 'hardhat';
   const stepNetwork = String(step.network || '').trim();
@@ -1663,7 +1728,6 @@ export async function POST(request: NextRequest) {
     const startIndex = Math.max(0, Number(body?.startIndex ?? 0) || 0);
     const stopAfterCurrentStep = body?.stopAfterCurrentStep === true;
     const source: SpCoinAccessSource = body?.spCoinAccessSource === 'local' ? 'local' : 'node_modules';
-    const compareOfflineRewards = body?.compareOfflineRewards === true;
     const cacheMode =
       body?.cacheMode === 'refresh' || body?.cacheMode === 'bypass' || body?.cacheMode === 'only'
         ? body.cacheMode
@@ -2791,38 +2855,13 @@ export async function POST(request: NextRequest) {
               const methodName = step.method as RewardUpdateWriteMethod;
               const accountKey = findParam('Account Key') || senderAddress;
               const pendingRewardsReader = access.read as PendingAccountRewardsReader;
-              const includeOfflineComparison =
-                methodName === 'claimOnChainTotalRewards' && compareOfflineRewards;
-              const latestBlockOfflinePreview =
-                includeOfflineComparison && typeof pendingRewardsReader.estimateOffChainTotalRewards === 'function'
-                  ? await pendingRewardsReader.estimateOffChainTotalRewards(accountKey)
-                  : null;
-              const affectedPendingRewardsByAccount = await getClaimAffectedPendingRewardsByAccount(
+              const preClaimCalculatedRewardsResult = await getClaimAffectedPendingRewardsResult(
                 pendingRewardsReader,
                 methodName,
                 accountKey,
                 readCacheOptions,
               );
-              const affectedAccountKeys = Array.from(
-                new Set([
-                  normalizeAddressDisplay(accountKey),
-                  ...Object.entries(affectedPendingRewardsByAccount ?? {}).map(([mapKey, rewards]) =>
-                    normalizeAddressDisplay(rewards.accountKey ?? mapKey),
-                  ),
-                ]),
-              ).filter(Boolean);
-              const rewardSnapshotBefore = await readAccountRewardSnapshot(contract, accountKey);
-              appendTrace(
-                `[REWARD_CALC_TRACE] claim before method=${methodName} account=${accountKey} sponsorTs=${rewardSnapshotBefore.lastSponsorUpdateTimeStamp} recipientTs=${rewardSnapshotBefore.lastRecipientUpdateTimeStamp} agentTs=${rewardSnapshotBefore.lastAgentUpdateTimeStamp}`,
-              );
-              const balancesBeforeEntries = await Promise.all(
-                affectedAccountKeys.map(async (affectedAccountKey) => [
-                  affectedAccountKey,
-                  await readAccountBalanceOf(contract, affectedAccountKey),
-                ] as const),
-              );
-              const balancesBeforeByAccount = Object.fromEntries(balancesBeforeEntries);
-              const balanceBefore = balancesBeforeByAccount[normalizeAddressDisplay(accountKey)] ?? '0';
+              const affectedPendingRewardsByAccount = readPendingRewardsByAccount(preClaimCalculatedRewardsResult);
               const tx = await sendSignedContractTransaction({
                 label: methodName,
                 contract: writeContract,
@@ -2837,78 +2876,42 @@ export async function POST(request: NextRequest) {
               appendTrace(
                 `[REWARD_CALC_TRACE] claim receipt method=${methodName} account=${accountKey} settlementTimestamp=${String(settlementTimestamp || '')} formula="grossSponsorPendingRewards = ${GROSS_SPONSOR_PENDING_REWARDS_FORMULA}" yearSeconds=${STAKING_REWARD_YEAR_SECONDS}`,
               );
-              const settlementOfflinePreview =
-                includeOfflineComparison && settlementTimestamp && typeof pendingRewardsReader.estimateOffChainTotalRewards === 'function'
-                  ? await pendingRewardsReader.estimateOffChainTotalRewards(accountKey, settlementTimestamp)
-                  : null;
-              const refreshedAccountRecordsByAccount = await refreshAccountRecordsByAccount({
-                affectedAccountKeys,
-                accessRead: access.read as Record<string, unknown>,
-                contract,
-                contractAddress,
-                readCacheOptions,
+              const settlementReplayClaimedRewardsByAccount = buildClaimedRewardsByAccountFromSettlementReplay({
+                preClaimCalculatedRewardsResult,
+                settlementTimestamp,
               });
-              const refreshedAccountRecord =
-                refreshedAccountRecordsByAccount[normalizeAddressDisplay(accountKey)] ?? null;
-              const rewardSnapshotAfter = await readAccountRewardSnapshot(contract, accountKey);
-              const balancesAfterEntries = await Promise.all(
-                affectedAccountKeys.map(async (affectedAccountKey) => {
-                  const refreshedBalance = affectedAccountKey === normalizeAddressDisplay(accountKey)
-                    ? readAccountRecordBalanceOf(refreshedAccountRecord)
-                    : null;
-                  return [
-                    affectedAccountKey,
-                    refreshedBalance ?? await readAccountBalanceOf(contract, affectedAccountKey),
-                  ] as const;
-                }),
+              const claimedRewardsByAccount =
+                settlementReplayClaimedRewardsByAccount ??
+                buildClaimedRewardsByAccountFromPendingRewards({
+                  affectedPendingRewardsByAccount,
+                  accountKey,
+                  methodName,
+                });
+              const claimedAmount = String(
+                claimedRewardsByAccount[normalizeAddressDisplay(accountKey)]?.claimedRewards ?? '0',
               );
-              const balancesAfterByAccount = Object.fromEntries(balancesAfterEntries);
-              const balanceAfter = balancesAfterByAccount[normalizeAddressDisplay(accountKey)] ?? balanceBefore;
-              const claimedAmount = (toBigIntAmount(balanceAfter) - toBigIntAmount(balanceBefore)).toString();
-              const claimedRewardsByAccount = buildClaimedRewardsByAccountFromBalanceDeltas({
-                affectedPendingRewardsByAccount,
-                accountKey,
-                methodName,
-                balancesBefore: balancesBeforeByAccount,
-                balancesAfter: balancesAfterByAccount,
-              });
-              const settlementOfflineDelta = pendingRewardsToSnapshot(settlementOfflinePreview);
+              traceRewardFormulaEntries('beforeClaim', preClaimCalculatedRewardsResult, appendTrace);
               stepRewardCalculationMeta = buildClaimRewardCalculationMeta({
                 methodName,
                 accountKey,
-                balanceBefore,
-                balanceAfter,
                 claimedAmount,
                 settlementTimestamp,
-                beforeSnapshot: rewardSnapshotBefore,
-                afterSnapshot: rewardSnapshotAfter,
+                beforeSnapshot: null,
+                afterSnapshot: null,
               });
               appendTrace(
-                `[REWARD_CALC_TRACE] claim after method=${methodName} account=${accountKey} sponsorTs=${rewardSnapshotAfter.lastSponsorUpdateTimeStamp} recipientTs=${rewardSnapshotAfter.lastRecipientUpdateTimeStamp} agentTs=${rewardSnapshotAfter.lastAgentUpdateTimeStamp} balanceBefore=${balanceBefore} balanceAfter=${balanceAfter} claimedAmount=${claimedAmount}`,
+                `[REWARD_CALC_TRACE] claim replay method=${methodName} account=${accountKey} settlementTimestamp=${String(settlementTimestamp || '')} claimedAmount=${claimedAmount} accounts=${Object.keys(claimedRewardsByAccount).join(',')}`,
               );
               stepResult = [
                 ...formatReceiptResult(methodName, tx, receipt, timingCollector),
                 {
-                  label: `${methodName} balanceOf`,
+                  label: `${methodName} settlementReplay`,
                   accountKey,
-                  balanceBefore,
-                  balanceAfter,
                   claimedAmount,
                   __claimedRewardsByAccount: claimedRewardsByAccount,
                   __claimedRewardsAllRoles: claimedRewardsByAccount[normalizeAddressDisplay(accountKey)],
-                  __refreshedAccountRecordsByAccount: refreshedAccountRecordsByAccount,
                   rewardCalculation: stepRewardCalculationMeta,
-                  ...(refreshedAccountRecord ? { refreshedAccountRecord } : {}),
-                  ...(includeOfflineComparison
-                    ? {
-                        offlineComparison: {
-                          latestBlockPreview: latestBlockOfflinePreview,
-                          settlementTimestamp,
-                          settlementTimestampPreview: settlementOfflinePreview,
-                          settlementTimestampDelta: settlementOfflineDelta,
-                        },
-                      }
-                    : {}),
+                  settlementTimestamp,
                 },
               ];
               break;

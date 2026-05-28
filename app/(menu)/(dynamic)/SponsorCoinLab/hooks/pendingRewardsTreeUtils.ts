@@ -1,7 +1,4 @@
-import {
-  calculateFormattedDT,
-  normalizePendingRewardsDisplayResult,
-} from '@/lib/spCoinLab/pendingRewards';
+import { normalizePendingRewardsDisplayResult } from '@/lib/spCoinLab/pendingRewards';
 import {
   resolveSpCoinAccountRoleLabel,
   resolveSpCoinMethodRole,
@@ -192,7 +189,7 @@ export function buildZeroPendingRewardsEstimateResult(accountKey: string, method
   return result;
 }
 
-type PendingRewardsAllRoles = {
+export type PendingRewardsAllRoles = {
   pendingSponsorRewards?: unknown;
   pendingRecipientRewards?: unknown;
   pendingAgentRewards?: unknown;
@@ -202,7 +199,7 @@ type PendingRewardsAllRoles = {
   claimedRewards?: unknown;
 };
 
-type PendingRewardsByAccount = Record<string, PendingRewardsAllRoles & { accountKey?: unknown; pendingRewards?: unknown }>;
+export type PendingRewardsByAccount = Record<string, PendingRewardsAllRoles & { accountKey?: unknown; pendingRewards?: unknown }>;
 
 export function getPendingRewardsRoleForMethod(method: unknown): string {
   return resolveSpCoinMethodRole(method);
@@ -342,6 +339,49 @@ export function buildClaimedRewardsByAccount(
   };
 }
 
+export function buildClaimedRewardsByAccountFromPendingRewards(
+  rewardsByAccount: PendingRewardsByAccount | null,
+  method: string,
+): PendingRewardsByAccount | null {
+  if (!rewardsByAccount) return null;
+  const claimedByAccount: PendingRewardsByAccount = {};
+  const toRewardAmountText = (value: unknown) => String(value ?? '0').replace(/,/g, '').trim() || '0';
+  for (const [mapKey, accountRewards] of Object.entries(rewardsByAccount)) {
+    const accountKey = String(accountRewards.accountKey ?? mapKey);
+    const normalizedAccountKey = normalizeAccountKeyValue(accountKey);
+    if (!normalizedAccountKey) continue;
+
+    const pendingSponsorRewards = toRewardAmountText(accountRewards.pendingSponsorRewards);
+    const pendingRecipientRewards = toRewardAmountText(accountRewards.pendingRecipientRewards);
+    const pendingAgentRewards = toRewardAmountText(accountRewards.pendingAgentRewards);
+    const claimedSponsorRewards =
+      method === 'claimOnChainSponsorRewards' || method === 'claimOnChainTotalRewards'
+        ? pendingSponsorRewards
+        : '0';
+    const claimedRecipientRewards =
+      method === 'claimOnChainRecipientRewards' || method === 'claimOnChainTotalRewards'
+        ? pendingRecipientRewards
+        : '0';
+    const claimedAgentRewards =
+      method === 'claimOnChainAgentRewards' || method === 'claimOnChainTotalRewards'
+        ? pendingAgentRewards
+        : '0';
+    const claimedRewards = addRewardAmountStrings(
+      addRewardAmountStrings(claimedSponsorRewards, claimedRecipientRewards),
+      claimedAgentRewards,
+    );
+
+    claimedByAccount[normalizedAccountKey] = {
+      accountKey,
+      claimedSponsorRewards,
+      claimedRecipientRewards,
+      claimedAgentRewards,
+      claimedRewards,
+    };
+  }
+  return Object.keys(claimedByAccount).length > 0 ? claimedByAccount : null;
+}
+
 function readPendingRewardsAllRolesAmount(allRoles: PendingRewardsAllRoles | null, method: string) {
   if (!allRoles) return null;
   const value =
@@ -377,7 +417,101 @@ function readClaimedRewardsAllRolesAmount(allRoles: PendingRewardsAllRoles | nul
   return value === null || value === undefined ? null : String(value);
 }
 
+function readClaimedRewardsTotalAmount(allRoles: PendingRewardsAllRoles | null) {
+  if (!allRoles) return null;
+  const direct = allRoles.claimedRewards;
+  if (direct !== undefined && direct !== null) {
+    const directText = String(direct).replace(/,/g, '').trim();
+    return directText && directText !== '0' ? String(direct) : null;
+  }
+  const total = addRewardAmountStrings(
+    addRewardAmountStrings(allRoles.claimedSponsorRewards, allRoles.claimedRecipientRewards),
+    allRoles.claimedAgentRewards,
+  );
+  return total === '0' ? null : total;
+}
+
+function getClaimFieldForAccountRole(role: unknown): keyof PendingRewardsAllRoles | null {
+  const roleText = toDisplayString(role).trim().toLowerCase();
+  if (roleText === 'sponsor') return 'claimedSponsorRewards';
+  if (roleText === 'recipient') return 'claimedRecipientRewards';
+  if (roleText === 'agent') return 'claimedAgentRewards';
+  return null;
+}
+
+function readClaimedRewardsForAccountRecord(
+  accountClaims: PendingRewardsAllRoles | null,
+  accountRecord: Record<string, unknown>,
+) {
+  if (!accountClaims) return null;
+  const claimField = getClaimFieldForAccountRole(accountRecord.role);
+  if (claimField) {
+    const roleAmount = normalizeRewardAmountText(accountClaims[claimField]);
+    if (roleAmount && roleAmount !== '0') return accountClaims[claimField];
+  }
+  return readClaimedRewardsTotalAmount(accountClaims);
+}
+
+function addRewardAmountStrings(left: unknown, right: unknown) {
+  const leftText = String(left ?? '0').replace(/,/g, '').trim();
+  const rightText = String(right ?? '0').replace(/,/g, '').trim();
+  if (!leftText || leftText === '0') return rightText || '0';
+  if (!rightText || rightText === '0') return leftText || '0';
+
+  const decimalScale = Math.max(
+    leftText.includes('.') ? leftText.split('.')[1]?.length ?? 0 : 0,
+    rightText.includes('.') ? rightText.split('.')[1]?.length ?? 0 : 0,
+  );
+  const toScaledBigInt = (value: string) => {
+    const [wholePart, fractionPart = ''] = value.split('.');
+    return BigInt(`${wholePart || '0'}${fractionPart.padEnd(decimalScale, '0')}`);
+  };
+  const total = toScaledBigInt(leftText) + toScaledBigInt(rightText);
+  if (decimalScale === 0) return total.toString();
+  const padded = total.toString().padStart(decimalScale + 1, '0');
+  const whole = padded.slice(0, -decimalScale) || '0';
+  const fraction = padded.slice(-decimalScale).replace(/0+$/, '');
+  return fraction ? `${whole}.${fraction}` : whole;
+}
+
+function normalizeRewardAmountText(value: unknown) {
+  return String(value ?? '').replace(/,/g, '').trim();
+}
+
+function formatBaseUnitRewardAmount(value: unknown) {
+  const text = normalizeRewardAmountText(value);
+  if (!text || text === '0') return '0';
+  if (text.includes('.')) return text;
+  if (!/^\d+$/.test(text)) return text;
+
+  const base = 1_000_000_000_000_000_000n;
+  const amount = BigInt(text);
+  const whole = amount / base;
+  const fraction = amount % base;
+  if (fraction === 0n) return whole.toString();
+  return `${whole}.${fraction.toString().padStart(18, '0').replace(/0+$/, '')}`;
+}
+
+function addClaimedRewardsToTotalSpCoins(value: unknown, claimedRewardsDisplayAmount: string) {
+  if (!claimedRewardsDisplayAmount || claimedRewardsDisplayAmount === '0') return value;
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'bigint') {
+    return addRewardAmountStrings(value, claimedRewardsDisplayAmount);
+  }
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
+  const record = value as Record<string, unknown>;
+  const next = { ...record };
+  if (next.totalSpCoins !== undefined) {
+    next.totalSpCoins = addRewardAmountStrings(next.totalSpCoins, claimedRewardsDisplayAmount);
+  }
+  if (next.balanceOf !== undefined) {
+    next.balanceOf = addRewardAmountStrings(next.balanceOf, claimedRewardsDisplayAmount);
+  }
+  return next;
+}
+
 function normalizeAccountKeyValue(value: unknown) {
+  if (value === undefined || value === null) return '';
+  if (typeof value === 'object' || typeof value === 'function' || typeof value === 'symbol') return '';
   return String(value ?? '').trim().toLowerCase();
 }
 
@@ -402,6 +536,56 @@ function readPendingRewardsBranchAccountKey(value: unknown) {
 function getAccountRewardsFromMap(rewardsByAccount: PendingRewardsByAccount | null, accountKey: string) {
   if (!rewardsByAccount || !accountKey) return null;
   return (rewardsByAccount[accountKey] ?? rewardsByAccount[accountKey.toLowerCase()]) || null;
+}
+
+function resolveClaimedAccountKeyForRecord(
+  record: Record<string, unknown>,
+  rewardsByAccount: PendingRewardsByAccount,
+) {
+  const claimField = getClaimFieldForAccountRole(record.role);
+  if (!claimField) return '';
+  const matches = Object.entries(rewardsByAccount)
+    .filter(([, accountClaims]) => {
+      const amount = normalizeRewardAmountText(accountClaims[claimField]);
+      return amount !== '' && amount !== '0';
+    })
+    .map(([accountKey, accountClaims]) => normalizeAccountKeyValue(accountClaims.accountKey ?? accountKey))
+    .filter(Boolean);
+  const uniqueMatches = Array.from(new Set(matches));
+  return uniqueMatches.length === 1 ? uniqueMatches[0] : '';
+}
+
+function readCallAccountKey(value: unknown) {
+  const record = asRecord(value);
+  const callParameters = asRecord(asRecord(record?.call)?.parameters);
+  return normalizeAccountKeyValue(callParameters?.['Account Key'] ?? callParameters?.Account);
+}
+
+function readRelationItemAccountKey(value: unknown) {
+  const record = asRecord(value);
+  return normalizeAccountKeyValue(record?.accountKey ?? record?.address ?? record?.key ?? record?.[0] ?? record?.value);
+}
+
+function readAccountContextKey(value: unknown) {
+  return readAccountRecordKey(value) || readRelationItemAccountKey(value) || readCallAccountKey(value);
+}
+
+function readChildAccountContextKey(
+  parent: Record<string, unknown>,
+  childKey: string,
+  childValue: unknown,
+  inheritedAccountKey: string,
+) {
+  const childAccountKey = readAccountContextKey(childValue);
+  if (childAccountKey) return childAccountKey;
+  if (childKey === 'result') {
+    const wrapperAccountKey = readRelationItemAccountKey(parent) || readCallAccountKey(parent);
+    if (wrapperAccountKey) return wrapperAccountKey;
+  }
+  if (childKey === 'totalSpCoins' || childKey === 'pendingRewards') {
+    return readAccountRecordKey(parent) || inheritedAccountKey;
+  }
+  return inheritedAccountKey;
 }
 
 export function mergePendingRewardsByAccountIntoTree(
@@ -486,22 +670,28 @@ function mergeClaimMethodResultAmount(
   };
 }
 
-export function mergeClaimedRewardsByAccountIntoTree(
+export function updateAccountClaimedRewards(
   value: unknown,
   claimedRewardsByAccount: PendingRewardsByAccount | null,
+  inheritedAccountKey = '',
 ): unknown {
   if (!claimedRewardsByAccount || !value || typeof value !== 'object') return value;
   if (Array.isArray(value)) {
-    return value.map((entry) => mergeClaimedRewardsByAccountIntoTree(entry, claimedRewardsByAccount));
+    return value.map((entry) => updateAccountClaimedRewards(entry, claimedRewardsByAccount, inheritedAccountKey));
   }
   const record = value as Record<string, unknown>;
+  const accountContextKey = readAccountContextKey(record) || inheritedAccountKey;
   const next: Record<string, unknown> = {};
   for (const [key, entry] of Object.entries(record)) {
-    next[key] = mergeClaimedRewardsByAccountIntoTree(entry, claimedRewardsByAccount);
+    next[key] = updateAccountClaimedRewards(
+      entry,
+      claimedRewardsByAccount,
+      readChildAccountContextKey(record, key, entry, accountContextKey),
+    );
   }
 
   if (next.TYPE === '--PENDING_REWARDS--') {
-    const accountKey = readPendingRewardsBranchAccountKey(next);
+    const accountKey = readPendingRewardsBranchAccountKey(next) || accountContextKey;
     const accountClaims = getAccountRewardsFromMap(claimedRewardsByAccount, accountKey);
     if (accountClaims) {
       for (const method of PENDING_REWARDS_CLAIM_METHODS) {
@@ -519,6 +709,110 @@ export function mergeClaimedRewardsByAccountIntoTree(
     }
   }
   return next;
+}
+
+export function updateAccountPendingEstimate(
+  value: unknown,
+  claimedRewardsByAccount: PendingRewardsByAccount | null,
+  inheritedAccountKey = '',
+): unknown {
+  if (!claimedRewardsByAccount || !value || typeof value !== 'object') return value;
+  if (Array.isArray(value)) {
+    return value.map((entry) => updateAccountPendingEstimate(entry, claimedRewardsByAccount, inheritedAccountKey));
+  }
+  const record = value as Record<string, unknown>;
+  const accountContextKey = readAccountContextKey(record) || inheritedAccountKey;
+  const next: Record<string, unknown> = {};
+  for (const [key, entry] of Object.entries(record)) {
+    next[key] = updateAccountPendingEstimate(
+      entry,
+      claimedRewardsByAccount,
+      readChildAccountContextKey(record, key, entry, accountContextKey),
+    );
+  }
+
+  if (next.TYPE === '--PENDING_REWARDS--') {
+    const accountKey = readPendingRewardsBranchAccountKey(next) || accountContextKey;
+    const accountClaims = getAccountRewardsFromMap(claimedRewardsByAccount, accountKey);
+    if (accountClaims) {
+      next.pendingRewards = '0';
+      const estimateMethodsByClaimField = [
+        ['claimedSponsorRewards', 'estimateOffChainSponsorRewards'],
+        ['claimedRecipientRewards', 'estimateOffChainRecipientRewards'],
+        ['claimedAgentRewards', 'estimateOffChainAgentRewards'],
+      ] as const;
+      for (const [claimField, estimateMethod] of estimateMethodsByClaimField) {
+        const amount = accountClaims[claimField];
+        if (normalizeRewardAmountText(amount) && normalizeRewardAmountText(amount) !== '0') {
+          next[estimateMethod] = mergeMethodResultAmount(
+            next[estimateMethod] ?? buildLazyPendingRewardsMethod(accountKey, estimateMethod),
+            '0',
+            estimateMethod,
+            accountKey,
+            accountClaims,
+          );
+        }
+      }
+      const claimedTotal = readClaimedRewardsTotalAmount(accountClaims);
+      if (claimedTotal !== null) {
+        next.estimateOffChainTotalRewards = mergeMethodResultAmount(
+          next.estimateOffChainTotalRewards ?? buildLazyPendingRewardsMethod(accountKey, 'estimateOffChainTotalRewards'),
+          '0',
+          'estimateOffChainTotalRewards',
+          accountKey,
+          accountClaims,
+        );
+      }
+    }
+  }
+  return next;
+}
+
+export function updateAccountRewardsEarned(
+  value: unknown,
+  claimedRewardsByAccount: PendingRewardsByAccount | null,
+  inheritedAccountKey = '',
+): unknown {
+  if (!claimedRewardsByAccount || !value || typeof value !== 'object') return value;
+  if (Array.isArray(value)) {
+    return value.map((entry) => updateAccountRewardsEarned(entry, claimedRewardsByAccount, inheritedAccountKey));
+  }
+  const record = value as Record<string, unknown>;
+  const accountContextKey = readAccountContextKey(record) || inheritedAccountKey;
+  const next: Record<string, unknown> = {};
+  for (const [key, entry] of Object.entries(record)) {
+    next[key] = updateAccountRewardsEarned(
+      entry,
+      claimedRewardsByAccount,
+      readChildAccountContextKey(record, key, entry, accountContextKey),
+    );
+  }
+
+  if (isAccountRecordNode(next)) {
+    const accountKey =
+      readAccountRecordKey(next) ||
+      accountContextKey ||
+      resolveClaimedAccountKeyForRecord(next, claimedRewardsByAccount);
+    const accountClaims = getAccountRewardsFromMap(claimedRewardsByAccount, accountKey);
+    const claimedRewards = readClaimedRewardsForAccountRecord(accountClaims, next);
+    if (accountClaims && claimedRewards !== undefined && claimedRewards !== null) {
+      const claimedRewardsDisplayAmount = formatBaseUnitRewardAmount(claimedRewards);
+      next.rewardsEarned = addRewardAmountStrings(next.rewardsEarned, claimedRewardsDisplayAmount);
+      next.totalSpCoins = addClaimedRewardsToTotalSpCoins(next.totalSpCoins, claimedRewardsDisplayAmount);
+    }
+  }
+  return next;
+}
+
+export function mergeClaimedRewardsByAccountIntoTree(
+  value: unknown,
+  claimedRewardsByAccount: PendingRewardsByAccount | null,
+): unknown {
+  if (!claimedRewardsByAccount || !value || typeof value !== 'object') return value;
+  return updateAccountRewardsEarned(
+    updateAccountPendingEstimate(updateAccountClaimedRewards(value, claimedRewardsByAccount), claimedRewardsByAccount),
+    claimedRewardsByAccount,
+  );
 }
 
 export function normalizePendingRewardsEstimateResult(value: unknown) {
@@ -745,215 +1039,26 @@ export function toRewardsBigInt(value: unknown) {
   }
 }
 
-export function readAccountRecordBalanceOf(value: unknown): string | null {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
-  const record = value as Record<string, unknown>;
-  const totalSpCoins = record.totalSpCoins;
-  if (totalSpCoins && typeof totalSpCoins === 'object' && !Array.isArray(totalSpCoins)) {
-    const balance = (totalSpCoins as Record<string, unknown>).balanceOf;
-    if (balance !== undefined && balance !== null) return String(balance);
-  }
-  const balance = record.balanceOf ?? record.accountBalance;
-  return balance === undefined || balance === null ? null : String(balance);
-}
-
-function readAccountRecordTimestamp(value: unknown, timestampKey: string, pendingRewardsKey: string): string | null {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
-  const record = value as Record<string, unknown>;
-  const direct = record[timestampKey];
-  if (direct !== undefined && direct !== null) return String(direct);
-  const totalSpCoins = record.totalSpCoins;
-  const pendingRewards =
-    totalSpCoins && typeof totalSpCoins === 'object' && !Array.isArray(totalSpCoins)
-      ? (totalSpCoins as Record<string, unknown>).pendingRewards
-      : null;
-  if (pendingRewards && typeof pendingRewards === 'object' && !Array.isArray(pendingRewards)) {
-    const nested = (pendingRewards as Record<string, unknown>)[pendingRewardsKey];
-    if (nested !== undefined && nested !== null) return String(nested);
-  }
-  return null;
-}
-
-export function buildAccountRecordMetaPatch(value: unknown): Record<string, unknown> {
-  const lastSponsorUpdateTimeStamp = readAccountRecordTimestamp(value, 'lastSponsorUpdateTimeStamp', 'lastSponsorUpdate');
-  const lastRecipientUpdateTimeStamp = readAccountRecordTimestamp(value, 'lastRecipientUpdateTimeStamp', 'lastRecipientUpdate');
-  const lastAgentUpdateTimeStamp = readAccountRecordTimestamp(value, 'lastAgentUpdateTimeStamp', 'lastAgentUpdate');
-  return {
-    ...(lastSponsorUpdateTimeStamp ? { lastSponsorUpdateTimeStamp: calculateFormattedDT(lastSponsorUpdateTimeStamp) } : {}),
-    ...(lastRecipientUpdateTimeStamp ? { lastRecipientUpdateTimeStamp: calculateFormattedDT(lastRecipientUpdateTimeStamp) } : {}),
-    ...(lastAgentUpdateTimeStamp ? { lastAgentUpdateTimeStamp: calculateFormattedDT(lastAgentUpdateTimeStamp) } : {}),
-  };
-}
-
-export function readRefreshedAccountRecordFromClaim(value: unknown): unknown | null {
-  const visit = (entry: unknown): unknown | null => {
-    if (!entry || typeof entry !== 'object') return null;
-    if (Array.isArray(entry)) {
-      for (const item of entry) {
-        const found = visit(item);
-        if (found) return found;
-      }
-      return null;
-    }
-    const record = entry as Record<string, unknown>;
-    if (record.refreshedAccountRecord) return record.refreshedAccountRecord;
-    if (record.result) {
-      const found = visit(record.result);
-      if (found) return found;
-    }
-    if (record.receipts) {
-      const found = visit(record.receipts);
-      if (found) return found;
-    }
-    return null;
-  };
-  return visit(value);
-}
-
-export function readRefreshedAccountRecordsByAccountFromClaim(value: unknown): Record<string, unknown> | null {
-  const visit = (entry: unknown): Record<string, unknown> | null => {
-    if (!entry || typeof entry !== 'object') return null;
-    if (Array.isArray(entry)) {
-      for (const item of entry) {
-        const found = visit(item);
-        if (found) return found;
-      }
-      return null;
-    }
-    const record = entry as Record<string, unknown>;
-    const direct = asRecord(record.__refreshedAccountRecordsByAccount);
-    if (direct) return direct;
-    if (record.result) {
-      const found = visit(record.result);
-      if (found) return found;
-    }
-    if (record.receipts) {
-      const found = visit(record.receipts);
-      if (found) return found;
-    }
-    return null;
-  };
-  return visit(value);
-}
-
 function readAccountRecordKey(value: unknown) {
   const record = asRecord(value);
   return normalizeAccountKeyValue(record?.accountKey);
 }
 
-const ACCOUNT_RELATION_BRANCH_KEYS = [
-  'recipientKeys',
-  'agentKeys',
-  'sponsorKeys',
-  'parentRecipientKeys',
-  'recipientRates',
-  'agentRates',
-] as const;
-
-function isLazyAccountRelation(value: unknown) {
+function isAccountRecordNode(value: unknown) {
   const record = asRecord(value);
-  return record?.__lazyAccountRelation === true;
+  if (!record) return false;
+  if (record.TYPE === '--ACCOUNT--') return true;
+  if (record.TYPE) return false;
+  return Boolean(
+    record.role !== undefined ||
+      record.rewardsEarned !== undefined ||
+      record.sponsorCount !== undefined ||
+      record.recipientCount !== undefined ||
+      record.agentCount !== undefined,
+  );
 }
 
-function isEmptyRecord(value: unknown) {
-  const record = asRecord(value);
-  return Boolean(record && Object.keys(record).length === 0);
-}
-
-function shouldPreserveAccountRelationBranch(existing: unknown, refreshed: unknown) {
-  if (existing === undefined || existing === null) return false;
-  if (isLazyAccountRelation(existing) || isEmptyRecord(existing)) return false;
-  return refreshed === undefined || refreshed === null || isLazyAccountRelation(refreshed) || isEmptyRecord(refreshed);
-}
-
-function getPreservedAccountRelationBranches(
-  existingAccount: Record<string, unknown>,
-  refreshedAccount: Record<string, unknown>,
-) {
-  const preserved: Record<string, unknown> = {};
-  for (const key of ACCOUNT_RELATION_BRANCH_KEYS) {
-    if (shouldPreserveAccountRelationBranch(existingAccount[key], refreshedAccount[key])) {
-      preserved[key] = existingAccount[key];
-    }
-  }
-  return preserved;
-}
-
-export function mergeRefreshedAccountRecordsByAccountIntoTree(
-  value: unknown,
-  refreshedAccountRecordsByAccount: Record<string, unknown> | null,
-  loadedMethod: string,
-  loadedMethodNode: unknown,
-  action: PendingRewardsActionClick['action'],
-  refreshAtMs: number,
-): unknown {
-  if (!refreshedAccountRecordsByAccount || !value || typeof value !== 'object') return value;
-  if (Array.isArray(value)) {
-    return value.map((entry) =>
-      mergeRefreshedAccountRecordsByAccountIntoTree(
-        entry,
-        refreshedAccountRecordsByAccount,
-        loadedMethod,
-        loadedMethodNode,
-        action,
-        refreshAtMs,
-      ),
-    );
-  }
-
-  const record = value as Record<string, unknown>;
-  const accountKey = readAccountRecordKey(record);
-  const refreshedRecord = accountKey
-    ? refreshedAccountRecordsByAccount[accountKey] ?? refreshedAccountRecordsByAccount[accountKey.toLowerCase()]
-    : null;
-  if (refreshedRecord && record.TYPE === '--ACCOUNT--') {
-    const refreshedAccount = asRecord(refreshedRecord) ?? {};
-    const existingTotalSpCoins = asRecord(record.totalSpCoins);
-    const refreshedTotalSpCoins = asRecord(refreshedAccount.totalSpCoins);
-    const existingPendingRewards = existingTotalSpCoins?.pendingRewards;
-    const refreshedPendingRewards = refreshedTotalSpCoins?.pendingRewards;
-    const mergedPendingRewards =
-      existingPendingRewards || refreshedPendingRewards
-        ? mergePendingRewardsBranchForAccountRefresh(
-            existingPendingRewards,
-            refreshedPendingRewards,
-            accountKey,
-            loadedMethod,
-            loadedMethodNode,
-            action,
-            refreshAtMs,
-          )
-        : undefined;
-    const preservedRelationBranches = getPreservedAccountRelationBranches(record, refreshedAccount);
-    return {
-      ...refreshedAccount,
-      ...preservedRelationBranches,
-      ...(mergedPendingRewards
-        ? {
-            totalSpCoins: {
-              ...(refreshedTotalSpCoins ?? {}),
-              pendingRewards: mergedPendingRewards,
-            },
-          }
-        : {}),
-    };
-  }
-
-  const next: Record<string, unknown> = {};
-  for (const [key, entry] of Object.entries(record)) {
-    next[key] = mergeRefreshedAccountRecordsByAccountIntoTree(
-      entry,
-      refreshedAccountRecordsByAccount,
-      loadedMethod,
-      loadedMethodNode,
-      action,
-      refreshAtMs,
-    );
-  }
-  return next;
-}
-
-function getClaimBalanceRecord(value: unknown): Record<string, unknown> | null {
+function getClaimRewardsRecord(value: unknown): Record<string, unknown> | null {
   const entries = Array.isArray(value)
     ? value
     : value && typeof value === 'object' && !Array.isArray(value) && Array.isArray((value as Record<string, unknown>).receipts)
@@ -962,33 +1067,20 @@ function getClaimBalanceRecord(value: unknown): Record<string, unknown> | null {
   for (const entry of entries) {
     if (!entry || typeof entry !== 'object' || Array.isArray(entry)) continue;
     const record = entry as Record<string, unknown>;
-    if (record.claimedAmount !== undefined || (record.balanceBefore !== undefined && record.balanceAfter !== undefined)) return record;
+    if (record.claimedAmount !== undefined) return record;
   }
   return null;
 }
 
-export function buildClaimedBalanceSummary(updateResult: unknown, fallback?: {
-  balanceBefore?: string;
-  balanceAfter?: string;
+export function buildClaimedRewardsSummary(updateResult: unknown, fallback?: {
   claimedAmount?: string;
 }) {
-  const balanceRecord = getClaimBalanceRecord(updateResult);
-  const balanceBefore = String(balanceRecord?.balanceBefore ?? fallback?.balanceBefore ?? '0');
-  const balanceAfter = String(balanceRecord?.balanceAfter ?? fallback?.balanceAfter ?? '0');
-  const claimedAmount = String(
-    balanceRecord?.claimedAmount ??
-      fallback?.claimedAmount ??
-      (toRewardsBigInt(balanceAfter) - toRewardsBigInt(balanceBefore)).toString(),
-  );
+  const rewardsRecord = getClaimRewardsRecord(updateResult);
+  const claimedAmount = toDisplayString(rewardsRecord?.claimedAmount ?? fallback?.claimedAmount, '0');
   return {
-    balanceBefore,
-    balanceAfter,
     claimedAmount,
     totalRewardsClaimed: claimedAmount,
-    ...(balanceRecord?.__claimedRewardsByAccount ? { __claimedRewardsByAccount: balanceRecord.__claimedRewardsByAccount } : {}),
-    ...(balanceRecord?.__claimedRewardsAllRoles ? { __claimedRewardsAllRoles: balanceRecord.__claimedRewardsAllRoles } : {}),
-    ...(balanceRecord?.__refreshedAccountRecordsByAccount
-      ? { __refreshedAccountRecordsByAccount: balanceRecord.__refreshedAccountRecordsByAccount }
-      : {}),
+    ...(rewardsRecord?.__claimedRewardsByAccount ? { __claimedRewardsByAccount: rewardsRecord.__claimedRewardsByAccount } : {}),
+    ...(rewardsRecord?.__claimedRewardsAllRoles ? { __claimedRewardsAllRoles: rewardsRecord.__claimedRewardsAllRoles } : {}),
   };
 }
