@@ -11,6 +11,9 @@ import { buildExecutionMeta, type MethodExecutionMeta } from './methodExecutionH
 import type { AccessMethodCaller } from './useAccessMethodCaller';
 import { normalizeExecutionPayload } from './executionPayload';
 import {
+  markSpCoinLabAccountRecordRefreshFailed,
+  markSpCoinLabAccountRecordRefreshing,
+  notifySpCoinLabAccountRecordsChanged,
   setSpCoinLabAccountRecord,
 } from '@/lib/spCoinLab/accountRecordStore';
 import {
@@ -154,17 +157,17 @@ function resolveLiftedPendingRewardsPayloadPath(payload: unknown, payloadPath: s
   return readPathValue(payload, storedPath) === undefined ? payloadPath : storedPath;
 }
 
-function replaceDisplayBlock(
+function replaceDisplayBlocks(
   blocks: string[],
-  blockIndex: number,
-  nextPayload: string,
+  nextPayloadByBlockIndex: Map<number, string>,
   inTreePanel: boolean,
   setFormattedOutputDisplay: (value: string) => void,
   setTrackedTreeOutputDisplay: (value: string) => void,
 ) {
-  const nextDisplay = blocks.length > 1
-    ? blocks.map((block, index) => (index === blockIndex ? nextPayload : block)).join('\n\n')
-    : nextPayload;
+  const nextDisplay =
+    blocks.length > 1
+      ? blocks.map((block, index) => nextPayloadByBlockIndex.get(index) ?? block).join('\n\n')
+      : nextPayloadByBlockIndex.get(0) ?? blocks[0] ?? '';
   if (inTreePanel) {
     setTrackedTreeOutputDisplay(nextDisplay);
   } else {
@@ -218,6 +221,48 @@ function cacheAccountRecordsFromPayload(
     if (key === 'call' || key === 'meta' || key === 'onChainCalls') continue;
     cacheAccountRecordsFromPayload(entry, affectedAccounts, normalizeAddressValue, treeAccountRecordCacheRef);
   }
+}
+
+function mergePendingRewardsAccountUpdates(
+  payload: unknown,
+  pendingRewardsByAccount: PendingRewardsByAccount | null,
+  claimedRewardsByAccount: PendingRewardsByAccount | null,
+  pendingRewardsRefreshAtMs: number,
+) {
+  return normalizeExecutionPayload(
+    mergeClaimedRewardsByAccountIntoTree(
+      mergePendingRewardsByAccountIntoTree(payload, pendingRewardsByAccount, pendingRewardsRefreshAtMs),
+      claimedRewardsByAccount,
+    ),
+  ) as Record<string, unknown>;
+}
+
+async function refreshChangedAccountRecords(
+  accounts: Iterable<string>,
+  reason: string,
+  loadAccountRecordForAddress: (
+    account: string,
+    options?: { force?: boolean; signal?: AbortSignal },
+  ) => Promise<unknown>,
+  appendLog: (line: string) => void,
+) {
+  const uniqueAccounts = notifySpCoinLabAccountRecordsChanged(accounts, reason);
+  if (uniqueAccounts.length === 0) return;
+  appendLog(`[ACCOUNT_RECORD_SYNC_TRACE] changed reason=${reason} accounts=${uniqueAccounts.join(',')}`);
+  await Promise.allSettled(
+    uniqueAccounts.map(async (accountKey) => {
+      markSpCoinLabAccountRecordRefreshing(accountKey, true, reason);
+      try {
+        await loadAccountRecordForAddress(accountKey, { force: true });
+        appendLog(`[ACCOUNT_RECORD_SYNC_TRACE] refreshed reason=${reason} account=${accountKey}`);
+      } catch (error) {
+        markSpCoinLabAccountRecordRefreshFailed(accountKey, error, reason);
+        appendLog(
+          `[ACCOUNT_RECORD_SYNC_TRACE] refresh failed reason=${reason} account=${accountKey} message=${getErrorMessage(error, 'Unable to refresh account record.')}`,
+        );
+      }
+    }),
+  );
 }
 
 export function usePendingRewardsInlineExpansion({
@@ -609,6 +654,11 @@ export function usePendingRewardsInlineExpansion({
           const pendingRewardsByAccountForDisplay = isEstimatePendingRewardsRequest
             ? pendingRewardsByAccount
             : buildZeroPendingRewardsByAccount(pendingRewardsByAccount ?? claimedRewardsByAccount);
+          if (pendingRewardsByAccountForDisplay) {
+            appendLog(
+              `[PENDING_REWARDS_TRACE] pending-rewards propagate method=${expandedCallMethod} accounts=${Object.keys(pendingRewardsByAccountForDisplay).join(',')} sourceAccounts=${Object.keys(pendingRewardsByAccount ?? {}).join(',') || 'none'}`,
+            );
+          }
           if (!isEstimatePendingRewardsRequest) {
             appendLog(
               `[PENDING_REWARDS_TRACE] claim pending-estimates zero map accounts=${Object.keys(pendingRewardsByAccountForDisplay ?? {}).join(',') || 'none'} sourceAccounts=${Object.keys(pendingRewardsByAccount ?? {}).join(',') || 'none'} claimedSourceAccounts=${Object.keys(claimedRewardsByAccount ?? {}).join(',') || 'none'}`,
@@ -668,23 +718,50 @@ export function usePendingRewardsInlineExpansion({
               ...Object.keys(claimedRewardsByAccountForDisplay ?? {}),
             ].map((accountKey) => normalizeAddressValue(accountKey)),
           );
-          if (locallyAffectedAccounts.size > 0) {
-            cacheAccountRecordsFromPayload(
-              nextRootPayload,
-              locallyAffectedAccounts,
-              normalizeAddressValue,
-              treeAccountRecordCacheRef,
-            );
+          const nextPayloadByBlockIndex = new Map<number, string>();
+          let autoSyncedBlockCount = 0;
+          for (const blockEntry of blockEntries) {
+            if (!blockEntry.payload) continue;
+            const nextBlockPayload =
+              blockEntry.index === entry.index
+                ? nextRootPayload
+                : mergePendingRewardsAccountUpdates(
+                    blockEntry.payload,
+                    pendingRewardsByAccountForDisplay,
+                    claimedRewardsByAccountForDisplay,
+                    pendingRewardsRefreshAtMs,
+                  );
+            nextPayloadByBlockIndex.set(blockEntry.index, formatFormattedPanelPayload(nextBlockPayload));
+            if (blockEntry.index !== entry.index) autoSyncedBlockCount += 1;
+            if (locallyAffectedAccounts.size > 0) {
+              cacheAccountRecordsFromPayload(
+                nextBlockPayload,
+                locallyAffectedAccounts,
+                normalizeAddressValue,
+                treeAccountRecordCacheRef,
+              );
+            }
           }
-          const nextPayload = formatFormattedPanelPayload(nextRootPayload);
-          replaceDisplayBlock(
+          replaceDisplayBlocks(
             blocks,
-            entry.index,
-            nextPayload,
+            nextPayloadByBlockIndex,
             inTreePanel,
             setFormattedOutputDisplay,
             setTrackedTreeOutputDisplay,
           );
+          if (autoSyncedBlockCount > 0 && locallyAffectedAccounts.size > 0) {
+            appendLog(
+              `[PENDING_REWARDS_TRACE] auto-sync account records blocks=${String(autoSyncedBlockCount)} accounts=${Array.from(locallyAffectedAccounts).join(',')}`,
+            );
+          }
+          if (!isEstimatePendingRewardsRequest && locallyAffectedAccounts.size > 0) {
+            void refreshChangedAccountRecords(
+              locallyAffectedAccounts,
+              String(expandedCallMethod),
+              loadAccountRecordForAddress,
+              appendLog,
+            );
+          }
           setStatus(`Loaded ${actionLabel} for ${normalizedAccount}.`);
           appendLog(`Inline ${actionLabel} loaded for ${normalizedAccount}`);
           appendLog(

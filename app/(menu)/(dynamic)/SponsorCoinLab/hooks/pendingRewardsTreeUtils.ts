@@ -612,6 +612,10 @@ export function mergePendingRewardsByAccountIntoTree(
   const record = value as Record<string, unknown>;
   const next: Record<string, unknown> = {};
   for (const [key, entry] of Object.entries(record)) {
+    if (ACCOUNT_REWARD_UPDATE_SKIP_KEYS.has(key)) {
+      next[key] = entry;
+      continue;
+    }
     next[key] = mergePendingRewardsByAccountIntoTree(entry, rewardsByAccount, refreshAtMs);
   }
 
