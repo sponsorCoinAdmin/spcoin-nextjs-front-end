@@ -214,7 +214,8 @@ function cacheAccountRecordsFromPayload(
     treeAccountRecordCacheRef.current.set(accountKey, record);
     setSpCoinLabAccountRecord(accountKey, record);
   }
-  for (const entry of Object.values(record)) {
+  for (const [key, entry] of Object.entries(record)) {
+    if (key === 'call' || key === 'meta' || key === 'onChainCalls') continue;
     cacheAccountRecordsFromPayload(entry, affectedAccounts, normalizeAddressValue, treeAccountRecordCacheRef);
   }
 }
@@ -484,9 +485,6 @@ export function usePendingRewardsInlineExpansion({
                 'Account Key': normalizedAccount,
               },
               selectedMethod: methodName,
-              ...(click.action === 'claim'
-                ? { sequence: ['balanceOf', expandedCallMethod, 'getAccountRecord'] }
-                : {}),
             },
             ...(expandedMeta ? { meta: expandedMeta } : {}),
             result: refreshablePendingResult,
@@ -656,10 +654,7 @@ export function usePendingRewardsInlineExpansion({
               `[PENDING_REWARDS_TRACE] local claim update account=${normalizedAccount} claimedKeys=${Object.keys(claimedRewardsByAccountForDisplay ?? {}).join(',') || 'none'}`,
             );
           }
-          const payloadAfterFinalPairedEstimateWrite =
-            pairedEstimateExpandedNode && pairedEstimatePath.length > 0
-              ? writePathValue(payloadWithPropagatedClaimedRewards, pairedEstimatePath, pairedEstimateExpandedNode)
-              : payloadWithPropagatedClaimedRewards;
+          const payloadAfterFinalPairedEstimateWrite = payloadWithPropagatedClaimedRewards;
           if (pairedEstimateMethod && pairedEstimatePath.length > 0) {
             const finalPairedEstimateNode = readPathValue(payloadAfterFinalPairedEstimateWrite, pairedEstimatePath);
             appendLog(

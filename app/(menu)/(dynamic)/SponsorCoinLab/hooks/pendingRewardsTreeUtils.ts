@@ -50,6 +50,8 @@ const PENDING_REWARDS_METHOD_KEYS = [
   'claimOnChainAgentRewards',
 ] as const;
 
+const ACCOUNT_REWARD_UPDATE_SKIP_KEYS = new Set(['call', 'meta', 'onChainCalls']);
+
 export const PENDING_REWARDS_INLINE_REFRESH_MS = 10_000;
 
 export const PENDING_REWARDS_CLAIM_TO_ESTIMATE_METHOD: Record<string, PendingRewardsActionClick['method']> = {
@@ -136,7 +138,9 @@ export function hasPendingRewardsRefreshAction(value: unknown) {
 export function readPendingRewardsAmount(value: unknown) {
   const normalized = normalizePendingRewardsDisplayResult(value);
   if (!normalized || typeof normalized !== 'object' || Array.isArray(normalized)) return null;
-  const record = normalized as Record<string, unknown>;
+  const normalizedRecord = normalized as Record<string, unknown>;
+  const nestedResult = asRecord(normalizedRecord.result);
+  const record = nestedResult ?? normalizedRecord;
   const amount =
     record.pendingRewards ??
     record.pendingTotalRewards ??
@@ -474,6 +478,14 @@ function addRewardAmountStrings(left: unknown, right: unknown) {
   return fraction ? `${whole}.${fraction}` : whole;
 }
 
+function addBaseUnitAmountStrings(left: unknown, right: unknown) {
+  const leftText = String(left ?? '0').replace(/,/g, '').trim();
+  const rightText = String(right ?? '0').replace(/,/g, '').trim();
+  const leftAmount = /^\d+$/.test(leftText) ? BigInt(leftText) : 0n;
+  const rightAmount = /^\d+$/.test(rightText) ? BigInt(rightText) : 0n;
+  return (leftAmount + rightAmount).toString();
+}
+
 function normalizeRewardAmountText(value: unknown) {
   return String(value ?? '').replace(/,/g, '').trim();
 }
@@ -683,6 +695,10 @@ export function updateAccountClaimedRewards(
   const accountContextKey = readAccountContextKey(record) || inheritedAccountKey;
   const next: Record<string, unknown> = {};
   for (const [key, entry] of Object.entries(record)) {
+    if (ACCOUNT_REWARD_UPDATE_SKIP_KEYS.has(key)) {
+      next[key] = entry;
+      continue;
+    }
     next[key] = updateAccountClaimedRewards(
       entry,
       claimedRewardsByAccount,
@@ -724,6 +740,10 @@ export function updateAccountPendingEstimate(
   const accountContextKey = readAccountContextKey(record) || inheritedAccountKey;
   const next: Record<string, unknown> = {};
   for (const [key, entry] of Object.entries(record)) {
+    if (ACCOUNT_REWARD_UPDATE_SKIP_KEYS.has(key)) {
+      next[key] = entry;
+      continue;
+    }
     next[key] = updateAccountPendingEstimate(
       entry,
       claimedRewardsByAccount,
@@ -781,6 +801,10 @@ export function updateAccountRewardsEarned(
   const accountContextKey = readAccountContextKey(record) || inheritedAccountKey;
   const next: Record<string, unknown> = {};
   for (const [key, entry] of Object.entries(record)) {
+    if (ACCOUNT_REWARD_UPDATE_SKIP_KEYS.has(key)) {
+      next[key] = entry;
+      continue;
+    }
     next[key] = updateAccountRewardsEarned(
       entry,
       claimedRewardsByAccount,
@@ -789,15 +813,22 @@ export function updateAccountRewardsEarned(
   }
 
   if (isAccountRecordNode(next)) {
-    const accountKey =
-      readAccountRecordKey(next) ||
-      accountContextKey ||
-      resolveClaimedAccountKeyForRecord(next, claimedRewardsByAccount);
+    const directAccountKey = readAccountRecordKey(next);
+    const fallbackAccountKey = accountContextKey;
+    const roleResolvedAccountKey = resolveClaimedAccountKeyForRecord(next, claimedRewardsByAccount);
+    const accountKey = directAccountKey || fallbackAccountKey || roleResolvedAccountKey;
     const accountClaims = getAccountRewardsFromMap(claimedRewardsByAccount, accountKey);
     const claimedRewards = readClaimedRewardsForAccountRecord(accountClaims, next);
     if (accountClaims && claimedRewards !== undefined && claimedRewards !== null) {
       const claimedRewardsDisplayAmount = formatBaseUnitRewardAmount(claimedRewards);
+      const claimedRewardsBaseAmount = normalizeRewardAmountText(claimedRewards);
       next.rewardsEarned = addRewardAmountStrings(next.rewardsEarned, claimedRewardsDisplayAmount);
+      if (next.stakingRewards !== undefined) {
+        next.stakingRewards = addBaseUnitAmountStrings(next.stakingRewards, claimedRewardsBaseAmount);
+      }
+      if (next.accountStakingRewards !== undefined) {
+        next.accountStakingRewards = addBaseUnitAmountStrings(next.accountStakingRewards, claimedRewardsBaseAmount);
+      }
       next.totalSpCoins = addClaimedRewardsToTotalSpCoins(next.totalSpCoins, claimedRewardsDisplayAmount);
     }
   }
