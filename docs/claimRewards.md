@@ -151,13 +151,15 @@ Stage 4A: classify fallback cases
 
 - Keep `refreshChangedAccountRecords(...)` callable.
 - Add or refine trace output so every fallback says whether it was caused by `mirror-missing`, `mirror-mismatch`, or `store-missing`.
-- Expected proof: normal claim/estimate paths continue to show `refresh=skip-mirror-match` or `refresh=not-applicable-estimate`, with `storeMissing=0`.
+- Part one is implemented: the helper computes one fallback reason and uses it for both the aggregate `refresh=` value and the `refresh fallback` trace.
+- Verified proof: normal claim/estimate paths continue to show `refresh=skip-mirror-match` or `refresh=not-applicable-estimate`, with `storeMissing=0`.
 
 Stage 4B: neutralize clean fallback refreshes
 
 - Ensure any path with `compare=match`, `mismatched=0`, and `storeMissing=0` cannot call the old forced `getAccountRecord` refresh.
 - Keep fallback refresh only for true missing or mismatch cases.
-- Expected proof: clean claim traces contain no `refresh fallback` line and still show `storeSynced>0`.
+- Implemented guard: `refreshChangedAccountRecords(...)` is now controlled by a single `shouldRefreshChangedAccountRecords` boolean that is false for clean store-covered claim paths.
+- Verified proof: clean claim traces contain no `refresh fallback` line and still show `storeSynced>0`, `storeMissing=0`, and `refresh=skip-mirror-match`.
 
 Stage 4C: centralize non-reward account-record writes
 
@@ -173,11 +175,9 @@ Stage 4D: prepare render-from-store
 
 ## Remaining Work
 
-1. Complete Stage 4A fallback classification.
-2. Complete Stage 4B clean fallback neutralization.
-3. Complete Stage 4C non-reward account-record store writes.
-4. Complete Stage 4D render-from-store preparation.
-5. Eventually render account records from the centralized account store instead of rewriting nested tree records directly.
+1. Complete Stage 4C non-reward account-record store writes.
+2. Complete Stage 4D render-from-store preparation.
+3. Eventually render account records from the centralized account store instead of rewriting nested tree records directly.
 
 ## Known Caveat
 

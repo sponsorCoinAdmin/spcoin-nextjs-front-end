@@ -479,13 +479,23 @@ function applyPendingRewardsAccountRecordUpdates({
     mirrorScan,
     locallyAffectedAccounts,
   );
+  const storeCoversAffectedAccountNodes = storeMissingNodeCount === 0;
+  const fallbackRefreshReason = !mirrorCoversAffectedAccounts
+    ? 'mirror-missing'
+    : mirrorScan.mismatched > 0
+      ? 'mirror-mismatch'
+      : !storeCoversAffectedAccountNodes
+        ? 'store-missing'
+        : 'none';
   const accountRefreshDecision = isEstimatePendingRewardsRequest
     ? 'not-applicable-estimate'
-    : mirrorScan.mismatched === 0 && mirrorCoversAffectedAccounts
+    : fallbackRefreshReason === 'none'
       ? 'skip-mirror-match'
-      : mirrorCoversAffectedAccounts
-        ? 'fallback-mirror-mismatch'
-        : 'fallback-mirror-missing';
+      : `fallback-${fallbackRefreshReason}`;
+  const shouldRefreshChangedAccountRecords =
+    !isEstimatePendingRewardsRequest &&
+    locallyAffectedAccounts.size > 0 &&
+    fallbackRefreshReason !== 'none';
 
   if (autoSyncedBlockCount > 0 && locallyAffectedAccounts.size > 0) {
     appendLog(
@@ -497,13 +507,13 @@ function applyPendingRewardsAccountRecordUpdates({
   }
 
   if (!isEstimatePendingRewardsRequest && locallyAffectedAccounts.size > 0) {
-    if (mirrorScan.mismatched === 0 && mirrorCoversAffectedAccounts) {
+    if (!shouldRefreshChangedAccountRecords) {
       appendLog(
-        `[ACCOUNT_RECORD_SYNC_TRACE] refresh skipped reason=mirror-match method=${expandedCallMethod} mirrored=${String(mirrorScan.mirrored)} accounts=${Array.from(locallyAffectedAccounts).join(',')}`,
+        `[ACCOUNT_RECORD_SYNC_TRACE] refresh skipped reason=mirror-match method=${expandedCallMethod} mirrored=${String(mirrorScan.mirrored)} storeSynced=${String(storeSyncedNodeCount)} storeMissing=${String(storeMissingNodeCount)} accounts=${Array.from(locallyAffectedAccounts).join(',')}`,
       );
     } else {
       appendLog(
-        `[ACCOUNT_RECORD_SYNC_TRACE] refresh fallback reason=${mirrorCoversAffectedAccounts ? 'mirror-mismatch' : 'mirror-missing'} method=${expandedCallMethod} mirrored=${String(mirrorScan.mirrored)} mismatched=${String(mirrorScan.mismatched)} mirroredAccounts=${Array.from(mirrorScan.mirroredAccounts).join(',') || 'none'} mismatchAccounts=${Array.from(mirrorScan.mismatchedAccounts).join(',') || 'none'} accounts=${Array.from(locallyAffectedAccounts).join(',')}`,
+        `[ACCOUNT_RECORD_SYNC_TRACE] refresh fallback reason=${fallbackRefreshReason} method=${expandedCallMethod} mirrored=${String(mirrorScan.mirrored)} mismatched=${String(mirrorScan.mismatched)} storeSynced=${String(storeSyncedNodeCount)} storeMissing=${String(storeMissingNodeCount)} mirroredAccounts=${Array.from(mirrorScan.mirroredAccounts).join(',') || 'none'} mismatchAccounts=${Array.from(mirrorScan.mismatchedAccounts).join(',') || 'none'} storeSyncedAccounts=${Array.from(storeSyncedAccounts).join(',') || 'none'} storeMissingAccounts=${Array.from(storeMissingAccounts).join(',') || 'none'} accounts=${Array.from(locallyAffectedAccounts).join(',')}`,
       );
       void refreshChangedAccountRecords(
         locallyAffectedAccounts,
