@@ -19,7 +19,7 @@ Affected display fields include:
 
 ## Current Status
 
-The reward calculation and tree propagation work is mostly complete.
+The reward calculation, tree propagation, and first account-store migration checkpoint are working.
 
 Completed:
 
@@ -29,13 +29,16 @@ Completed:
 - Affected pending estimates are set to `0` after a successful claim.
 - Expanded relationship branches are preserved during local tree updates.
 - Current traces show Sponsor, Recipient, and Agent account records being included in the same update pass.
+- Updated visible account records are mirrored into `accountRecordStore`.
+- Mirror scans compare the store summary against the updated tree summary and currently report `compare=match`.
+- Clean post-claim paths now skip the old forced account-record refresh when the mirror covers every affected account.
 
 Still active:
 
 - Account record updates are still tree-driven.
-- We are now mirroring those tree-driven updates into a centralized account record store.
+- We are mirroring those tree-driven updates into a centralized account record store.
 - The centralized store is not yet the display source of truth.
-- The old tree update path must stay in place until the store path is proven.
+- The old tree update path must stay in place until visible rendering can safely read from the store.
 
 ## Current Flow
 
@@ -87,17 +90,17 @@ Tree propagation:
 Stability:
 
 - The old tree update path remains active.
-- The new account-store path is currently observational and incremental.
+- The new account-store path is currently mirrored and compared against the tree.
 - Current validation traces include lines like:
 
 ```text
-[PENDING_REWARDS_TRACE] auto-sync account records blocks=2 accounts=...
+[PENDING_REWARDS_TRACE] auto-sync account records blocks=2 mirrored=13 compare=match matched=13 mismatched=0 refresh=skip-mirror-match ...
 ```
 
-The next expected validation marker is:
+Estimate paths use the same mirror scan without a post-claim refresh decision:
 
 ```text
-[ACCOUNT_RECORD_STORE_TRACE] mirror scan source=pendingRewardsTree mirrored=...
+[PENDING_REWARDS_TRACE] auto-sync account records blocks=2 mirrored=13 compare=match matched=13 mismatched=0 refresh=not-applicable-estimate ...
 ```
 
 ## Current Incremental Migration
@@ -109,25 +112,24 @@ Current approach:
 1. Keep the existing tree updater as the working source of truth.
 2. After the tree payload is updated, scan it for affected `TYPE: "--ACCOUNT--"` records.
 3. Mirror those records into `accountRecordStore`.
-4. Log mirror counts and field summaries for comparison.
+4. Log mirror counts, matched/mismatched account counts, and the refresh decision.
 5. Do not render from the store yet.
 
-This lets us compare the new account-store methodology against the known working tree updates before replacing the old system.
+This lets us compare the new account-store methodology against the known working tree updates before replacing the old system. The latest traces show the mirror matching the tree and claim refreshes using `refresh=skip-mirror-match` on covered paths.
 
 ## Remaining Work
 
-1. Confirm the mirror trace appears after every claim and estimate update.
-2. Verify the mirrored store records match the visible tree records for Sponsor, Recipient, and Agent.
-3. Add a small read-only store inspection point or trace summary so store state can be compared without changing UI rendering.
-4. Replace targeted tree account refresh logic with store-driven invalidation once the mirror path is trusted.
-5. Remove or reduce extra post-claim `getAccountRecord` refresh calls only after the local replay and store mirror cover all required fields.
-6. Eventually render account records from the centralized account store instead of rewriting nested tree records directly.
+1. Keep the aggregate mirror trace while removing older noisy diagnostics.
+2. Centralize the account-record update helper so reward updates write through one path.
+3. Replace remaining fallback refresh paths only after mismatch and missing-account scenarios are understood.
+4. Sync visible tree nodes from the centralized store instead of treating nested records as independent copies.
+5. Eventually render account records from the centralized account store instead of rewriting nested tree records directly.
 
 ## Known Caveat
 
-The desired final flow avoids extra after-transaction `getAccountRecord` reads. That is not fully true yet. The current incremental implementation can still call `refreshChangedAccountRecords(...)` after non-estimate claim paths.
+The desired final flow avoids extra after-transaction `getAccountRecord` reads. That is now true for clean claim paths where the mirror scan covers all affected accounts and reports no mismatches.
 
-That refresh remains intentionally for now. It should be removed only after the centralized account-record store is proven to update every affected account correctly.
+`refreshChangedAccountRecords(...)` remains as a fallback for missing mirror coverage or store/tree mismatches. It should stay until those failure paths have clearer diagnostics and recovery behavior.
 
 ## Target Final Flow
 

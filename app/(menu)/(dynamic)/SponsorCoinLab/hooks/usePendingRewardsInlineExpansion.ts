@@ -202,6 +202,7 @@ interface AccountRecordMirrorScan {
   mirrored: number;
   matched: number;
   mismatched: number;
+  mirroredAccounts: Set<string>;
   mismatchedAccounts: Set<string>;
 }
 
@@ -210,6 +211,7 @@ function createAccountRecordMirrorScan(): AccountRecordMirrorScan {
     mirrored: 0,
     matched: 0,
     mismatched: 0,
+    mirroredAccounts: new Set<string>(),
     mismatchedAccounts: new Set<string>(),
   };
 }
@@ -218,9 +220,19 @@ function mergeAccountRecordMirrorScan(target: AccountRecordMirrorScan, source: A
   target.mirrored += source.mirrored;
   target.matched += source.matched;
   target.mismatched += source.mismatched;
+  for (const accountKey of source.mirroredAccounts) {
+    target.mirroredAccounts.add(accountKey);
+  }
   for (const accountKey of source.mismatchedAccounts) {
     target.mismatchedAccounts.add(accountKey);
   }
+}
+
+function accountRecordMirrorScanCoversAccounts(scan: AccountRecordMirrorScan, accounts: Set<string>) {
+  for (const accountKey of accounts) {
+    if (!scan.mirroredAccounts.has(accountKey)) return false;
+  }
+  return true;
 }
 
 function cacheAccountRecordsFromPayload(
@@ -228,7 +240,6 @@ function cacheAccountRecordsFromPayload(
   affectedAccounts: Set<string>,
   normalizeAddressValue: (value: string) => string,
   treeAccountRecordCacheRef: MutableRefObject<Map<string, unknown>>,
-  appendLog?: (line: string) => void,
 ): AccountRecordMirrorScan {
   const scan = createAccountRecordMirrorScan();
   if (!value || typeof value !== 'object') return scan;
@@ -236,7 +247,7 @@ function cacheAccountRecordsFromPayload(
     for (const entry of value) {
       mergeAccountRecordMirrorScan(
         scan,
-        cacheAccountRecordsFromPayload(entry, affectedAccounts, normalizeAddressValue, treeAccountRecordCacheRef, appendLog),
+        cacheAccountRecordsFromPayload(entry, affectedAccounts, normalizeAddressValue, treeAccountRecordCacheRef),
       );
     }
     return scan;
@@ -247,23 +258,21 @@ function cacheAccountRecordsFromPayload(
     treeAccountRecordCacheRef.current.set(accountKey, record);
     const mirrorResult = mirrorSpCoinLabAccountRecord(accountKey, record);
     scan.mirrored += mirrorResult ? 1 : 0;
+    if (mirrorResult) {
+      scan.mirroredAccounts.add(mirrorResult.accountKey);
+    }
     if (mirrorResult?.mismatchedFields.length) {
       scan.mismatched += 1;
       scan.mismatchedAccounts.add(mirrorResult.accountKey);
     } else if (mirrorResult) {
       scan.matched += 1;
     }
-    if (appendLog && mirrorResult) {
-      appendLog(
-        `[ACCOUNT_RECORD_STORE_TRACE] mirror source=pendingRewardsTree account=${mirrorResult.accountKey} changed=${mirrorResult.changedFields.join(',') || 'none'} compare=${mirrorResult.mismatchedFields.length === 0 ? 'match' : 'mismatch'} mismatched=${mirrorResult.mismatchedFields.join(',') || 'none'} treeAfter=${JSON.stringify(mirrorResult.treeAfter)} storeAfter=${JSON.stringify(mirrorResult.storeAfter)} storeBefore=${JSON.stringify(mirrorResult.storeBefore)}`,
-      );
-    }
   }
   for (const [key, entry] of Object.entries(record)) {
     if (key === 'call' || key === 'meta' || key === 'onChainCalls') continue;
     mergeAccountRecordMirrorScan(
       scan,
-      cacheAccountRecordsFromPayload(entry, affectedAccounts, normalizeAddressValue, treeAccountRecordCacheRef, appendLog),
+      cacheAccountRecordsFromPayload(entry, affectedAccounts, normalizeAddressValue, treeAccountRecordCacheRef),
     );
   }
   return scan;
@@ -788,7 +797,6 @@ export function usePendingRewardsInlineExpansion({
                 locallyAffectedAccounts,
                 normalizeAddressValue,
                 treeAccountRecordCacheRef,
-                appendLog,
               ),
             );
             }
@@ -800,21 +808,41 @@ export function usePendingRewardsInlineExpansion({
             setFormattedOutputDisplay,
             setTrackedTreeOutputDisplay,
           );
+          const mirrorCoversAffectedAccounts = accountRecordMirrorScanCoversAccounts(
+            mirrorScan,
+            locallyAffectedAccounts,
+          );
+          const accountRefreshDecision = isEstimatePendingRewardsRequest
+            ? 'not-applicable-estimate'
+            : mirrorScan.mismatched === 0 && mirrorCoversAffectedAccounts
+              ? 'skip-mirror-match'
+              : mirrorCoversAffectedAccounts
+                ? 'fallback-mirror-mismatch'
+                : 'fallback-mirror-missing';
           if (autoSyncedBlockCount > 0 && locallyAffectedAccounts.size > 0) {
             appendLog(
-              `[PENDING_REWARDS_TRACE] auto-sync account records blocks=${String(autoSyncedBlockCount)} mirrored=${String(mirrorScan.mirrored)} compare=${mirrorScan.mismatched === 0 ? 'match' : 'mismatch'} matched=${String(mirrorScan.matched)} mismatched=${String(mirrorScan.mismatched)} mismatchAccounts=${Array.from(mirrorScan.mismatchedAccounts).join(',') || 'none'} accounts=${Array.from(locallyAffectedAccounts).join(',')}`,
+              `[PENDING_REWARDS_TRACE] auto-sync account records blocks=${String(autoSyncedBlockCount)} mirrored=${String(mirrorScan.mirrored)} compare=${mirrorScan.mismatched === 0 ? 'match' : 'mismatch'} matched=${String(mirrorScan.matched)} mismatched=${String(mirrorScan.mismatched)} refresh=${accountRefreshDecision} mirroredAccounts=${Array.from(mirrorScan.mirroredAccounts).join(',') || 'none'} mismatchAccounts=${Array.from(mirrorScan.mismatchedAccounts).join(',') || 'none'} accounts=${Array.from(locallyAffectedAccounts).join(',')}`,
             );
             appendLog(
-              `[ACCOUNT_RECORD_STORE_TRACE] mirror scan source=pendingRewardsTree mirrored=${String(mirrorScan.mirrored)} compare=${mirrorScan.mismatched === 0 ? 'match' : 'mismatch'} matched=${String(mirrorScan.matched)} mismatched=${String(mirrorScan.mismatched)} mismatchAccounts=${Array.from(mirrorScan.mismatchedAccounts).join(',') || 'none'} blocks=${String(autoSyncedBlockCount)} accounts=${Array.from(locallyAffectedAccounts).join(',')}`,
+              `[ACCOUNT_RECORD_STORE_TRACE] mirror scan source=pendingRewardsTree mirrored=${String(mirrorScan.mirrored)} compare=${mirrorScan.mismatched === 0 ? 'match' : 'mismatch'} matched=${String(mirrorScan.matched)} mismatched=${String(mirrorScan.mismatched)} mirroredAccounts=${Array.from(mirrorScan.mirroredAccounts).join(',') || 'none'} mismatchAccounts=${Array.from(mirrorScan.mismatchedAccounts).join(',') || 'none'} blocks=${String(autoSyncedBlockCount)} accounts=${Array.from(locallyAffectedAccounts).join(',')}`,
             );
           }
           if (!isEstimatePendingRewardsRequest && locallyAffectedAccounts.size > 0) {
-            void refreshChangedAccountRecords(
-              locallyAffectedAccounts,
-              String(expandedCallMethod),
-              loadAccountRecordForAddress,
-              appendLog,
-            );
+            if (mirrorScan.mismatched === 0 && mirrorCoversAffectedAccounts) {
+              appendLog(
+                `[ACCOUNT_RECORD_SYNC_TRACE] refresh skipped reason=mirror-match method=${String(expandedCallMethod)} mirrored=${String(mirrorScan.mirrored)} accounts=${Array.from(locallyAffectedAccounts).join(',')}`,
+              );
+            } else {
+              appendLog(
+                `[ACCOUNT_RECORD_SYNC_TRACE] refresh fallback reason=${mirrorCoversAffectedAccounts ? 'mirror-mismatch' : 'mirror-missing'} method=${String(expandedCallMethod)} mirrored=${String(mirrorScan.mirrored)} mismatched=${String(mirrorScan.mismatched)} mirroredAccounts=${Array.from(mirrorScan.mirroredAccounts).join(',') || 'none'} mismatchAccounts=${Array.from(mirrorScan.mismatchedAccounts).join(',') || 'none'} accounts=${Array.from(locallyAffectedAccounts).join(',')}`,
+              );
+              void refreshChangedAccountRecords(
+                locallyAffectedAccounts,
+                String(expandedCallMethod),
+                loadAccountRecordForAddress,
+                appendLog,
+              );
+            }
           }
           setStatus(`Loaded ${actionLabel} for ${normalizedAccount}.`);
           appendLog(`Inline ${actionLabel} loaded for ${normalizedAccount}`);
