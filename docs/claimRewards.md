@@ -1,130 +1,142 @@
-# Claim Rewards Update Flow
+# Claim Rewards Account Update Flow
 
 ## Goal
 
-SponsorCoinLab displays a Sponsor, Recipient, and Agent relationship tree. When any claim method is called from one account, the UI must update every affected visible account in that relationship.
+SponsorCoinLab displays Sponsor, Recipient, and Agent account records in a relationship tree. When a claim or estimate changes reward state for one account, every affected visible account record must update consistently across the app.
 
-The affected display fields include:
+Affected display fields include:
 
 - `rewardsEarned`
 - `totalSpCoins`
-- `getPendingRewards`
-- estimate methods:
-  - `estimateOffChainSponsorRewards`
-  - `estimateOffChainRecipientRewards`
-  - `estimateOffChainAgentRewards`
-- claim methods:
-  - `claimOnChainSponsorRewards`
-  - `claimOnChainRecipientRewards`
-  - `claimOnChainAgentRewards`
-  - `claimOnChainTotalRewards`
-
-## Current Architecture
-
-Claims now use a pre-claim calculation plus receipt-timestamp replay:
-
-1. Call `calculateClaimedRewards` before the claim and preserve bucket inputs.
-2. Execute the on-chain claim.
-3. Read the claim receipt block timestamp.
-4. Replay the pre-claim formula trace at that settlement timestamp.
-5. Merge the replayed claim map into the tree.
-6. Clear affected pending estimates.
-7. Preserve expanded relationship branches.
-
-Important files:
-
-- `app/api/spCoin/run-script/route.ts`
-- `app/(menu)/(dynamic)/SponsorCoinLab/hooks/usePendingRewardsInlineExpansion.ts`
-- `app/(menu)/(dynamic)/SponsorCoinLab/hooks/useServerBackedTreeSpCoinMethod.ts`
-- `app/(menu)/(dynamic)/SponsorCoinLab/hooks/pendingRewardsTreeUtils.ts`
-- `spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinReadModule/methods/calculateClaimedRewards.ts`
-
-## Implemented Work
-
-`calculateClaimedRewards` is the offline source for claimed reward propagation and formula trace input capture.
-
-The frontend has local update helpers in `pendingRewardsTreeUtils.ts`:
-
-- `updateAccountClaimedRewards`
-- `updateAccountPendingEstimate`
-- `updateAccountRewardsEarned`
-- `mergeClaimedRewardsByAccountIntoTree`
-
-The server-backed claim route now uses the final replay flow:
-
-1. Call `calculateClaimedRewards` before the claim and preserve formula trace inputs.
-2. Execute the on-chain claim.
-3. Read the claim receipt block timestamp.
-4. Replay the pre-claim formula trace with the receipt block timestamp.
-5. Return `__claimedRewardsByAccount` from that replay for local tree updates.
-
-## Resolved Issues
-
-After-transaction diagnostic reads have been removed from the final claim path, so a transient RPC failure after a successful transaction cannot turn the claim result into a failure.
-
-Tree merge fixes:
-
-- relation wrappers resolve account keys from `record[0]` and `record.value`,
-- preserved relation branches are recursively merged,
-- object values are ignored by account-key normalization so trace output does not show `[object object]`,
-- claimed rewards and zeroed pending estimates propagate to every affected visible account.
+- `pendingRewards`
+- `estimateOffChainSponsorRewards`
+- `estimateOffChainRecipientRewards`
+- `estimateOffChainAgentRewards`
+- `claimOnChainSponsorRewards`
+- `claimOnChainRecipientRewards`
+- `claimOnChainAgentRewards`
+- `claimOnChainTotalRewards`
 
 ## Current Status
 
-The replay calculation has been proven against temporary account-record diagnostics for Sponsor, Recipient, and Agent.
+The reward calculation and tree propagation work is mostly complete.
 
-We are not adding a random delta or correction factor. The exact match comes from using the pre-claim bucket state with the claim receipt block timestamp.
+Completed:
 
-## Validation Trace
+- Claim methods use pre-claim reward inputs plus the claim receipt block timestamp.
+- The server returns `__claimedRewardsByAccount` from settlement replay.
+- The frontend merges claimed rewards into every affected visible account in the tree.
+- Affected pending estimates are set to `0` after a successful claim.
+- Expanded relationship branches are preserved during local tree updates.
+- Current traces show Sponsor, Recipient, and Agent account records being included in the same update pass.
 
-During validation, temporary comparison traces confirmed the receipt-timestamp replay exactly matched the on-chain claim results. Those extra diagnostics are no longer part of the final flow.
+Still active:
 
-The route still requests formula tracing from `calculateClaimedRewards` and prints `[REWARD_FORMULA_TRACE]` lines.
+- Account record updates are still tree-driven.
+- We are now mirroring those tree-driven updates into a centralized account record store.
+- The centralized store is not yet the display source of truth.
+- The old tree update path must stay in place until the store path is proven.
 
-Each formula line includes:
+## Current Flow
 
-- reward kind: `recipient` or `agent`
-- Sponsor, Recipient, and Agent keys
-- recipient and agent rates
-- `totalStaked`
-- `lastUpdate`
-- calculation timestamp
-- `timeDiff`
-- `yearSeconds`
-- computed bucket reward
+Claim flow:
 
-The formula being validated is:
+1. The user expands or runs a claim method from a visible account record.
+2. `app/api/spCoin/run-script/route.ts` calls `calculateClaimedRewards` before the on-chain claim.
+3. The claim transaction is sent and the receipt block timestamp is read.
+4. The server replays the pre-claim formula inputs at the receipt timestamp.
+5. The server returns the role claim result plus `__claimedRewardsByAccount`.
+6. `usePendingRewardsInlineExpansion.ts` extracts affected accounts from claimed and pending reward maps.
+7. `pendingRewardsTreeUtils.ts` merges the reward updates into the existing tree payload.
+8. The visible tree is rewritten while preserving expanded branches.
+9. The same updated account records are mirrored into `lib/spCoinLab/accountRecordStore.ts`.
+
+Estimate flow:
+
+1. The user expands or reruns an estimate method.
+2. The server returns pending reward values and affected account maps.
+3. The frontend merges pending reward changes into every affected visible account.
+4. The updated tree payload is scanned for affected account records.
+5. Matching account records are mirrored into the centralized account record store.
+
+## Important Files
+
+- `app/api/spCoin/run-script/route.ts`
+- `app/(menu)/(dynamic)/SponsorCoinLab/hooks/usePendingRewardsInlineExpansion.ts`
+- `app/(menu)/(dynamic)/SponsorCoinLab/hooks/useSponsorCoinLabTreeMethods.ts`
+- `app/(menu)/(dynamic)/SponsorCoinLab/hooks/pendingRewardsTreeUtils.ts`
+- `lib/spCoinLab/accountRecordStore.ts`
+- `spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/modules/spCoinReadModule/methods/calculateClaimedRewards.ts`
+
+## Resolved Work
+
+Reward math:
+
+- No delta or correction factor is used.
+- Exact claim amounts come from replaying the pre-claim bucket state at the receipt block timestamp.
+- Formula traces are still available through `[REWARD_FORMULA_TRACE]`.
+
+Tree propagation:
+
+- Relation wrappers resolve account keys from nested record shapes.
+- Object account-key values are ignored so traces do not show `[object object]`.
+- Claimed rewards propagate across Sponsor, Recipient, and Agent records.
+- Pending estimates are zeroed for all affected visible records after claims.
+- Expanded relation branches survive local tree rewrites.
+
+Stability:
+
+- The old tree update path remains active.
+- The new account-store path is currently observational and incremental.
+- Current validation traces include lines like:
 
 ```text
-floor(floor(timeDiff * totalStaked * rate / 100) / yearSeconds)
+[PENDING_REWARDS_TRACE] auto-sync account records blocks=2 accounts=...
 ```
 
-This matches the Solidity formula shape in `RewardsManager.sol`:
+The next expected validation marker is:
 
-```solidity
-uint256 timeRateMultiplier = ( timeDiff * _stakedSPCoins * _rate ) / 100;
-rewards = timeRateMultiplier / year;
+```text
+[ACCOUNT_RECORD_STORE_TRACE] mirror scan source=pendingRewardsTree mirrored=...
 ```
 
-## Final Test Result
+## Current Incremental Migration
 
-The Agent claim replay matched all affected accounts exactly:
+We are moving toward a single account record update system without breaking the existing tree behavior.
 
-- Sponsor: `deltaMinusSettlementReplay=0`
-- Recipient: `deltaMinusSettlementReplay=0`
-- Agent: `deltaMinusSettlementReplay=0`
+Current approach:
 
-Extra after-transaction diagnostic reads were removed after this proof.
+1. Keep the existing tree updater as the working source of truth.
+2. After the tree payload is updated, scan it for affected `TYPE: "--ACCOUNT--"` records.
+3. Mirror those records into `accountRecordStore`.
+4. Log mirror counts and field summaries for comparison.
+5. Do not render from the store yet.
 
-## Desired Final Flow
+This lets us compare the new account-store methodology against the known working tree updates before replacing the old system.
 
-After any claim method is called from Sponsor, Recipient, or Agent:
+## Remaining Work
 
-1. Resolve all affected accounts in the Sponsor/Recipient/Agent relationship.
-2. Calculate exact claimed rewards offline using the same inputs as the on-chain claim.
-3. Update each visible account record locally.
-4. Add claimed amounts into `rewardsEarned`.
-5. Set affected pending estimates to `0`.
-6. Show the role-specific claim result as `Last Claimed`.
-7. Preserve already-expanded relationship branches in the tree.
-8. Avoid extra after-transaction `getAccountRecord` reads.
+1. Confirm the mirror trace appears after every claim and estimate update.
+2. Verify the mirrored store records match the visible tree records for Sponsor, Recipient, and Agent.
+3. Add a small read-only store inspection point or trace summary so store state can be compared without changing UI rendering.
+4. Replace targeted tree account refresh logic with store-driven invalidation once the mirror path is trusted.
+5. Remove or reduce extra post-claim `getAccountRecord` refresh calls only after the local replay and store mirror cover all required fields.
+6. Eventually render account records from the centralized account store instead of rewriting nested tree records directly.
+
+## Known Caveat
+
+The desired final flow avoids extra after-transaction `getAccountRecord` reads. That is not fully true yet. The current incremental implementation can still call `refreshChangedAccountRecords(...)` after non-estimate claim paths.
+
+That refresh remains intentionally for now. It should be removed only after the centralized account-record store is proven to update every affected account correctly.
+
+## Target Final Flow
+
+After any claim or estimate method changes account state:
+
+1. Resolve the affected Sponsor, Recipient, and Agent accounts.
+2. Calculate or receive the exact changed reward values.
+3. Update the centralized account record store once per affected account.
+4. Notify all visible tree locations that reference those accounts.
+5. Render every visible account record from the same stored account state.
+6. Preserve expanded relationship branches and pending method expansion state.
+7. Avoid extra after-transaction `getAccountRecord` reads unless explicitly requested.

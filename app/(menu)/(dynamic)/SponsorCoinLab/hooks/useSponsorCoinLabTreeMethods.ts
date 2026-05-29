@@ -19,7 +19,7 @@ import {
 import {
   getSpCoinLabAccountRecord,
   invalidateSpCoinLabAccountRecord,
-  setSpCoinLabAccountRecord,
+  mirrorSpCoinLabAccountRecord,
 } from '@/lib/spCoinLab/accountRecordStore';
 import {
   parsePendingRewardsActionClick,
@@ -358,11 +358,16 @@ export function useSponsorCoinLabTreeMethods({
           applyLazyAccountRelationBuckets(treeRecord, normalizedAccount);
         }
         treeAccountRecordCacheRef.current.set(normalizedAccount, tree);
-        setSpCoinLabAccountRecord(normalizedAccount, tree);
+        const mirrorResult = mirrorSpCoinLabAccountRecord(normalizedAccount, tree);
+        if (mirrorResult) {
+          appendLog(
+            `[ACCOUNT_RECORD_STORE_TRACE] mirror source=loadAccountRecord account=${mirrorResult.accountKey} changed=${mirrorResult.changedFields.join(',') || 'none'} compare=${mirrorResult.mismatchedFields.length === 0 ? 'match' : 'mismatch'} mismatched=${mirrorResult.mismatchedFields.join(',') || 'none'} treeAfter=${JSON.stringify(mirrorResult.treeAfter)} storeAfter=${JSON.stringify(mirrorResult.storeAfter)} storeBefore=${JSON.stringify(mirrorResult.storeBefore)}`,
+          );
+        }
       }
       return tree;
     },
-    [mode, normalizeAddressValue, readCacheNamespace, requireContractAddress, rpcUrl],
+    [appendLog, normalizeAddressValue, readCacheNamespace, requireContractAddress, rpcUrl],
   );
 
   const runTreeDumpBase = useCallback(async (accountOverride?: string, options?: { force?: boolean }) => {
@@ -531,7 +536,7 @@ export function useSponsorCoinLabTreeMethods({
         parsePendingRewardsActionClick(account, normalizeAddressValue);
       if (pendingRewardsClick || /PendingRewards/i.test(String(account ?? ''))) {
         appendLog(
-          `[PENDING_REWARDS_TRACE] dispatch accountArg=${String(account ?? '')} path=${String(pathHint ?? '')} rawOverride=${String(rawDisplayOverride !== undefined)} action=${String(pendingRewardsClick?.action || '')} method=${String(pendingRewardsClick?.method || '')} parsedAccount=${String(pendingRewardsClick?.accountKey || '')}`,
+          `[PENDING_REWARDS_TRACE] dispatch accountArg=${String(account ?? '')} path=${String(pathHint ?? '')} rawOverride=${String(rawDisplayOverride !== undefined)} action=${String(pendingRewardsClick?.action ?? '')} method=${String(pendingRewardsClick?.method ?? '')} parsedAccount=${String(pendingRewardsClick?.accountKey ?? '')}`,
         );
       }
       if (String(account ?? '').trim() === '__load_spcoin_metadata__') {

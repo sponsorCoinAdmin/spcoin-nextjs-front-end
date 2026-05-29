@@ -13,8 +13,8 @@ import { normalizeExecutionPayload } from './executionPayload';
 import {
   markSpCoinLabAccountRecordRefreshFailed,
   markSpCoinLabAccountRecordRefreshing,
+  mirrorSpCoinLabAccountRecord,
   notifySpCoinLabAccountRecordsChanged,
-  setSpCoinLabAccountRecord,
 } from '@/lib/spCoinLab/accountRecordStore';
 import {
   asRecord,
@@ -198,29 +198,75 @@ function describeRewardsByAccountMap(map: PendingRewardsByAccount | null | undef
     .join(' | ') || 'none';
 }
 
+interface AccountRecordMirrorScan {
+  mirrored: number;
+  matched: number;
+  mismatched: number;
+  mismatchedAccounts: Set<string>;
+}
+
+function createAccountRecordMirrorScan(): AccountRecordMirrorScan {
+  return {
+    mirrored: 0,
+    matched: 0,
+    mismatched: 0,
+    mismatchedAccounts: new Set<string>(),
+  };
+}
+
+function mergeAccountRecordMirrorScan(target: AccountRecordMirrorScan, source: AccountRecordMirrorScan) {
+  target.mirrored += source.mirrored;
+  target.matched += source.matched;
+  target.mismatched += source.mismatched;
+  for (const accountKey of source.mismatchedAccounts) {
+    target.mismatchedAccounts.add(accountKey);
+  }
+}
+
 function cacheAccountRecordsFromPayload(
   value: unknown,
   affectedAccounts: Set<string>,
   normalizeAddressValue: (value: string) => string,
   treeAccountRecordCacheRef: MutableRefObject<Map<string, unknown>>,
-) {
-  if (!value || typeof value !== 'object') return;
+  appendLog?: (line: string) => void,
+): AccountRecordMirrorScan {
+  const scan = createAccountRecordMirrorScan();
+  if (!value || typeof value !== 'object') return scan;
   if (Array.isArray(value)) {
     for (const entry of value) {
-      cacheAccountRecordsFromPayload(entry, affectedAccounts, normalizeAddressValue, treeAccountRecordCacheRef);
+      mergeAccountRecordMirrorScan(
+        scan,
+        cacheAccountRecordsFromPayload(entry, affectedAccounts, normalizeAddressValue, treeAccountRecordCacheRef, appendLog),
+      );
     }
-    return;
+    return scan;
   }
   const record = value as Record<string, unknown>;
   const accountKey = normalizeAddressValue(toDisplayString(record.accountKey));
   if (record.TYPE === '--ACCOUNT--' && affectedAccounts.has(accountKey)) {
     treeAccountRecordCacheRef.current.set(accountKey, record);
-    setSpCoinLabAccountRecord(accountKey, record);
+    const mirrorResult = mirrorSpCoinLabAccountRecord(accountKey, record);
+    scan.mirrored += mirrorResult ? 1 : 0;
+    if (mirrorResult?.mismatchedFields.length) {
+      scan.mismatched += 1;
+      scan.mismatchedAccounts.add(mirrorResult.accountKey);
+    } else if (mirrorResult) {
+      scan.matched += 1;
+    }
+    if (appendLog && mirrorResult) {
+      appendLog(
+        `[ACCOUNT_RECORD_STORE_TRACE] mirror source=pendingRewardsTree account=${mirrorResult.accountKey} changed=${mirrorResult.changedFields.join(',') || 'none'} compare=${mirrorResult.mismatchedFields.length === 0 ? 'match' : 'mismatch'} mismatched=${mirrorResult.mismatchedFields.join(',') || 'none'} treeAfter=${JSON.stringify(mirrorResult.treeAfter)} storeAfter=${JSON.stringify(mirrorResult.storeAfter)} storeBefore=${JSON.stringify(mirrorResult.storeBefore)}`,
+      );
+    }
   }
   for (const [key, entry] of Object.entries(record)) {
     if (key === 'call' || key === 'meta' || key === 'onChainCalls') continue;
-    cacheAccountRecordsFromPayload(entry, affectedAccounts, normalizeAddressValue, treeAccountRecordCacheRef);
+    mergeAccountRecordMirrorScan(
+      scan,
+      cacheAccountRecordsFromPayload(entry, affectedAccounts, normalizeAddressValue, treeAccountRecordCacheRef, appendLog),
+    );
   }
+  return scan;
 }
 
 function mergePendingRewardsAccountUpdates(
@@ -720,6 +766,7 @@ export function usePendingRewardsInlineExpansion({
           );
           const nextPayloadByBlockIndex = new Map<number, string>();
           let autoSyncedBlockCount = 0;
+          const mirrorScan = createAccountRecordMirrorScan();
           for (const blockEntry of blockEntries) {
             if (!blockEntry.payload) continue;
             const nextBlockPayload =
@@ -730,16 +777,20 @@ export function usePendingRewardsInlineExpansion({
                     pendingRewardsByAccountForDisplay,
                     claimedRewardsByAccountForDisplay,
                     pendingRewardsRefreshAtMs,
-                  );
-            nextPayloadByBlockIndex.set(blockEntry.index, formatFormattedPanelPayload(nextBlockPayload));
-            if (blockEntry.index !== entry.index) autoSyncedBlockCount += 1;
-            if (locallyAffectedAccounts.size > 0) {
+          );
+          nextPayloadByBlockIndex.set(blockEntry.index, formatFormattedPanelPayload(nextBlockPayload));
+          if (blockEntry.index !== entry.index) autoSyncedBlockCount += 1;
+          if (locallyAffectedAccounts.size > 0) {
+            mergeAccountRecordMirrorScan(
+              mirrorScan,
               cacheAccountRecordsFromPayload(
                 nextBlockPayload,
                 locallyAffectedAccounts,
                 normalizeAddressValue,
                 treeAccountRecordCacheRef,
-              );
+                appendLog,
+              ),
+            );
             }
           }
           replaceDisplayBlocks(
@@ -751,7 +802,10 @@ export function usePendingRewardsInlineExpansion({
           );
           if (autoSyncedBlockCount > 0 && locallyAffectedAccounts.size > 0) {
             appendLog(
-              `[PENDING_REWARDS_TRACE] auto-sync account records blocks=${String(autoSyncedBlockCount)} accounts=${Array.from(locallyAffectedAccounts).join(',')}`,
+              `[PENDING_REWARDS_TRACE] auto-sync account records blocks=${String(autoSyncedBlockCount)} mirrored=${String(mirrorScan.mirrored)} compare=${mirrorScan.mismatched === 0 ? 'match' : 'mismatch'} matched=${String(mirrorScan.matched)} mismatched=${String(mirrorScan.mismatched)} mismatchAccounts=${Array.from(mirrorScan.mismatchedAccounts).join(',') || 'none'} accounts=${Array.from(locallyAffectedAccounts).join(',')}`,
+            );
+            appendLog(
+              `[ACCOUNT_RECORD_STORE_TRACE] mirror scan source=pendingRewardsTree mirrored=${String(mirrorScan.mirrored)} compare=${mirrorScan.mismatched === 0 ? 'match' : 'mismatch'} matched=${String(mirrorScan.matched)} mismatched=${String(mirrorScan.mismatched)} mismatchAccounts=${Array.from(mirrorScan.mismatchedAccounts).join(',') || 'none'} blocks=${String(autoSyncedBlockCount)} accounts=${Array.from(locallyAffectedAccounts).join(',')}`,
             );
           }
           if (!isEstimatePendingRewardsRequest && locallyAffectedAccounts.size > 0) {
