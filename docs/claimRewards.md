@@ -35,6 +35,8 @@ Completed:
 - Stage 1 of the source-of-truth migration extracted the block update, mirror scan, and refresh decision into a single helper while preserving behavior.
 - Stage 2 writes affected account records into `accountRecordStore` before visible blocks are formatted, then syncs visible account nodes from the store.
 - Stage 2 has been UI-verified with Recipient claim and Agent/Total estimate paths still reporting `compare=match`.
+- Stage 3 adds store-sync diagnostics so fallback refreshes can be removed only after missing store coverage is visible.
+- Stage 3 has been UI-verified with claim and estimate paths reporting `storeSynced=3` and `storeMissing=0`.
 
 Still active:
 
@@ -134,12 +136,48 @@ Stage 2:
 - This makes reward-driven block updates store-first inside the helper, while the broader UI still renders formatted tree payloads.
 - Verification traces showed clean claim paths with `refresh=skip-mirror-match` and estimate paths with `refresh=not-applicable-estimate`, both with `mismatched=0`.
 
+Stage 3:
+
+- The aggregate trace now includes `storeSynced`, `storeMissing`, `storeSyncedAccounts`, and `storeMissingAccounts`.
+- This proves how many visible account nodes were actually formatted from `accountRecordStore` after the mirror write.
+- The old fallback refresh remains in place, but missing store coverage is now explicit instead of inferred.
+- Verification traces showed Recipient and Agent reward paths with `compare=match`, `mismatched=0`, `storeSynced=3`, and `storeMissing=0`.
+
+Stage 4 Plan:
+
+Stage 4 should be split into smaller checkpoints. The goal is to remove old refresh behavior only where the store path has already proven coverage.
+
+Stage 4A: classify fallback cases
+
+- Keep `refreshChangedAccountRecords(...)` callable.
+- Add or refine trace output so every fallback says whether it was caused by `mirror-missing`, `mirror-mismatch`, or `store-missing`.
+- Expected proof: normal claim/estimate paths continue to show `refresh=skip-mirror-match` or `refresh=not-applicable-estimate`, with `storeMissing=0`.
+
+Stage 4B: neutralize clean fallback refreshes
+
+- Ensure any path with `compare=match`, `mismatched=0`, and `storeMissing=0` cannot call the old forced `getAccountRecord` refresh.
+- Keep fallback refresh only for true missing or mismatch cases.
+- Expected proof: clean claim traces contain no `refresh fallback` line and still show `storeSynced>0`.
+
+Stage 4C: centralize non-reward account-record writes
+
+- Move normal account-record loads and relationship expansion loads through the same store write/sync path.
+- Keep the existing formatted tree payload as the display envelope.
+- Expected proof: account-record open traces show store mirroring from normal loads, and reward traces still match.
+
+Stage 4D: prepare render-from-store
+
+- Identify the UI boundary where account records can read from `accountRecordStore` directly.
+- Keep relation expansion state separate from account-record value state.
+- Expected proof: no behavior change yet, only clear ownership boundaries for the final render migration.
+
 ## Remaining Work
 
-1. Add a trace marker proving visible block formatting used store-synced account nodes, if needed.
-2. Replace remaining fallback refresh paths only after mismatch and missing-account scenarios are understood.
-3. Move non-reward account-record updates through the same centralized store path.
-4. Eventually render account records from the centralized account store instead of rewriting nested tree records directly.
+1. Complete Stage 4A fallback classification.
+2. Complete Stage 4B clean fallback neutralization.
+3. Complete Stage 4C non-reward account-record store writes.
+4. Complete Stage 4D render-from-store preparation.
+5. Eventually render account records from the centralized account store instead of rewriting nested tree records directly.
 
 ## Known Caveat
 

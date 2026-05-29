@@ -207,6 +207,14 @@ interface AccountRecordMirrorScan {
   mismatchedAccounts: Set<string>;
 }
 
+interface AccountRecordStoreSyncScan {
+  value: unknown;
+  synced: number;
+  missing: number;
+  syncedAccounts: Set<string>;
+  missingAccounts: Set<string>;
+}
+
 type TreePayloadBlockEntry = ReturnType<typeof buildTreePayloadBlockEntries>['blockEntries'][number];
 
 interface PendingRewardsAccountRecordUpdateResult {
@@ -293,22 +301,43 @@ function syncAccountRecordsFromStoreIntoPayload(
   value: unknown,
   affectedAccounts: Set<string>,
   normalizeAddressValue: (value: string) => string,
-): unknown {
-  if (!value || typeof value !== 'object') return value;
+): AccountRecordStoreSyncScan {
+  const scan: AccountRecordStoreSyncScan = {
+    value,
+    synced: 0,
+    missing: 0,
+    syncedAccounts: new Set<string>(),
+    missingAccounts: new Set<string>(),
+  };
+  if (!value || typeof value !== 'object') return scan;
   if (Array.isArray(value)) {
     let changed = false;
     const nextEntries = value.map((entry) => {
       const nextEntry = syncAccountRecordsFromStoreIntoPayload(entry, affectedAccounts, normalizeAddressValue);
-      changed ||= nextEntry !== entry;
-      return nextEntry;
+      scan.synced += nextEntry.synced;
+      scan.missing += nextEntry.missing;
+      for (const accountKey of nextEntry.syncedAccounts) scan.syncedAccounts.add(accountKey);
+      for (const accountKey of nextEntry.missingAccounts) scan.missingAccounts.add(accountKey);
+      changed ||= nextEntry.value !== entry;
+      return nextEntry.value;
     });
-    return changed ? nextEntries : value;
+    scan.value = changed ? nextEntries : value;
+    return scan;
   }
 
   const record = value as Record<string, unknown>;
   const accountKey = normalizeAddressValue(toDisplayString(record.accountKey));
   if (record.TYPE === '--ACCOUNT--' && affectedAccounts.has(accountKey)) {
-    return getSpCoinLabAccountRecord(accountKey) ?? value;
+    const storeValue = getSpCoinLabAccountRecord(accountKey);
+    if (storeValue === undefined) {
+      scan.missing = 1;
+      scan.missingAccounts.add(accountKey);
+      return scan;
+    }
+    scan.value = storeValue;
+    scan.synced = 1;
+    scan.syncedAccounts.add(accountKey);
+    return scan;
   }
 
   let changed = false;
@@ -319,10 +348,15 @@ function syncAccountRecordsFromStoreIntoPayload(
       continue;
     }
     const nextEntry = syncAccountRecordsFromStoreIntoPayload(entry, affectedAccounts, normalizeAddressValue);
-    changed ||= nextEntry !== entry;
-    nextRecord[key] = nextEntry;
+    scan.synced += nextEntry.synced;
+    scan.missing += nextEntry.missing;
+    for (const accountKey of nextEntry.syncedAccounts) scan.syncedAccounts.add(accountKey);
+    for (const accountKey of nextEntry.missingAccounts) scan.missingAccounts.add(accountKey);
+    changed ||= nextEntry.value !== entry;
+    nextRecord[key] = nextEntry.value;
   }
-  return changed ? nextRecord : value;
+  scan.value = changed ? nextRecord : value;
+  return scan;
 }
 
 function mergePendingRewardsAccountUpdates(
@@ -388,6 +422,10 @@ function applyPendingRewardsAccountRecordUpdates({
   const nextPayloadByBlockIndex = new Map<number, string>();
   let autoSyncedBlockCount = 0;
   const mirrorScan = createAccountRecordMirrorScan();
+  let storeSyncedNodeCount = 0;
+  let storeMissingNodeCount = 0;
+  const storeSyncedAccounts = new Set<string>();
+  const storeMissingAccounts = new Set<string>();
 
   for (const blockEntry of blockEntries) {
     if (!blockEntry.payload) continue;
@@ -412,11 +450,21 @@ function applyPendingRewardsAccountRecordUpdates({
         ),
       );
     }
-    const nextBlockPayloadFromStore =
+    const storeSyncScan =
       locallyAffectedAccounts.size > 0
         ? syncAccountRecordsFromStoreIntoPayload(nextBlockPayload, locallyAffectedAccounts, normalizeAddressValue)
-        : nextBlockPayload;
-    nextPayloadByBlockIndex.set(blockEntry.index, formatFormattedPanelPayload(nextBlockPayloadFromStore));
+        : {
+            value: nextBlockPayload,
+            synced: 0,
+            missing: 0,
+            syncedAccounts: new Set<string>(),
+            missingAccounts: new Set<string>(),
+          };
+    storeSyncedNodeCount += storeSyncScan.synced;
+    storeMissingNodeCount += storeSyncScan.missing;
+    for (const accountKey of storeSyncScan.syncedAccounts) storeSyncedAccounts.add(accountKey);
+    for (const accountKey of storeSyncScan.missingAccounts) storeMissingAccounts.add(accountKey);
+    nextPayloadByBlockIndex.set(blockEntry.index, formatFormattedPanelPayload(storeSyncScan.value));
   }
 
   replaceDisplayBlocks(
@@ -441,10 +489,10 @@ function applyPendingRewardsAccountRecordUpdates({
 
   if (autoSyncedBlockCount > 0 && locallyAffectedAccounts.size > 0) {
     appendLog(
-      `[PENDING_REWARDS_TRACE] auto-sync account records blocks=${String(autoSyncedBlockCount)} mirrored=${String(mirrorScan.mirrored)} compare=${mirrorScan.mismatched === 0 ? 'match' : 'mismatch'} matched=${String(mirrorScan.matched)} mismatched=${String(mirrorScan.mismatched)} refresh=${accountRefreshDecision} mirroredAccounts=${Array.from(mirrorScan.mirroredAccounts).join(',') || 'none'} mismatchAccounts=${Array.from(mirrorScan.mismatchedAccounts).join(',') || 'none'} accounts=${Array.from(locallyAffectedAccounts).join(',')}`,
+      `[PENDING_REWARDS_TRACE] auto-sync account records blocks=${String(autoSyncedBlockCount)} mirrored=${String(mirrorScan.mirrored)} compare=${mirrorScan.mismatched === 0 ? 'match' : 'mismatch'} matched=${String(mirrorScan.matched)} mismatched=${String(mirrorScan.mismatched)} refresh=${accountRefreshDecision} storeSynced=${String(storeSyncedNodeCount)} storeMissing=${String(storeMissingNodeCount)} mirroredAccounts=${Array.from(mirrorScan.mirroredAccounts).join(',') || 'none'} mismatchAccounts=${Array.from(mirrorScan.mismatchedAccounts).join(',') || 'none'} storeSyncedAccounts=${Array.from(storeSyncedAccounts).join(',') || 'none'} storeMissingAccounts=${Array.from(storeMissingAccounts).join(',') || 'none'} accounts=${Array.from(locallyAffectedAccounts).join(',')}`,
     );
     appendLog(
-      `[ACCOUNT_RECORD_STORE_TRACE] mirror scan source=pendingRewardsTree mirrored=${String(mirrorScan.mirrored)} compare=${mirrorScan.mismatched === 0 ? 'match' : 'mismatch'} matched=${String(mirrorScan.matched)} mismatched=${String(mirrorScan.mismatched)} mirroredAccounts=${Array.from(mirrorScan.mirroredAccounts).join(',') || 'none'} mismatchAccounts=${Array.from(mirrorScan.mismatchedAccounts).join(',') || 'none'} blocks=${String(autoSyncedBlockCount)} accounts=${Array.from(locallyAffectedAccounts).join(',')}`,
+      `[ACCOUNT_RECORD_STORE_TRACE] mirror scan source=pendingRewardsTree mirrored=${String(mirrorScan.mirrored)} compare=${mirrorScan.mismatched === 0 ? 'match' : 'mismatch'} matched=${String(mirrorScan.matched)} mismatched=${String(mirrorScan.mismatched)} storeSynced=${String(storeSyncedNodeCount)} storeMissing=${String(storeMissingNodeCount)} mirroredAccounts=${Array.from(mirrorScan.mirroredAccounts).join(',') || 'none'} mismatchAccounts=${Array.from(mirrorScan.mismatchedAccounts).join(',') || 'none'} storeSyncedAccounts=${Array.from(storeSyncedAccounts).join(',') || 'none'} storeMissingAccounts=${Array.from(storeMissingAccounts).join(',') || 'none'} blocks=${String(autoSyncedBlockCount)} accounts=${Array.from(locallyAffectedAccounts).join(',')}`,
     );
   }
 
