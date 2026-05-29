@@ -11,6 +11,7 @@ import { buildExecutionMeta, type MethodExecutionMeta } from './methodExecutionH
 import type { AccessMethodCaller } from './useAccessMethodCaller';
 import { normalizeExecutionPayload } from './executionPayload';
 import {
+  getSpCoinLabAccountRecord,
   markSpCoinLabAccountRecordRefreshFailed,
   markSpCoinLabAccountRecordRefreshing,
   mirrorSpCoinLabAccountRecord,
@@ -206,6 +207,16 @@ interface AccountRecordMirrorScan {
   mismatchedAccounts: Set<string>;
 }
 
+type TreePayloadBlockEntry = ReturnType<typeof buildTreePayloadBlockEntries>['blockEntries'][number];
+
+interface PendingRewardsAccountRecordUpdateResult {
+  locallyAffectedAccounts: Set<string>;
+  mirrorScan: AccountRecordMirrorScan;
+  mirrorCoversAffectedAccounts: boolean;
+  autoSyncedBlockCount: number;
+  accountRefreshDecision: string;
+}
+
 function createAccountRecordMirrorScan(): AccountRecordMirrorScan {
   return {
     mirrored: 0,
@@ -278,6 +289,42 @@ function cacheAccountRecordsFromPayload(
   return scan;
 }
 
+function syncAccountRecordsFromStoreIntoPayload(
+  value: unknown,
+  affectedAccounts: Set<string>,
+  normalizeAddressValue: (value: string) => string,
+): unknown {
+  if (!value || typeof value !== 'object') return value;
+  if (Array.isArray(value)) {
+    let changed = false;
+    const nextEntries = value.map((entry) => {
+      const nextEntry = syncAccountRecordsFromStoreIntoPayload(entry, affectedAccounts, normalizeAddressValue);
+      changed ||= nextEntry !== entry;
+      return nextEntry;
+    });
+    return changed ? nextEntries : value;
+  }
+
+  const record = value as Record<string, unknown>;
+  const accountKey = normalizeAddressValue(toDisplayString(record.accountKey));
+  if (record.TYPE === '--ACCOUNT--' && affectedAccounts.has(accountKey)) {
+    return getSpCoinLabAccountRecord(accountKey) ?? value;
+  }
+
+  let changed = false;
+  const nextRecord: Record<string, unknown> = {};
+  for (const [key, entry] of Object.entries(record)) {
+    if (key === 'call' || key === 'meta' || key === 'onChainCalls') {
+      nextRecord[key] = entry;
+      continue;
+    }
+    const nextEntry = syncAccountRecordsFromStoreIntoPayload(entry, affectedAccounts, normalizeAddressValue);
+    changed ||= nextEntry !== entry;
+    nextRecord[key] = nextEntry;
+  }
+  return changed ? nextRecord : value;
+}
+
 function mergePendingRewardsAccountUpdates(
   payload: unknown,
   pendingRewardsByAccount: PendingRewardsByAccount | null,
@@ -290,6 +337,142 @@ function mergePendingRewardsAccountUpdates(
       claimedRewardsByAccount,
     ),
   ) as Record<string, unknown>;
+}
+
+function applyPendingRewardsAccountRecordUpdates({
+  blockEntries,
+  primaryBlockIndex,
+  nextRootPayload,
+  pendingRewardsByAccountForDisplay,
+  claimedRewardsByAccountForDisplay,
+  pendingRewardsRefreshAtMs,
+  blocks,
+  inTreePanel,
+  isEstimatePendingRewardsRequest,
+  expandedCallMethod,
+  formatFormattedPanelPayload,
+  normalizeAddressValue,
+  treeAccountRecordCacheRef,
+  setFormattedOutputDisplay,
+  setTrackedTreeOutputDisplay,
+  loadAccountRecordForAddress,
+  appendLog,
+}: {
+  blockEntries: TreePayloadBlockEntry[];
+  primaryBlockIndex: number;
+  nextRootPayload: Record<string, unknown>;
+  pendingRewardsByAccountForDisplay: PendingRewardsByAccount | null;
+  claimedRewardsByAccountForDisplay: PendingRewardsByAccount | null;
+  pendingRewardsRefreshAtMs: number;
+  blocks: string[];
+  inTreePanel: boolean;
+  isEstimatePendingRewardsRequest: boolean;
+  expandedCallMethod: string;
+  formatFormattedPanelPayload: (payload: unknown) => string;
+  normalizeAddressValue: (value: string) => string;
+  treeAccountRecordCacheRef: MutableRefObject<Map<string, unknown>>;
+  setFormattedOutputDisplay: (value: string) => void;
+  setTrackedTreeOutputDisplay: (value: string) => void;
+  loadAccountRecordForAddress: (
+    account: string,
+    options?: { force?: boolean; signal?: AbortSignal },
+  ) => Promise<unknown>;
+  appendLog: (line: string) => void;
+}): PendingRewardsAccountRecordUpdateResult {
+  const locallyAffectedAccounts = new Set(
+    [
+      ...Object.keys(pendingRewardsByAccountForDisplay ?? {}),
+      ...Object.keys(claimedRewardsByAccountForDisplay ?? {}),
+    ].map((accountKey) => normalizeAddressValue(accountKey)),
+  );
+  const nextPayloadByBlockIndex = new Map<number, string>();
+  let autoSyncedBlockCount = 0;
+  const mirrorScan = createAccountRecordMirrorScan();
+
+  for (const blockEntry of blockEntries) {
+    if (!blockEntry.payload) continue;
+    const nextBlockPayload =
+      blockEntry.index === primaryBlockIndex
+        ? nextRootPayload
+        : mergePendingRewardsAccountUpdates(
+            blockEntry.payload,
+            pendingRewardsByAccountForDisplay,
+            claimedRewardsByAccountForDisplay,
+            pendingRewardsRefreshAtMs,
+          );
+    if (blockEntry.index !== primaryBlockIndex) autoSyncedBlockCount += 1;
+    if (locallyAffectedAccounts.size > 0) {
+      mergeAccountRecordMirrorScan(
+        mirrorScan,
+        cacheAccountRecordsFromPayload(
+          nextBlockPayload,
+          locallyAffectedAccounts,
+          normalizeAddressValue,
+          treeAccountRecordCacheRef,
+        ),
+      );
+    }
+    const nextBlockPayloadFromStore =
+      locallyAffectedAccounts.size > 0
+        ? syncAccountRecordsFromStoreIntoPayload(nextBlockPayload, locallyAffectedAccounts, normalizeAddressValue)
+        : nextBlockPayload;
+    nextPayloadByBlockIndex.set(blockEntry.index, formatFormattedPanelPayload(nextBlockPayloadFromStore));
+  }
+
+  replaceDisplayBlocks(
+    blocks,
+    nextPayloadByBlockIndex,
+    inTreePanel,
+    setFormattedOutputDisplay,
+    setTrackedTreeOutputDisplay,
+  );
+
+  const mirrorCoversAffectedAccounts = accountRecordMirrorScanCoversAccounts(
+    mirrorScan,
+    locallyAffectedAccounts,
+  );
+  const accountRefreshDecision = isEstimatePendingRewardsRequest
+    ? 'not-applicable-estimate'
+    : mirrorScan.mismatched === 0 && mirrorCoversAffectedAccounts
+      ? 'skip-mirror-match'
+      : mirrorCoversAffectedAccounts
+        ? 'fallback-mirror-mismatch'
+        : 'fallback-mirror-missing';
+
+  if (autoSyncedBlockCount > 0 && locallyAffectedAccounts.size > 0) {
+    appendLog(
+      `[PENDING_REWARDS_TRACE] auto-sync account records blocks=${String(autoSyncedBlockCount)} mirrored=${String(mirrorScan.mirrored)} compare=${mirrorScan.mismatched === 0 ? 'match' : 'mismatch'} matched=${String(mirrorScan.matched)} mismatched=${String(mirrorScan.mismatched)} refresh=${accountRefreshDecision} mirroredAccounts=${Array.from(mirrorScan.mirroredAccounts).join(',') || 'none'} mismatchAccounts=${Array.from(mirrorScan.mismatchedAccounts).join(',') || 'none'} accounts=${Array.from(locallyAffectedAccounts).join(',')}`,
+    );
+    appendLog(
+      `[ACCOUNT_RECORD_STORE_TRACE] mirror scan source=pendingRewardsTree mirrored=${String(mirrorScan.mirrored)} compare=${mirrorScan.mismatched === 0 ? 'match' : 'mismatch'} matched=${String(mirrorScan.matched)} mismatched=${String(mirrorScan.mismatched)} mirroredAccounts=${Array.from(mirrorScan.mirroredAccounts).join(',') || 'none'} mismatchAccounts=${Array.from(mirrorScan.mismatchedAccounts).join(',') || 'none'} blocks=${String(autoSyncedBlockCount)} accounts=${Array.from(locallyAffectedAccounts).join(',')}`,
+    );
+  }
+
+  if (!isEstimatePendingRewardsRequest && locallyAffectedAccounts.size > 0) {
+    if (mirrorScan.mismatched === 0 && mirrorCoversAffectedAccounts) {
+      appendLog(
+        `[ACCOUNT_RECORD_SYNC_TRACE] refresh skipped reason=mirror-match method=${expandedCallMethod} mirrored=${String(mirrorScan.mirrored)} accounts=${Array.from(locallyAffectedAccounts).join(',')}`,
+      );
+    } else {
+      appendLog(
+        `[ACCOUNT_RECORD_SYNC_TRACE] refresh fallback reason=${mirrorCoversAffectedAccounts ? 'mirror-mismatch' : 'mirror-missing'} method=${expandedCallMethod} mirrored=${String(mirrorScan.mirrored)} mismatched=${String(mirrorScan.mismatched)} mirroredAccounts=${Array.from(mirrorScan.mirroredAccounts).join(',') || 'none'} mismatchAccounts=${Array.from(mirrorScan.mismatchedAccounts).join(',') || 'none'} accounts=${Array.from(locallyAffectedAccounts).join(',')}`,
+      );
+      void refreshChangedAccountRecords(
+        locallyAffectedAccounts,
+        expandedCallMethod,
+        loadAccountRecordForAddress,
+        appendLog,
+      );
+    }
+  }
+
+  return {
+    locallyAffectedAccounts,
+    mirrorScan,
+    mirrorCoversAffectedAccounts,
+    autoSyncedBlockCount,
+    accountRefreshDecision,
+  };
 }
 
 async function refreshChangedAccountRecords(
@@ -767,83 +950,25 @@ export function usePendingRewardsInlineExpansion({
             );
           }
           const nextRootPayload = normalizeExecutionPayload(payloadAfterFinalPairedEstimateWrite) as Record<string, unknown>;
-          const locallyAffectedAccounts = new Set(
-            [
-              ...Object.keys(pendingRewardsByAccountForDisplay ?? {}),
-              ...Object.keys(claimedRewardsByAccountForDisplay ?? {}),
-            ].map((accountKey) => normalizeAddressValue(accountKey)),
-          );
-          const nextPayloadByBlockIndex = new Map<number, string>();
-          let autoSyncedBlockCount = 0;
-          const mirrorScan = createAccountRecordMirrorScan();
-          for (const blockEntry of blockEntries) {
-            if (!blockEntry.payload) continue;
-            const nextBlockPayload =
-              blockEntry.index === entry.index
-                ? nextRootPayload
-                : mergePendingRewardsAccountUpdates(
-                    blockEntry.payload,
-                    pendingRewardsByAccountForDisplay,
-                    claimedRewardsByAccountForDisplay,
-                    pendingRewardsRefreshAtMs,
-          );
-          nextPayloadByBlockIndex.set(blockEntry.index, formatFormattedPanelPayload(nextBlockPayload));
-          if (blockEntry.index !== entry.index) autoSyncedBlockCount += 1;
-          if (locallyAffectedAccounts.size > 0) {
-            mergeAccountRecordMirrorScan(
-              mirrorScan,
-              cacheAccountRecordsFromPayload(
-                nextBlockPayload,
-                locallyAffectedAccounts,
-                normalizeAddressValue,
-                treeAccountRecordCacheRef,
-              ),
-            );
-            }
-          }
-          replaceDisplayBlocks(
+          applyPendingRewardsAccountRecordUpdates({
+            blockEntries,
+            primaryBlockIndex: entry.index,
+            nextRootPayload,
+            pendingRewardsByAccountForDisplay,
+            claimedRewardsByAccountForDisplay,
+            pendingRewardsRefreshAtMs,
             blocks,
-            nextPayloadByBlockIndex,
             inTreePanel,
+            isEstimatePendingRewardsRequest,
+            expandedCallMethod: String(expandedCallMethod),
+            formatFormattedPanelPayload,
+            normalizeAddressValue,
+            treeAccountRecordCacheRef,
             setFormattedOutputDisplay,
             setTrackedTreeOutputDisplay,
-          );
-          const mirrorCoversAffectedAccounts = accountRecordMirrorScanCoversAccounts(
-            mirrorScan,
-            locallyAffectedAccounts,
-          );
-          const accountRefreshDecision = isEstimatePendingRewardsRequest
-            ? 'not-applicable-estimate'
-            : mirrorScan.mismatched === 0 && mirrorCoversAffectedAccounts
-              ? 'skip-mirror-match'
-              : mirrorCoversAffectedAccounts
-                ? 'fallback-mirror-mismatch'
-                : 'fallback-mirror-missing';
-          if (autoSyncedBlockCount > 0 && locallyAffectedAccounts.size > 0) {
-            appendLog(
-              `[PENDING_REWARDS_TRACE] auto-sync account records blocks=${String(autoSyncedBlockCount)} mirrored=${String(mirrorScan.mirrored)} compare=${mirrorScan.mismatched === 0 ? 'match' : 'mismatch'} matched=${String(mirrorScan.matched)} mismatched=${String(mirrorScan.mismatched)} refresh=${accountRefreshDecision} mirroredAccounts=${Array.from(mirrorScan.mirroredAccounts).join(',') || 'none'} mismatchAccounts=${Array.from(mirrorScan.mismatchedAccounts).join(',') || 'none'} accounts=${Array.from(locallyAffectedAccounts).join(',')}`,
-            );
-            appendLog(
-              `[ACCOUNT_RECORD_STORE_TRACE] mirror scan source=pendingRewardsTree mirrored=${String(mirrorScan.mirrored)} compare=${mirrorScan.mismatched === 0 ? 'match' : 'mismatch'} matched=${String(mirrorScan.matched)} mismatched=${String(mirrorScan.mismatched)} mirroredAccounts=${Array.from(mirrorScan.mirroredAccounts).join(',') || 'none'} mismatchAccounts=${Array.from(mirrorScan.mismatchedAccounts).join(',') || 'none'} blocks=${String(autoSyncedBlockCount)} accounts=${Array.from(locallyAffectedAccounts).join(',')}`,
-            );
-          }
-          if (!isEstimatePendingRewardsRequest && locallyAffectedAccounts.size > 0) {
-            if (mirrorScan.mismatched === 0 && mirrorCoversAffectedAccounts) {
-              appendLog(
-                `[ACCOUNT_RECORD_SYNC_TRACE] refresh skipped reason=mirror-match method=${String(expandedCallMethod)} mirrored=${String(mirrorScan.mirrored)} accounts=${Array.from(locallyAffectedAccounts).join(',')}`,
-              );
-            } else {
-              appendLog(
-                `[ACCOUNT_RECORD_SYNC_TRACE] refresh fallback reason=${mirrorCoversAffectedAccounts ? 'mirror-mismatch' : 'mirror-missing'} method=${String(expandedCallMethod)} mirrored=${String(mirrorScan.mirrored)} mismatched=${String(mirrorScan.mismatched)} mirroredAccounts=${Array.from(mirrorScan.mirroredAccounts).join(',') || 'none'} mismatchAccounts=${Array.from(mirrorScan.mismatchedAccounts).join(',') || 'none'} accounts=${Array.from(locallyAffectedAccounts).join(',')}`,
-              );
-              void refreshChangedAccountRecords(
-                locallyAffectedAccounts,
-                String(expandedCallMethod),
-                loadAccountRecordForAddress,
-                appendLog,
-              );
-            }
-          }
+            loadAccountRecordForAddress,
+            appendLog,
+          });
           setStatus(`Loaded ${actionLabel} for ${normalizedAccount}.`);
           appendLog(`Inline ${actionLabel} loaded for ${normalizedAccount}`);
           appendLog(

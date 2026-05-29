@@ -32,6 +32,9 @@ Completed:
 - Updated visible account records are mirrored into `accountRecordStore`.
 - Mirror scans compare the store summary against the updated tree summary and currently report `compare=match`.
 - Clean post-claim paths now skip the old forced account-record refresh when the mirror covers every affected account.
+- Stage 1 of the source-of-truth migration extracted the block update, mirror scan, and refresh decision into a single helper while preserving behavior.
+- Stage 2 writes affected account records into `accountRecordStore` before visible blocks are formatted, then syncs visible account nodes from the store.
+- Stage 2 has been UI-verified with Recipient claim and Agent/Total estimate paths still reporting `compare=match`.
 
 Still active:
 
@@ -112,18 +115,31 @@ Current approach:
 1. Keep the existing tree updater as the working source of truth.
 2. After the tree payload is updated, scan it for affected `TYPE: "--ACCOUNT--"` records.
 3. Mirror those records into `accountRecordStore`.
-4. Log mirror counts, matched/mismatched account counts, and the refresh decision.
-5. Do not render from the store yet.
+4. Sync visible account nodes from the stored account records before formatting the updated blocks.
+5. Log mirror counts, matched/mismatched account counts, and the refresh decision.
+6. Do not render directly from store subscriptions yet.
 
 This lets us compare the new account-store methodology against the known working tree updates before replacing the old system. The latest traces show the mirror matching the tree and claim refreshes using `refresh=skip-mirror-match` on covered paths.
 
+Stage 1:
+
+- `usePendingRewardsInlineExpansion.ts` now routes reward-driven account-record updates through `applyPendingRewardsAccountRecordUpdates(...)`.
+- The helper preserves the existing tree-first behavior, aggregate mirror trace, and refresh fallback decision.
+- This is an organization checkpoint only; it does not yet make the store the display source of truth.
+
+Stage 2:
+
+- The helper now mirrors affected account records into `accountRecordStore` before the updated visible blocks are formatted.
+- Each visible block is formatted from a payload whose affected `TYPE: "--ACCOUNT--"` nodes have been replaced with the current store value.
+- This makes reward-driven block updates store-first inside the helper, while the broader UI still renders formatted tree payloads.
+- Verification traces showed clean claim paths with `refresh=skip-mirror-match` and estimate paths with `refresh=not-applicable-estimate`, both with `mismatched=0`.
+
 ## Remaining Work
 
-1. Keep the aggregate mirror trace while removing older noisy diagnostics.
-2. Centralize the account-record update helper so reward updates write through one path.
-3. Replace remaining fallback refresh paths only after mismatch and missing-account scenarios are understood.
-4. Sync visible tree nodes from the centralized store instead of treating nested records as independent copies.
-5. Eventually render account records from the centralized account store instead of rewriting nested tree records directly.
+1. Add a trace marker proving visible block formatting used store-synced account nodes, if needed.
+2. Replace remaining fallback refresh paths only after mismatch and missing-account scenarios are understood.
+3. Move non-reward account-record updates through the same centralized store path.
+4. Eventually render account records from the centralized account store instead of rewriting nested tree records directly.
 
 ## Known Caveat
 
