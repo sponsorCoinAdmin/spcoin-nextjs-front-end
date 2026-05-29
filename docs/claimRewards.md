@@ -37,6 +37,7 @@ Completed:
 - Stage 2 has been UI-verified with Recipient claim and Agent/Total estimate paths still reporting `compare=match`.
 - Stage 3 adds store-sync diagnostics so fallback refreshes can be removed only after missing store coverage is visible.
 - Stage 3 has been UI-verified with claim and estimate paths reporting `storeSynced=3` and `storeMissing=0`.
+- Stage 4C has been UI-verified for normal inline account-record expansion with `mirror source=loadAccountRecordInline`, `compare=match`, and `storeMissing=0`.
 
 Still active:
 
@@ -165,19 +166,21 @@ Stage 4C: centralize non-reward account-record writes
 
 - Move normal account-record loads and relationship expansion loads through the same store write/sync path.
 - Keep the existing formatted tree payload as the display envelope.
-- Expected proof: account-record open traces show store mirroring from normal loads, and reward traces still match.
+- Implemented first pass: `loadAccountRecordForAddress(...)` now prefers `accountRecordStore`, mirrors fetched records into the store, and returns the store-synced value.
+- Inline relationship expansion now mirrors fetched account records into `accountRecordStore` before replacing the visible tree entry.
+- Verified proof: account-record open traces show `mirror source=loadAccountRecordInline`, `compare=match`, `storeSynced=1`, and `storeMissing=0`; reward claim/estimate traces still match.
 
 Stage 4D: prepare render-from-store
 
 - Identify the UI boundary where account records can read from `accountRecordStore` directly.
 - Keep relation expansion state separate from account-record value state.
+- Prepared boundary: account-record value ownership belongs to `accountRecordStore`; formatted tree payloads remain the display envelope; relation expansion state remains in tree payload/cache helpers.
+- Future render migration should replace account value reads first, while leaving relation expansion wrappers and pending method expansion state intact.
 - Expected proof: no behavior change yet, only clear ownership boundaries for the final render migration.
 
 ## Remaining Work
 
-1. Complete Stage 4C non-reward account-record store writes.
-2. Complete Stage 4D render-from-store preparation.
-3. Eventually render account records from the centralized account store instead of rewriting nested tree records directly.
+1. Eventually render account records from the centralized account store instead of rewriting nested tree records directly.
 
 ## Known Caveat
 

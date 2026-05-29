@@ -17,6 +17,7 @@ import {
   useLazyAccountRelationExpansion,
 } from './useLazyAccountRelationExpansion';
 import {
+  formatSpCoinLabAccountRecordMirrorTrace,
   getSpCoinLabAccountRecord,
   invalidateSpCoinLabAccountRecord,
   mirrorSpCoinLabAccountRecord,
@@ -284,7 +285,7 @@ export function useSponsorCoinLabTreeMethods({
       const normalizedAccount = normalizeAddressValue(account);
       let tree = options?.force
         ? undefined
-        : treeAccountRecordCacheRef.current.get(normalizedAccount) ?? getSpCoinLabAccountRecord(normalizedAccount);
+        : getSpCoinLabAccountRecord(normalizedAccount) ?? treeAccountRecordCacheRef.current.get(normalizedAccount);
       if (!tree) {
         const target = requireContractAddress();
         const response = await fetch('/api/spCoin/run-script', {
@@ -357,13 +358,11 @@ export function useSponsorCoinLabTreeMethods({
           }
           applyLazyAccountRelationBuckets(treeRecord, normalizedAccount);
         }
-        treeAccountRecordCacheRef.current.set(normalizedAccount, tree);
         const mirrorResult = mirrorSpCoinLabAccountRecord(normalizedAccount, tree);
-        if (mirrorResult) {
-          appendLog(
-            `[ACCOUNT_RECORD_STORE_TRACE] mirror source=loadAccountRecord account=${mirrorResult.accountKey} changed=${mirrorResult.changedFields.join(',') || 'none'} compare=${mirrorResult.mismatchedFields.length === 0 ? 'match' : 'mismatch'} mismatched=${mirrorResult.mismatchedFields.join(',') || 'none'} treeAfter=${JSON.stringify(mirrorResult.treeAfter)} storeAfter=${JSON.stringify(mirrorResult.storeAfter)} storeBefore=${JSON.stringify(mirrorResult.storeBefore)}`,
-          );
-        }
+        const storeTree = getSpCoinLabAccountRecord(normalizedAccount) ?? tree;
+        treeAccountRecordCacheRef.current.set(normalizedAccount, storeTree);
+        appendLog(formatSpCoinLabAccountRecordMirrorTrace('loadAccountRecord', normalizedAccount, mirrorResult, storeTree));
+        tree = storeTree;
       }
       return tree;
     },
@@ -403,14 +402,16 @@ export function useSponsorCoinLabTreeMethods({
             : list[0];
       setSelectedTreeAccount(activeAccount);
       const treeCall = buildMethodCallEntry('getAccountRecord', [{ label: 'Account', value: activeAccount }]);
-      let tree = treeAccountRecordCacheRef.current.get(activeAccount);
+      const normalizedActiveAccount = normalizeAddressValue(activeAccount);
+      let tree = getSpCoinLabAccountRecord(normalizedActiveAccount) ?? treeAccountRecordCacheRef.current.get(normalizedActiveAccount);
       if (!tree || options?.force) {
         tree = executionTimingCollector
           ? await runWithMethodTimingCollector(executionTimingCollector, async () =>
               loadAccountRecordForAddress(activeAccount, { force: options?.force }),
             )
           : await loadAccountRecordForAddress(activeAccount, { force: options?.force });
-        treeAccountRecordCacheRef.current.set(activeAccount, tree);
+        tree = getSpCoinLabAccountRecord(normalizedActiveAccount) ?? tree;
+        treeAccountRecordCacheRef.current.set(normalizedActiveAccount, tree);
       }
       setTrackedTreeOutputDisplay(
         formatOutputDisplayValue({

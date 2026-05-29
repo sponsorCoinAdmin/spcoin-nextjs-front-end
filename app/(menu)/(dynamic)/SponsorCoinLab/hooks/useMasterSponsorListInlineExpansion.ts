@@ -1,4 +1,9 @@
 import { useCallback, type MutableRefObject } from 'react';
+import {
+  formatSpCoinLabAccountRecordMirrorTrace,
+  getSpCoinLabAccountRecord,
+  mirrorSpCoinLabAccountRecord,
+} from '@/lib/spCoinLab/accountRecordStore';
 import { normalizeExecutionPayload } from './executionPayload';
 import { applyLazyAccountRelationBuckets } from './useLazyAccountRelationExpansion';
 import type { AccessMethodCaller } from './useAccessMethodCaller';
@@ -273,7 +278,17 @@ export function useMasterSponsorListInlineExpansion({
               ? await callAccessMethod('getAccountRecord', ({ executionSignal }) => loadInlineAccountRecord(executionSignal))
               : await loadInlineAccountRecord();
             if (accountRecord === undefined) return 'handled';
-            const nextAccountEntry = buildExpandedAccountEntry(accountRecord);
+            const mirrorResult = mirrorSpCoinLabAccountRecord(normalizedAccount, accountRecord);
+            const storeRecord = getSpCoinLabAccountRecord(normalizedAccount) ?? accountRecord;
+            appendLog(
+              formatSpCoinLabAccountRecordMirrorTrace(
+                'loadAccountRecordInline',
+                normalizedAccount,
+                mirrorResult,
+                storeRecord,
+              ),
+            );
+            const nextAccountEntry = buildExpandedAccountEntry(storeRecord);
             const nextRootPayload = normalizeExecutionPayload(
               writePathValue(payload, target.path, nextAccountEntry),
             ) as Record<string, unknown>;

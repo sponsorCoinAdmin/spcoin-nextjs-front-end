@@ -9,7 +9,7 @@ interface AccountRecordEntry {
   error?: string;
 }
 
-interface AccountRecordMirrorResult {
+export interface AccountRecordMirrorResult {
   accountKey: string;
   changedFields: string[];
   mismatchedFields: string[];
@@ -100,6 +100,21 @@ export function mirrorSpCoinLabAccountRecord(accountKey: unknown, value: unknown
     storeAfter,
     treeAfter,
   };
+}
+
+export function formatSpCoinLabAccountRecordMirrorTrace(
+  source: string,
+  accountKey: unknown,
+  mirrorResult: AccountRecordMirrorResult | null,
+  storeRecord: unknown | undefined,
+): string {
+  const storeSynced = storeRecord === undefined ? '0' : '1';
+  const storeMissing = storeRecord === undefined ? '1' : '0';
+  if (!mirrorResult) {
+    return `[ACCOUNT_RECORD_STORE_TRACE] mirror source=${source} mirrored=0 compare=missing matched=0 mismatched=0 storeSynced=${storeSynced} storeMissing=${storeMissing} account=${normalizeAccountRecordKey(accountKey)} changed=none mismatchFields=none`;
+  }
+  const matches = mirrorResult.mismatchedFields.length === 0;
+  return `[ACCOUNT_RECORD_STORE_TRACE] mirror source=${source} mirrored=1 compare=${matches ? 'match' : 'mismatch'} matched=${matches ? '1' : '0'} mismatched=${matches ? '0' : '1'} storeSynced=${storeSynced} storeMissing=${storeMissing} account=${mirrorResult.accountKey} changed=${mirrorResult.changedFields.join(',') || 'none'} mismatchFields=${mirrorResult.mismatchedFields.join(',') || 'none'}`;
 }
 
 export function markSpCoinLabAccountRecordDirty(accountKey: unknown, reason?: string): void {

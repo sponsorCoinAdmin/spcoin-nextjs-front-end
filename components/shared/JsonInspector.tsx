@@ -3082,8 +3082,6 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
   const accountRelationDisplayParts = isLazyAccountRelation || isLoadedAccountRelation
     ? getLazyAccountRelationDisplayParts(data, String(label || path || ''))
     : null;
-  const showOnChainCallsField = !effectiveHideEntryKeys.includes('onChainCalls');
-  const shouldShowLoadedRelationTimingMarker = isLoadedAccountRelation && showOnChainCallsField;
   const isGetPendingRewardsNode = label === 'pendingRewards' && isPendingRewardsRecord(data);
   const getPendingRewardsAccount = isGetPendingRewardsNode ? getPendingRewardsAccountKey(data) : '';
   const getPendingRewardsResultSummary = isGetPendingRewardsNode
@@ -3987,9 +3985,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
               );
               toggleBranch();
             }}
-            title={`${accountRelationDisplayParts.label}${accountRelationDisplayParts.suffix || ''}${
-              shouldShowLoadedRelationTimingMarker ? ':' : ''
-            }`}
+            title={`${accountRelationDisplayParts.label}${accountRelationDisplayParts.suffix || ''}`}
           >
             {accountRelationDisplayParts.label}
             {accountRelationDisplayParts.suffix ? (
@@ -3998,7 +3994,6 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
                 {accountRelationDisplayParts.suffix.trimStart()}
               </span>
             ) : null}
-            {shouldShowLoadedRelationTimingMarker ? ':' : null}
           </button>
         ) : relationItemDisplayParts ? (
           <>
