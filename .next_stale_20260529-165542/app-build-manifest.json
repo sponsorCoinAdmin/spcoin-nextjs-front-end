@@ -1,0 +1,111 @@
+{
+  "pages": {
+    "/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/layout.css",
+      "static/chunks/app/layout.js"
+    ],
+    "/(menu)/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(menu)/layout.js"
+    ],
+    "/(menu)/loading": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/(menu)/loading.css",
+      "static/chunks/app/(menu)/loading.js"
+    ],
+    "/(menu)/(dynamic)/SponsorCoinLab/loading": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/(menu)/(dynamic)/SponsorCoinLab/loading.css",
+      "static/chunks/app/(menu)/(dynamic)/SponsorCoinLab/loading.js"
+    ],
+    "/(menu)/(dynamic)/SponsorCoinLab/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(menu)/(dynamic)/SponsorCoinLab/page.js"
+    ],
+    "/api/spCoin/accounts/[accountAddress]/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/spCoin/accounts/[accountAddress]/route.js"
+    ],
+    "/api/spCoin/contract-directories/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/spCoin/contract-directories/route.js"
+    ],
+    "/api/spCoin/lab/method-member-lists/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/spCoin/lab/method-member-lists/route.js"
+    ],
+    "/api/spCoin/abi/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/spCoin/abi/route.js"
+    ],
+    "/api/spCoin/access-manager/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/spCoin/access-manager/route.js"
+    ],
+    "/api/spCoin/scripts/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/spCoin/scripts/route.js"
+    ],
+    "/api/spCoin/lab/account-popup-trace/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/spCoin/lab/account-popup-trace/route.js"
+    ],
+    "/api/spCoin/run-script/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/spCoin/run-script/route.js"
+    ],
+    "/(menu)/Exchange/loading": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/(menu)/Exchange/loading.css",
+      "static/chunks/app/(menu)/Exchange/loading.js"
+    ],
+    "/(menu)/Exchange/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/(menu)/Exchange/page.css",
+      "static/chunks/app/(menu)/Exchange/page.js"
+    ],
+    "/api/spCoin/tokens/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/spCoin/tokens/route.js"
+    ],
+    "/(menu)/SponsorCoin/loading": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/(menu)/SponsorCoin/loading.css",
+      "static/chunks/app/(menu)/SponsorCoin/loading.js"
+    ],
+    "/(menu)/SponsorCoin/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(menu)/SponsorCoin/page.js"
+    ],
+    "/(menu)/(dynamic)/SpCoinAPI/loading": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/(menu)/(dynamic)/SpCoinAPI/loading.css",
+      "static/chunks/app/(menu)/(dynamic)/SpCoinAPI/loading.js"
+    ],
+    "/_not-found/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/_not-found/page.js"
+    ]
+  }
+}

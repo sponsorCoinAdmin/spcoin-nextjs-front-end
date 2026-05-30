@@ -1,0 +1,6 @@
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/(menu)/(dynamic)/SponsorCoinLab/page": "app/(menu)/(dynamic)/SponsorCoinLab/page.js",
+  "/(menu)/Exchange/page": "app/(menu)/Exchange/page.js",
+  "/(menu)/SponsorCoin/page": "app/(menu)/SponsorCoin/page.js"
+}
