@@ -68,7 +68,7 @@ export default function WhitePaper() {
             className={`${h2Class} !text-[24px] font-bold !text-[#f87171]`}
             onClick={() => setShowOverview(!showOverview)}
           >
-            Sponsor Coin API Library Overview {showOverview ? '▾' : '▸'}
+            Sponsor Coin API Access Library Overview {showOverview ? '▾' : '▸'}
           </h2>
 
           {/* Overview body */}
@@ -115,7 +115,7 @@ export default function WhitePaper() {
             role="button"
             aria-expanded={showLibraries}
           >
-            Sponsor Coin API Libraries <span className="ml-2">{showLibraries ? '▾' : '▸'}</span>
+            Sponsor Coin API Access Libraries <span className="ml-2">{showLibraries ? '▾' : '▸'}</span>
           </h2>
 
           {showLibraries && (

@@ -132,7 +132,7 @@ export default function TradeContainerHeader() {
             priority
           />
         ) : (
-          <OpenCloseBtn onClick={handleHeaderClose} expandedTitle="Close" expandedAriaLabel="Close" className="absolute top-2 right-[27px]" />
+          <OpenCloseBtn onClick={handleHeaderClose} expandedTitle="Close" expandedAriaLabel="Close" />
         )}
       </div>
     </div>

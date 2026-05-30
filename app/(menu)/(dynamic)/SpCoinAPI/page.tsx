@@ -328,23 +328,58 @@ export default function WhitePaper() {
             role="button"
             aria-expanded={showOverview}
           >
-            Sponsor Coin API Library Overview
+            Sponsor Coin API Access Library Overview {showOverview ? '▾' : '▸'}
           </h2>
 
           {showOverview && (
             <div className="ml-5 mt-2">
               <p>
-                <b>NPM Module Description:</b> This document details the TypeScript and JavaScript class modules available to the Ethereum SponsorCoin token contract. These access modules interact with the SponsorCoin contract on the Ethereum network and manage accounts, sponsorship relationships, reward claims, staking calculations, and ERC20 token transfers.
+                <b>NPM Module Description:</b> This document details the TypeScript and JavaScript class modules available to the ERC20 SponsorCoin token contract. These access modules interact with the SponsorCoin contract on the ERC20 based network and manage Sponsor Coin accounts, sponsorship relationships, reward claims, staking calculations, and ERC20 token method calls.
               </p>
               <p>
                 <b>NPM Installation:</b> This project requires Node 18.16.0 or later. You can install it using the following command:{' '}
                 <span className="font-bold text-blue-600 underline">npm i @sponsorcoin/spcoin-access-modules</span>
               </p>
               <p>
-                The current access package exposes a top-level <b>SpCoinAccessModules</b> facade, an <b>SpCoinOnChainProcessor</b> for direct contract modules, and an <b>SpCoinOffChainProcessor</b> for higher-level orchestration workflows.
+                The current access package exposes a top-level <b>SpCoinAccessModules</b> facade. This is a <b>SpCoinOnChainProcessor</b> for direct contract modules, and an <b>SpCoinOffChainProcessor</b> for higher-level orchestration workflows.
+              </p>
+            </div>
+          )}
+
+          <h2
+            className={`${h2Class} !text-[24px] font-bold !text-[#f87171]`}
+            onClick={() => setShowArchitecture((value) => !value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                setShowArchitecture((value) => !value);
+              }
+            }}
+            tabIndex={0}
+            role="button"
+            aria-expanded={showArchitecture}
+          >
+            Sponsor Coin Access Architecture <span className="ml-2">{showArchitecture ? '▾' : '▸'}</span>
+          </h2>
+          {showArchitecture && (
+            <div className="ml-5 mt-2">
+              <p>
+                <b>SpCoinAccessModules:</b>
+              </p>
+              <p className="ml-[20px]">
+                The top-level compatibility facade exposes the deployed contract, logger, on-chain processor, off-chain processor, public grouped modules, and legacy names such as <code>spCoinAddMethods</code> and <code>spCoinReadMethods</code>.
               </p>
               <p>
-                The public module layout is aligned with SponsorCoinLab method groups: <b>SpCoinERC20Module</b>, <b>SpCoinReadModule</b>, <b>SpCoinWriteModule</b>, <b>SpCoinAdminModule</b>, and <b>SpCoinUtilModule</b>. Legacy modules such as <code>SpCoinAddModule</code>, <code>SpCoinDeleteModule</code>, <code>SpCoinRewardsModule</code>, and <code>SpCoinStakingModule</code> remain available as compatibility/internal write-module building blocks.
+                <b>SpCoinOnChainProcessor:</b>
+              </p>
+              <p className="ml-[20px]">
+                Creates the deployed ethers contract instance and groups direct contract modules under short names: <code>erc20</code>, <code>read</code>, <code>write</code>, <code>admin</code>, and <code>util</code>. Legacy short names such as <code>add</code>, <code>delete</code>, <code>rewards</code>, and <code>staking</code> remain available for compatibility.
+              </p>
+              <p>
+                <b>SpCoinOffChainProcessor:</b>
+              </p>
+              <p className="ml-[20px]">
+                Coordinates higher-level workflows that use on-chain modules underneath, such as tree deletion.
               </p>
             </div>
           )}
@@ -362,52 +397,11 @@ export default function WhitePaper() {
             role="button"
             aria-expanded={showLibraries}
           >
-            Sponsor Coin API Access Modules
+            Sponsor Coin API Access Libraries <span className="ml-2">{showLibraries ? '▾' : '▸'}</span>
           </h2>
 
           {showLibraries && (
             <>
-              <h2
-                className={`${h2Class} !mt-0 ml-5`}
-                onClick={() => setShowArchitecture((value) => !value)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault();
-                    setShowArchitecture((value) => !value);
-                  }
-                }}
-                tabIndex={0}
-                role="button"
-                aria-expanded={showArchitecture}
-              >
-                Access Architecture {disclosure(showArchitecture)}
-              </h2>
-              {showArchitecture && (
-                <div className="ml-10">
-                  <p>
-                    <b>SpCoinAccessModules:</b>
-                  </p>
-                  <p className="ml-[20px]">
-                    The top-level compatibility facade exposes the deployed contract, logger, on-chain processor, off-chain processor, public grouped modules, and legacy names such as <code>spCoinAddMethods</code> and <code>spCoinReadMethods</code>.
-                  </p>
-                  <p>
-                    <b>SpCoinOnChainProcessor:</b>
-                  </p>
-                  <p className="ml-[20px]">
-                    Creates the deployed ethers contract instance and groups direct contract modules under short names: <code>erc20</code>, <code>read</code>, <code>write</code>, <code>admin</code>, and <code>util</code>. Legacy short names such as <code>add</code>, <code>delete</code>, <code>rewards</code>, and <code>staking</code> remain available for compatibility.
-                  </p>
-                  <p>
-                    <b>SpCoinOffChainProcessor:</b>
-                  </p>
-                  <p className="ml-[20px]">
-                    Coordinates higher-level workflows that use on-chain modules underneath, such as tree deletion.
-                  </p>
-                </div>
-              )}
-
-              <h2 className={`${h2Class} !mt-0 ml-5 !text-[#f87171]`}>
-                API Modules
-              </h2>
               {moduleSections.map((module) => (
                 <ApiModuleSection key={module.name} module={module} />
               ))}

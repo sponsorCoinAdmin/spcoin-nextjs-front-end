@@ -328,7 +328,7 @@ export default function WhitePaper() {
             role="button"
             aria-expanded={showOverview}
           >
-            Sponsor Coin API Library Overview
+            Sponsor Coin API Access Library Overview
           </h2>
 
           {showOverview && (
@@ -380,7 +380,7 @@ export default function WhitePaper() {
                 role="button"
                 aria-expanded={showArchitecture}
               >
-                Access Architecture {disclosure(showArchitecture)}
+                Sponsor Coin Access Architecture {disclosure(showArchitecture)}
               </h2>
               {showArchitecture && (
                 <div className="ml-10">
