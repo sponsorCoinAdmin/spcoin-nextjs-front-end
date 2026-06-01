@@ -2275,6 +2275,14 @@ export async function POST(request: NextRequest) {
                 access.read as unknown as { getAccountRoles: (accountKey: string) => Promise<unknown> }
               ).getAccountRoles(findParam('Account Key'));
               break;
+            case 'getRoles':
+              if (typeof (access.read as Record<string, unknown>).getRoles !== 'function') {
+                throw new Error('getRoles is not available on the current SpCoin read access path.');
+              }
+              stepResult = await (
+                access.read as unknown as { getRoles: (accountKey: string) => Promise<unknown> }
+              ).getRoles(findParam('Account Key'));
+              break;
             case 'isSponsor':
               if (typeof (access.read as Record<string, unknown>).isSponsor !== 'function') {
                 throw new Error('isSponsor is not available on the current SpCoin read access path.');

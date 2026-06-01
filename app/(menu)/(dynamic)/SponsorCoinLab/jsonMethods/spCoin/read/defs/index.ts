@@ -21,6 +21,7 @@ import getSummaryRecord from './getSummaryRecord';
 import getAccountRewardUpdateTimestamps from './getAccountRewardUpdateTimestamps';
 import getAccountRoleSummary from './getAccountRoleSummary';
 import getAccountRoles from './getAccountRoles';
+import getRoles from './getRoles';
 import getAccountStakingRewards from './getAccountStakingRewards';
 import estimateOffChainTotalRewards from './estimateOffChainTotalRewards';
 import estimateOffChainSponsorRewards from './estimateOffChainSponsorRewards';
@@ -101,6 +102,7 @@ export const SPCOIN_READ_METHOD_DEFS = {
   getAccountRewardUpdateTimestamps,
   getAccountRoleSummary,
   getAccountRoles,
+  getRoles,
   isSponsor,
   isRecipient,
   isAgent,

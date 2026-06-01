@@ -158,6 +158,31 @@ function resolveLiftedPendingRewardsPayloadPath(payload: unknown, payloadPath: s
   return readPathValue(payload, storedPath) === undefined ? payloadPath : storedPath;
 }
 
+function resolveWritablePendingRewardsPath(payload: unknown, candidatePath: string[]) {
+  if (candidatePath.length === 0) return candidatePath;
+  const hasObjectParentAt = (path: string[]) => {
+    const parentPath = path.slice(0, -1);
+    const parentNode = readPathValue(payload, parentPath);
+    return Boolean(parentNode && typeof parentNode === 'object' && !Array.isArray(parentNode));
+  };
+  if (hasObjectParentAt(candidatePath)) return candidatePath;
+  const pendingRewardsIndex = candidatePath.findIndex((segment) => segment === 'pendingRewards');
+  if (pendingRewardsIndex < 1) return candidatePath;
+  if (candidatePath[pendingRewardsIndex - 1] === 'totalSpCoins') {
+    const unliftedPath = [
+      ...candidatePath.slice(0, pendingRewardsIndex - 1),
+      ...candidatePath.slice(pendingRewardsIndex),
+    ];
+    return hasObjectParentAt(unliftedPath) ? unliftedPath : candidatePath;
+  }
+  const liftedPath = [
+    ...candidatePath.slice(0, pendingRewardsIndex),
+    'totalSpCoins',
+    ...candidatePath.slice(pendingRewardsIndex),
+  ];
+  return hasObjectParentAt(liftedPath) ? liftedPath : candidatePath;
+}
+
 function replaceDisplayBlocks(
   blocks: string[],
   nextPayloadByBlockIndex: Map<number, string>,
@@ -197,6 +222,27 @@ function describeRewardsByAccountMap(map: PendingRewardsByAccount | null | undef
       ].join(' ');
     })
     .join(' | ') || 'none';
+}
+
+function describeTraceNode(value: unknown): string {
+  const record = asRecord(value);
+  const result = asRecord(record?.result);
+  const source = result ?? record;
+  if (!record && !result) return 'none';
+  return [
+    `keys=${record ? Object.keys(record).join(',') : 'none'}`,
+    `resultKeys=${result ? Object.keys(result).join(',') : 'none'}`,
+    `call=${String(asRecord(record?.call)?.method ?? '')}`,
+    `role=${String(source?.role ?? record?.role ?? '')}`,
+    `roles=${String(source?.roles ?? record?.roles ?? '')}`,
+    `isSponsor=${String(source?.isSponsor ?? record?.isSponsor ?? '')}`,
+    `pendingRewards=${String(source?.pendingRewards ?? '')}`,
+    `pendingTotalRewards=${String(source?.pendingTotalRewards ?? '')}`,
+    `pendingSponsorRewards=${String(source?.pendingSponsorRewards ?? '')}`,
+    `claimed=${String(source?.totalRewardsClaimed ?? source?.claimedAmount ?? '')}`,
+    `allRoles=${String(Boolean(asRecord(source?.__pendingRewardsAllRoles) ?? asRecord(record?.__pendingRewardsAllRoles)))}`,
+    `byAccount=${String(Boolean(asRecord(source?.__pendingRewardsByAccount) ?? asRecord(record?.__pendingRewardsByAccount)))}`,
+  ].join(' ');
 }
 
 interface AccountRecordMirrorScan {
@@ -633,8 +679,9 @@ export function usePendingRewardsInlineExpansion({
         const storedPayloadPath = resolveLiftedPendingRewardsPayloadPath(payload, payloadPath);
         const targetNode = readDisplayPathValue(payload, payloadPath) ?? readPathValue(payload, storedPayloadPath);
         const targetPath = resolveTargetPath(targetNode, storedPayloadPath);
+        const writableTargetPath = resolveWritablePendingRewardsPath(payload, targetPath);
         const actionNode = readPathValue(payload, targetPath) ?? readPathValue(payload, payloadPath);
-        const targetLeaf = targetPath.at(-1);
+        const targetLeaf = writableTargetPath.at(-1);
         const isPendingRewardsMethodLeaf =
           typeof targetLeaf === 'string' &&
           (PENDING_REWARDS_ESTIMATE_METHODS.has(targetLeaf) || PENDING_REWARDS_CLAIM_METHODS.has(targetLeaf));
@@ -643,6 +690,10 @@ export function usePendingRewardsInlineExpansion({
           Boolean(click.method) &&
           isPendingRewardsMethodLeaf &&
           Boolean(readPendingRewardsAmount(targetNode) ?? readPendingRewardsAmount(targetNodeResult));
+        const isPendingRewardsMethodClickTarget =
+          Boolean(click.method) &&
+          isPendingRewardsMethodLeaf &&
+          click.method === targetLeaf;
         const pendingRewardsRecord = isPendingRewardsMethodLeaf
           ? asRecord(readPathValue(payload, targetPath.slice(0, -1)))
           : null;
@@ -651,9 +702,10 @@ export function usePendingRewardsInlineExpansion({
             ? PENDING_REWARDS_CLAIM_TO_ESTIMATE_METHOD[click.method]
             : null;
         const pairedEstimatePath = pairedEstimateMethod && isPendingRewardsMethodLeaf
-          ? [...targetPath.slice(0, -1), pairedEstimateMethod]
+          ? [...writableTargetPath.slice(0, -1), pairedEstimateMethod]
           : [];
-        const pairedEstimateNode = pairedEstimatePath.length > 0 ? readPathValue(payload, pairedEstimatePath) : undefined;
+        const writablePairedEstimatePath = resolveWritablePendingRewardsPath(payload, pairedEstimatePath);
+        const pairedEstimateNode = writablePairedEstimatePath.length > 0 ? readPathValue(payload, writablePairedEstimatePath) : undefined;
         const shouldRefreshPairedEstimate = Boolean(
           click.action === 'claim' &&
             pairedEstimateMethod &&
@@ -662,13 +714,13 @@ export function usePendingRewardsInlineExpansion({
         );
 
         appendLog(
-          `[PENDING_REWARDS_TRACE] paired-estimate decision action=${click.action} claimMethod=${String(click.method ?? '')} target=${targetPath.join('.')} pairedMethod=${String(pairedEstimateMethod ?? '')} pairedPath=${pairedEstimatePath.join('.')} pairedExists=${String(pairedEstimateNode !== undefined)} shouldRefresh=${String(shouldRefreshPairedEstimate)}`,
+          `[PENDING_REWARDS_TRACE] paired-estimate decision action=${click.action} claimMethod=${String(click.method ?? '')} target=${writableTargetPath.join('.')} pairedMethod=${String(pairedEstimateMethod ?? '')} pairedPath=${writablePairedEstimatePath.join('.')} pairedExists=${String(pairedEstimateNode !== undefined)} shouldRefresh=${String(shouldRefreshPairedEstimate)}`,
         );
         const fallbackActionNode = pendingRewardsRecord
           ? pendingRewardsRecord[click.action] ?? pendingRewardsRecord.estimate ?? pendingRewardsRecord.claim
           : null;
         appendLog(
-          `[PENDING_REWARDS_TRACE] candidate target=${targetPath.join('.')} leaf=${String(targetLeaf ?? '')} method=${String(click.method ?? '')} action=${click.action} rerun=${String(isRerunnablePendingRewardsMethod)} lazy=${String(hasLazyPendingRewardsAction(actionNode) || hasLazyPendingRewardsMethod(actionNode))}`,
+          `[PENDING_REWARDS_TRACE] candidate target=${writableTargetPath.join('.')} leaf=${String(targetLeaf ?? '')} method=${String(click.method ?? '')} action=${click.action} rerun=${String(isRerunnablePendingRewardsMethod)} lazy=${String(hasLazyPendingRewardsAction(actionNode) || hasLazyPendingRewardsMethod(actionNode))}`,
         );
         if (
           !hasLazyPendingRewardsAction(actionNode) &&
@@ -676,9 +728,10 @@ export function usePendingRewardsInlineExpansion({
           !hasLazyPendingRewardsAction(fallbackActionNode) &&
           !hasLazyPendingRewardsMethod(fallbackActionNode) &&
           !hasPendingRewardsRefreshAction(targetNode) &&
+          !isPendingRewardsMethodClickTarget &&
           !isRerunnablePendingRewardsMethod
         ) {
-          appendLog(`[PENDING_REWARDS_TRACE] candidate skip no-action target=${targetPath.join('.')}`);
+          appendLog(`[PENDING_REWARDS_TRACE] candidate skip no-action target=${writableTargetPath.join('.')}`);
           continue;
         }
 
@@ -694,7 +747,7 @@ export function usePendingRewardsInlineExpansion({
                   ? click.method
                   : 'estimateOffChainTotalRewards';
             appendLog(
-              `[PENDING_REWARDS_TRACE] run estimate method=${selectedEstimateMethod} account=${normalizedAccount} target=${targetPath.join('.')}`,
+              `[PENDING_REWARDS_TRACE] run estimate method=${selectedEstimateMethod} account=${normalizedAccount} target=${writableTargetPath.join('.')}`,
             );
             if (mode === 'hardhat') {
               const serverResult = await runServerBackedTreeSpCoinMethod({
@@ -736,7 +789,7 @@ export function usePendingRewardsInlineExpansion({
                 ? click.method
                 : 'claimOnChainTotalRewards';
             appendLog(
-              `[PENDING_REWARDS_TRACE] run claim method=${selectedClaimMethod} account=${normalizedAccount} target=${targetPath.join('.')}`,
+              `[PENDING_REWARDS_TRACE] run claim method=${selectedClaimMethod} account=${normalizedAccount} target=${writableTargetPath.join('.')}`,
             );
             const claimSender = selectedHardhatAddress?.trim() ? selectedHardhatAddress : normalizedAccount;
             const updateResult =
@@ -832,6 +885,9 @@ export function usePendingRewardsInlineExpansion({
             __forceExpanded: true,
             __showEmptyFields: true,
           };
+          appendLog(
+            `[PENDING_REWARDS_TRACE] step expanded-node method=${expandedCallMethod} pendingResult=(${describeTraceNode(pendingResult)}) expandedNode=(${describeTraceNode(expandedNode)}) metaKeys=${Object.keys(asRecord(expandedMeta) ?? {}).join(',') || 'none'}`,
+          );
 
           let pairedEstimateExpandedNode: Record<string, unknown> | null = null;
           let pairedEstimatePendingResult: unknown | null = null;
@@ -861,10 +917,11 @@ export function usePendingRewardsInlineExpansion({
           const pendingRewardsRefreshAtMs = Date.now() + PENDING_REWARDS_INLINE_REFRESH_MS;
           const pendingRewardsPath =
             targetLeaf === 'estimate' || targetLeaf === 'claim' || isPendingRewardsMethodLeaf
-              ? targetPath.slice(0, -1)
+              ? writableTargetPath.slice(0, -1)
               : targetLeaf === 'pendingRewards'
-                ? targetPath
+                ? writableTargetPath
                 : [];
+          const writablePendingRewardsPath = resolveWritablePendingRewardsPath(payload, pendingRewardsPath);
           const pendingRewardsByAccountBeforePairedWrite =
             readPendingRewardsByAccount(expandedNode) ??
             readPendingRewardsByAccount(pendingResult) ??
@@ -878,11 +935,11 @@ export function usePendingRewardsInlineExpansion({
             targetLeaf === 'pendingRewards';
           const payloadWithExpandedNode =
             isPendingRewardsMethodLeaf
-              ? writePathValue(payload, targetPath, expandedNode)
+              ? writePathValue(payload, writableTargetPath, expandedNode)
               : targetLeaf === 'estimate' || targetLeaf === 'claim'
                 ? writePathValue(
                     payload,
-                    targetPath,
+                    writableTargetPath,
                     buildLazyPendingRewardsMethod(
                       normalizedAccount,
                       click.action === 'claim' ? 'claimOnChainTotalRewards' : 'estimateOffChainTotalRewards',
@@ -892,20 +949,20 @@ export function usePendingRewardsInlineExpansion({
                   ? payload
                   : writePathValue(payload, targetPath, expandedNode);
           const payloadWithRefreshedPairedEstimate =
-            pairedEstimateExpandedNode && pairedEstimatePath.length > 0
+            pairedEstimateExpandedNode && writablePairedEstimatePath.length > 0
               ? (() => {
                   appendLog(
-                    `[PENDING_REWARDS_TRACE] paired-estimate write path=${pairedEstimatePath.join('.')} method=${String(pairedEstimateMethod ?? '')}`,
+                    `[PENDING_REWARDS_TRACE] paired-estimate write path=${writablePairedEstimatePath.join('.')} method=${String(pairedEstimateMethod ?? '')}`,
                   );
-                  return writePathValue(payloadWithExpandedNode, pairedEstimatePath, pairedEstimateExpandedNode);
+                  return writePathValue(payloadWithExpandedNode, writablePairedEstimatePath, pairedEstimateExpandedNode);
                 })()
               : (() => {
                   appendLog(
-                    `[PENDING_REWARDS_TRACE] paired-estimate write skipped hasNode=${String(Boolean(pairedEstimateExpandedNode))} path=${pairedEstimatePath.join('.')}`,
+                    `[PENDING_REWARDS_TRACE] paired-estimate write skipped hasNode=${String(Boolean(pairedEstimateExpandedNode))} path=${writablePairedEstimatePath.join('.')}`,
                   );
                   return payloadWithExpandedNode;
                 })();
-          const existingPendingRewardsNode = readPathValue(payloadWithRefreshedPairedEstimate, pendingRewardsPath);
+          const existingPendingRewardsNode = readPathValue(payloadWithRefreshedPairedEstimate, writablePendingRewardsPath);
           const summaryLoadedMethod =
             pairedEstimateExpandedNode && pairedEstimateMethod
               ? pairedEstimateMethod
@@ -913,13 +970,13 @@ export function usePendingRewardsInlineExpansion({
           const summaryLoadedNode = pairedEstimateExpandedNode ?? expandedNode;
           const payloadWithPendingRewardsSummary =
             pendingRewardsAmount !== null &&
-            pendingRewardsPath.length > 0 &&
+            writablePendingRewardsPath.length > 0 &&
             existingPendingRewardsNode &&
             typeof existingPendingRewardsNode === 'object' &&
             !Array.isArray(existingPendingRewardsNode)
               ? writePathValue(
                   payloadWithRefreshedPairedEstimate,
-                  pendingRewardsPath,
+                  writablePendingRewardsPath,
                   mergePendingRewardsSummaryNode(
                     existingPendingRewardsNode,
                     summaryPendingResult,
@@ -931,6 +988,13 @@ export function usePendingRewardsInlineExpansion({
                   ),
                 )
               : payloadWithRefreshedPairedEstimate;
+          const mergedPendingRewardsNode = writablePendingRewardsPath.length > 0
+            ? readPathValue(payloadWithPendingRewardsSummary, writablePendingRewardsPath)
+            : undefined;
+          const mergedTargetNode = readPathValue(payloadWithPendingRewardsSummary, writableTargetPath);
+          appendLog(
+            `[PENDING_REWARDS_TRACE] step merge-summary method=${expandedCallMethod} amount=${String(pendingRewardsAmount ?? 'null')} pendingPath=${writablePendingRewardsPath.join('.')} existing=(${describeTraceNode(existingPendingRewardsNode)}) mergedPending=(${describeTraceNode(mergedPendingRewardsNode)}) mergedTarget=(${describeTraceNode(mergedTargetNode)})`,
+          );
           const pendingRewardsByAccount =
             readPendingRewardsByAccount(expandedNode) ??
             readPendingRewardsByAccount(summaryPendingResult) ??
@@ -1001,13 +1065,20 @@ export function usePendingRewardsInlineExpansion({
             );
           }
           const payloadAfterFinalPairedEstimateWrite = payloadWithPropagatedClaimedRewards;
-          if (pairedEstimateMethod && pairedEstimatePath.length > 0) {
-            const finalPairedEstimateNode = readPathValue(payloadAfterFinalPairedEstimateWrite, pairedEstimatePath);
+          if (pairedEstimateMethod && writablePairedEstimatePath.length > 0) {
+            const finalPairedEstimateNode = readPathValue(payloadAfterFinalPairedEstimateWrite, writablePairedEstimatePath);
             appendLog(
-              `[PENDING_REWARDS_TRACE] paired-estimate final path=${pairedEstimatePath.join('.')} method=${pairedEstimateMethod} amount=${String(readPendingRewardsAmount(finalPairedEstimateNode) ?? 'null')}`,
+              `[PENDING_REWARDS_TRACE] paired-estimate final path=${writablePairedEstimatePath.join('.')} method=${pairedEstimateMethod} amount=${String(readPendingRewardsAmount(finalPairedEstimateNode) ?? 'null')}`,
             );
           }
           const nextRootPayload = normalizeExecutionPayload(payloadAfterFinalPairedEstimateWrite) as Record<string, unknown>;
+          const finalPendingRewardsNode = writablePendingRewardsPath.length > 0
+            ? readPathValue(nextRootPayload, writablePendingRewardsPath)
+            : undefined;
+          const finalTargetNode = readPathValue(nextRootPayload, writableTargetPath);
+          appendLog(
+            `[PENDING_REWARDS_TRACE] step final-payload method=${expandedCallMethod} finalPending=(${describeTraceNode(finalPendingRewardsNode)}) finalTarget=(${describeTraceNode(finalTargetNode)})`,
+          );
           applyPendingRewardsAccountRecordUpdates({
             blockEntries,
             primaryBlockIndex: entry.index,
@@ -1030,7 +1101,7 @@ export function usePendingRewardsInlineExpansion({
           setStatus(`Loaded ${actionLabel} for ${normalizedAccount}.`);
           appendLog(`Inline ${actionLabel} loaded for ${normalizedAccount}`);
           appendLog(
-            `[PENDING_REWARDS_TRACE] expand success method=${String(expandedCallMethod)} account=${normalizedAccount} target=${targetPath.join('.')} pendingPath=${pendingRewardsPath.join('.')}`,
+            `[PENDING_REWARDS_TRACE] expand success method=${String(expandedCallMethod)} account=${normalizedAccount} target=${writableTargetPath.join('.')} pendingPath=${writablePendingRewardsPath.join('.')}`,
           );
           return 'expanded';
         } catch (error) {
@@ -1038,7 +1109,7 @@ export function usePendingRewardsInlineExpansion({
           setStatus(`Unable to load pending rewards for ${normalizedAccount}.`);
           appendLog(`Inline pending rewards ${click.action} failed for ${normalizedAccount}: ${message}`);
           appendLog(
-            `[PENDING_REWARDS_TRACE] expand error action=${click.action} method=${String(click.method ?? '')} account=${normalizedAccount} target=${targetPath.join('.')} message=${message}`,
+            `[PENDING_REWARDS_TRACE] expand error action=${click.action} method=${String(click.method ?? '')} account=${normalizedAccount} target=${writableTargetPath.join('.')} message=${message}`,
           );
           return 'handled';
         }

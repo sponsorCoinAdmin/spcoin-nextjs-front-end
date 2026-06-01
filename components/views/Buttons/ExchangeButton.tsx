@@ -120,7 +120,7 @@ const ExchangeButton = ({ isLoadingPrice }: Props) => {
         return 'Sell Token Required';
       case BUTTON_TYPE.BUY_TOKEN_REQUIRED:
       case BUTTON_TYPE.BUY_ERROR_REQUIRED:
-        return 'Buy Token Required';
+        return 'Buy Token(s) Required';
       default:
         return 'Button Type Undefined';
     }

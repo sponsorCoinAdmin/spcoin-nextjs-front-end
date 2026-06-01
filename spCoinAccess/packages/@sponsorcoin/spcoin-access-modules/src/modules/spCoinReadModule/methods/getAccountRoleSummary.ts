@@ -12,6 +12,19 @@ function normalizeAccountKey(value) {
     return String(value ?? '').trim().toLowerCase();
 }
 
+export const NA = 0;
+export const SPONSOR = 1;
+export const RECIPIENT = 2;
+export const AGENT = 4;
+
+function buildRolesMask(isSponsor, isRecipient, isAgent) {
+    return (
+        (isSponsor ? SPONSOR : NA) |
+        (isRecipient ? RECIPIENT : NA) |
+        (isAgent ? AGENT : NA)
+    );
+}
+
 function buildAccountRoleSummary(accountKey, accountRecord, source) {
     const normalizedAccountKey = normalizeAccountKey(accountRecord?.accountKey || accountKey);
     const sponsorCount = listLength(accountRecord?.sponsorKeys);
@@ -23,11 +36,7 @@ function buildAccountRoleSummary(accountKey, accountRecord, source) {
     const isSponsor = recipientCount > 0;
     const isRecipient = sponsorCount > 0 || agentCount > 0 || recipientRateTransactionSetCount > 0;
     const isAgent = parentRecipientCount > 0 || agentRateTransactionSetCount > 0;
-    const roles = [
-        isSponsor ? 'sponsor' : '',
-        isRecipient ? 'recipient' : '',
-        isAgent ? 'agent' : '',
-    ].filter(Boolean);
+    const roles = buildRolesMask(isSponsor, isRecipient, isAgent);
 
     return {
         TYPE: '--ACCOUNT_ROLE_SUMMARY--',
@@ -91,6 +100,13 @@ export async function getAccountRoleSummary(context, _accountKey) {
 export async function getAccountRoles(context, _accountKey) {
     const summary = await getCachedAccountRoleSummary(context, _accountKey);
     return summary.roles;
+}
+
+export async function getRoles(context, _accountKey) {
+    const isSponsorRole = await isSponsor(context, _accountKey);
+    const isRecipientRole = await isRecipient(context, _accountKey);
+    const isAgentRole = await isAgent(context, _accountKey);
+    return buildRolesMask(isSponsorRole, isRecipientRole, isAgentRole);
 }
 
 export async function isSponsor(context, _accountKey) {

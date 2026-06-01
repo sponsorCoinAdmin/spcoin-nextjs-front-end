@@ -1,6 +1,8 @@
 // @ts-nocheck
 import { buildHandler, getDynamicMethod } from '../../readMethodRuntime';
 
+const SPONSOR = 1;
+
 async function getMasterAccountKeys(context) {
   const method =
     getDynamicMethod(context.read, 'getMasterAccountKeys')
@@ -31,9 +33,13 @@ async function isSponsorKey(context, accountKey) {
     || getDynamicMethod(context.contract, 'isSponsor');
   if (method) return Boolean(await method(accountKey));
 
-  const rolesMethod = getDynamicMethod(context.read, 'getAccountRoles');
+  const rolesMethod =
+    getDynamicMethod(context.read, 'getRoles') ||
+    getDynamicMethod(context.read, 'getAccountRoles');
   if (rolesMethod) {
     const roles = await rolesMethod(accountKey);
+    if (typeof roles === 'number') return (roles & SPONSOR) === SPONSOR;
+    if (/^[0-7]$/.test(String(roles ?? '').trim())) return (Number(roles) & SPONSOR) === SPONSOR;
     return Array.isArray(roles) && roles.map((role) => String(role).toLowerCase()).includes('sponsor');
   }
 
@@ -46,7 +52,7 @@ async function isSponsorKey(context, accountKey) {
       || (Array.isArray(agentKeys) && agentKeys.length > 0);
   }
 
-  throw new Error('SpCoin read method getSponsorKeys requires isSponsor(), getAccountRoles(), or getAccountRecord().');
+  throw new Error('SpCoin read method getSponsorKeys requires isSponsor(), getRoles(), getAccountRoles(), or getAccountRecord().');
 }
 
 const handler = buildHandler('getSponsorKeys', async (context) => {

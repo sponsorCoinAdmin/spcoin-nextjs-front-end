@@ -1,3 +1,11 @@
+import {
+  resolveSpCoinAccountRoleLabel,
+  resolveSpCoinAccountRoles,
+} from '@/lib/spCoinLab/accountRoles';
+
+type PendingRewardsRole = 'Sponsor' | 'Recipient' | 'Agent';
+type PendingRewardsDisplayRole = PendingRewardsRole | 'NA';
+
 export function toPendingRewardsBigInt(value: unknown): bigint {
   const normalized = String(value ?? '0').replace(/,/g, '').trim().match(/^-?\d+/)?.[0] ?? '';
   if (!normalized) return 0n;
@@ -79,20 +87,57 @@ function formatTimestampDifference(secondsValue: unknown): string {
   return parts.length > 0 ? parts.join(', ') : 'Secs: 0';
 }
 
-function getPendingRewardsRole(record: Record<string, unknown>): 'Sponsor' | 'Recipient' | 'Agent' {
+function hasOwn(record: Record<string, unknown>, key: string) {
+  return Object.prototype.hasOwnProperty.call(record, key);
+}
+
+function hasRoleShape(record: Record<string, unknown>) {
+  return hasOwn(record, 'role') ||
+    hasOwn(record, 'Role') ||
+    hasOwn(record, 'isSponsor') ||
+    hasOwn(record, 'isRecipient') ||
+    hasOwn(record, 'isRecipiet') ||
+    hasOwn(record, 'isAgent');
+}
+
+function normalizeExplicitRole(value: unknown): PendingRewardsDisplayRole | '' {
+  const roleText = String(value ?? '').trim();
+  if (!roleText) return '';
+  if (/^(na|n\/a|none)$/i.test(roleText)) return 'NA';
+  if (/sponsor/i.test(roleText)) return 'Sponsor';
+  if (/recipient/i.test(roleText)) return 'Recipient';
+  if (/agent/i.test(roleText)) return 'Agent';
+  return '';
+}
+
+function getPendingRewardsRole(record: Record<string, unknown>): PendingRewardsDisplayRole {
+  const explicitRole = normalizeExplicitRole(record.role ?? record.Role);
+  if (explicitRole) return explicitRole;
+  if (hasRoleShape(record)) {
+    const roleLabel = resolveSpCoinAccountRoleLabel(record);
+    if (roleLabel) return resolveSpCoinAccountRoles(record)[0] ?? 'NA';
+    return 'NA';
+  }
   const type = String(record.TYPE ?? '').toUpperCase();
   if (type.includes('SPONSOR')) return 'Sponsor';
   if (type.includes('RECIPIENT')) return 'Recipient';
   if (type.includes('AGENT')) return 'Agent';
+  const hasOnlySponsorReward = hasOwn(record, 'pendingSponsorRewards') && !hasOwn(record, 'pendingRecipientRewards') && !hasOwn(record, 'pendingAgentRewards');
+  const hasOnlyRecipientReward = !hasOwn(record, 'pendingSponsorRewards') && hasOwn(record, 'pendingRecipientRewards') && !hasOwn(record, 'pendingAgentRewards');
+  const hasOnlyAgentReward = !hasOwn(record, 'pendingSponsorRewards') && !hasOwn(record, 'pendingRecipientRewards') && hasOwn(record, 'pendingAgentRewards');
+  if (hasOnlySponsorReward) return 'Sponsor';
+  if (hasOnlyRecipientReward) return 'Recipient';
+  if (hasOnlyAgentReward) return 'Agent';
   if (toPendingRewardsBigInt(record.pendingSponsorRewards) > 0n) return 'Sponsor';
   if (toPendingRewardsBigInt(record.pendingRecipientRewards) > 0n) return 'Recipient';
   if (toPendingRewardsBigInt(record.pendingAgentRewards) > 0n) return 'Agent';
   if (toPendingRewardsBigInt(record.lastSponsorUpdate) > 0n || toPendingRewardsBigInt(record.lastSponsorUpdateTimeStamp) > 0n) return 'Sponsor';
   if (toPendingRewardsBigInt(record.lastRecipientUpdate) > 0n || toPendingRewardsBigInt(record.lastRecipientUpdateTimeStamp) > 0n) return 'Recipient';
-  return 'Agent';
+  if (toPendingRewardsBigInt(record.lastAgentUpdate) > 0n || toPendingRewardsBigInt(record.lastAgentUpdateTimeStamp) > 0n) return 'Agent';
+  return 'NA';
 }
 
-function getRoleLastUpdateValue(record: Record<string, unknown>, role: 'Sponsor' | 'Recipient' | 'Agent') {
+function getRoleLastUpdateValue(record: Record<string, unknown>, role: PendingRewardsDisplayRole) {
   if (record.lastUpDateTimeStamp !== undefined) return record.lastUpDateTimeStamp;
   if (role === 'Sponsor') {
     return record.sponsorBucketLastUpdateTimeStamp ?? record.lastSponsorUpdate ?? record.lastSponsorUpdateTimeStamp ?? record.lastSponsorTimeStamp ?? '0';
@@ -100,22 +145,26 @@ function getRoleLastUpdateValue(record: Record<string, unknown>, role: 'Sponsor'
   if (role === 'Recipient') {
     return record.recipientBucketLastUpdateTimeStamp ?? record.lastRecipientUpdate ?? record.lastRecipientUpdateTimeStamp ?? record.lastRecipientTimeStamp ?? '0';
   }
-  return record.agentBucketLastUpdateTimeStamp ?? record.lastAgentUpdate ?? record.lastAgentUpdateTimeStamp ?? record.lastAgentTimeStamp ?? '0';
+  if (role === 'Agent') {
+    return record.agentBucketLastUpdateTimeStamp ?? record.lastAgentUpdate ?? record.lastAgentUpdateTimeStamp ?? record.lastAgentTimeStamp ?? '0';
+  }
+  return '0';
 }
 
 function getVisiblePendingRewardComponents(
-  role: 'Sponsor' | 'Recipient' | 'Agent',
+  role: PendingRewardsDisplayRole,
   pendingSponsorRewards: string,
   pendingRecipientRewards: string,
   pendingAgentRewards: string,
 ): Record<string, string> {
   if (role === 'Sponsor') return { pendingSponsorRewards };
   if (role === 'Recipient') return { pendingRecipientRewards };
-  return { pendingAgentRewards };
+  if (role === 'Agent') return { pendingAgentRewards };
+  return {};
 }
 
 function buildPendingRecipientDistributions(
-  role: 'Sponsor' | 'Recipient' | 'Agent',
+  role: PendingRewardsDisplayRole,
   allRoles: unknown,
   rewardsByAccount: unknown,
   accountKey: unknown,
@@ -357,6 +406,7 @@ export function normalizePendingRewardsDisplayResult(value: unknown): unknown {
       ...restRecord,
       TYPE: restRecord.TYPE ?? '--ACCOUNT_PENDING_REWARDS--',
       accountKey: String(restRecord.accountKey ?? ''),
+      role,
       calculatedFormatted,
       ...visiblePendingRewardComponents,
       pendingTotalRewards: buildPendingTotalRewardsDisplay(
@@ -371,6 +421,7 @@ export function normalizePendingRewardsDisplayResult(value: unknown): unknown {
   const normalizedResult: Record<string, unknown> = {
     TYPE: restRecord.TYPE ?? '--ACCOUNT_PENDING_REWARDS--',
     accountKey: String(restRecord.accountKey ?? ''),
+    role,
     steakedBalance: formatTokenQuantityValue(
       steakedBalance ??
         steakedQuantity ??
@@ -378,7 +429,9 @@ export function normalizePendingRewardsDisplayResult(value: unknown): unknown {
           ? record.sponsorBucketStakedQuantity
           : role === 'Recipient'
             ? record.recipientBucketStakedQuantity
-            : record.agentBucketStakedQuantity),
+            : role === 'Agent'
+              ? record.agentBucketStakedQuantity
+              : undefined),
     ),
     lastUpDateTimeStamp: formatSecondsValue(lastUpDateTimeStamp),
     lastUpDateFormatted: calculateFormattedDT(lastUpDateTimeStamp),

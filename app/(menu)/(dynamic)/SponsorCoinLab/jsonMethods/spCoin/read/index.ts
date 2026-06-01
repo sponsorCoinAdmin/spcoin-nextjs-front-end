@@ -44,6 +44,7 @@ export type SpCoinReadMethod =
   | 'getAccountRewardUpdateTimestamps'
   | 'getAccountRoleSummary'
   | 'getAccountRoles'
+  | 'getRoles'
   | 'isSponsor'
   | 'isRecipient'
   | 'isAgent'

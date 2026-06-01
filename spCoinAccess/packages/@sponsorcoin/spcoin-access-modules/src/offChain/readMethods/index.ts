@@ -2,6 +2,7 @@
 import compareSpCoinContractSize from './compareSpCoinContractSize';
 import getAccountRoleSummary from './getAccountRoleSummary';
 import getAccountRoles from './getAccountRoles';
+import getRoles from './getRoles';
 import getAccountRecordShallow from './getAccountRecordShallow';
 import getAccountStakingRewards from './getAccountStakingRewards';
 import {
@@ -21,6 +22,7 @@ export const OFFCHAIN_READ_METHOD_HANDLERS = {
     compareSpCoinContractSize,
     getAccountRoleSummary,
     getAccountRoles,
+    getRoles,
     getAccountRecordShallow,
     getAccountStakingRewards,
     estimateOffChainTotalRewards,

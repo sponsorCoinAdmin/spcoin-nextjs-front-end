@@ -15,6 +15,7 @@ import { SpCoinStakingModule as LocalSpCoinStakingModule } from '../../../../../
 import {
   getAccountRoleSummary as localGetAccountRoleSummary,
   getAccountRoles as localGetAccountRoles,
+  getRoles as localGetRoles,
   isAgent as localIsAgent,
   isRecipient as localIsRecipient,
   isSponsor as localIsSponsor,
@@ -183,7 +184,8 @@ export type SpCoinReadAccess = {
   getAccountRecord: (_accountKey: string, options?: unknown) => Promise<AccountStruct>;
   getAccountRecordShallow?: (_accountKey: string, options?: unknown) => Promise<AccountStruct>;
   getAccountRoleSummary?: (_accountKey: string) => Promise<unknown>;
-  getAccountRoles?: (_accountKey: string) => Promise<string[]>;
+  getAccountRoles?: (_accountKey: string) => Promise<number>;
+  getRoles?: (_accountKey: string) => Promise<number>;
   isSponsor?: (_accountKey: string) => Promise<boolean>;
   isRecipient?: (_accountKey: string) => Promise<boolean>;
   isAgent?: (_accountKey: string) => Promise<boolean>;
@@ -820,6 +822,9 @@ function attachAccountRoleReadMethods(read: SpCoinReadAccess) {
   }
   if (typeof readHost.getAccountRoles !== 'function') {
     readHost.getAccountRoles = (accountKey: string) => localGetAccountRoles(read, accountKey);
+  }
+  if (typeof readHost.getRoles !== 'function') {
+    readHost.getRoles = (accountKey: string) => localGetRoles(read, accountKey);
   }
   if (typeof readHost.isSponsor !== 'function') {
     readHost.isSponsor = (accountKey: string) => localIsSponsor(read, accountKey);

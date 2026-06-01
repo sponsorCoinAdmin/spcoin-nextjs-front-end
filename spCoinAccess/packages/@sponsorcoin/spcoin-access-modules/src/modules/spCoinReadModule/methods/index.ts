@@ -18,6 +18,7 @@ export { getAccountRecord, getAccountRecordShallow } from './getAccountRecord';
 export {
     getAccountRoleSummary,
     getAccountRoles,
+    getRoles,
     isSponsor,
     isRecipient,
     isAgent,

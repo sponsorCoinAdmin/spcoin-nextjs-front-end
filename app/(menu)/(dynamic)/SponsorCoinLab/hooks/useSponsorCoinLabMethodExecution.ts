@@ -43,6 +43,7 @@ import {
 import { normalizeExecutionPayload } from './executionPayload';
 import {
   buildLazyPendingRewardsMethod,
+  normalizePendingRewardsRoleDisplayTree,
   normalizePendingRewardsEstimateResult,
   PENDING_REWARDS_INLINE_REFRESH_MS,
 } from './pendingRewardsTreeUtils';
@@ -260,7 +261,13 @@ function buildExecutionResultPayload(
   }
 
   const { onChainCalls: _oc, ...metaWithoutOnChainCalls } = (meta ?? {}) as Record<string, unknown>;
-  return { call, result, ...(warning ? { warning } : {}), meta: metaWithoutOnChainCalls, ...(_oc ? { onChainCalls: _oc as MethodExecutionMeta['onChainCalls'] } : {}) };
+  return {
+    call,
+    result: normalizePendingRewardsRoleDisplayTree(result),
+    ...(warning ? { warning } : {}),
+    meta: metaWithoutOnChainCalls,
+    ...(_oc ? { onChainCalls: _oc as MethodExecutionMeta['onChainCalls'] } : {}),
+  };
 }
 
 export function useSponsorCoinLabMethodExecution({
@@ -750,7 +757,7 @@ export function useSponsorCoinLabMethodExecution({
           }
           return {
             call,
-            result: sanitizedSerializationResult,
+            result: normalizePendingRewardsRoleDisplayTree(sanitizedSerializationResult),
             ...(extractedWarning ? { warning: extractedWarning } : {}),
             meta: finalizeMeta(),
           };

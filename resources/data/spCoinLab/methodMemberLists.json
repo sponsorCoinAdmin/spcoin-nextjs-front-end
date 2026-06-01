@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-29T06:24:48.072Z",
+  "updatedAt": "2026-06-01T03:27:48.048Z",
   "lists": {
     "serialization": {
       "Basic": {
@@ -155,6 +155,7 @@
         "getAccountRewardUpdateTimestamps": false,
         "getAccountRoleSummary": true,
         "getAccountRoles": true,
+        "getRoles": true,
         "isSponsor": true,
         "isRecipient": true,
         "isAgent": true,
@@ -246,6 +247,7 @@
         "getAccountRewardUpdateTimestamps": false,
         "getAccountRoleSummary": true,
         "getAccountRoles": true,
+        "getRoles": true,
         "isSponsor": true,
         "isRecipient": true,
         "isAgent": true,
@@ -337,6 +339,7 @@
         "getAccountRewardUpdateTimestamps": true,
         "getAccountRoleSummary": false,
         "getAccountRoles": false,
+        "getRoles": false,
         "isSponsor": false,
         "isRecipient": false,
         "isAgent": false,
@@ -428,6 +431,7 @@
         "getAccountRewardUpdateTimestamps": false,
         "getAccountRoleSummary": false,
         "getAccountRoles": false,
+        "getRoles": false,
         "isSponsor": false,
         "isRecipient": false,
         "isAgent": false,
@@ -519,6 +523,7 @@
         "getAccountRewardUpdateTimestamps": false,
         "getAccountRoleSummary": false,
         "getAccountRoles": false,
+        "getRoles": false,
         "isSponsor": false,
         "isRecipient": false,
         "isAgent": false,
@@ -892,6 +897,7 @@
     "spCoinRead:getAccountRewardUpdateTimestamps": "spcoin_rread",
     "spCoinRead:getAccountRoleSummary": "spcoin_rread",
     "spCoinRead:getAccountRoles": "spcoin_rread",
+    "spCoinRead:getRoles": "spcoin_rread",
     "spCoinRead:isSponsor": "spcoin_rread",
     "spCoinRead:isRecipient": "spcoin_rread",
     "spCoinRead:isAgent": "spcoin_rread",

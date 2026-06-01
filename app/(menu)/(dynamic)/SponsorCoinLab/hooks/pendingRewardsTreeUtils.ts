@@ -1,6 +1,7 @@
 import { normalizePendingRewardsDisplayResult } from '@/lib/spCoinLab/pendingRewards';
 import {
   resolveSpCoinAccountRoleLabel,
+  resolveSpCoinAccountRoles,
   resolveSpCoinMethodRole,
 } from '@/lib/spCoinLab/accountRoles';
 
@@ -49,6 +50,26 @@ const PENDING_REWARDS_METHOD_KEYS = [
   'estimateOffChainAgentRewards',
   'claimOnChainAgentRewards',
 ] as const;
+
+type PendingRewardsRoleName = 'Sponsor' | 'Recipient' | 'Agent';
+
+type PendingRewardsRoleState = {
+  known: boolean;
+  role: string;
+  roles: PendingRewardsRoleName[];
+  isSponsor: boolean;
+  isRecipient: boolean;
+  isAgent: boolean;
+};
+
+const PENDING_REWARDS_METHOD_ROLE: Record<string, PendingRewardsRoleName> = {
+  estimateOffChainSponsorRewards: 'Sponsor',
+  claimOnChainSponsorRewards: 'Sponsor',
+  estimateOffChainRecipientRewards: 'Recipient',
+  claimOnChainRecipientRewards: 'Recipient',
+  estimateOffChainAgentRewards: 'Agent',
+  claimOnChainAgentRewards: 'Agent',
+};
 
 const ACCOUNT_REWARD_UPDATE_SKIP_KEYS = new Set(['call', 'meta', 'onChainCalls']);
 
@@ -157,6 +178,210 @@ export function asRecord(value: unknown): Record<string, unknown> | null {
     : null;
 }
 
+function hasOwn(record: Record<string, unknown>, key: string) {
+  return Object.prototype.hasOwnProperty.call(record, key);
+}
+
+function toRoleCount(value: unknown) {
+  const normalized = String(value ?? '0').replace(/,/g, '').trim();
+  if (!normalized || !/^\d+$/.test(normalized)) return 0;
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function listOrCountLength(listValue: unknown, countValue: unknown) {
+  if (countValue !== undefined && countValue !== null && String(countValue).trim() !== '') {
+    return toRoleCount(countValue);
+  }
+  return Array.isArray(listValue) ? listValue.length : 0;
+}
+
+function normalizeExplicitRoleNames(value: unknown): PendingRewardsRoleName[] | null {
+  const roleText = String(value ?? '').trim();
+  if (!roleText) return null;
+  if (/^(na|n\/a|none)$/i.test(roleText)) return [];
+  const roles: PendingRewardsRoleName[] = [];
+  if (/sponsor/i.test(roleText)) roles.push('Sponsor');
+  if (/recipient/i.test(roleText)) roles.push('Recipient');
+  if (/agent/i.test(roleText)) roles.push('Agent');
+  return roles.length > 0 ? roles : null;
+}
+
+function buildRoleState(roles: PendingRewardsRoleName[]): PendingRewardsRoleState {
+  const uniqueRoles = Array.from(new Set(roles));
+  return {
+    known: true,
+    role: uniqueRoles.length > 0 ? uniqueRoles.join(' / ') : 'NA',
+    roles: uniqueRoles,
+    isSponsor: uniqueRoles.includes('Sponsor'),
+    isRecipient: uniqueRoles.includes('Recipient'),
+    isAgent: uniqueRoles.includes('Agent'),
+  };
+}
+
+function readRoleStateFromRecord(record: Record<string, unknown> | null): PendingRewardsRoleState | null {
+  if (!record) return null;
+
+  const explicitRoles = normalizeExplicitRoleNames(record.role ?? record.Role);
+  if (explicitRoles) return buildRoleState(explicitRoles);
+
+  if (hasOwn(record, 'roles')) {
+    return buildRoleState(resolveSpCoinAccountRoles(record) as PendingRewardsRoleName[]);
+  }
+
+  const hasRoleFlags =
+    hasOwn(record, 'isSponsor') ||
+    hasOwn(record, 'isRecipient') ||
+    hasOwn(record, 'isRecipiet') ||
+    hasOwn(record, 'isAgent');
+  if (hasRoleFlags) {
+    return buildRoleState(resolveSpCoinAccountRoles(record) as PendingRewardsRoleName[]);
+  }
+
+  const hasRoleCounts =
+    hasOwn(record, 'sponsorCount') ||
+    hasOwn(record, 'recipientCount') ||
+    hasOwn(record, 'agentCount') ||
+    hasOwn(record, 'parentRecipientCount') ||
+    hasOwn(record, 'recipientRateTransactionSetCount') ||
+    hasOwn(record, 'agentRateTransactionSetCount') ||
+    hasOwn(record, 'sponsorKeys') ||
+    hasOwn(record, 'recipientKeys') ||
+    hasOwn(record, 'agentKeys') ||
+    hasOwn(record, 'parentRecipientKeys') ||
+    hasOwn(record, 'recipientRateTransactionSetKeys') ||
+    hasOwn(record, 'agentRateTransactionSetKeys');
+  if (!hasRoleCounts) return null;
+
+  const sponsorCount = listOrCountLength(record.sponsorKeys, record.sponsorCount);
+  const recipientCount = listOrCountLength(record.recipientKeys, record.recipientCount);
+  const agentCount = listOrCountLength(record.agentKeys, record.agentCount);
+  const parentRecipientCount = listOrCountLength(record.parentRecipientKeys, record.parentRecipientCount);
+  const recipientRateTransactionSetCount = listOrCountLength(
+    record.recipientRateTransactionSetKeys,
+    record.recipientRateTransactionSetCount,
+  );
+  const agentRateTransactionSetCount = listOrCountLength(
+    record.agentRateTransactionSetKeys,
+    record.agentRateTransactionSetCount,
+  );
+  const roles: PendingRewardsRoleName[] = [];
+  if (recipientCount > 0) roles.push('Sponsor');
+  if (sponsorCount > 0 || agentCount > 0 || recipientRateTransactionSetCount > 0) roles.push('Recipient');
+  if (parentRecipientCount > 0 || agentRateTransactionSetCount > 0) roles.push('Agent');
+  return buildRoleState(roles);
+}
+
+function readRoleStateFromValue(value: unknown): PendingRewardsRoleState | null {
+  const record = asRecord(value);
+  if (!record) return null;
+  return (
+    readRoleStateFromRecord(record) ??
+    readRoleStateFromRecord(asRecord(record.result)) ??
+    readRoleStateFromRecord(asRecord(record.pendingRewards)) ??
+    readRoleStateFromRecord(asRecord(asRecord(record.totalSpCoins)?.pendingRewards))
+  );
+}
+
+function readFirstRoleState(...values: unknown[]) {
+  for (const value of values) {
+    const roleState = readRoleStateFromValue(value);
+    if (roleState) return roleState;
+  }
+  return null;
+}
+
+function getMethodRole(method: unknown) {
+  return PENDING_REWARDS_METHOD_ROLE[String(method ?? '').trim()] ?? null;
+}
+
+function shouldIncludePendingRewardsMethod(method: unknown, roleState: PendingRewardsRoleState | null) {
+  const methodRole = getMethodRole(method);
+  if (!methodRole || !roleState?.known) return true;
+  if (methodRole === 'Sponsor') return roleState.isSponsor;
+  if (methodRole === 'Recipient') return roleState.isRecipient;
+  return roleState.isAgent;
+}
+
+function withRoleStateFields<T extends Record<string, unknown>>(record: T, roleState: PendingRewardsRoleState | null): T {
+  if (!roleState?.known) return record;
+  return {
+    ...record,
+    role: roleState.role,
+    isSponsor: roleState.isSponsor,
+    isRecipient: roleState.isRecipient,
+    isAgent: roleState.isAgent,
+  };
+}
+
+function prunePendingRewardsRoleMethods<T extends Record<string, unknown>>(record: T, roleState: PendingRewardsRoleState | null): T {
+  if (!roleState?.known) return record;
+  const next = { ...record };
+  for (const method of Object.keys(PENDING_REWARDS_METHOD_ROLE)) {
+    if (!shouldIncludePendingRewardsMethod(method, roleState)) delete next[method];
+  }
+  return withRoleStateFields(next, roleState) as T;
+}
+
+function isPendingRewardsBranch(record: Record<string, unknown>) {
+  return record.TYPE === '--PENDING_REWARDS--' ||
+    PENDING_REWARDS_METHOD_KEYS.some((method) => hasOwn(record, method)) ||
+    hasOwn(record, 'pendingRewards') ||
+    hasOwn(record, 'pendingSponsorRewards') ||
+    hasOwn(record, 'pendingRecipientRewards') ||
+    hasOwn(record, 'pendingAgentRewards');
+}
+
+function isAccountRoleRecord(record: Record<string, unknown>) {
+  return record.TYPE === '--ACCOUNT--' ||
+    Boolean(record.totalSpCoins && typeof record.totalSpCoins === 'object' && !Array.isArray(record.totalSpCoins)) ||
+    Boolean(readRoleStateFromRecord(record));
+}
+
+export function normalizePendingRewardsRoleDisplayTree(value: unknown, inheritedRoleState: PendingRewardsRoleState | null = null): unknown {
+  if (!value || typeof value !== 'object') return value;
+  if (Array.isArray(value)) {
+    return value.map((entry) => normalizePendingRewardsRoleDisplayTree(entry, inheritedRoleState));
+  }
+
+  const record = value as Record<string, unknown>;
+  const rawOwnRoleState = readRoleStateFromRecord(record);
+  const ownRoleState =
+    record.TYPE === '--PENDING_REWARDS--' &&
+    rawOwnRoleState?.known &&
+    rawOwnRoleState.roles.length === 0 &&
+    inheritedRoleState?.known &&
+    inheritedRoleState.roles.length > 0
+      ? inheritedRoleState
+      : rawOwnRoleState;
+  const roleState = ownRoleState ?? inheritedRoleState;
+  const isAccount = isAccountRoleRecord(record);
+  const nextRoleState = isAccount ? (ownRoleState ?? readRoleStateFromRecord(record) ?? inheritedRoleState) : roleState;
+  const next: Record<string, unknown> = {};
+
+  for (const [key, entry] of Object.entries(record)) {
+    if (
+      nextRoleState?.known &&
+      PENDING_REWARDS_METHOD_ROLE[key] &&
+      !shouldIncludePendingRewardsMethod(key, nextRoleState)
+    ) {
+      continue;
+    }
+    const childRoleState =
+      key === 'pendingRewards' || key === 'totalSpCoins' || isPendingRewardsBranch(record)
+        ? nextRoleState
+        : roleState;
+    next[key] = normalizePendingRewardsRoleDisplayTree(entry, childRoleState);
+  }
+
+  const normalized = isPendingRewardsBranch(next)
+    ? prunePendingRewardsRoleMethods(next, nextRoleState)
+    : isAccount && nextRoleState?.known
+      ? withRoleStateFields(next, nextRoleState)
+      : next;
+  return normalized;
+}
+
 export function isLoadedPendingRewardsMethodNode(value: unknown) {
   const record = asRecord(value);
   return Boolean(record && (record.call || record.meta || record.result || record.onChainCalls));
@@ -212,6 +437,8 @@ export function getPendingRewardsRoleForMethod(method: unknown): string {
 function getPendingRewardsRoleForValue(value: unknown): string {
   const record = asRecord(value);
   if (!record) return '';
+  const roleState = readRoleStateFromRecord(record) ?? readRoleStateFromRecord(asRecord(record.result));
+  if (roleState?.known) return roleState.role;
   const accountRoleLabel =
     resolveSpCoinAccountRoleLabel(record) ||
     resolveSpCoinAccountRoleLabel(record.result);
@@ -220,7 +447,10 @@ function getPendingRewardsRoleForValue(value: unknown): string {
 }
 
 export function withPendingRewardsRoleMeta(meta: unknown, method: unknown, value?: unknown) {
-  const role = getPendingRewardsRoleForValue(value) || getPendingRewardsRoleForMethod(method);
+  const valueRoleState = readRoleStateFromValue(value);
+  const role = valueRoleState?.known
+    ? valueRoleState.role
+    : getPendingRewardsRoleForValue(value) || getPendingRewardsRoleForMethod(method);
   const metaRecord = asRecord(meta);
   if (!role) return metaRecord ?? meta;
   return {
@@ -622,9 +852,14 @@ export function mergePendingRewardsByAccountIntoTree(
   if (next.TYPE === '--PENDING_REWARDS--') {
     const accountKey = readPendingRewardsBranchAccountKey(next);
     const accountRewards = getAccountRewardsFromMap(rewardsByAccount, accountKey);
+    const roleState = readFirstRoleState(next, accountRewards);
     if (accountRewards) {
       for (const method of PENDING_REWARDS_ESTIMATE_METHODS) {
         const methodName = String(method);
+        if (!shouldIncludePendingRewardsMethod(methodName, roleState)) {
+          delete next[methodName];
+          continue;
+        }
         const amount = readPendingRewardsAllRolesAmount(accountRewards, methodName);
         if (amount === null) continue;
         next[methodName] = mergeMethodResultAmount(
@@ -645,6 +880,7 @@ export function mergePendingRewardsByAccountIntoTree(
       next.__pendingRewardsRefreshAtMs = refreshAtMs;
       next.__pendingRewardsRefreshActionName = 'estimate';
     }
+    return prunePendingRewardsRoleMethods(next, roleState);
   }
   return next;
 }
@@ -713,9 +949,14 @@ export function updateAccountClaimedRewards(
   if (next.TYPE === '--PENDING_REWARDS--') {
     const accountKey = readPendingRewardsBranchAccountKey(next) || accountContextKey;
     const accountClaims = getAccountRewardsFromMap(claimedRewardsByAccount, accountKey);
+    const roleState = readFirstRoleState(next, accountClaims);
     if (accountClaims) {
       for (const method of PENDING_REWARDS_CLAIM_METHODS) {
         const methodName = String(method);
+        if (!shouldIncludePendingRewardsMethod(methodName, roleState)) {
+          delete next[methodName];
+          continue;
+        }
         const amount = readClaimedRewardsAllRolesAmount(accountClaims, methodName);
         if (amount === null) continue;
         next[methodName] = mergeClaimMethodResultAmount(
@@ -727,6 +968,7 @@ export function updateAccountClaimedRewards(
         );
       }
     }
+    return prunePendingRewardsRoleMethods(next, roleState);
   }
   return next;
 }
@@ -758,6 +1000,7 @@ export function updateAccountPendingEstimate(
   if (next.TYPE === '--PENDING_REWARDS--') {
     const accountKey = readPendingRewardsBranchAccountKey(next) || accountContextKey;
     const accountClaims = getAccountRewardsFromMap(claimedRewardsByAccount, accountKey);
+    const roleState = readFirstRoleState(next, accountClaims);
     if (accountClaims) {
       next.pendingRewards = '0';
       const estimateMethodsByClaimField = [
@@ -766,6 +1009,10 @@ export function updateAccountPendingEstimate(
         ['claimedAgentRewards', 'estimateOffChainAgentRewards'],
       ] as const;
       for (const [claimField, estimateMethod] of estimateMethodsByClaimField) {
+        if (!shouldIncludePendingRewardsMethod(estimateMethod, roleState)) {
+          delete next[estimateMethod];
+          continue;
+        }
         const amount = accountClaims[claimField];
         if (normalizeRewardAmountText(amount) && normalizeRewardAmountText(amount) !== '0') {
           next[estimateMethod] = mergeMethodResultAmount(
@@ -788,6 +1035,7 @@ export function updateAccountPendingEstimate(
         );
       }
     }
+    return prunePendingRewardsRoleMethods(next, roleState);
   }
   return next;
 }
@@ -948,9 +1196,14 @@ export function mergePendingRewardsBranchForAccountRefresh(
     readPendingRewardsAllRoles(loadedMethodNode) ??
     readPendingRewardsAllRoles(existing) ??
     readPendingRewardsAllRoles(refreshed);
+  const roleState = readFirstRoleState(loadedMethodNode, existing, refreshed);
 
   for (const method of PENDING_REWARDS_METHOD_KEYS) {
     const methodName = String(method);
+    if (!shouldIncludePendingRewardsMethod(methodName, roleState)) {
+      delete next[method];
+      continue;
+    }
     const candidate =
       loadedMethod === methodName
         ? loadedMethodNode
@@ -977,7 +1230,7 @@ export function mergePendingRewardsBranchForAccountRefresh(
   next.__pendingRewardsRefreshAction = true;
   next.__pendingRewardsRefreshAtMs = refreshAtMs;
   next.__pendingRewardsRefreshActionName = action;
-  return next;
+  return prunePendingRewardsRoleMethods(next, roleState);
 }
 
 export function mergePendingRewardsSummaryNode(
@@ -1002,6 +1255,12 @@ export function mergePendingRewardsSummaryNode(
     readPendingRewardsAllRoles(result) ??
     readPendingRewardsAllRoles(pendingResult) ??
     readPendingRewardsAllRoles(existing);
+  const loadedMethodRole = resolveSpCoinMethodRole(loadedMethod);
+  const foundRoleState = readFirstRoleState(loadedMethodNode, result, pendingResult, existing);
+  const roleState =
+    loadedMethodRole && (!foundRoleState?.known || foundRoleState.roles.length === 0)
+      ? buildRoleState([loadedMethodRole as PendingRewardsRoleName])
+      : foundRoleState;
   const getMethodNode = (method: string) =>
     PENDING_REWARDS_ESTIMATE_METHODS.has(method)
       ? mergeMethodResultAmount(
@@ -1025,7 +1284,7 @@ export function mergePendingRewardsSummaryNode(
         : existing[method] ?? buildLazyPendingRewardsMethod(normalizedAccount, method);
   const suppressMethodInjection = existing.__suppressPendingRewardsMethodInjection === true;
   if (suppressMethodInjection) {
-    return {
+    return prunePendingRewardsRoleMethods({
       ...existing,
       TYPE: existing.TYPE ?? '--PENDING_REWARDS--',
       [loadedMethod]: loadedMethodNode,
@@ -1035,7 +1294,7 @@ export function mergePendingRewardsSummaryNode(
       __pendingRewardsRefreshAtMs: refreshAtMs,
       __pendingRewardsRefreshActionName: action,
       __suppressPendingRewardsMethodInjection: true,
-    };
+    }, roleState);
   }
   const estimateOffChainTotalRewards = getMethodNode('estimateOffChainTotalRewards');
   const claimOnChainTotalRewards = getMethodNode('claimOnChainTotalRewards');
@@ -1045,23 +1304,23 @@ export function mergePendingRewardsSummaryNode(
   const claimOnChainRecipientRewards = getMethodNode('claimOnChainRecipientRewards');
   const estimateOffChainAgentRewards = getMethodNode('estimateOffChainAgentRewards');
   const claimOnChainAgentRewards = getMethodNode('claimOnChainAgentRewards');
-  return {
+  return prunePendingRewardsRoleMethods({
     ...existing,
     TYPE: existing.TYPE ?? '--PENDING_REWARDS--',
-    estimateOffChainTotalRewards,
-    claimOnChainTotalRewards,
-    estimateOffChainSponsorRewards,
-    claimOnChainSponsorRewards,
-    estimateOffChainRecipientRewards,
-    claimOnChainRecipientRewards,
-    estimateOffChainAgentRewards,
-    claimOnChainAgentRewards,
+    ...(shouldIncludePendingRewardsMethod('estimateOffChainTotalRewards', roleState) ? { estimateOffChainTotalRewards } : {}),
+    ...(shouldIncludePendingRewardsMethod('claimOnChainTotalRewards', roleState) ? { claimOnChainTotalRewards } : {}),
+    ...(shouldIncludePendingRewardsMethod('estimateOffChainSponsorRewards', roleState) ? { estimateOffChainSponsorRewards } : {}),
+    ...(shouldIncludePendingRewardsMethod('claimOnChainSponsorRewards', roleState) ? { claimOnChainSponsorRewards } : {}),
+    ...(shouldIncludePendingRewardsMethod('estimateOffChainRecipientRewards', roleState) ? { estimateOffChainRecipientRewards } : {}),
+    ...(shouldIncludePendingRewardsMethod('claimOnChainRecipientRewards', roleState) ? { claimOnChainRecipientRewards } : {}),
+    ...(shouldIncludePendingRewardsMethod('estimateOffChainAgentRewards', roleState) ? { estimateOffChainAgentRewards } : {}),
+    ...(shouldIncludePendingRewardsMethod('claimOnChainAgentRewards', roleState) ? { claimOnChainAgentRewards } : {}),
     meta: withPendingRewardsRoleMeta(existing.meta, loadedMethod, loadedMethodNode),
     pendingRewards: String(result.pendingRewards ?? existing.pendingRewards ?? '0'),
     __pendingRewardsRefreshAction: true,
     __pendingRewardsRefreshAtMs: refreshAtMs,
     __pendingRewardsRefreshActionName: action,
-  };
+  }, roleState);
 }
 
 export function toRewardsBigInt(value: unknown) {
