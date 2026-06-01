@@ -1039,6 +1039,12 @@ function isPendingRewardsContainerSummaryField(parent: any, childKey: string): b
   ].includes(childKey);
 }
 
+function isPendingRewardsClaimMetaSourceField(parent: any, childKey: string): boolean {
+  if (!isPendingRewardsRecord(parent)) return false;
+  if (!(CLAIM_RESULT_META_KEYS as readonly string[]).includes(childKey)) return false;
+  return Boolean(getPendingRewardsClaimMethodKey(parent));
+}
+
 function isAccountRoleCountDisplayField(parent: any, childKey: string): boolean {
   if (
     !parent ||
@@ -1338,6 +1344,259 @@ const ACCOUNT_UPDATE_TIMESTAMP_KEYS = [
   'lastAgentUpdateTimeStamp',
 ];
 
+const ACCOUNT_RESULT_META_KEYS = [
+  ...ACCOUNT_UPDATE_TIMESTAMP_KEYS,
+  'totalFeePaidEth',
+  'totalFeePaidWei',
+  'totalGasPriceWei',
+  'totalGasUsed',
+] as const;
+
+const CLAIM_RESULT_META_KEYS = [
+  'totalFeePaidEth',
+  'totalFeePaidWei',
+  'totalGasPriceWei',
+  'totalGasUsed',
+] as const;
+
+function isResultFeeDisplayField(label: string | undefined, path: string | undefined, childKey: string): boolean {
+  if (!(CLAIM_RESULT_META_KEYS as readonly string[]).includes(childKey)) return false;
+  return label === 'result' || String(path || '').endsWith('.result');
+}
+
+function getResultFeeKeysFromEntry(entry: [string, any] | undefined): string[] {
+  if (!entry || entry[0] !== 'result') return [];
+  const value = entry[1];
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return [];
+  return CLAIM_RESULT_META_KEYS.filter((key) =>
+    Object.prototype.hasOwnProperty.call(value as Record<string, unknown>, key),
+  );
+}
+
+function getPendingRewardsClaimMethodKey(record: unknown): string {
+  if (!record || typeof record !== 'object' || Array.isArray(record)) return '';
+  const source = record as Record<string, unknown>;
+  for (const methodName of PENDING_REWARDS_CLAIM_METHOD_NAMES) {
+    const methodNode = source[methodName];
+    if (!methodNode || typeof methodNode !== 'object' || Array.isArray(methodNode)) continue;
+    const methodRecord = methodNode as Record<string, unknown>;
+    if (
+      methodRecord.call !== undefined ||
+      methodRecord.result !== undefined ||
+      methodRecord.meta !== undefined ||
+      methodRecord.__pendingRewardsRefreshMethodName !== undefined ||
+      methodRecord.__pendingRewardsRefreshActionName !== undefined
+    ) {
+      return methodName;
+    }
+  }
+  return '';
+}
+
+function withPendingRewardsClaimMetaFields(
+  value: unknown,
+  methodName: string,
+  parentRecord: unknown,
+): unknown {
+  if (!PENDING_REWARDS_CLAIM_METHOD_NAMES.has(methodName)) return value;
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
+  if (!parentRecord || typeof parentRecord !== 'object' || Array.isArray(parentRecord)) return value;
+
+  const parent = parentRecord as Record<string, unknown>;
+  const nextValue = { ...(value as Record<string, unknown>) };
+  const nextMeta =
+    nextValue.meta && typeof nextValue.meta === 'object' && !Array.isArray(nextValue.meta)
+      ? { ...(nextValue.meta as Record<string, unknown>) }
+      : {};
+
+  let changed = false;
+  for (const metaKey of CLAIM_RESULT_META_KEYS) {
+    if (!Object.prototype.hasOwnProperty.call(parent, metaKey)) continue;
+    if (!Object.prototype.hasOwnProperty.call(nextMeta, metaKey)) {
+      nextMeta[metaKey] = parent[metaKey];
+      changed = true;
+    }
+  }
+
+  if (!changed) return value;
+  nextValue.meta = nextMeta;
+  return nextValue;
+}
+
+function moveResultClaimMetaFields(
+  resultValue: Record<string, unknown>,
+  onTrace?: (line: string) => void,
+  path?: string,
+): Record<string, unknown> | null {
+  const totalSpCoins =
+    resultValue.totalSpCoins &&
+    typeof resultValue.totalSpCoins === 'object' &&
+    !Array.isArray(resultValue.totalSpCoins)
+      ? (resultValue.totalSpCoins as Record<string, unknown>)
+      : null;
+  if (!totalSpCoins) return null;
+
+  const pendingRewards =
+    totalSpCoins.pendingRewards &&
+    typeof totalSpCoins.pendingRewards === 'object' &&
+    !Array.isArray(totalSpCoins.pendingRewards)
+      ? (totalSpCoins.pendingRewards as Record<string, unknown>)
+      : null;
+  if (!pendingRewards) return null;
+
+  const claimMethodKey = getPendingRewardsClaimMethodKey(pendingRewards);
+  if (!claimMethodKey) return null;
+
+  const claimNode =
+    pendingRewards[claimMethodKey] &&
+    typeof pendingRewards[claimMethodKey] === 'object' &&
+    !Array.isArray(pendingRewards[claimMethodKey])
+      ? (pendingRewards[claimMethodKey] as Record<string, unknown>)
+      : null;
+  if (!claimNode) return null;
+
+  const nextMeta =
+    claimNode.meta && typeof claimNode.meta === 'object' && !Array.isArray(claimNode.meta)
+      ? { ...(claimNode.meta as Record<string, unknown>) }
+      : {};
+
+  const movedKeys: string[] = [];
+  for (const metaKey of CLAIM_RESULT_META_KEYS) {
+    if (!Object.prototype.hasOwnProperty.call(resultValue, metaKey)) continue;
+    if (!Object.prototype.hasOwnProperty.call(nextMeta, metaKey)) {
+      nextMeta[metaKey] = resultValue[metaKey];
+    }
+    movedKeys.push(metaKey);
+  }
+
+  if (movedKeys.length === 0) return null;
+
+  const nextClaimNode = { ...claimNode, meta: nextMeta };
+  const nextPendingRewards = { ...pendingRewards, [claimMethodKey]: nextClaimNode };
+  const nextTotalSpCoins = { ...totalSpCoins, pendingRewards: nextPendingRewards };
+  const nextResult: Record<string, unknown> = { ...resultValue, totalSpCoins: nextTotalSpCoins };
+
+  for (const metaKey of movedKeys) {
+    delete nextResult[metaKey];
+  }
+
+  onTrace?.(
+    `[JSON_INSPECTOR_TRACE] remap claim meta path=${String(path || '')} method=${claimMethodKey} movedFromResult=${movedKeys.join(',')}`,
+  );
+  return nextResult;
+}
+
+function moveStepResultMetaFields(
+  entries: Array<[string, any]>,
+): Array<[string, any]> {
+  const metaIndex = entries.findIndex(([key]) => key === 'meta');
+  const resultIndex = entries.findIndex(([key]) => key === 'result');
+  if (resultIndex < 0) return entries;
+
+  const resultValue = entries[resultIndex]?.[1];
+  if (!resultValue || typeof resultValue !== 'object' || Array.isArray(resultValue)) return entries;
+
+  const nextResult = { ...(resultValue as Record<string, unknown>) };
+  const nextMeta =
+    metaIndex >= 0 && entries[metaIndex]?.[1] && typeof entries[metaIndex][1] === 'object' && !Array.isArray(entries[metaIndex][1])
+      ? { ...(entries[metaIndex][1] as Record<string, unknown>) }
+      : {};
+
+  let moved = false;
+  for (const key of ACCOUNT_RESULT_META_KEYS) {
+    if (!Object.prototype.hasOwnProperty.call(nextResult, key)) continue;
+    if (!Object.prototype.hasOwnProperty.call(nextMeta, key)) {
+      nextMeta[key] = nextResult[key];
+    }
+    delete nextResult[key];
+    moved = true;
+  }
+
+  if (!moved) return entries;
+
+  const nextEntries = [...entries];
+  if (metaIndex >= 0) {
+    nextEntries[metaIndex] = ['meta', nextMeta];
+  } else {
+    nextEntries.unshift(['meta', nextMeta]);
+  }
+  nextEntries[resultIndex >= 0 ? resultIndex + (metaIndex < 0 ? 1 : 0) : resultIndex] = ['result', nextResult];
+  return nextEntries;
+}
+
+function remapStepMetaResultBranchValue(
+  parent: unknown,
+  key: string,
+  value: unknown,
+  onTrace?: (line: string) => void,
+  path?: string,
+): unknown {
+  if (!parent || typeof parent !== 'object' || Array.isArray(parent)) return value;
+  const parentRecord = parent as Record<string, unknown>;
+  const siblingResult =
+    parentRecord.result && typeof parentRecord.result === 'object' && !Array.isArray(parentRecord.result)
+      ? (parentRecord.result as Record<string, unknown>)
+      : null;
+
+  if (key === 'meta') {
+    if (!value || typeof value !== 'object' || Array.isArray(value) || !siblingResult) return value;
+    const nextMeta = { ...(value as Record<string, unknown>) };
+    let changed = false;
+    const movedKeys: string[] = [];
+    for (const metaKey of ACCOUNT_RESULT_META_KEYS) {
+      if (!Object.prototype.hasOwnProperty.call(siblingResult, metaKey)) continue;
+      if (!Object.prototype.hasOwnProperty.call(nextMeta, metaKey)) {
+        nextMeta[metaKey] = siblingResult[metaKey];
+        changed = true;
+        movedKeys.push(metaKey);
+      }
+    }
+    if (movedKeys.length > 0) {
+      onTrace?.(
+        `[JSON_INSPECTOR_TRACE] remap meta branch path=${String(path || '')} movedFromSiblingResult=${movedKeys.join(',')}`,
+      );
+    }
+    return changed ? nextMeta : value;
+  }
+
+  if (key === 'result') {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
+    const claimRemappedResult = moveResultClaimMetaFields(
+      value as Record<string, unknown>,
+      onTrace,
+      path,
+    );
+    const nextResult = claimRemappedResult
+      ? { ...claimRemappedResult }
+      : { ...(value as Record<string, unknown>) };
+    let changed = false;
+    const removedKeys: string[] = [];
+    for (const metaKey of ACCOUNT_RESULT_META_KEYS) {
+      if (!Object.prototype.hasOwnProperty.call(nextResult, metaKey)) continue;
+      delete nextResult[metaKey];
+      changed = true;
+      removedKeys.push(metaKey);
+    }
+    if (removedKeys.length > 0) {
+      onTrace?.(
+        `[JSON_INSPECTOR_TRACE] remap result branch path=${String(path || '')} removedToMeta=${removedKeys.join(',')}`,
+      );
+    }
+    return changed ? nextResult : value;
+  }
+
+  return value;
+}
+
+function remapPendingRewardsClaimBranchValue(
+  parent: unknown,
+  key: string,
+  value: unknown,
+): unknown {
+  if (!isPendingRewardsRecord(parent)) return value;
+  return withPendingRewardsClaimMetaFields(value, key, parent);
+}
+
 function hasAccountUpdateTimestampEntries(record: Record<string, unknown>): boolean {
   return ACCOUNT_UPDATE_TIMESTAMP_KEYS.some((key) => Object.prototype.hasOwnProperty.call(record, key));
 }
@@ -1346,7 +1605,7 @@ function insertAccountUpdateTimestampsInMeta(
   meta: Record<string, unknown>,
   accountRecord: Record<string, unknown>,
 ): Record<string, unknown> {
-  const timestampEntries = ACCOUNT_UPDATE_TIMESTAMP_KEYS
+  const timestampEntries = ACCOUNT_RESULT_META_KEYS
     .filter((key) => Object.prototype.hasOwnProperty.call(accountRecord, key))
     .map((key): [string, unknown] => [key, accountRecord[key]]);
   if (timestampEntries.length === 0) return meta;
@@ -1386,7 +1645,9 @@ function moveAccountUpdateTimestampsToMeta(value: any): any {
 
   const resultRecord = result as Record<string, unknown>;
   const resultWithoutUpdateTimestamps = Object.fromEntries(
-    Object.entries(resultRecord).filter(([key]) => !ACCOUNT_UPDATE_TIMESTAMP_KEYS.includes(key)),
+    Object.entries(resultRecord).filter(
+      ([key]) => !(ACCOUNT_RESULT_META_KEYS as readonly string[]).includes(key),
+    ),
   );
 
   return {
@@ -1521,7 +1782,16 @@ function normalizeOnChainTimingDisplayShape(value: any): any {
       ? record.totalOnChainMs
       : existingTotalRecord?.totalOnChainMs ??
         getDirectOnChainCallsMs(record) + getChildOnChainCallsMs(childOnChainCalls);
-  const { calls: _calls, childOnChainCalls: _childOnChainCalls, totalOnChainMs: _totalOnChainMs, ...rest } = record;
+  const {
+    calls: _calls,
+    childOnChainCalls: _childOnChainCalls,
+    totalOnChainMs: _totalOnChainMs,
+    totalFeePaidEth,
+    totalFeePaidWei,
+    totalGasPriceWei,
+    totalGasUsed,
+    ...rest
+  } = record;
   void _calls;
   void _childOnChainCalls;
   void _totalOnChainMs;
@@ -1531,6 +1801,10 @@ function normalizeOnChainTimingDisplayShape(value: any): any {
     totalOnChainMs: {
       ...(existingTotalRecord ?? {}),
       totalOnChainMs,
+      ...(totalFeePaidEth !== undefined ? { totalFeePaidEth } : {}),
+      ...(totalFeePaidWei !== undefined ? { totalFeePaidWei } : {}),
+      ...(totalGasPriceWei !== undefined ? { totalGasPriceWei } : {}),
+      ...(totalGasUsed !== undefined ? { totalGasUsed } : {}),
       ...buildOnChainCallBreakdownEntries(calls),
       ...(childOnChainCalls ? { childOnChainCalls } : {}),
     },
@@ -3096,6 +3370,8 @@ function getVisibleEntries(
             childKey === 'rewardFormulas' &&
             !String(path || '').endsWith('.getPendingRewards.meta')
           ) &&
+          !isResultFeeDisplayField(label, path, childKey) &&
+          !isPendingRewardsClaimMetaSourceField(displayValue, childKey) &&
           !isRoleBooleanDisplayField(childKey) &&
           !isPendingRewardsContainerSummaryField(displayValue, childKey) &&
           !isAccountRoleCountDisplayField(displayValue, childKey) &&
@@ -3189,6 +3465,8 @@ function getVisibleEntries(
         childKey === 'rewardFormulas' &&
         !String(path || '').endsWith('.getPendingRewards.meta')
       ) return false;
+      if (isResultFeeDisplayField(label, path, childKey)) return false;
+      if (isPendingRewardsClaimMetaSourceField(displayValue, childKey)) return false;
       if (isRoleBooleanDisplayField(childKey)) return false;
       if (isPendingRewardsContainerSummaryField(displayValue, childKey)) return false;
       if (isAccountRoleCountDisplayField(displayValue, childKey)) return false;
@@ -3796,7 +4074,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
       ? ''
       : inlineStepMethodDisplayName;
   const showStepAddressAfterMethod = Boolean(inlineStepMethodAddress && stepCallRecord && visibleInlineStepMethod);
-  const promotedStepEntries =
+  const promotedStepEntries = moveStepResultMetaFields(
     stepCallRecord && !Array.isArray(stepCallRecord)
       ? [
           ...(stepCallRecord.parameters !== undefined && !hideEntryKeys.includes('parameters')
@@ -3804,7 +4082,32 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
             : []),
           ...visibleEntries.filter(([key]) => key !== 'call'),
         ]
-      : visibleEntries;
+      : visibleEntries,
+  );
+  const rawResultFeeKeys = getResultFeeKeysFromEntry(
+    (stepCallRecord && !Array.isArray(stepCallRecord)
+      ? [
+          ...(stepCallRecord.parameters !== undefined && !hideEntryKeys.includes('parameters')
+            ? ([['parameters', stepCallRecord.parameters]] as Array<[string, any]>)
+            : []),
+          ...visibleEntries.filter(([key]) => key !== 'call'),
+        ]
+      : visibleEntries
+    ).find(([key]) => key === 'result'),
+  );
+  if (rawResultFeeKeys.length > 0) {
+    onTrace?.(
+      `[JSON_INSPECTOR_TRACE] step result fee keys before promotion path=${String(path || '')} label=${String(label || '')} keys=${rawResultFeeKeys.join(',')}`,
+    );
+  }
+  const promotedResultFeeKeys = getResultFeeKeysFromEntry(
+    promotedStepEntries.find(([key]) => key === 'result'),
+  );
+  if (promotedResultFeeKeys.length > 0) {
+    onTrace?.(
+      `[JSON_INSPECTOR_TRACE] step result fee keys after promotion path=${String(path || '')} label=${String(label || '')} keys=${promotedResultFeeKeys.join(',')}`,
+    );
+  }
   const beginScriptStepDrag = useCallback(
     (event: React.MouseEvent<HTMLElement>) => {
       if (!isDraggableScriptStep || !scriptStepDragState) return;
@@ -3845,6 +4148,11 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
 
   const renderValue = (value: any, key: string) => {
     const nextPath = getDisplayEntryPath(path ?? '', data, key, value);
+    const branchValue = remapPendingRewardsClaimBranchValue(
+      data,
+      key,
+      remapStepMetaResultBranchValue(data, key, value, onTrace, nextPath),
+    );
     if (
       key.trim().toLowerCase() === 'role' &&
       (label === 'rewardFormulas' ||
@@ -3906,26 +4214,26 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
       }
     }
 
-    if (value && typeof value === 'object') {
+    if (branchValue && typeof branchValue === 'object') {
       const forceRenderObject =
-        isTotalSpCoinsPendingRewards(data, key, value) ||
-        (key === 'totalSpCoins' && isTotalSpCoinsRecord(value)) ||
-        isPendingRewardsIncludedMethodNode(value);
+        isTotalSpCoinsPendingRewards(data, key, branchValue) ||
+        (key === 'totalSpCoins' && isTotalSpCoinsRecord(branchValue)) ||
+        isPendingRewardsIncludedMethodNode(branchValue);
       if (
         !forceRenderObject &&
         !forceShowEntryKeys.includes(key) &&
-        !hasVisibleDescendants(value, showAll, hiddenRules, showStructureType)
+        !hasVisibleDescendants(branchValue, showAll, hiddenRules, showStructureType)
       ) {
         return null;
       }
       const inspectorData =
         key === 'result' && pendingRewardsMethodResultSummaryDisplay
           ? withPendingRewardsResultRefreshMetadata(
-              value,
+              branchValue,
               pendingRewardsDisplayMethod,
               pendingRewardsMethodAccountValue,
             )
-          : value;
+          : branchValue;
       const nextPendingRewardsParentRecord =
         isPendingRewardsRecord(data) && PENDING_REWARDS_METHOD_NAMES.has(key)
           ? data
@@ -3971,7 +4279,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     );
     const scalarDisplayValue = formatDisplayScalar(
       getScalarFormattingKey(data, key),
-      value,
+      branchValue,
       formatTokenAmounts,
       tokenDecimals,
     );
@@ -3986,7 +4294,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
         isCompactRewardFormulaDisplayGroup(data));
     const scalarDelimiter = isRewardFormulaEntry ? '=' : ':';
     const scalarDelimiterText = scalarDelimiter === '=' ? ' = ' : ': ';
-    const rawStringValue = typeof value === 'string' ? value.trim() : '';
+    const rawStringValue = typeof branchValue === 'string' ? branchValue.trim() : '';
     const isClickableAddress = /^0x[0-9a-fA-F]{40}$/.test(rawStringValue);
     const isArrayIndexAddress = isClickableAddress && /^\d+$/.test(String(key || ''));
     return (

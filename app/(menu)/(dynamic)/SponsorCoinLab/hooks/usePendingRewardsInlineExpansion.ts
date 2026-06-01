@@ -57,6 +57,51 @@ const noop = () => undefined;
 
 type InlineExpansionResult = 'expanded' | 'handled' | 'unhandled';
 
+const CLAIM_RECEIPT_META_KEYS = [
+  'totalFeePaidEth',
+  'totalFeePaidWei',
+  'totalGasPriceWei',
+  'totalGasUsed',
+] as const;
+
+function moveClaimReceiptFieldsToTargetMeta(params: {
+  payload: Record<string, unknown>;
+  targetPath: string[];
+  method: string;
+  appendLog: (line: string) => void;
+}) {
+  const { payload, targetPath, method, appendLog } = params;
+  if (!PENDING_REWARDS_CLAIM_METHODS.has(method)) return payload;
+  if (targetPath.length === 0) return payload;
+
+  const rootResult = asRecord(payload.result);
+  const targetNode = asRecord(readPathValue(payload, targetPath));
+  if (!rootResult || !targetNode) return payload;
+
+  const nextMeta = asRecord(targetNode.meta) ? { ...(targetNode.meta as Record<string, unknown>) } : {};
+  const nextResult = { ...rootResult };
+  const movedKeys: string[] = [];
+
+  for (const fieldKey of CLAIM_RECEIPT_META_KEYS) {
+    if (!Object.prototype.hasOwnProperty.call(rootResult, fieldKey)) continue;
+    if (!Object.prototype.hasOwnProperty.call(nextMeta, fieldKey)) {
+      nextMeta[fieldKey] = rootResult[fieldKey];
+    }
+    delete nextResult[fieldKey];
+    movedKeys.push(fieldKey);
+  }
+
+  if (movedKeys.length === 0) return payload;
+
+  const nextTargetNode = { ...targetNode, meta: nextMeta };
+  const payloadWithTargetMeta = writePathValue(payload, targetPath, nextTargetNode) as Record<string, unknown>;
+  const payloadWithRootResult = writePathValue(payloadWithTargetMeta, ['result'], nextResult) as Record<string, unknown>;
+  appendLog(
+    `[PENDING_REWARDS_TRACE] claim meta move method=${method} target=${targetPath.join('.')} moved=${movedKeys.join(',')}`,
+  );
+  return payloadWithRootResult;
+}
+
 function mergeRewardsByAccountMaps(
   ...maps: (PendingRewardsByAccount | null | undefined)[]
 ): PendingRewardsByAccount | null {
@@ -1071,7 +1116,13 @@ export function usePendingRewardsInlineExpansion({
               `[PENDING_REWARDS_TRACE] paired-estimate final path=${writablePairedEstimatePath.join('.')} method=${pairedEstimateMethod} amount=${String(readPendingRewardsAmount(finalPairedEstimateNode) ?? 'null')}`,
             );
           }
-          const nextRootPayload = normalizeExecutionPayload(payloadAfterFinalPairedEstimateWrite) as Record<string, unknown>;
+          const normalizedRootPayload = normalizeExecutionPayload(payloadAfterFinalPairedEstimateWrite) as Record<string, unknown>;
+          const nextRootPayload = moveClaimReceiptFieldsToTargetMeta({
+            payload: normalizedRootPayload,
+            targetPath: writableTargetPath,
+            method: String(expandedCallMethod),
+            appendLog,
+          });
           const finalPendingRewardsNode = writablePendingRewardsPath.length > 0
             ? readPathValue(nextRootPayload, writablePendingRewardsPath)
             : undefined;
