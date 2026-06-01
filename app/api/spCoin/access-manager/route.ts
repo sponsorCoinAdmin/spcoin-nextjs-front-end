@@ -35,8 +35,12 @@ const DEPLOYMENT_RPC_HEALTH_TIMEOUT_MS = Number(process.env.SPCOIN_DEPLOYMENT_RP
 const DEPLOYMENT_TX_TIMEOUT_MS = Number(process.env.SPCOIN_DEPLOYMENT_TX_TIMEOUT_MS || 30 * 60 * 1000);
 
 function resolveSpCoinDeploymentAssetChainId(chainId: unknown): number {
-  const parsed = Number(chainId);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 31337;
+  const resolved = resolveSpCoinDiskChainId(chainId);
+  if (Number.isFinite(resolved) && resolved > 0) return resolved;
+  const hardhatForkAssetChainId = resolveSpCoinDiskChainId(31337);
+  return Number.isFinite(hardhatForkAssetChainId) && hardhatForkAssetChainId > 0
+    ? hardhatForkAssetChainId
+    : 31337;
 }
 
 type AccessManagerRequest = {
@@ -897,40 +901,36 @@ async function handleUpdateServer(params: {
   const metadataPathAbsolute = path.join(contractDir, 'info.json');
   await fs.writeFile(metadataPathAbsolute, JSON.stringify(metadata, null, 2), 'utf8');
 
-  // If the token folder already exists, treat it as already-registered and skip list updates.
-  if (!contractDirAlreadyExists) {
-    const networkNameByChainId: Record<number, string> = {
-      1: 'ethereum',
-      137: 'polygon',
-      8453: 'base',
-      31337: 'hardhat',
-      11155111: 'sepolia',
-    };
-    const networkName = networkNameByChainId[requestedChainId];
-    if (networkName) {
-      const tokenListPath = path.join(
-        process.cwd(),
-        'resources',
-        'data',
-        'networks',
-        networkName,
-        'tokenList.json',
-      );
-      const tokenListExists = await fs
-        .access(tokenListPath)
-        .then(() => true)
-        .catch(() => false);
-      if (tokenListExists) {
-        const rawTokenList = await fs.readFile(tokenListPath, 'utf8');
-        const parsed = JSON.parse(rawTokenList);
-        if (Array.isArray(parsed)) {
-          const upperAddress = toDiskAddressFolderName(address);
-          const filtered = parsed.filter(
-            (entry) => String(entry || '').toUpperCase() !== upperAddress,
-          );
-          const insertIndex = filtered.length > 0 ? 1 : 0;
-          filtered.splice(insertIndex, 0, upperAddress);
-          await fs.writeFile(tokenListPath, JSON.stringify(filtered, null, 2), 'utf8');
+  const networkName = mapNetworkNameByChainId(requestedChainId);
+  let tokenListPath = '';
+  let tokenListUpdated = false;
+  if (networkName && !networkName.startsWith('chain-')) {
+    tokenListPath = path.join(
+      process.cwd(),
+      'resources',
+      'data',
+      'networks',
+      networkName,
+      'tokenList.json',
+    );
+    const tokenListExists = await fs
+      .access(tokenListPath)
+      .then(() => true)
+      .catch(() => false);
+    if (tokenListExists) {
+      const rawTokenList = await fs.readFile(tokenListPath, 'utf8');
+      const parsed = JSON.parse(rawTokenList);
+      if (Array.isArray(parsed)) {
+        const upperAddress = toDiskAddressFolderName(address);
+        const alreadyPresent = parsed.some(
+          (entry) => toDiskAddressFolderName(entry) === upperAddress,
+        );
+        if (!alreadyPresent) {
+          const next = [...parsed];
+          const insertIndex = next.length > 0 ? 1 : 0;
+          next.splice(insertIndex, 0, upperAddress);
+          await fs.writeFile(tokenListPath, JSON.stringify(next, null, 2), 'utf8');
+          tokenListUpdated = true;
         }
       }
     }
@@ -947,6 +947,8 @@ async function handleUpdateServer(params: {
       resolvedChainId: chainId,
       contractDir,
       contractDirAlreadyExists,
+      tokenListPath,
+      tokenListUpdated,
       tokenStatusBefore: tokenStatusBefore.tokenStatus,
       tokenStatusAfter: tokenStatusAfter.tokenStatus,
     },
@@ -1825,6 +1827,8 @@ export async function POST(request: Request) {
             `requestedChainId: ${String((result as any).debug?.requestedChainId ?? 'unknown')}`,
             `resolvedChainId: ${String((result as any).debug?.resolvedChainId ?? 'unknown')}`,
             `contractDirAlreadyExists: ${String((result as any).debug?.contractDirAlreadyExists ?? false)}`,
+            `tokenListUpdated: ${String((result as any).debug?.tokenListUpdated ?? false)}`,
+            `tokenListPath: ${String((result as any).debug?.tokenListPath ?? '')}`,
             `tokenStatusBefore: ${String((result as any).debug?.tokenStatusBefore ?? 'unknown')}`,
             `tokenStatusAfter: ${String((result as any).debug?.tokenStatusAfter ?? 'unknown')}`,
             `contractDir: ${String((result as any).debug?.contractDir ?? '')}`,

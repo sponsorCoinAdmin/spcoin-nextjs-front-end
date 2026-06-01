@@ -219,16 +219,14 @@ export default function RenderAssetPreview() {
 
   const onInfoContextMenu = () => {
     if (feedType === FEED_TYPE.TOKEN_LIST) {
-      debugLog.log?.('[onInfoContextMenu] token logo URL', {
-        name,
-        avatarSrc,
-      });
-    } else {
-      debugLog.log?.('[onInfoContextMenu] wallet logo record', {
-        name,
-        logoURL: stringifyBigInt(validatedAsset.logoURL || ''),
-      });
+      onInfoClick();
+      return;
     }
+
+    debugLog.log?.('[onInfoContextMenu] wallet logo record', {
+      name,
+      logoURL: stringifyBigInt(validatedAsset.logoURL || ''),
+    });
   };
 
   return (
@@ -242,6 +240,8 @@ export default function RenderAssetPreview() {
           onAvatarClick={onAvatarClick}
           onInfoClick={onInfoClick}
           onInfoContextMenu={onInfoContextMenu}
+          avatarClickAction="select"
+          trailingControl="info"
         />
       </BasePreviewWrapper>
     </div>

@@ -214,14 +214,6 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
 
   const handlePickAddress = useCallback(
     (address: string) => {
-      const selectedToken =
-        isTokenFeed
-          ? tokens.find((t) => String(t?.address || '').toLowerCase() === address.toLowerCase())
-          : undefined;
-      if (isTokenFeed && selectedToken) {
-        setTradingTokenCallback(selectedToken as any);
-        return;
-      }
       debugLog.log?.('[pick]', {
         addressPreview: address?.slice(0, 12),
         manualEntry,
@@ -251,9 +243,7 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
       setInputState,
       handleHexInputChange,
       isAccountFeed,
-      isTokenFeed,
       accounts,
-      tokens,
       setTradingTokenCallback,
       setManualEntry,
       manualEntry,
@@ -319,8 +309,8 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
                 {tokenTextMode} View
               </button>
             ) : null}
-            <div className="w-8 flex items-center justify-center text-center text-xs font-semibold uppercase tracking-wide text-slate-300/80">
-              Select
+            <div className="w-20 flex items-center justify-end text-right text-xs font-semibold uppercase tracking-wide text-slate-300/80">
+              Info
             </div>
           </div>
         </div>
@@ -361,6 +351,7 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
                   symbol={safeSymbol}
                   address={token.address as `0x${string}` | string}
                   logoURL={token.logoURL ?? undefined}
+                  token={token as any}
                   textMode={tokenTextMode}
                   confirmAssetCallback={handlePickAddress}
                 />
