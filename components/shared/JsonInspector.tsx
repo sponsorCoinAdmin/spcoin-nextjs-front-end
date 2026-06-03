@@ -2144,6 +2144,22 @@ function addDecimalStrings(left: string, right: string): string {
   return fraction ? `${whole}.${fraction}` : whole;
 }
 
+function getDisplayTotalSpCoinsValue(parent: unknown): string | null {
+  if (!parent || typeof parent !== 'object' || Array.isArray(parent)) return null;
+  const record = parent as Record<string, unknown>;
+  if (record.TYPE !== '--TOTAL_SP_COINS--') return null;
+  const balanceText = String(record.balanceOf ?? '').replace(/,/g, '').trim();
+  const stakedText = String(record.stakedBalance ?? '').replace(/,/g, '').trim();
+  if (!balanceText && !stakedText) return null;
+  if (/^-?\d+(?:\.\d+)?$/.test(balanceText || '0') && /^-?\d+(?:\.\d+)?$/.test(stakedText || '0')) {
+    return addDecimalStrings(balanceText || '0', stakedText || '0');
+  }
+  const balanceValue = parseTokenAmountBigInt(balanceText || '0');
+  const stakedValue = parseTokenAmountBigInt(stakedText || '0');
+  if (balanceValue === null && stakedValue === null) return null;
+  return String((balanceValue ?? 0n) + (stakedValue ?? 0n));
+}
+
 function getPendingRecipientDistributionsTotal(data: unknown): string | null {
   if (!data || typeof data !== 'object' || Array.isArray(data)) return null;
   const record = data as Record<string, unknown>;
@@ -2221,6 +2237,18 @@ function getPendingRewardsMethodSummaryValue(
   return null;
 }
 
+function readPendingTotalRewardsSummaryValue(value: unknown): unknown {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
+  const record = value as Record<string, unknown>;
+  return (
+    record.total ??
+    record.pendingTotalRewards ??
+    record.pendingRewards ??
+    record.totalRewards ??
+    value
+  );
+}
+
 function getPendingRewardsMethodResultSummaryValue(
   methodName: string,
   data: unknown,
@@ -2234,7 +2262,15 @@ function getPendingRewardsMethodResultSummaryValue(
       : record;
 
   if (methodName.startsWith('estimateOffChain') && methodName.endsWith('Rewards')) {
-    const value = result.pendingTotalRewards ?? result.pendingRewards ?? result.totalRewards;
+    const componentTotal =
+      toDisplayBigInt(result.pendingSponsorRewards) +
+      toDisplayBigInt(result.pendingRecipientRewards) +
+      toDisplayBigInt(result.pendingAgentRewards);
+    const value =
+      (componentTotal > 0n ? componentTotal.toString() : undefined) ??
+      readPendingTotalRewardsSummaryValue(result.pendingTotalRewards) ??
+      result.pendingRewards ??
+      result.totalRewards;
     return value === undefined || value === null
       ? null
       : { key: 'pendingTotalRewards', value, suffix: ' (Last Estimate)', methodName };
@@ -4277,9 +4313,13 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     const valueHighlighted = highlightPathPrefixes.some(
       (prefix) => nextPath === prefix || nextPath.startsWith(`${prefix}.`),
     );
+    const displayBranchValue =
+      key === 'totalSpCoins' && isTotalSpCoinsRecord(data)
+        ? getDisplayTotalSpCoinsValue(data) ?? branchValue
+        : branchValue;
     const scalarDisplayValue = formatDisplayScalar(
       getScalarFormattingKey(data, key),
-      branchValue,
+      displayBranchValue,
       formatTokenAmounts,
       tokenDecimals,
     );

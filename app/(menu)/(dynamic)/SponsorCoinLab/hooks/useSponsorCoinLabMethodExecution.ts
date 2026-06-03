@@ -62,6 +62,7 @@ export interface MethodExecutionDescriptor {
   params: MethodParamEntry[];
   sender?: string;
   mode?: ConnectionMode;
+  preClaimEstimateResult?: unknown;
 }
 
 export interface MethodExecutionResult {
@@ -303,6 +304,8 @@ export function useSponsorCoinLabMethodExecution({
       sender?: string,
       modeOverride: ConnectionMode = mode,
       executionSignal?: AbortSignal,
+      clearReadCache?: boolean,
+      preClaimEstimateResult?: unknown,
     ): Promise<ServerBackedStepResult> => {
       const target = requireContractAddress();
       appendWriteTrace(
@@ -318,6 +321,9 @@ export function useSponsorCoinLabMethodExecution({
           spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
           ...(useReadCache === undefined ? {} : { useCache: useReadCache }),
           cacheNamespace: readCacheNamespace,
+          traceCache: traceEnabled,
+          ...(clearReadCache ? { clearReadCache: true } : {}),
+          ...(preClaimEstimateResult === undefined ? {} : { preClaimEstimateResult }),
           script: {
             id: `spcoin-rread-${method}-${Date.now()}`,
             name: method,
@@ -345,6 +351,7 @@ export function useSponsorCoinLabMethodExecution({
             result?: unknown;
             warning?: Record<string, unknown> | undefined;
             error?: { message?: string };
+            debug?: { trace?: unknown };
             meta?: MethodExecutionPayloadMeta;
             onChainCalls?: MethodExecutionMeta['onChainCalls'];
           };
@@ -370,6 +377,11 @@ export function useSponsorCoinLabMethodExecution({
         }
         throw nextError;
       }
+      if (Array.isArray(firstResult?.payload?.debug?.trace)) {
+        firstResult.payload.debug.trace
+          .map((entry) => String(entry))
+          .forEach((line) => appendWriteTrace(`server ${line}`));
+      }
       return {
         result: firstResult?.payload?.result,
         warning: firstResult?.payload?.warning,
@@ -377,13 +389,13 @@ export function useSponsorCoinLabMethodExecution({
         onChainCalls: firstResult?.payload?.onChainCalls,
       };
     },
-    [mode, readCacheNamespace, requireContractAddress, rpcUrl, useLocalSpCoinAccessPackage, useReadCache],
+    [mode, readCacheNamespace, requireContractAddress, rpcUrl, traceEnabled, useLocalSpCoinAccessPackage, useReadCache],
   );
 
   const executeMethodDescriptor = useCallback(
     async (
       descriptor: MethodExecutionDescriptor,
-      options?: { executionSignal?: AbortSignal },
+      options?: { executionSignal?: AbortSignal; clearReadCache?: boolean },
     ): Promise<MethodExecutionResult> => {
       const executionStartedAtMs = Date.now();
       const executionTimingCollector = traceEnabled ? createMethodTimingCollector(executionStartedAtMs) : null;
@@ -624,6 +636,10 @@ export function useSponsorCoinLabMethodExecution({
               'getAccountKeyCount',
               'getMasterAccountListSize',
               'getAccountListSize',
+              'estimateOffChainTotalRewards',
+              'estimateOffChainSponsorRewards',
+              'estimateOffChainRecipientRewards',
+              'estimateOffChainAgentRewards',
             ].includes(normalizedSelectedMethod);
           let result: unknown;
           try {
@@ -635,10 +651,12 @@ export function useSponsorCoinLabMethodExecution({
                   key: param.label,
                   value: resolvedReadParams[idx] || '',
                 })),
-                undefined,
-                effectiveMode,
-                executionSignal,
-              );
+              undefined,
+              effectiveMode,
+              executionSignal,
+              options?.clearReadCache === true,
+              undefined,
+            );
               result = serverResult.result;
               warning = serverResult.warning;
               serverBackedMeta = serverResult.meta;
@@ -883,6 +901,8 @@ export function useSponsorCoinLabMethodExecution({
               signer,
               effectiveMode,
               executionSignal,
+              options?.clearReadCache === true,
+              descriptor.preClaimEstimateResult,
             )
            : await runSpCoinWriteMethod({
                selectedMethod,

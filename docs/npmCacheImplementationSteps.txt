@@ -1,0 +1,242 @@
+NPM Package Cache Implementation Steps
+
+1. Create package cache subsystem
+
+Add:
+
+spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/cache/
+  index.ts
+  types.ts
+  readCacheStore.ts
+  readCacheKeys.ts
+  readCacheTags.ts
+  readCachePolicy.ts
+  readCacheRuntime.ts
+  writeInvalidation.ts
+
+2. Move existing cache logic
+
+Move logic from:
+
+spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/utils/readCache.ts
+
+into the new cache subsystem files.
+
+Keep src/utils/readCache.ts as a compatibility shim:
+
+export * from '../cache';
+
+3. Define standard cache options
+
+In cache/types.ts define:
+
+cache?: 'default' | 'refresh' | 'bypass' | 'only';
+readThrough?: boolean;
+ttlMs?: number;
+cacheNamespace?: string;
+blockTag?: 'latest' | 'pending' | number;
+traceCache?: boolean;
+timestampOverride?: string | number | bigint;
+
+Do not add invalidate?: boolean. ttlMs: 0 is the exact-member invalidation signal.
+
+4. Implement cache policy behavior
+
+In readCachePolicy.ts:
+
+cache: default
+  Use fresh cache if available. Otherwise read through and store.
+
+cache: refresh
+  Force read through and replace cache.
+
+cache: bypass
+  Force read through and do not store.
+
+cache: only
+  Cache-only. Do not call chain/offline source.
+
+readThrough: false
+  Cache-only behavior.
+
+ttlMs: 0
+  Invalidate the exact cache member first. Then continue according to cache/readThrough mode.
+
+5. Implement exact cache invalidation
+
+In readCacheStore.ts add:
+
+- remove by exact key
+- remove by tag/dependency
+- remove by multiple tags/dependencies
+- clear all
+- size/stats
+
+6. Implement cache key builder
+
+In readCacheKeys.ts, key entries by:
+
+- chain/provider scope
+- contract address
+- method name
+- normalized args
+- cache namespace
+- blockTag
+- timestampOverride
+
+Normalize address args to lowercase.
+
+7. Implement cache tag builder
+
+In readCacheTags.ts add default tags:
+
+- chain:<chainScope>
+- contract:<chainScope>:<contractAddress>
+- method:<methodName>
+- account:<accountKey> for address args
+
+Add domain tags:
+
+- inflation
+- rates
+- rate-transactions
+- account-record
+- account-links
+- rewards
+
+8. Update runCachedRead
+
+In readCacheRuntime.ts, make runCachedRead the single package read wrapper.
+
+It should:
+
+- apply cache policy
+- build exact key
+- invalidate exact key when ttlMs: 0
+- check cache
+- call loader when read-through is allowed/required
+- store result unless mode is bypass
+- trace decisions
+
+9. Apply cache to every package read method
+
+Ensure all read methods go through the package cache runtime:
+
+- getInflationRate
+- getAccountRecord
+- getAccountLinks
+- sponsor/recipient/agent rate reads
+- rate transaction set reads
+- reward estimates
+- helper reads used by reward estimates
+
+10. Add package clearCache
+
+Expose:
+
+clearCache(options?)
+
+Return:
+
+{
+  cleared: true,
+  entriesBefore: number,
+  entriesAfter: number
+}
+
+11. Add write invalidation
+
+In writeInvalidation.ts, map write methods to invalidation tags/accounts.
+
+After successful write receipt:
+
+claim methods:
+  invalidate rewards + affected account
+
+rate writes:
+  invalidate rates + rate-transactions + rewards + affected accounts
+
+account relationship writes:
+  invalidate account-links + rewards + affected accounts
+
+inflation writes:
+  invalidate inflation + rewards
+
+If a write cannot precisely determine affected accounts, invalidate broader domain tags.
+
+12. Remove hidden claim pre-read
+
+Claim methods should not run reward estimates before transaction execution.
+
+Claim should:
+
+- send transaction
+- wait for receipt
+- invalidate affected cache
+- return transaction/receipt/gas details
+
+13. Wire global Cache checkbox
+
+SponsorCoinLab should pass package cache options:
+
+Cache checked:
+
+{
+  cache: 'default',
+  readThrough: true
+}
+
+Cache unchecked:
+
+{
+  cache: 'bypass',
+  readThrough: true
+}
+
+Cache unchecked means force live chain/offline execution and do not store results.
+
+14. Add dropdown cache params
+
+For read/dropdown methods, add optional cache params where relevant:
+
+- Cache Mode
+- Read Through
+- TTL Ms
+- Trace Cache
+
+These must be stripped from Solidity/package positional args and converted into SpCoinReadCacheOptions.
+
+15. Add Admin Utils clearCache
+
+Add clearCache under the Admin Utils dropdown.
+
+It should call the package clearCache method and display:
+
+- entriesBefore
+- entriesAfter
+- cleared
+
+16. Clean UI/server special cases
+
+Remove or reduce:
+
+- UI pending reward cache shortcuts
+- server manual cache clears except explicit clearCache
+- cache namespace hacks
+- duplicate cache decisions outside the package
+
+SponsorCoinLab should pass cache options only. It should not own cache logic.
+
+17. Verify behavior
+
+Test:
+
+- first estimate after refresh reads chain
+- second estimate hits cache
+- Cache unchecked forces chain read
+- TTL Ms = 0 invalidates exact cached member
+- clearCache empties package cache
+- claim only sends claim transaction
+- writes invalidate affected cached reads
+- typecheck passes
+

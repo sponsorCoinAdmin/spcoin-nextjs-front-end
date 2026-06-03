@@ -22,6 +22,7 @@ interface MethodExecutionDescriptor {
   params: MethodParamEntry[];
   sender?: string;
   mode?: ConnectionMode;
+  preClaimEstimateResult?: unknown;
 }
 
 interface MethodExecutionResult {
@@ -43,6 +44,7 @@ interface ScriptRunOptions {
   executionSignal?: AbortSignal;
   executionLabel?: string;
   scriptNetwork?: string;
+  clearReadCache?: boolean;
 }
 
 interface Params {
@@ -55,7 +57,7 @@ interface Params {
   getRecentWriteTrace: () => string[];
   executeMethodDescriptor: (
     descriptor: MethodExecutionDescriptor,
-    options?: { executionSignal?: AbortSignal },
+    options?: { executionSignal?: AbortSignal; clearReadCache?: boolean },
   ) => Promise<MethodExecutionResult>;
   buildMethodCallEntry: (
     method: string,
@@ -112,6 +114,13 @@ const PENDING_REWARDS_ESTIMATE_METHODS = new Set([
   'estimateOffChainRecipientRewards',
   'estimateOffChainAgentRewards',
 ]);
+
+const CLAIM_TO_ESTIMATE_METHOD: Record<string, string> = {
+  claimOnChainTotalRewards: 'estimateOffChainTotalRewards',
+  claimOnChainSponsorRewards: 'estimateOffChainSponsorRewards',
+  claimOnChainRecipientRewards: 'estimateOffChainRecipientRewards',
+  claimOnChainAgentRewards: 'estimateOffChainAgentRewards',
+};
 
 function readClaimedRewardsAmount(value: unknown) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
@@ -272,6 +281,58 @@ function findPendingRewardsSnapshotInOutput(formattedOutputBase: string | undefi
     if (!accountRecord) continue;
     const pendingRewards = buildPendingRewardsFromAccountRecordSnapshot(accountRecord, accountKey);
     if (pendingRewards) return pendingRewards;
+  }
+  return null;
+}
+
+function readCallMethod(block: unknown) {
+  if (!block || typeof block !== 'object' || Array.isArray(block)) return '';
+  const call = (block as Record<string, unknown>).call;
+  if (!call || typeof call !== 'object' || Array.isArray(call)) return '';
+  return String((call as Record<string, unknown>).method || '');
+}
+
+function readCallAccountKey(block: unknown) {
+  if (!block || typeof block !== 'object' || Array.isArray(block)) return '';
+  const call = (block as Record<string, unknown>).call;
+  if (!call || typeof call !== 'object' || Array.isArray(call)) return '';
+  const parameters = (call as Record<string, unknown>).parameters;
+  if (Array.isArray(parameters)) {
+    const accountParam = parameters.find((entry) => {
+      if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return false;
+      return String((entry as Record<string, unknown>).label || (entry as Record<string, unknown>).key || '') === 'Account Key';
+    });
+    return normalizeAddress(
+      accountParam && typeof accountParam === 'object' && !Array.isArray(accountParam)
+        ? (accountParam as Record<string, unknown>).value
+        : '',
+    );
+  }
+  if (parameters && typeof parameters === 'object') {
+    return normalizeAddress((parameters as Record<string, unknown>)['Account Key']);
+  }
+  return '';
+}
+
+function findPreClaimEstimateResultInOutput(
+  formattedOutputBase: string | undefined,
+  claimMethod: string,
+  accountKey: string,
+) {
+  const estimateMethod = CLAIM_TO_ESTIMATE_METHOD[claimMethod];
+  if (!estimateMethod) return null;
+  const normalizedAccountKey = normalizeAddress(accountKey);
+  if (!normalizedAccountKey) return null;
+  const blocks = parseFormattedOutputBlocks(formattedOutputBase);
+  for (let index = blocks.length - 1; index >= 0; index -= 1) {
+    const block = blocks[index];
+    const method = readCallMethod(block);
+    const blockAccountKey = readCallAccountKey(block);
+    if (blockAccountKey !== normalizedAccountKey) continue;
+    if (PENDING_REWARDS_CLAIM_METHODS.has(method)) return null;
+    if (method !== estimateMethod || !block || typeof block !== 'object' || Array.isArray(block)) continue;
+    const result = (block as Record<string, unknown>).result;
+    return result === undefined ? null : result;
   }
   return null;
 }
@@ -711,6 +772,12 @@ export function useSponsorCoinLabScriptRunner({
                   onChainRunTimeMs: '0',
                   onChainCallCount: '0',
                 },
+                debug: {
+                  panel: step.panel,
+                  source: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
+                  method: step.method,
+                  trace: getRecentWriteTrace(),
+                },
                 result: snapshotResult,
               },
               true,
@@ -718,7 +785,26 @@ export function useSponsorCoinLabScriptRunner({
           }
           appendWriteTrace(`estimateOffChainTotalRewards no previous snapshot; running method; accountKey=${accountKey}`);
         }
-        const { call, result, warning, meta, onChainCalls } = await executeMethodDescriptor(descriptor, { executionSignal: options?.executionSignal });
+        if (descriptor.panel === 'spcoin_write' && PENDING_REWARDS_CLAIM_METHODS.has(descriptor.method)) {
+          const accountKey = descriptor.params.find((entry) => entry.key === 'Account Key')?.value || descriptor.sender || '';
+          const preClaimEstimateResult = findPreClaimEstimateResultInOutput(
+            formattedOutputBase,
+            descriptor.method,
+            accountKey,
+          );
+          if (preClaimEstimateResult) {
+            descriptor.preClaimEstimateResult = preClaimEstimateResult;
+            appendWriteTrace(
+              `${descriptor.method} using previous matching estimate result for server pre-claim snapshot; accountKey=${accountKey}`,
+            );
+          } else {
+            appendWriteTrace(`${descriptor.method} no reusable pre-claim estimate snapshot; accountKey=${accountKey}`);
+          }
+        }
+        const { call, result, warning, meta, onChainCalls } = await executeMethodDescriptor(descriptor, {
+          executionSignal: options?.executionSignal,
+          clearReadCache: options?.clearReadCache === true,
+        });
         if (
           descriptor.panel === 'spcoin_rread' &&
           (descriptor.method === 'getAccountRecord' || descriptor.method === 'getSummaryRecord') &&
@@ -752,7 +838,22 @@ export function useSponsorCoinLabScriptRunner({
           descriptor.method,
           refreshedResult,
         );
-        return commitResult({ call, meta: nextMeta, ...(onChainCalls ? { onChainCalls } : {}), result: refreshedResult, ...(warning ? { warning } : {}) }, true);
+        return commitResult(
+          {
+            call,
+            meta: nextMeta,
+            ...(onChainCalls ? { onChainCalls } : {}),
+            debug: {
+              panel: step.panel,
+              source: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
+              method: step.method,
+              trace: getRecentWriteTrace(),
+            },
+            result: refreshedResult,
+            ...(warning ? { warning } : {}),
+          },
+          true,
+        );
       } catch (error) {
         const message =
           error instanceof Error

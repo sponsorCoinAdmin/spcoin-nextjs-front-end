@@ -3,6 +3,7 @@ import type { SpCoinReadCacheOptions } from "./readCache";
 const METHOD_READ_CACHE_TTL_MS: Record<string, number> = {
   getAccountRecord: 60 * 60 * 1000,
   getAccountRecordShallow: 60 * 60 * 1000,
+  getAccountLinks: 60 * 60 * 1000,
 };
 
 const METHOD_READ_CACHE_TTL_BLOCKS: Record<string, string> = {
@@ -36,6 +37,11 @@ const BLOCK_READ_CACHE_TTL_ENV_VALUES: Record<string, string | undefined> = {
   RATES: process.env.NEXT_PUBLIC_SPCOIN_READ_CACHE_TTL_MS_BLOCK_RATES,
   INITIAL_STAKING_REWARDS: process.env.NEXT_PUBLIC_SPCOIN_READ_CACHE_TTL_MS_BLOCK_INITIAL_STAKING_REWARDS,
   ACCOUNT_EXISTENCE: process.env.NEXT_PUBLIC_SPCOIN_READ_CACHE_TTL_MS_BLOCK_ACCOUNT_EXISTENCE,
+};
+
+const BLOCK_READ_CACHE_TTL_MS: Record<string, number> = {
+  INFLATION: 24 * 60 * 60 * 1000,
+  RATES: 24 * 60 * 60 * 1000,
 };
 
 const METHOD_READ_CACHE_TTL_ENV_VALUES: Record<string, string | undefined> = {
@@ -126,8 +132,20 @@ function getBlockEnvTtlMs(methodName: string): number | null | undefined {
   return parseMethodTtlMs(BLOCK_READ_CACHE_TTL_ENV_VALUES[blockName]);
 }
 
+function getBlockDefaultTtlMs(methodName: string): number | undefined {
+  const blockName = METHOD_READ_CACHE_TTL_BLOCKS[methodName];
+  if (!blockName) return undefined;
+  return BLOCK_READ_CACHE_TTL_MS[blockName];
+}
+
 export function applyMethodCacheDefaults(methodName: string, options: SpCoinReadCacheOptions): SpCoinReadCacheOptions {
-  if (options.ttlMs != null || options.blockTag != null || options.timestampOverride != null) return options;
+  if (
+    options.ttlMs != null ||
+    options.blockTag != null ||
+    (options.timestampOverride != null && METHOD_READ_CACHE_TTL_BLOCKS[methodName] === "ESTIMATE_REWARDS")
+  ) {
+    return options;
+  }
   const envTtlMs = getMethodEnvTtlMs(methodName);
   if (envTtlMs !== undefined) {
     if (envTtlMs !== null) {
@@ -146,6 +164,14 @@ export function applyMethodCacheDefaults(methodName: string, options: SpCoinRead
     }
     return options;
   }
+  const blockTtlMs = getBlockEnvTtlMs(methodName);
+  if (blockTtlMs === null) return options;
+  if (blockTtlMs !== undefined) {
+    return {
+      ...options,
+      ttlMs: blockTtlMs,
+    };
+  }
   const methodTtlMs = METHOD_READ_CACHE_TTL_MS[methodName];
   if (methodTtlMs != null) {
     return {
@@ -153,7 +179,7 @@ export function applyMethodCacheDefaults(methodName: string, options: SpCoinRead
       ttlMs: methodTtlMs,
     };
   }
-  const blockTtlMs = getBlockEnvTtlMs(methodName);
-  if (blockTtlMs === null || blockTtlMs === undefined) return options;
-  return { ...options, ttlMs: blockTtlMs };
+  const blockDefaultTtlMs = getBlockDefaultTtlMs(methodName);
+  if (blockDefaultTtlMs === undefined) return options;
+  return { ...options, ttlMs: blockDefaultTtlMs };
 }

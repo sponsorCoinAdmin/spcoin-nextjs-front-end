@@ -24,6 +24,7 @@ interface UseServerBackedTreeSpCoinMethodParams {
   readCacheNamespace?: string;
   requireContractAddress: () => string;
   rpcUrl?: string;
+  traceEnabled?: boolean;
   useLocalSpCoinAccessPackage: boolean;
   useReadCache?: boolean;
 }
@@ -41,6 +42,7 @@ export function useServerBackedTreeSpCoinMethod({
   readCacheNamespace,
   requireContractAddress,
   rpcUrl,
+  traceEnabled,
   useLocalSpCoinAccessPackage,
   useReadCache,
 }: UseServerBackedTreeSpCoinMethodParams) {
@@ -66,6 +68,7 @@ export function useServerBackedTreeSpCoinMethod({
           spCoinAccessSource: useLocalSpCoinAccessPackage ? 'local' : 'node_modules',
           ...(cacheMode ? { cacheMode } : useCache !== undefined ? { useCache } : useReadCache === undefined ? {} : { useCache: useReadCache }),
           cacheNamespace: readCacheNamespace,
+          traceCache: traceEnabled === true,
           script: {
             id: `tree-${method}-${Date.now()}`,
             name: method,
@@ -121,6 +124,6 @@ export function useServerBackedTreeSpCoinMethod({
         onChainCalls: firstResult.payload?.onChainCalls,
       };
     },
-    [appendWriteTrace, mode, readCacheNamespace, requireContractAddress, rpcUrl, useLocalSpCoinAccessPackage, useReadCache],
+    [appendWriteTrace, mode, readCacheNamespace, requireContractAddress, rpcUrl, traceEnabled, useLocalSpCoinAccessPackage, useReadCache],
   );
 }

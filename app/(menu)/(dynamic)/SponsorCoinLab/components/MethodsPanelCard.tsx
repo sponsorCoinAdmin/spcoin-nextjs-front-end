@@ -362,8 +362,10 @@ function readStoredMethodsPanelUiState(): StoredMethodsPanelUiState | null {
     if (typeof saved.writeTraceEnabled === 'boolean') {
       next.writeTraceEnabled = saved.writeTraceEnabled;
     }
-    if (typeof saved.useReadCache === 'boolean' || saved.useReadCache === null) {
+    if (typeof saved.useReadCache === 'boolean') {
       next.useReadCache = saved.useReadCache;
+    } else if (saved.useReadCache === null) {
+      next.useReadCache = true;
     }
     if (typeof saved.showOnChainMethods === 'boolean') {
       next.showOnChainMethods = saved.showOnChainMethods;
@@ -591,9 +593,9 @@ export default function MethodsPanelCard({
     }
     if (
       (typeof storedMethodsPanelUiState?.useReadCache === 'boolean' || storedMethodsPanelUiState?.useReadCache === null) &&
-      (storedMethodsPanelUiState.useReadCache ?? undefined) !== useReadCache
+      (storedMethodsPanelUiState.useReadCache ?? true) !== useReadCache
     ) {
-      setUseReadCache(storedMethodsPanelUiState.useReadCache ?? undefined);
+      setUseReadCache(storedMethodsPanelUiState.useReadCache ?? true);
     }
     didHydratePanelUiRef.current = true;
     setIsPanelUiPersistenceReady(true);
@@ -1218,7 +1220,7 @@ export default function MethodsPanelCard({
         selectedDisplayGroup,
         selectedAlterMode,
         writeTraceEnabled,
-        useReadCache: useReadCache ?? null,
+        useReadCache: useReadCache ?? true,
         showOnChainMethods,
         showOffChainMethods,
         selectedMethodId: currentMethodIdentity?.id || '',

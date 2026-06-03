@@ -109,6 +109,7 @@ import {
   isSponsorCoinLabAccountTraceLine,
   recordSponsorCoinLabAccountTrace,
 } from '@/lib/spCoinLab/accountPopupTrace';
+import { clearReadCache } from '@/spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/utils/readCache';
 
 interface SponsorCoinLabControllerProps {
   initialContractDirectoryOptions?: ContractDirectoryOption[];
@@ -116,6 +117,29 @@ interface SponsorCoinLabControllerProps {
 
 const TRACE_LOG_PATTERN =
   /\[TRACE\]|\[EXPAND\]|\[ACCOUNT_EXPAND_TRACE\]|\[ACCOUNT_POPUP_TRACE\]|\[JSON_INSPECTOR_TRACE\]|\[PENDING_REWARDS_TRACE\]|\[REWARD_CALC_TRACE\]|\[SPCOIN_RPC_TRACE\]|Lazy-loaded|Inline account record|Inline pending rewards/i;
+
+const METHODS_PANEL_UI_STORAGE_KEY = 'spCoinLabMethodsPanelUiKey';
+
+function createReadCacheNamespace() {
+  return `spcoin-lab-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+function readInitialUseReadCache(): boolean | undefined {
+  if (typeof window === 'undefined') return true;
+
+  try {
+    const raw = window.localStorage.getItem(METHODS_PANEL_UI_STORAGE_KEY);
+    if (!raw) return true;
+
+    const saved = JSON.parse(raw) as { useReadCache?: unknown };
+    if (typeof saved.useReadCache === 'boolean') return saved.useReadCache;
+    if (saved.useReadCache === null) return true;
+  } catch {
+    // Ignore malformed persisted UI state and fall back to cache-on.
+  }
+
+  return true;
+}
 
 export default function SponsorCoinLabPage({
   initialContractDirectoryOptions = [],
@@ -145,8 +169,27 @@ export default function SponsorCoinLabPage({
   const [showAllTreeRecords, setShowAllTreeRecords] = useState(false);
   const [isScriptDebugRunning, setIsScriptDebugRunning] = useState(false);
   const [writeTraceEnabled, setWriteTraceEnabled] = useState(false);
-  const [useReadCache, setUseReadCache] = useState<boolean | undefined>(undefined);
+  const [useReadCache, setUseReadCache] = useState<boolean | undefined>(() => readInitialUseReadCache());
   const recentWriteTraceRef = useRef<string[]>([]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    try {
+      const raw = window.localStorage.getItem(METHODS_PANEL_UI_STORAGE_KEY);
+      const saved = raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
+      window.localStorage.setItem(
+        METHODS_PANEL_UI_STORAGE_KEY,
+        JSON.stringify({
+          ...saved,
+          useReadCache: useReadCache ?? true,
+        }),
+      );
+    } catch {
+      // Ignore localStorage write failures; the in-memory setting still applies.
+    }
+  }, [useReadCache]);
+
   const {
     invalidFieldIds,
     setInvalidFieldIds,
@@ -205,7 +248,8 @@ export default function SponsorCoinLabPage({
   );
   const [methodSelectionSource, setMethodSelectionSource] = useState<MethodSelectionSource>('dropdown');
   const [editingScriptStepNumber, setEditingScriptStepNumber] = useState<number | null>(null);
-  const [readCacheNamespace] = useState(() => `spcoin-lab-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+  const [readCacheNamespace, setReadCacheNamespace] = useState(() => createReadCacheNamespace());
+  const didClearReadCacheOnMountRef = useRef(false);
   const { callAccessMethod, runningMethodPopup } = useAccessMethodCaller({ traceEnabled: writeTraceEnabled });
 
   const appendLog = useCallback((line: string) => {
@@ -331,6 +375,34 @@ export default function SponsorCoinLabPage({
     setLogs((prev) => prev.filter((line) => !TRACE_LOG_PATTERN.test(line)));
   }, []);
   const getRecentWriteTrace = useCallback(() => recentWriteTraceRef.current.slice(), []);
+  const resetReadCacheForRefresh = useCallback(() => {
+    clearReadCache();
+    const nextNamespace = createReadCacheNamespace();
+    setReadCacheNamespace(nextNamespace);
+    appendLog(`[TRACE] [SPCOIN_READ_CACHE_TRACE] phase=clear reason=console-refresh namespace=${nextNamespace}`);
+  }, [appendLog]);
+  useEffect(() => {
+    if (didClearReadCacheOnMountRef.current) return;
+    didClearReadCacheOnMountRef.current = true;
+    clearReadCache();
+    const namespace = readCacheNamespace;
+    appendLog(`[TRACE] [SPCOIN_READ_CACHE_TRACE] phase=clear scope=browser reason=lab-mount namespace=${namespace}`);
+    void fetch('/api/spCoin/read-cache', { method: 'POST' })
+      .then(async (response) => {
+        const payload = (await response.json().catch(() => null)) as
+          | { beforeSize?: unknown; afterSize?: unknown }
+          | null;
+        appendLog(
+          `[TRACE] [SPCOIN_READ_CACHE_TRACE] phase=clear scope=server reason=lab-mount beforeSize=${String(
+            payload?.beforeSize ?? '',
+          )} afterSize=${String(payload?.afterSize ?? '')} namespace=${namespace}`,
+        );
+      })
+      .catch((error) => {
+        const message = error instanceof Error ? error.message : 'Unknown server read cache clear error.';
+        appendLog(`[TRACE] [SPCOIN_READ_CACHE_TRACE] phase=clear-failed scope=server reason=lab-mount message=${message}`);
+      });
+  }, [appendLog, readCacheNamespace]);
 
   const {
     selectedSponsorCoinVersion,
@@ -1418,6 +1490,7 @@ export default function SponsorCoinLabPage({
     selectedScriptStepNumber,
     runScriptStep,
     callAccessMethod,
+    resetReadCacheForRefresh,
     focusScriptStep,
     spCoinReadMethodDefs,
     spCoinWriteMethodDefs,

@@ -1,5 +1,7 @@
 // @ts-nocheck
 import { bigIntToDateTimeString, bigIntToDecString } from "../../../utils/dateTime";
+import { runCachedRead } from "../../../utils/readCache";
+import { applyMethodCacheDefaults } from "../../../utils/readCacheTtl";
 
 function toBigIntValue(value) {
     const normalized = String(value ?? "0").replace(/,/g, "").trim();
@@ -269,73 +271,170 @@ export function normalizeAccountRecordCacheKey(accountKey) {
     return String(accountKey ?? "").trim().toLowerCase();
 }
 
-export async function getInflationRateCached(runtime) {
+function getReadCacheContext(runtime) {
+    return {
+        spCoinContractDeployed: runtime?.spCoinContractDeployed,
+        spCoinLogger: runtime?.spCoinLogger,
+    };
+}
+
+function getReadCacheOptions(methodName, readOptions = undefined) {
+    const options = readOptions && typeof readOptions === "object" && !Array.isArray(readOptions)
+        ? { ...readOptions }
+        : {};
+    delete options.timestampOverride;
+    return applyMethodCacheDefaults(methodName, options);
+}
+
+function shouldTraceRelationshipCache(readOptions = undefined) {
+    return Boolean(readOptions && typeof readOptions === "object" && readOptions.traceCache === true);
+}
+
+function traceRelationshipCache(runtime, readOptions, message) {
+    if (!shouldTraceRelationshipCache(readOptions))
+        return;
+    runtime?.spCoinLogger?.logDetail?.(`JS => relationshipCache ${message}`);
+}
+
+export async function getInflationRateCached(runtime, readOptions = undefined) {
     const cache = getRelationshipReadCache(runtime);
     if (!cache.inflationRate) {
+        traceRelationshipCache(runtime, readOptions, "miss method=getInflationRate key=singleton");
         const readInflationRate = runtime?.spCoinContractDeployed?.getInflationRate;
-        cache.inflationRate =
-            typeof readInflationRate === "function"
-                ? readInflationRate()
-                : Promise.resolve(0);
+        cache.inflationRate = runCachedRead(
+            getReadCacheContext(runtime),
+            "getInflationRate",
+            [],
+            getReadCacheOptions("getInflationRate", readOptions),
+            () => (typeof readInflationRate === "function" ? readInflationRate() : 0),
+        );
+    }
+    else {
+        traceRelationshipCache(runtime, readOptions, "hit method=getInflationRate key=singleton");
     }
     return await cache.inflationRate;
 }
 
-export async function getAccountRecordObjectCached(runtime, accountKey) {
+export async function getAccountRecordObjectCached(runtime, accountKey, readOptions = undefined) {
     const cache = getRelationshipReadCache(runtime);
     const key = normalizeAccountRecordCacheKey(accountKey);
     if (!cache.accountRecordObject.has(key)) {
-        cache.accountRecordObject.set(key, runtime.spCoinSerialize.getAccountRecordObject(accountKey));
+        traceRelationshipCache(runtime, readOptions, `miss method=getAccountRecord key=${key}`);
+        cache.accountRecordObject.set(
+            key,
+            runCachedRead(
+                getReadCacheContext(runtime),
+                "getAccountRecord",
+                [accountKey],
+                getReadCacheOptions("getAccountRecord", readOptions),
+                () => runtime.spCoinSerialize.getAccountRecordObject(accountKey),
+            ),
+        );
+    }
+    else {
+        traceRelationshipCache(runtime, readOptions, `hit method=getAccountRecord key=${key}`);
     }
     return await cache.accountRecordObject.get(key);
 }
 
-export async function getRecipientRateListCached(runtime, sponsorAccountKey, recipientAccountKey) {
+export async function getRecipientRateListCached(runtime, sponsorAccountKey, recipientAccountKey, readOptions = undefined) {
     const cache = getRelationshipReadCache(runtime);
     const key = `${String(sponsorAccountKey ?? "").trim().toLowerCase()}|${String(recipientAccountKey ?? "").trim().toLowerCase()}`;
     if (!cache.recipientRateList.has(key)) {
-        cache.recipientRateList.set(key, runtime.getRecipientRateList(sponsorAccountKey, recipientAccountKey));
+        traceRelationshipCache(runtime, readOptions, `miss method=getRecipientRateList key=${key}`);
+        cache.recipientRateList.set(
+            key,
+            runCachedRead(
+                getReadCacheContext(runtime),
+                "getRecipientRateList",
+                [sponsorAccountKey, recipientAccountKey],
+                getReadCacheOptions("getRecipientRateList", readOptions),
+                () => runtime.getRecipientRateList(sponsorAccountKey, recipientAccountKey),
+            ),
+        );
+    }
+    else {
+        traceRelationshipCache(runtime, readOptions, `hit method=getRecipientRateList key=${key}`);
     }
     return await cache.recipientRateList.get(key);
 }
 
-export async function getRecipientRateAgentListCached(runtime, sponsorAccountKey, recipientAccountKey, recipientRateKey) {
+export async function getRecipientRateAgentListCached(runtime, sponsorAccountKey, recipientAccountKey, recipientRateKey, readOptions = undefined) {
     const cache = getRelationshipReadCache(runtime);
     const key = `${String(sponsorAccountKey ?? "").trim().toLowerCase()}|${String(recipientAccountKey ?? "").trim().toLowerCase()}|${String(recipientRateKey ?? "")}`;
     if (!cache.recipientRateAgentList.has(key)) {
+        traceRelationshipCache(runtime, readOptions, `miss method=getRecipientRateAgentList key=${key}`);
         cache.recipientRateAgentList.set(
             key,
-            runtime.getRecipientRateAgentList(sponsorAccountKey, recipientAccountKey, recipientRateKey),
+            runCachedRead(
+                getReadCacheContext(runtime),
+                "getRecipientRateAgentList",
+                [sponsorAccountKey, recipientAccountKey, recipientRateKey],
+                getReadCacheOptions("getRecipientRateAgentList", readOptions),
+                () => runtime.getRecipientRateAgentList(
+                    sponsorAccountKey,
+                    recipientAccountKey,
+                    recipientRateKey,
+                ),
+            ),
         );
+    }
+    else {
+        traceRelationshipCache(runtime, readOptions, `hit method=getRecipientRateAgentList key=${key}`);
     }
     return await cache.recipientRateAgentList.get(key);
 }
 
-export async function getAgentRateListCached(runtime, sponsorAccountKey, recipientAccountKey, recipientRateKey, agentAccountKey) {
+export async function getAgentRateListCached(runtime, sponsorAccountKey, recipientAccountKey, recipientRateKey, agentAccountKey, readOptions = undefined) {
     const cache = getRelationshipReadCache(runtime);
     const key = `${String(sponsorAccountKey ?? "").trim().toLowerCase()}|${String(recipientAccountKey ?? "").trim().toLowerCase()}|${String(recipientRateKey ?? "")}|${String(agentAccountKey ?? "").trim().toLowerCase()}`;
     if (!cache.agentRateList.has(key)) {
+        traceRelationshipCache(runtime, readOptions, `miss method=getAgentRateList key=${key}`);
         cache.agentRateList.set(
             key,
-            runtime.getAgentRateList(sponsorAccountKey, recipientAccountKey, recipientRateKey, agentAccountKey),
+            runCachedRead(
+                getReadCacheContext(runtime),
+                "getAgentRateList",
+                [sponsorAccountKey, recipientAccountKey, recipientRateKey, agentAccountKey],
+                getReadCacheOptions("getAgentRateList", readOptions),
+                () => runtime.getAgentRateList(
+                    sponsorAccountKey,
+                    recipientAccountKey,
+                    recipientRateKey,
+                    agentAccountKey,
+                ),
+            ),
         );
+    }
+    else {
+        traceRelationshipCache(runtime, readOptions, `hit method=getAgentRateList key=${key}`);
     }
     return await cache.agentRateList.get(key);
 }
 
-export async function getRateTransactionSetCached(runtime, setKey) {
+export async function getRateTransactionSetCached(runtime, setKey, readOptions = undefined) {
     const cache = getRelationshipReadCache(runtime);
     const key = String(setKey ?? "");
     if (!key)
         return null;
     if (!cache.rateTransactionSet.has(key)) {
+        traceRelationshipCache(runtime, readOptions, `miss method=getRateTransactionSet key=${key}`);
         const readRateTransactionSet = runtime?.spCoinContractDeployed?.getRateTransactionSet;
         cache.rateTransactionSet.set(
             key,
-            typeof readRateTransactionSet === "function"
-                ? readRateTransactionSet(setKey)
-                : Promise.resolve(null),
+            runCachedRead(
+                    getReadCacheContext(runtime),
+                    "getRateTransactionSet",
+                    [setKey],
+                    getReadCacheOptions("getRateTransactionSet", readOptions),
+                    () => typeof runtime.getRateTransactionSet === "function"
+                        ? runtime.getRateTransactionSet(setKey)
+                        : (typeof readRateTransactionSet === "function" ? readRateTransactionSet(setKey) : null),
+                ),
         );
+    }
+    else {
+        traceRelationshipCache(runtime, readOptions, `hit method=getRateTransactionSet key=${key}`);
     }
     const result = await cache.rateTransactionSet.get(key);
     if (!Array.isArray(result))
@@ -351,35 +450,61 @@ export async function getRateTransactionSetCached(runtime, setKey) {
     };
 }
 
-export async function getRecipientRateTransactionSetCached(runtime, sponsorAccountKey, recipientAccountKey, recipientRateKey) {
+export async function getRecipientRateTransactionSetCached(runtime, sponsorAccountKey, recipientAccountKey, recipientRateKey, readOptions = undefined) {
     const cache = getRelationshipReadCache(runtime);
     const key = `${String(sponsorAccountKey ?? "").trim().toLowerCase()}|${String(recipientAccountKey ?? "").trim().toLowerCase()}|${String(recipientRateKey ?? "")}`;
     if (cache.recipientRateTransactionSet.has(key)) {
+        traceRelationshipCache(runtime, readOptions, `hit method=getRecipientRateTransactionSet key=${key}`);
         return await cache.recipientRateTransactionSet.get(key);
     }
+    traceRelationshipCache(runtime, readOptions, `miss method=getRecipientRateTransactionSet key=${key}`);
     const getSetKey = runtime?.spCoinContractDeployed?.getRecipientRateTransactionSetKey;
-    if (typeof getSetKey !== "function")
+    if (typeof getSetKey !== "function" && typeof runtime.getRecipientRateTransactionSetKey !== "function")
         return null;
     const resultPromise = (async () => {
-        const setKey = await getSetKey(sponsorAccountKey, recipientAccountKey, recipientRateKey);
-        return getRateTransactionSetCached(runtime, setKey);
+        const setKey = await runCachedRead(
+                getReadCacheContext(runtime),
+                "getRecipientRateTransactionSetKey",
+                [sponsorAccountKey, recipientAccountKey, recipientRateKey],
+                getReadCacheOptions("getRecipientRateTransactionSetKey", readOptions),
+                () => typeof runtime.getRecipientRateTransactionSetKey === "function"
+                    ? runtime.getRecipientRateTransactionSetKey(sponsorAccountKey, recipientAccountKey, recipientRateKey)
+                    : getSetKey(sponsorAccountKey, recipientAccountKey, recipientRateKey),
+            );
+        return getRateTransactionSetCached(runtime, setKey, readOptions);
     })();
     cache.recipientRateTransactionSet.set(key, resultPromise);
     return await resultPromise;
 }
 
-export async function getAgentRateTransactionSetCached(runtime, sponsorAccountKey, recipientAccountKey, recipientRateKey, agentAccountKey, agentRateKey) {
+export async function getAgentRateTransactionSetCached(runtime, sponsorAccountKey, recipientAccountKey, recipientRateKey, agentAccountKey, agentRateKey, readOptions = undefined) {
     const cache = getRelationshipReadCache(runtime);
     const key = `${String(sponsorAccountKey ?? "").trim().toLowerCase()}|${String(recipientAccountKey ?? "").trim().toLowerCase()}|${String(recipientRateKey ?? "")}|${String(agentAccountKey ?? "").trim().toLowerCase()}|${String(agentRateKey ?? "")}`;
     if (cache.agentRateTransactionSet.has(key)) {
+        traceRelationshipCache(runtime, readOptions, `hit method=getAgentRateTransactionSet key=${key}`);
         return await cache.agentRateTransactionSet.get(key);
     }
+    traceRelationshipCache(runtime, readOptions, `miss method=getAgentRateTransactionSet key=${key}`);
     const getSetKey = runtime?.spCoinContractDeployed?.getAgentRateTransactionSetKey;
-    if (typeof getSetKey !== "function")
+    if (typeof getSetKey !== "function" && typeof runtime.getAgentRateTransactionSetKey !== "function")
         return null;
     const resultPromise = (async () => {
-        const setKey = await getSetKey(sponsorAccountKey, recipientAccountKey, recipientRateKey, agentAccountKey, agentRateKey);
-        return getRateTransactionSetCached(runtime, setKey);
+        const setKey = await runCachedRead(
+                getReadCacheContext(runtime),
+                "getAgentRateTransactionSetKey",
+                [sponsorAccountKey, recipientAccountKey, recipientRateKey, agentAccountKey, agentRateKey],
+                getReadCacheOptions("getAgentRateTransactionSetKey", readOptions),
+                () => typeof runtime.getAgentRateTransactionSetKey === "function"
+                    ? runtime.getAgentRateTransactionSetKey(
+                        sponsorAccountKey,
+                        recipientAccountKey,
+                        recipientRateKey,
+                        agentAccountKey,
+                        agentRateKey,
+                    )
+                    : getSetKey(sponsorAccountKey, recipientAccountKey, recipientRateKey, agentAccountKey, agentRateKey),
+            );
+        return getRateTransactionSetCached(runtime, setKey, readOptions);
     })();
     cache.agentRateTransactionSet.set(key, resultPromise);
     return await resultPromise;

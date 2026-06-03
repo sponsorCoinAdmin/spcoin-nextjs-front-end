@@ -162,7 +162,17 @@ export function readPendingRewardsAmount(value: unknown) {
   const normalizedRecord = normalized as Record<string, unknown>;
   const nestedResult = asRecord(normalizedRecord.result);
   const record = nestedResult ?? normalizedRecord;
+  const pendingTotalRecord = asRecord(record.pendingTotalRewards);
+  const componentTotal =
+    toRewardsBigInt(record.pendingSponsorRewards) +
+    toRewardsBigInt(record.pendingRecipientRewards) +
+    toRewardsBigInt(record.pendingAgentRewards);
   const amount =
+    (componentTotal > 0n ? componentTotal.toString() : undefined) ??
+    pendingTotalRecord?.total ??
+    pendingTotalRecord?.pendingTotalRewards ??
+    pendingTotalRecord?.pendingRewards ??
+    pendingTotalRecord?.totalRewards ??
     record.pendingRewards ??
     record.pendingTotalRewards ??
     record.totalRewards ??
@@ -1118,6 +1128,15 @@ function readPendingRewardsMethodAmount(pendingRewardsBranch: unknown, method: s
 
   for (const key of keys) {
     const value = record[key];
+    if (key === 'pendingTotalRewards') {
+      const totalRecord = asRecord(value);
+      const totalValue =
+        totalRecord?.total ??
+        totalRecord?.pendingTotalRewards ??
+        totalRecord?.pendingRewards ??
+        totalRecord?.totalRewards;
+      if (totalValue !== undefined && totalValue !== null) return String(totalValue);
+    }
     if (value !== undefined && value !== null) return String(value);
   }
   return readPendingRewardsAmount(record);

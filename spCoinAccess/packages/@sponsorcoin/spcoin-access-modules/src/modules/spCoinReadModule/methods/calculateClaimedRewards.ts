@@ -14,6 +14,7 @@ const DECIMAL_MULTIPLIER = 10n ** 18n;
 const PERCENT_DIVISER = DECIMAL_MULTIPLIER / 100n;
 const MIN_PENDING_REWARDS_CACHE_MS = 10_000;
 const DEFAULT_PENDING_REWARDS_CACHE_MS = 10_000;
+const DEFAULT_STABLE_REWARDS_READ_CACHE_MS = 24 * 60 * 60 * 1000;
 
 function toBigIntValue(value) {
     const normalized = String(value ?? "0").replace(/,/g, "").trim();
@@ -95,6 +96,11 @@ function normalizePendingRewardsOptions(optionsOrTimestampOverride = undefined, 
         options.cacheTtlMs ??
         DEFAULT_PENDING_REWARDS_CACHE_MS
     );
+    const stableReadTtlMs =
+        options.stableReadTtlMs ??
+        options.readTtlMs ??
+        options.relationshipReadTtlMs ??
+        DEFAULT_STABLE_REWARDS_READ_CACHE_MS;
     const bypassCache =
         options.cache === "bypass" ||
         options.cache === false ||
@@ -108,6 +114,17 @@ function normalizePendingRewardsOptions(optionsOrTimestampOverride = undefined, 
         timestampOverride: rawTimestampOverride,
         bypassCache,
         cacheMs,
+        readCacheOptions: {
+            cache: bypassCache
+                ? "bypass"
+                : options.cache === "refresh" || options.cache === "only"
+                    ? options.cache
+                    : "default",
+            ...(options.cacheNamespace ? { cacheNamespace: options.cacheNamespace } : {}),
+            ...(options.blockTag != null ? { blockTag: options.blockTag } : {}),
+            ttlMs: stableReadTtlMs,
+            ...(options.traceCache === true ? { traceCache: true } : {}),
+        },
         traceRewardFormula: options.traceRewardFormula === true,
     };
 }
@@ -123,6 +140,44 @@ function getOffChainRewardsEstimateCacheKey(accountKey, timestampOverride) {
     const normalizedAccount = String(accountKey ?? "").trim().toLowerCase();
     const normalizedTimestamp = toBigIntValue(timestampOverride);
     return `${normalizedAccount}|${normalizedTimestamp > 0n ? normalizedTimestamp.toString() : "now"}`;
+}
+
+function tracePendingRewardsCache(runtime, options, message) {
+    if (!options?.readCacheOptions?.traceCache)
+        return;
+    const line = `[PENDING_REWARDS_CACHE_TRACE] ${message}`;
+    runtime?.spCoinLogger?.logDetail?.(`JS => ${line}`);
+    try {
+        if (typeof window !== "undefined" && typeof window.dispatchEvent === "function") {
+            window.dispatchEvent(new CustomEvent("spcoin-rpc-trace", { detail: { line } }));
+        }
+    }
+    catch (_error) {
+        // Tracing must never affect reward calculation.
+    }
+    try {
+        console.debug(line);
+    }
+    catch (_error) {
+        // Ignore console failures in restricted runtimes.
+    }
+}
+
+function describePendingRewardsOptions(options) {
+    const readOptions = options?.readCacheOptions ?? {};
+    return [
+        `estimateTimestampOverride=${String(options?.timestampOverride ?? "")}`,
+        `estimateBypass=${String(Boolean(options?.bypassCache))}`,
+        `estimateCacheMs=${String(options?.cacheMs ?? "")}`,
+        `readCacheMode=${String(readOptions.cache ?? "")}`,
+        `readTtlMs=${String(readOptions.ttlMs ?? "")}`,
+        `readTtlSource=${readOptions.ttlMs == DEFAULT_STABLE_REWARDS_READ_CACHE_MS ? "default-stable-rewards-read-ttl" : "explicit-stable-read-ttl"}`,
+        `readNamespace=${String(readOptions.cacheNamespace ?? "")}`,
+        `readBlockTag=${String(readOptions.blockTag ?? "")}`,
+        `readTimestampOverride=${String(readOptions.timestampOverride ?? "")}`,
+        `traceCache=${String(Boolean(readOptions.traceCache))}`,
+        `traceRewardFormula=${String(Boolean(options?.traceRewardFormula))}`,
+    ].join(" ");
 }
 
 function clonePendingRewardsResult(value) {
@@ -200,17 +255,17 @@ async function getCurrentBlockTimestamp(runtime, timestampOverride = undefined) 
     return BigInt(Math.floor(Date.now() / 1000));
 }
 
-async function getAnnualInflation(runtime) {
+async function getAnnualInflation(runtime, readOptions = undefined) {
     try {
-        return toBigIntValue(await getInflationRateCached(runtime));
+        return toBigIntValue(await getInflationRateCached(runtime, readOptions));
     }
     catch (_error) {
         return 10n;
     }
 }
 
-async function getAccountLinks(runtime, accountKey) {
-    const accountRecord = await getAccountRecordObjectCached(runtime, accountKey);
+async function getAccountLinks(runtime, accountKey, readOptions = undefined) {
+    const accountRecord = await getAccountRecordObjectCached(runtime, accountKey, readOptions);
     return {
         sponsorKeys: toAddressList(accountRecord?.sponsorKeys),
         recipientKeys: toAddressList(accountRecord?.recipientKeys),
@@ -218,8 +273,8 @@ async function getAccountLinks(runtime, accountKey) {
     };
 }
 
-async function calculateRecipientSetRewards(runtime, sponsorKey, recipientKey, recipientRate, currentTimeStamp, formulaTrace = undefined) {
-    const setRecord = await getRecipientRateTransactionSetCached(runtime, sponsorKey, recipientKey, recipientRate);
+async function calculateRecipientSetRewards(runtime, sponsorKey, recipientKey, recipientRate, currentTimeStamp, readOptions = undefined, formulaTrace = undefined) {
+    const setRecord = await getRecipientRateTransactionSetCached(runtime, sponsorKey, recipientKey, recipientRate, readOptions);
     if (!setRecord?.inserted)
         return { rewards: 0n, lastUpdate: "0", stakedQuantity: "0" };
     const rewards = calculatePendingStakingRewards(
@@ -244,8 +299,8 @@ async function calculateRecipientSetRewards(runtime, sponsorKey, recipientKey, r
     };
 }
 
-async function calculateAgentSetRewards(runtime, sponsorKey, recipientKey, recipientRate, agentKey, agentRate, currentTimeStamp, formulaTrace = undefined) {
-    const setRecord = await getAgentRateTransactionSetCached(runtime, sponsorKey, recipientKey, recipientRate, agentKey, agentRate);
+async function calculateAgentSetRewards(runtime, sponsorKey, recipientKey, recipientRate, agentKey, agentRate, currentTimeStamp, readOptions = undefined, formulaTrace = undefined) {
+    const setRecord = await getAgentRateTransactionSetCached(runtime, sponsorKey, recipientKey, recipientRate, agentKey, agentRate, readOptions);
     if (!setRecord?.inserted)
         return { rewards: 0n, lastUpdate: "0", stakedQuantity: "0" };
     const rewards = calculatePendingStakingRewards(
@@ -270,42 +325,47 @@ async function calculateAgentSetRewards(runtime, sponsorKey, recipientKey, recip
     };
 }
 
-async function getRecipientRates(runtime, sponsorKey, recipientKey) {
+async function getRecipientRates(runtime, sponsorKey, recipientKey, readOptions = undefined) {
     try {
-        const readOptions = { cache: "bypass" };
-        return toRateList(await runtime.getRecipientRateList(sponsorKey, recipientKey, readOptions));
+        return toRateList(await getRecipientRateListCached(runtime, sponsorKey, recipientKey, readOptions));
     }
     catch (_error) {
         return [];
     }
 }
 
-async function getRecipientRateAgents(runtime, sponsorKey, recipientKey, recipientRate) {
+async function getRecipientRateAgents(runtime, sponsorKey, recipientKey, recipientRate, readOptions = undefined) {
     try {
-        const readOptions = { cache: "bypass" };
-        return toAddressList(await runtime.getRecipientRateAgentList(sponsorKey, recipientKey, recipientRate, readOptions));
+        return toAddressList(await getRecipientRateAgentListCached(runtime, sponsorKey, recipientKey, recipientRate, readOptions));
     }
     catch (_error) {
         return [];
     }
 }
 
-async function getAgentRates(runtime, sponsorKey, recipientKey, recipientRate, agentKey) {
+async function getAgentRates(runtime, sponsorKey, recipientKey, recipientRate, agentKey, readOptions = undefined) {
     try {
-        const readOptions = { cache: "bypass" };
-        return toRateList(await runtime.getAgentRateList(sponsorKey, recipientKey, recipientRate, agentKey, readOptions));
+        return toRateList(await getAgentRateListCached(runtime, sponsorKey, recipientKey, recipientRate, agentKey, readOptions));
     }
     catch (_error) {
         return [];
     }
 }
 
-async function addSponsorPathPending(runtime, pending, accountKey, currentTimeStamp, annualInflation, formulaTrace = undefined) {
-    const { recipientKeys } = await getAccountLinks(runtime, accountKey);
+async function addSponsorPathPending(runtime, pending, accountKey, currentTimeStamp, annualInflation, readOptions = undefined, formulaTrace = undefined) {
+    const { recipientKeys } = await getAccountLinks(runtime, accountKey, readOptions);
+    tracePendingRewardsCache(runtime, { readCacheOptions: readOptions }, `path=sponsor account=${String(accountKey ?? "")} recipientCount=${String(recipientKeys.length)}`);
+    if (recipientKeys.length === 0) {
+        tracePendingRewardsCache(runtime, { readCacheOptions: readOptions }, `path=sponsor stop=no-recipient-links account=${String(accountKey ?? "")}`);
+    }
     for (const recipientKey of recipientKeys) {
-            const recipientRates = await getRecipientRates(runtime, accountKey, recipientKey);
+        const recipientRates = await getRecipientRates(runtime, accountKey, recipientKey, readOptions);
+        tracePendingRewardsCache(runtime, { readCacheOptions: readOptions }, `path=sponsor sponsor=${String(accountKey ?? "")} recipient=${String(recipientKey ?? "")} recipientRateCount=${String(recipientRates.length)}`);
+        if (recipientRates.length === 0) {
+            tracePendingRewardsCache(runtime, { readCacheOptions: readOptions }, `path=sponsor stop=no-recipient-rates sponsor=${String(accountKey ?? "")} recipient=${String(recipientKey ?? "")}`);
+        }
         for (const recipientRate of recipientRates) {
-            const { rewards: recipientRewards, lastUpdate, stakedQuantity } = await calculateRecipientSetRewards(runtime, accountKey, recipientKey, recipientRate, currentTimeStamp, formulaTrace);
+            const { rewards: recipientRewards, lastUpdate, stakedQuantity } = await calculateRecipientSetRewards(runtime, accountKey, recipientKey, recipientRate, currentTimeStamp, readOptions, formulaTrace);
             trackBucketLastUpdate(pending, "sponsorBucketLastUpdateTimeStamp", lastUpdate);
             addPending(pending, "sponsorBucketStakedQuantity", stakedQuantity);
             const sponsorParentAmount = calculateParentRewardAmount(recipientRewards, recipientRate);
@@ -314,11 +374,13 @@ async function addSponsorPathPending(runtime, pending, accountKey, currentTimeSt
             addPendingForAccount(pending, accountKey, "pendingSponsorRewards", sponsorRewards);
             addPendingForAccount(pending, recipientKey, "pendingRecipientRewards", recipientRewards);
 
-            const agentKeys = await getRecipientRateAgents(runtime, accountKey, recipientKey, recipientRate);
+            const agentKeys = await getRecipientRateAgents(runtime, accountKey, recipientKey, recipientRate, readOptions);
+            tracePendingRewardsCache(runtime, { readCacheOptions: readOptions }, `path=sponsor sponsor=${String(accountKey ?? "")} recipient=${String(recipientKey ?? "")} recipientRate=${String(recipientRate ?? "")} agentCount=${String(agentKeys.length)}`);
             for (const agentKey of agentKeys) {
-                const agentRates = await getAgentRates(runtime, accountKey, recipientKey, recipientRate, agentKey);
+                const agentRates = await getAgentRates(runtime, accountKey, recipientKey, recipientRate, agentKey, readOptions);
+                tracePendingRewardsCache(runtime, { readCacheOptions: readOptions }, `path=sponsor sponsor=${String(accountKey ?? "")} recipient=${String(recipientKey ?? "")} recipientRate=${String(recipientRate ?? "")} agent=${String(agentKey ?? "")} agentRateCount=${String(agentRates.length)}`);
                 for (const agentRate of agentRates) {
-                    const { rewards: agentRewards, lastUpdate: agentLastUpdate, stakedQuantity: agentStakedQuantity } = await calculateAgentSetRewards(runtime, accountKey, recipientKey, recipientRate, agentKey, agentRate, currentTimeStamp, formulaTrace);
+                    const { rewards: agentRewards, lastUpdate: agentLastUpdate, stakedQuantity: agentStakedQuantity } = await calculateAgentSetRewards(runtime, accountKey, recipientKey, recipientRate, agentKey, agentRate, currentTimeStamp, readOptions, formulaTrace);
                     trackBucketLastUpdate(pending, "sponsorBucketLastUpdateTimeStamp", agentLastUpdate);
                     addPending(pending, "sponsorBucketStakedQuantity", agentStakedQuantity);
                     const recipientParentAmount = calculateParentRewardAmount(agentRewards, agentRate);
@@ -334,12 +396,20 @@ async function addSponsorPathPending(runtime, pending, accountKey, currentTimeSt
     }
 }
 
-async function addRecipientPathPending(runtime, pending, accountKey, currentTimeStamp, annualInflation, formulaTrace = undefined) {
-    const { sponsorKeys } = await getAccountLinks(runtime, accountKey);
+async function addRecipientPathPending(runtime, pending, accountKey, currentTimeStamp, annualInflation, readOptions = undefined, formulaTrace = undefined) {
+    const { sponsorKeys } = await getAccountLinks(runtime, accountKey, readOptions);
+    tracePendingRewardsCache(runtime, { readCacheOptions: readOptions }, `path=recipient account=${String(accountKey ?? "")} sponsorCount=${String(sponsorKeys.length)}`);
+    if (sponsorKeys.length === 0) {
+        tracePendingRewardsCache(runtime, { readCacheOptions: readOptions }, `path=recipient stop=no-sponsor-links account=${String(accountKey ?? "")}`);
+    }
     for (const sponsorKey of sponsorKeys) {
-        const recipientRates = await getRecipientRates(runtime, sponsorKey, accountKey);
+        const recipientRates = await getRecipientRates(runtime, sponsorKey, accountKey, readOptions);
+        tracePendingRewardsCache(runtime, { readCacheOptions: readOptions }, `path=recipient sponsor=${String(sponsorKey ?? "")} recipient=${String(accountKey ?? "")} recipientRateCount=${String(recipientRates.length)}`);
+        if (recipientRates.length === 0) {
+            tracePendingRewardsCache(runtime, { readCacheOptions: readOptions }, `path=recipient stop=no-recipient-rates sponsor=${String(sponsorKey ?? "")} recipient=${String(accountKey ?? "")}`);
+        }
         for (const recipientRate of recipientRates) {
-            const { rewards: recipientRewards, lastUpdate, stakedQuantity } = await calculateRecipientSetRewards(runtime, sponsorKey, accountKey, recipientRate, currentTimeStamp, formulaTrace);
+            const { rewards: recipientRewards, lastUpdate, stakedQuantity } = await calculateRecipientSetRewards(runtime, sponsorKey, accountKey, recipientRate, currentTimeStamp, readOptions, formulaTrace);
             trackBucketLastUpdate(pending, "recipientBucketLastUpdateTimeStamp", lastUpdate);
             addPending(pending, "recipientBucketStakedQuantity", stakedQuantity);
             addPending(pending, "pendingRecipientRewards", recipientRewards);
@@ -347,11 +417,13 @@ async function addRecipientPathPending(runtime, pending, accountKey, currentTime
             const sponsorParentAmount = calculateParentRewardAmount(recipientRewards, recipientRate);
             addPendingForAccount(pending, sponsorKey, "pendingSponsorRewards", calculateSponsorDepositAmount(sponsorParentAmount, annualInflation));
 
-            const agentKeys = await getRecipientRateAgents(runtime, sponsorKey, accountKey, recipientRate);
+            const agentKeys = await getRecipientRateAgents(runtime, sponsorKey, accountKey, recipientRate, readOptions);
+            tracePendingRewardsCache(runtime, { readCacheOptions: readOptions }, `path=recipient sponsor=${String(sponsorKey ?? "")} recipient=${String(accountKey ?? "")} recipientRate=${String(recipientRate ?? "")} agentCount=${String(agentKeys.length)}`);
             for (const agentKey of agentKeys) {
-                const agentRates = await getAgentRates(runtime, sponsorKey, accountKey, recipientRate, agentKey);
+                const agentRates = await getAgentRates(runtime, sponsorKey, accountKey, recipientRate, agentKey, readOptions);
+                tracePendingRewardsCache(runtime, { readCacheOptions: readOptions }, `path=recipient sponsor=${String(sponsorKey ?? "")} recipient=${String(accountKey ?? "")} recipientRate=${String(recipientRate ?? "")} agent=${String(agentKey ?? "")} agentRateCount=${String(agentRates.length)}`);
                 for (const agentRate of agentRates) {
-                    const { rewards: agentRewards, lastUpdate: agentLastUpdate, stakedQuantity: agentStakedQuantity } = await calculateAgentSetRewards(runtime, sponsorKey, accountKey, recipientRate, agentKey, agentRate, currentTimeStamp, formulaTrace);
+                    const { rewards: agentRewards, lastUpdate: agentLastUpdate, stakedQuantity: agentStakedQuantity } = await calculateAgentSetRewards(runtime, sponsorKey, accountKey, recipientRate, agentKey, agentRate, currentTimeStamp, readOptions, formulaTrace);
                     trackBucketLastUpdate(pending, "recipientBucketLastUpdateTimeStamp", agentLastUpdate);
                     addPending(pending, "recipientBucketStakedQuantity", agentStakedQuantity);
                     const recipientAgentRewards = calculateParentRewardAmount(agentRewards, agentRate);
@@ -366,19 +438,29 @@ async function addRecipientPathPending(runtime, pending, accountKey, currentTime
     }
 }
 
-async function addAgentPathPending(runtime, pending, accountKey, currentTimeStamp, annualInflation, formulaTrace = undefined) {
-    const { parentRecipientKeys } = await getAccountLinks(runtime, accountKey);
+async function addAgentPathPending(runtime, pending, accountKey, currentTimeStamp, annualInflation, readOptions = undefined, formulaTrace = undefined) {
+    const { parentRecipientKeys } = await getAccountLinks(runtime, accountKey, readOptions);
+    tracePendingRewardsCache(runtime, { readCacheOptions: readOptions }, `path=agent account=${String(accountKey ?? "")} parentRecipientCount=${String(parentRecipientKeys.length)}`);
+    if (parentRecipientKeys.length === 0) {
+        tracePendingRewardsCache(runtime, { readCacheOptions: readOptions }, `path=agent stop=no-parent-recipient-links account=${String(accountKey ?? "")}`);
+    }
     for (const parentRecipientKey of parentRecipientKeys) {
-        const { sponsorKeys } = await getAccountLinks(runtime, parentRecipientKey);
+        const { sponsorKeys } = await getAccountLinks(runtime, parentRecipientKey, readOptions);
+        tracePendingRewardsCache(runtime, { readCacheOptions: readOptions }, `path=agent account=${String(accountKey ?? "")} parentRecipient=${String(parentRecipientKey ?? "")} sponsorCount=${String(sponsorKeys.length)}`);
         for (const sponsorKey of sponsorKeys) {
-            const recipientRates = await getRecipientRates(runtime, sponsorKey, parentRecipientKey);
+            const recipientRates = await getRecipientRates(runtime, sponsorKey, parentRecipientKey, readOptions);
+            tracePendingRewardsCache(runtime, { readCacheOptions: readOptions }, `path=agent sponsor=${String(sponsorKey ?? "")} parentRecipient=${String(parentRecipientKey ?? "")} recipientRateCount=${String(recipientRates.length)}`);
             for (const recipientRate of recipientRates) {
-                const agentKeys = await getRecipientRateAgents(runtime, sponsorKey, parentRecipientKey, recipientRate);
-                if (!agentKeys.map((key) => key.toLowerCase()).includes(String(accountKey).toLowerCase()))
+                const agentKeys = await getRecipientRateAgents(runtime, sponsorKey, parentRecipientKey, recipientRate, readOptions);
+                tracePendingRewardsCache(runtime, { readCacheOptions: readOptions }, `path=agent sponsor=${String(sponsorKey ?? "")} parentRecipient=${String(parentRecipientKey ?? "")} recipientRate=${String(recipientRate ?? "")} agentCount=${String(agentKeys.length)}`);
+                if (!agentKeys.map((key) => key.toLowerCase()).includes(String(accountKey).toLowerCase())) {
+                    tracePendingRewardsCache(runtime, { readCacheOptions: readOptions }, `path=agent skip=account-not-in-agent-list account=${String(accountKey ?? "")} sponsor=${String(sponsorKey ?? "")} parentRecipient=${String(parentRecipientKey ?? "")} recipientRate=${String(recipientRate ?? "")}`);
                     continue;
-                const agentRates = await getAgentRates(runtime, sponsorKey, parentRecipientKey, recipientRate, accountKey);
+                }
+                const agentRates = await getAgentRates(runtime, sponsorKey, parentRecipientKey, recipientRate, accountKey, readOptions);
+                tracePendingRewardsCache(runtime, { readCacheOptions: readOptions }, `path=agent sponsor=${String(sponsorKey ?? "")} parentRecipient=${String(parentRecipientKey ?? "")} recipientRate=${String(recipientRate ?? "")} account=${String(accountKey ?? "")} agentRateCount=${String(agentRates.length)}`);
                 for (const agentRate of agentRates) {
-                    const { rewards: agentRewards, lastUpdate, stakedQuantity } = await calculateAgentSetRewards(runtime, sponsorKey, parentRecipientKey, recipientRate, accountKey, agentRate, currentTimeStamp, formulaTrace);
+                    const { rewards: agentRewards, lastUpdate, stakedQuantity } = await calculateAgentSetRewards(runtime, sponsorKey, parentRecipientKey, recipientRate, accountKey, agentRate, currentTimeStamp, readOptions, formulaTrace);
                     trackBucketLastUpdate(pending, "agentBucketLastUpdateTimeStamp", lastUpdate);
                     addPending(pending, "agentBucketStakedQuantity", stakedQuantity);
                     addPending(pending, "pendingAgentRewards", agentRewards);
@@ -396,19 +478,31 @@ async function addAgentPathPending(runtime, pending, accountKey, currentTimeStam
 export async function calculateClaimedRewards(context, accountKey, optionsOrTimestampOverride = undefined, timestampOverride = undefined) {
     const runtime = context;
     const options = normalizePendingRewardsOptions(optionsOrTimestampOverride, timestampOverride);
+    tracePendingRewardsCache(runtime, options, `normalized account=${String(accountKey ?? "")} ${describePendingRewardsOptions(options)}`);
     const cache = getOffChainRewardsEstimateCache(runtime);
     const cacheKey = getOffChainRewardsEstimateCacheKey(accountKey, options.timestampOverride);
     const nowMs = Date.now();
     const cached = options.bypassCache ? null : cache.get(cacheKey);
     if (cached && cached.expiresAtMs > nowMs) {
+        tracePendingRewardsCache(runtime, options, `hit key=${cacheKey} ttlRemainingMs=${cached.expiresAtMs - nowMs}`);
         return clonePendingRewardsResult(await cached.promise);
     }
+    tracePendingRewardsCache(
+        runtime,
+        options,
+        `${options.bypassCache ? "bypass" : cached ? "expired" : "miss"} key=${cacheKey} cacheMs=${options.cacheMs}`,
+    );
     runtime.spCoinLogger.logFunctionHeader("calculateClaimedRewards(" + accountKey + ")");
     const pendingPromise = (async () => {
-        delete runtime.__relationshipReadCache;
+        if (options.readCacheOptions?.cache === "refresh" || options.readCacheOptions?.cache === "bypass") {
+            tracePendingRewardsCache(runtime, options, `clear relationship cache cacheMode=${options.readCacheOptions.cache}`);
+            delete runtime.__relationshipReadCache;
+        }
         const currentTimeStamp = await getCurrentBlockTimestamp(runtime, options.timestampOverride);
-        const annualInflation = await getAnnualInflation(runtime);
-        const accountRecord = await getAccountRecordObjectCached(runtime, accountKey);
+        const readOptions = options.readCacheOptions;
+        tracePendingRewardsCache(runtime, options, `stable-read-options account=${String(accountKey ?? "")} currentTimeStamp=${String(currentTimeStamp)} ${describePendingRewardsOptions(options)}`);
+        const annualInflation = await getAnnualInflation(runtime, readOptions);
+        const accountRecord = await getAccountRecordObjectCached(runtime, accountKey, readOptions);
         const formulaTrace = options.traceRewardFormula ? [] : undefined;
         const pending = {
             TYPE: "--ACCOUNT_PENDING_REWARDS--",
@@ -431,9 +525,9 @@ export async function calculateClaimedRewards(context, accountKey, optionsOrTime
             pendingAgentRewards: "0",
         };
 
-        await addSponsorPathPending(runtime, pending, accountKey, currentTimeStamp, annualInflation, formulaTrace);
-        await addRecipientPathPending(runtime, pending, accountKey, currentTimeStamp, annualInflation, formulaTrace);
-        await addAgentPathPending(runtime, pending, accountKey, currentTimeStamp, annualInflation, formulaTrace);
+        await addSponsorPathPending(runtime, pending, accountKey, currentTimeStamp, annualInflation, readOptions, formulaTrace);
+        await addRecipientPathPending(runtime, pending, accountKey, currentTimeStamp, annualInflation, readOptions, formulaTrace);
+        await addAgentPathPending(runtime, pending, accountKey, currentTimeStamp, annualInflation, readOptions, formulaTrace);
         pending.pendingRewards = (
             toBigIntValue(pending.pendingSponsorRewards) +
             toBigIntValue(pending.pendingRecipientRewards) +

@@ -23,7 +23,11 @@ import {
   setCachedAccountRecord,
   invalidateCachedAccountRecord as invalidatePersistentAccountRecord,
 } from '@/spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/utils/accountCache';
-import { invalidateReadCacheForAccount } from '@/spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/utils/readCache';
+import {
+  clearReadCache,
+  getReadCacheSize,
+  invalidateReadCacheForAccount,
+} from '@/spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/utils/readCache';
 
 type LabScriptParam = {
   key: string;
@@ -67,6 +71,8 @@ type RunScriptRequest = {
   cacheMode?: 'default' | 'refresh' | 'bypass' | 'only';
   cacheNamespace?: string;
   traceCache?: boolean;
+  clearReadCache?: boolean;
+  preClaimEstimateResult?: unknown;
 };
 
 type StepPayload =
@@ -1183,6 +1189,14 @@ function buildRewardCalculationMeta(params: RewardCalculationMetaParams) {
     params.normalizedResult && typeof params.normalizedResult === 'object' && !Array.isArray(params.normalizedResult)
       ? (params.normalizedResult as Record<string, unknown>)
       : {};
+  const pendingTotalRewardsRecord =
+    record.pendingTotalRewards && typeof record.pendingTotalRewards === 'object' && !Array.isArray(record.pendingTotalRewards)
+      ? (record.pendingTotalRewards as Record<string, unknown>)
+      : null;
+  const totalRolePendingRewards =
+    toBigIntAmount(record.pendingSponsorRewards) +
+    toBigIntAmount(record.pendingRecipientRewards) +
+    toBigIntAmount(record.pendingAgentRewards);
   const accountSnapshot = params.accountSnapshot ?? params.afterSnapshot ?? params.beforeSnapshot ?? null;
   const pendingRoleRewards =
     role === 'Sponsor'
@@ -1191,7 +1205,14 @@ function buildRewardCalculationMeta(params: RewardCalculationMetaParams) {
         ? record.pendingRecipientRewards
         : role === 'Agent'
           ? record.pendingAgentRewards
-          : record.pendingTotalRewards ?? record.pendingRewards ?? record.totalRewards;
+          : (totalRolePendingRewards > 0n ? totalRolePendingRewards.toString() : undefined) ??
+            pendingTotalRewardsRecord?.total ??
+            pendingTotalRewardsRecord?.pendingTotalRewards ??
+            pendingTotalRewardsRecord?.pendingRewards ??
+            pendingTotalRewardsRecord?.totalRewards ??
+            record.pendingTotalRewards ??
+            record.pendingRewards ??
+            record.totalRewards;
   const pendingRoleRewardsKey =
     role === 'Sponsor'
       ? 'pendingSponsorRewards'
@@ -1230,7 +1251,17 @@ function buildRewardCalculationMeta(params: RewardCalculationMetaParams) {
           [`${roleBucketPrefix}BucketLastUpdateFormatted`]: roleBucketLastUpdateFormatted,
           calculatedFormatted: String(record.calculatedFormatted ?? ''),
           [pendingRoleRewardsKey]: String(pendingRoleRewards ?? '0'),
-          pendingTotalRewards: String(record.pendingTotalRewards ?? record.pendingRewards ?? record.totalRewards ?? '0'),
+          pendingTotalRewards: String(
+            (totalRolePendingRewards > 0n ? totalRolePendingRewards.toString() : undefined) ??
+            pendingTotalRewardsRecord?.total ??
+            pendingTotalRewardsRecord?.pendingTotalRewards ??
+            pendingTotalRewardsRecord?.pendingRewards ??
+            pendingTotalRewardsRecord?.totalRewards ??
+            record.pendingTotalRewards ??
+            record.pendingRewards ??
+            record.totalRewards ??
+            '0',
+          ),
         },
       },
     };
@@ -1297,29 +1328,6 @@ function buildClaimRewardCalculationMeta(params: {
   });
 }
 
-type PendingAccountRewardsReader = {
-  estimateOffChainTotalRewards?: (
-    accountKey: string,
-    optionsOrTimestampOverride?: unknown,
-    timestampOverride?: string | number | bigint,
-  ) => Promise<unknown>;
-  estimateOffChainSponsorRewards?: (
-    accountKey: string,
-    optionsOrTimestampOverride?: unknown,
-    timestampOverride?: string | number | bigint,
-  ) => Promise<unknown>;
-  estimateOffChainRecipientRewards?: (
-    accountKey: string,
-    optionsOrTimestampOverride?: unknown,
-    timestampOverride?: string | number | bigint,
-  ) => Promise<unknown>;
-  estimateOffChainAgentRewards?: (
-    accountKey: string,
-    optionsOrTimestampOverride?: unknown,
-    timestampOverride?: string | number | bigint,
-  ) => Promise<unknown>;
-};
-
 type ClaimedRewardsByAccount = Record<string, {
   accountKey: string;
   claimedSponsorRewards: string;
@@ -1327,13 +1335,6 @@ type ClaimedRewardsByAccount = Record<string, {
   claimedAgentRewards: string;
   claimedRewards: string;
 }>;
-
-const CLAIM_TO_ESTIMATE_METHOD: Record<RewardUpdateWriteMethod, keyof PendingAccountRewardsReader> = {
-  claimOnChainTotalRewards: 'estimateOffChainTotalRewards',
-  claimOnChainSponsorRewards: 'estimateOffChainSponsorRewards',
-  claimOnChainRecipientRewards: 'estimateOffChainRecipientRewards',
-  claimOnChainAgentRewards: 'estimateOffChainAgentRewards',
-};
 
 function readPendingRewardsByAccount(value: unknown): Record<string, Record<string, unknown>> | null {
   const normalized = normalizePendingRewardsDisplayResult(value);
@@ -1346,22 +1347,6 @@ function readPendingRewardsByAccount(value: unknown): Record<string, Record<stri
   return rewardsByAccount && typeof rewardsByAccount === 'object' && !Array.isArray(rewardsByAccount)
     ? (rewardsByAccount as Record<string, Record<string, unknown>>)
     : null;
-}
-
-async function getClaimAffectedPendingRewardsResult(
-  pendingRewardsReader: PendingAccountRewardsReader,
-  methodName: RewardUpdateWriteMethod,
-  accountKey: string,
-  readCacheOptions: unknown,
-) {
-  const estimateMethodName = CLAIM_TO_ESTIMATE_METHOD[methodName];
-  const estimateMethod = pendingRewardsReader[estimateMethodName];
-  if (typeof estimateMethod !== 'function') return null;
-  return await estimateMethod(accountKey, {
-    ...(readCacheOptions as Record<string, unknown>),
-    cache: false,
-    traceRewardFormula: true,
-  });
 }
 
 function getClaimRoleForAffectedAccount(
@@ -1733,16 +1718,19 @@ export async function POST(request: NextRequest) {
         ? body.cacheMode
         : body?.useCache === false
           ? 'bypass'
-          : body?.useCache === true
-            ? 'default'
-            : source === 'local'
-              ? 'bypass'
+        : body?.useCache === true
+          ? 'default'
           : 'default';
     const readCacheOptions = {
       cache: cacheMode,
       cacheNamespace: String(body?.cacheNamespace || '').trim() || undefined,
       traceCache: body?.traceCache === true,
     };
+    const shouldClearReadCache = body?.clearReadCache === true;
+    const readCacheSizeBeforeClear = shouldClearReadCache ? getReadCacheSize() : null;
+    if (shouldClearReadCache) {
+      clearReadCache();
+    }
 
     if (!script || !Array.isArray(script.steps)) {
       return NextResponse.json({ ok: false, message: 'A script with steps is required.' }, { status: 400 });
@@ -1800,6 +1788,13 @@ export async function POST(request: NextRequest) {
         appendTrace(`resolved hardhat sender=${senderAddress}`);
         appendTrace(`spCoinAccessSource=${source}`);
         appendTrace(`readCacheMode=${cacheMode}; readCacheNamespace=${readCacheOptions.cacheNamespace || ''}`);
+        if (shouldClearReadCache) {
+          appendTrace(
+            `[SPCOIN_READ_CACHE_TRACE] phase=clear scope=server reason=request clearReadCache=true beforeSize=${String(
+              readCacheSizeBeforeClear ?? 0,
+            )} afterSize=${String(getReadCacheSize())} namespace=${readCacheOptions.cacheNamespace || ''}`,
+          );
+        }
         const access = createSpCoinModuleAccess(contract, signer, source, appendTrace);
         const initialLatestBlockClock = await getLatestBlockClock(provider);
         const initialWallClockTimestamp = String(Math.floor(Date.now() / 1000));
@@ -2862,13 +2857,18 @@ export async function POST(request: NextRequest) {
             case 'claimOnChainAgentRewards': {
               const methodName = step.method as RewardUpdateWriteMethod;
               const accountKey = findParam('Account Key') || senderAddress;
-              const pendingRewardsReader = access.read as PendingAccountRewardsReader;
-              const preClaimCalculatedRewardsResult = await getClaimAffectedPendingRewardsResult(
-                pendingRewardsReader,
-                methodName,
-                accountKey,
-                readCacheOptions,
+              appendTrace(
+                `[SPCOIN_READ_CACHE_TRACE] claim pre-read method=${methodName} account=${accountKey} cacheMode=${cacheMode} namespace=${readCacheOptions.cacheNamespace || ''}`,
               );
+              const hasSuppliedPreClaimEstimate = body?.preClaimEstimateResult !== undefined;
+              appendTrace(
+                `[SPCOIN_READ_CACHE_TRACE] claim pre-read source=${
+                  hasSuppliedPreClaimEstimate ? 'client-estimate-snapshot' : 'server-estimate'
+                } method=${methodName} account=${accountKey}`,
+              );
+              const preClaimCalculatedRewardsResult = hasSuppliedPreClaimEstimate
+                ? body.preClaimEstimateResult
+                : null;
               const affectedPendingRewardsByAccount = readPendingRewardsByAccount(preClaimCalculatedRewardsResult);
               const tx = await sendSignedContractTransaction({
                 label: methodName,
@@ -2897,6 +2897,16 @@ export async function POST(request: NextRequest) {
                 });
               const claimedAmount = String(
                 claimedRewardsByAccount[normalizeAddressDisplay(accountKey)]?.claimedRewards ?? '0',
+              );
+              const invalidatedAccounts = Array.from(
+                new Set([accountKey, ...Object.keys(claimedRewardsByAccount)].map((value) => normalizeAddressDisplay(value)).filter(Boolean)),
+              );
+              for (const invalidatedAccount of invalidatedAccounts) {
+                invalidateCachedAccountRecord(contractAddress, invalidatedAccount);
+              }
+              clearReadCache();
+              appendTrace(
+                `[SPCOIN_READ_CACHE_TRACE] phase=clear scope=server reason=claim-write method=${methodName} accounts=${invalidatedAccounts.join(',') || normalizeAddressDisplay(accountKey)}`,
               );
               traceRewardFormulaEntries('beforeClaim', preClaimCalculatedRewardsResult, appendTrace);
               stepRewardCalculationMeta = buildClaimRewardCalculationMeta({

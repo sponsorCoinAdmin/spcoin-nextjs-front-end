@@ -158,6 +158,7 @@ export function useSponsorCoinLabTreeMethods({
         rpcUrl,
         spCoinAccessSource: 'local',
         cacheNamespace: readCacheNamespace,
+        traceCache: traceEnabled,
         script: {
           id: `load-account-list-${Date.now()}`,
           name: 'Load Account List',
@@ -191,7 +192,7 @@ export function useSponsorCoinLabTreeMethods({
     treeAccountListCacheRef.current = list;
     syncTreeAccountOptions(list);
     return { list };
-  }, [mode, readCacheNamespace, requireContractAddress, rpcUrl, syncTreeAccountOptions]);
+  }, [mode, readCacheNamespace, requireContractAddress, rpcUrl, syncTreeAccountOptions, traceEnabled]);
 
   const runServerBackedTreeSpCoinMethod = useServerBackedTreeSpCoinMethod({
     appendWriteTrace,
@@ -199,6 +200,7 @@ export function useSponsorCoinLabTreeMethods({
     readCacheNamespace,
     requireContractAddress,
     rpcUrl,
+    traceEnabled,
     useLocalSpCoinAccessPackage,
     useReadCache,
   });
@@ -297,7 +299,8 @@ export function useSponsorCoinLabTreeMethods({
             rpcUrl,
             spCoinAccessSource: 'local',
             cacheNamespace: readCacheNamespace,
-            ...(options?.force ? { cacheMode: 'bypass' } : {}),
+            traceCache: traceEnabled,
+            ...(options?.force ? { cacheMode: 'refresh' } : {}),
             script: {
               id: `expand-account-record-${Date.now()}`,
               name: 'Expand Account Record',
@@ -366,7 +369,7 @@ export function useSponsorCoinLabTreeMethods({
       }
       return tree;
     },
-    [appendLog, normalizeAddressValue, readCacheNamespace, requireContractAddress, rpcUrl],
+    [appendLog, normalizeAddressValue, readCacheNamespace, requireContractAddress, rpcUrl, traceEnabled],
   );
 
   const runTreeDumpBase = useCallback(async (accountOverride?: string, options?: { force?: boolean }) => {

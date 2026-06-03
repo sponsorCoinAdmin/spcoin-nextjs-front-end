@@ -1497,35 +1497,17 @@ export default function OutputResultsCard({
                 <button
                   type="button"
                   aria-label="Cycle cache mode"
-                  aria-pressed={controls.useReadCache === true}
-                  className={`inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded border text-[9px] font-black leading-none ${getTriStateControlClasses(controls.useReadCache)}`}
+                  aria-pressed={controls.useReadCache !== false}
+                  className={`inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded border text-[9px] font-black leading-none ${getTriStateControlClasses(controls.useReadCache !== false)}`}
                   onClick={() => {
-                    controls.setUseReadCache(
-                      controls.useReadCache === undefined
-                        ? false
-                        : controls.useReadCache === false
-                          ? true
-                          : undefined,
-                    );
+                    controls.setUseReadCache(controls.useReadCache === false);
                   }}
-                  title={
-                    controls.useReadCache === true
-                      ? 'Cache on'
-                      : controls.useReadCache === false
-                        ? 'Cache off'
-                        : 'Cache default'
-                  }
+                  title={controls.useReadCache !== false ? 'Cache on' : 'Cache off'}
                 >
-                  {controls.useReadCache === true ? '\u2713' : controls.useReadCache === false ? 'X' : ''}
+                  {controls.useReadCache !== false ? '\u2713' : 'X'}
                 </button>
                 <span
-                  className={
-                    controls.useReadCache === true
-                      ? 'text-green-400'
-                      : controls.useReadCache === false
-                        ? 'text-red-400'
-                        : 'text-slate-200'
-                  }
+                  className={controls.useReadCache !== false ? 'text-green-400' : 'text-red-400'}
                 >
                   Cache
                 </span>

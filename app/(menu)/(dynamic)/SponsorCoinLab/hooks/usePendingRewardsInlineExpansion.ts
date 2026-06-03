@@ -799,7 +799,7 @@ export function usePendingRewardsInlineExpansion({
                 panel: 'spcoin_rread',
                 method: selectedEstimateMethod,
                 params: [{ key: 'Account Key', value: normalizedAccount }],
-                cacheMode: 'bypass',
+                cacheMode: 'default',
               });
               return {
                 pendingResult: serverResult.result,

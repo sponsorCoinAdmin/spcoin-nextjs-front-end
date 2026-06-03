@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-06-01T21:40:07.511Z",
+  "updatedAt": "2026-06-03T19:31:15.128Z",
   "lists": {
     "serialization": {
       "Basic": {
@@ -906,7 +906,7 @@
     "spCoinRead:estimateOffChainTotalRewards": "spcoin_rread",
     "spCoinRead:estimateOffChainSponsorRewards": "spcoin_rread",
     "spCoinRead:estimateOffChainRecipientRewards": "spcoin_rread",
-    "spCoinRead:estimateOffChainAgentRewards": "spcoin_rread",
+    "spCoinRead:estimateOffChainAgentRewards": "spcoin_write",
     "spCoinRead:getTransactionRecord": "spcoin_rread",
     "spCoinRead:getRecipientTransactionIdKeys": "spcoin_rread",
     "spCoinRead:getAgentTransactionIdKeys": "spcoin_rread",

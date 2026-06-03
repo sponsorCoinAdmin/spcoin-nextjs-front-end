@@ -122,6 +122,7 @@ function getPendingRewardsRole(record: Record<string, unknown>): PendingRewardsD
   if (type.includes('SPONSOR')) return 'Sponsor';
   if (type.includes('RECIPIENT')) return 'Recipient';
   if (type.includes('AGENT')) return 'Agent';
+  if (type.includes('TOTAL')) return 'NA';
   const hasOnlySponsorReward = hasOwn(record, 'pendingSponsorRewards') && !hasOwn(record, 'pendingRecipientRewards') && !hasOwn(record, 'pendingAgentRewards');
   const hasOnlyRecipientReward = !hasOwn(record, 'pendingSponsorRewards') && hasOwn(record, 'pendingRecipientRewards') && !hasOwn(record, 'pendingAgentRewards');
   const hasOnlyAgentReward = !hasOwn(record, 'pendingSponsorRewards') && !hasOwn(record, 'pendingRecipientRewards') && hasOwn(record, 'pendingAgentRewards');
@@ -160,6 +161,11 @@ function getVisiblePendingRewardComponents(
   if (role === 'Sponsor') return { pendingSponsorRewards };
   if (role === 'Recipient') return { pendingRecipientRewards };
   if (role === 'Agent') return { pendingAgentRewards };
+  const components: Record<string, string> = {};
+  if (toPendingRewardsBigInt(pendingSponsorRewards) > 0n) components.pendingSponsorRewards = pendingSponsorRewards;
+  if (toPendingRewardsBigInt(pendingRecipientRewards) > 0n) components.pendingRecipientRewards = pendingRecipientRewards;
+  if (toPendingRewardsBigInt(pendingAgentRewards) > 0n) components.pendingAgentRewards = pendingAgentRewards;
+  if (Object.keys(components).length > 0) return components;
   return {};
 }
 

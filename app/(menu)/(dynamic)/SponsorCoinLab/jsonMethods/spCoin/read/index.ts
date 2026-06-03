@@ -546,7 +546,7 @@ export async function runSpCoinReadMethod(args: RunArgs): Promise<unknown> {
   const staking = access.staking as SpCoinStakingAccess & Record<string, unknown>;
   const contract = access.contract as SpCoinContractAccess;
   const methodArgs = activeDef.params.map((def, idx) => coerceParamValue(spReadParams[idx], def));
-  const effectiveReadCache = useReadCache ?? (spCoinAccessSource === 'local' ? false : undefined);
+  const effectiveReadCache = useReadCache ?? true;
   const readCacheOptions = {
     ...(effectiveReadCache === undefined ? {} : { cache: effectiveReadCache ? 'default' : 'bypass' }),
     ...(readCacheNamespace ? { cacheNamespace: readCacheNamespace } : {}),
