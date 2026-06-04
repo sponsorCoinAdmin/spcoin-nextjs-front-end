@@ -6,7 +6,7 @@ import type { ParamDef } from '../../shared/types';
 import { normalizeStringListResult } from '../../shared/normalizeListResult';
 import { buildExternalserializedRResult, type SerializationBaseMethod } from '../../serializationTests';
 import { normalizePendingRewardsDisplayResult } from '@/lib/spCoinLab/pendingRewards';
-import { clearCache as clearPackageCache, setCacheTraceMode as setPackageCacheTraceMode } from '@/spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/cache';
+import { clearCache as clearPackageCache, setCacheTraceMode as setPackageCacheTraceMode } from '@/spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/cache/index';
 import { parseTtlMs } from '../../shared/cacheTtl';
 
 export type SpCoinReadMethod =
