@@ -21,6 +21,7 @@ type Params = {
   methodPanelMode: string;
   activeReadLabels: AddressFieldLabels;
   activeWriteLabels: AddressFieldLabels;
+  readTokenAddress: string;
   readAddressA: string;
   readAddressB: string;
   writeAddressA: string;
@@ -45,6 +46,7 @@ export function useControllerEditorSync({
   methodPanelMode,
   activeReadLabels,
   activeWriteLabels,
+  readTokenAddress,
   readAddressA,
   readAddressB,
   writeAddressA,
@@ -134,6 +136,7 @@ export function useControllerEditorSync({
         return '';
       };
       return {
+        tokenAddress: String(readTokenAddress || contractAddress || '').trim(),
         addressA: resolveByLabel(labels.addressALabel),
         addressB: resolveByLabel(labels.addressBLabel),
       };
@@ -141,7 +144,9 @@ export function useControllerEditorSync({
     [
       activeAccountAddress,
       agentAccountAddress,
+      contractAddress,
       recipientAccountAddress,
+      readTokenAddress,
       selectedWriteSenderAddress,
       sponsorAccountAddress,
     ],
@@ -233,6 +238,15 @@ export function useControllerEditorSync({
     },
     [setExchangeContext],
   );
+
+  useEffect(() => {
+    if (methodPanelMode !== 'ecr20_read') return;
+    syncEditorAddressFieldToExchangeContext('Token Address', readTokenAddress);
+  }, [
+    methodPanelMode,
+    readTokenAddress,
+    syncEditorAddressFieldToExchangeContext,
+  ]);
 
   useEffect(() => {
     if (methodPanelMode !== 'ecr20_read') return;

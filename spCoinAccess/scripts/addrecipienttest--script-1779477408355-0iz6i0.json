@@ -48,37 +48,6 @@
     },
     {
       "step": 4,
-      "name": "addAgentTransaction",
-      "panel": "spcoin_write",
-      "method": "addAgentTransaction",
-      "msg.sender": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
-      "params": [
-        {
-          "key": "Recipient Key",
-          "value": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8"
-        },
-        {
-          "key": "Recipient Rate Key",
-          "value": "20"
-        },
-        {
-          "key": "Agent Key",
-          "value": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc"
-        },
-        {
-          "key": "Agent Rate Key",
-          "value": "2"
-        },
-        {
-          "key": "Transaction Quantity",
-          "value": "100000000000000000000"
-        }
-      ],
-      "breakpoint": false,
-      "hasMissingRequiredParams": false
-    },
-    {
-      "step": 5,
       "name": "estimateOffChainSponsorRewards",
       "panel": "spcoin_rread",
       "method": "estimateOffChainSponsorRewards",
@@ -92,7 +61,7 @@
       "hasMissingRequiredParams": false
     },
     {
-      "step": 6,
+      "step": 5,
       "name": "estimateOffChainRecipientRewards",
       "panel": "spcoin_rread",
       "method": "estimateOffChainRecipientRewards",
@@ -106,7 +75,7 @@
       "hasMissingRequiredParams": false
     },
     {
-      "step": 7,
+      "step": 6,
       "name": "getSummaryRecord",
       "panel": "spcoin_rread",
       "method": "getSummaryRecord",
@@ -120,16 +89,21 @@
       "hasMissingRequiredParams": false
     },
     {
-      "step": 8,
+      "step": 7,
       "name": "decimals",
       "panel": "ecr20_read",
       "method": "decimals",
-      "params": [],
+      "params": [
+        {
+          "key": "Token Address",
+          "value": "0x55138b5b44193b0cdc7e2824881e8d63643c049c"
+        }
+      ],
       "breakpoint": false,
       "hasMissingRequiredParams": false
     },
     {
-      "step": 9,
+      "step": 8,
       "name": "estimateOffChainTotalRewards",
       "panel": "spcoin_rread",
       "method": "estimateOffChainTotalRewards",
@@ -143,7 +117,7 @@
       "hasMissingRequiredParams": false
     },
     {
-      "step": 10,
+      "step": 9,
       "name": "claimOnChainTotalRewards",
       "panel": "spcoin_write",
       "method": "claimOnChainTotalRewards",

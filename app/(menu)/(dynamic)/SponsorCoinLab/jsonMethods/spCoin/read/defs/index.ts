@@ -1,4 +1,5 @@
 // File: app/(menu)/(dynamic)/SponsorCoinLab/methods/spcoin/read/defs/index.ts
+import type { MethodDef, ParamDef } from '../../../shared/types';
 import getInflationRate from './getInflationRate';
 import calculateStakingRewards from './calculateStakingRewards';
 import creationTime from './creationTime';
@@ -66,9 +67,29 @@ import version from './version';
 import isSponsor from './isSponsor';
 import isRecipient from './isRecipient';
 import isAgent from './isAgent';
+import clearCache from './clearCache';
+import setCacheTraceMode from './setCacheTraceMode';
 
-export const SPCOIN_READ_METHOD_DEFS = {
+const READ_CACHE_PARAM_DEFS: ParamDef[] = [
+  { label: 'Cache Mode', placeholder: 'default | forceRefresh | useCacheOnly', type: 'string', optional: true },
+  { label: 'TTL', placeholder: '24:00:00.000', type: 'string', optional: true },
+  { label: 'TTL Format', placeholder: 'hh:mm:ss.ms', type: 'string', optional: true },
+  { label: 'Trace Cache', placeholder: 'true', type: 'bool', optional: true },
+];
+
+const METHODS_WITHOUT_CACHE_PARAMS = new Set(['clearCache', 'setCacheTraceMode', 'calcDataTimeDiff']);
+
+function withReadCacheParams(def: MethodDef): MethodDef {
+  return {
+    ...def,
+    params: [...def.params, ...READ_CACHE_PARAM_DEFS],
+  };
+}
+
+const BASE_SPCOIN_READ_METHOD_DEFS = {
   getInflationRate,
+  clearCache,
+  setCacheTraceMode,
   calculateStakingRewards,
   creationTime,
   getMasterAccountMetaData,
@@ -159,3 +180,10 @@ export const SPCOIN_READ_METHOD_DEFS = {
   totalStakingRewards,
   version,
 };
+
+export const SPCOIN_READ_METHOD_DEFS = Object.fromEntries(
+  Object.entries(BASE_SPCOIN_READ_METHOD_DEFS).map(([name, def]) => [
+    name,
+    METHODS_WITHOUT_CACHE_PARAMS.has(name) ? def : withReadCacheParams(def),
+  ]),
+) as typeof BASE_SPCOIN_READ_METHOD_DEFS;

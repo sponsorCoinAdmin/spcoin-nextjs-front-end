@@ -3,6 +3,9 @@ import type { SpCoinReadCacheOptions } from "./readCache";
 const METHOD_READ_CACHE_TTL_MS: Record<string, number> = {
   getAccountRecord: 60 * 60 * 1000,
   getAccountRecordShallow: 60 * 60 * 1000,
+  getAccountRelationshipRecord: 60 * 60 * 1000,
+  getAccountRewardSnapshotRecord: 60 * 60 * 1000,
+  getAccountRewardTotals: 60 * 60 * 1000,
   getAccountLinks: 60 * 60 * 1000,
 };
 
@@ -66,6 +69,9 @@ const METHOD_READ_CACHE_TTL_ENV_VALUES: Record<string, string | undefined> = {
   getAccountRecipientListSize: process.env.NEXT_PUBLIC_SPCOIN_READ_CACHE_TTL_MS_GET_ACCOUNT_RECIPIENT_LIST_SIZE,
   getAccountRecord: process.env.NEXT_PUBLIC_SPCOIN_READ_CACHE_TTL_MS_GET_ACCOUNT_RECORD,
   getAccountRecordShallow: process.env.NEXT_PUBLIC_SPCOIN_READ_CACHE_TTL_MS_GET_ACCOUNT_RECORD_SHALLOW,
+  getAccountRelationshipRecord: process.env.NEXT_PUBLIC_SPCOIN_READ_CACHE_TTL_MS_GET_ACCOUNT_RELATIONSHIP_RECORD,
+  getAccountRewardSnapshotRecord: process.env.NEXT_PUBLIC_SPCOIN_READ_CACHE_TTL_MS_GET_ACCOUNT_REWARD_SNAPSHOT_RECORD,
+  getAccountRewardTotals: process.env.NEXT_PUBLIC_SPCOIN_READ_CACHE_TTL_MS_GET_ACCOUNT_REWARD_TOTALS,
   getAccountRoleSummary: process.env.NEXT_PUBLIC_SPCOIN_READ_CACHE_TTL_MS_GET_ACCOUNT_ROLE_SUMMARY,
   getAccountRoles: process.env.NEXT_PUBLIC_SPCOIN_READ_CACHE_TTL_MS_GET_ACCOUNT_ROLES,
   getRoles: process.env.NEXT_PUBLIC_SPCOIN_READ_CACHE_TTL_MS_GET_ROLES,

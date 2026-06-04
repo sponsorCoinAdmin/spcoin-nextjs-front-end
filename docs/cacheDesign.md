@@ -110,7 +110,7 @@ The exact debug API name can change, but it should be explicit and traceable.
 Use a shared options object rather than loose boolean arguments.
 
 ```ts
-type CacheMode = 'default' | 'refresh' | 'bypass' | 'only';
+type CacheMode = 'default' | 'forceRefresh' | 'useCacheOnly';
 
 type ReadOptions = {
   cache?: CacheMode;
@@ -130,19 +130,13 @@ default
 Use the cache if present and valid. On miss, read chain, normalize, update cache, return.
 
 ```text
-refresh
+forceRefresh
 ```
 
 Ignore existing cached value, read from chain, normalize, update cache, return. This is the preferred "force fresh" mode.
 
 ```text
-bypass
-```
-
-Read directly from chain and do not read from or write to the cache. This is for advanced debugging only.
-
-```text
-only
+useCacheOnly
 ```
 
 Return cached value only. If missing, return null or a typed cache-miss result. This is useful for UI previews and diagnostics.
@@ -176,22 +170,10 @@ Use cache unchecked
 Call read methods with:
 
 ```ts
-{ cache: 'refresh' }
+{ cache: 'forceRefresh' }
 ```
 
-Unchecked should mean "read fresh from chain and update the cache." It should not mean true bypass by default.
-
-If needed later, add an advanced/debug-only option:
-
-```text
-Bypass cache without updating
-```
-
-That maps to:
-
-```ts
-{ cache: 'bypass' }
-```
+Unchecked should mean "read fresh from chain and update the cache." It should not mean a no-store read mode.
 
 ## Cache Key Strategy
 
@@ -458,16 +440,15 @@ event AgentRelationshipChanged(
 event AccountRewardsUpdated(address indexed accountKey);
 ```
 
-## Raw Read Bypass Policy
+## Raw Read Policy
 
-Normal app/library consumers should not bypass the cache.
+Normal app/library consumers should not use uncached raw reads.
 
-Allowed bypass cases:
+Allowed raw-read cases:
 
 ```text
 internal library implementation
-explicit refresh mode
-advanced SponsorCoinLab diagnostics
+explicit forceRefresh mode
 tests
 emergency debugging
 ```
@@ -479,7 +460,7 @@ The only normal exposed points are cached methods.
 Raw reads live under explicit internal/debug APIs.
 ```
 
-This preserves debuggability without allowing accidental bypass everywhere.
+This preserves debuggability without adding a normal no-store cache mode.
 
 ## Trace And Debug Output
 
@@ -491,8 +472,7 @@ Useful trace lines:
 cache mode=default
 cache hit method=getAccountRecord key=...
 cache miss method=getAccountRecord key=...
-cache refresh method=getAccountRecord key=...
-cache bypass method=getAccountRecord key=...
+cache forceRefresh method=getAccountRecord key=...
 cache set method=getAccountRecord key=... dependencies=[...]
 cache invalidate dependency=account:0xf39... count=...
 cache invalidate method=getAccountPendingRewards reason=AccountRewardsUpdated
@@ -598,13 +578,7 @@ Checked:
 Unchecked:
 
 ```ts
-{ cache: 'refresh' }
-```
-
-Advanced/debug-only:
-
-```ts
-{ cache: 'bypass' }
+{ cache: 'forceRefresh' }
 ```
 
 ## Testing Plan
@@ -637,8 +611,8 @@ Important assertions:
 no stale reward totals after updateAccountStakingRewards
 no stale relationship lists after add/delete relationship writes
 pending reward parity with settlement timestamp remains exact
-SponsorCoinLab trace shows hit/miss/refresh clearly
-Use cache unchecked refreshes from chain and updates cache
+SponsorCoinLab trace shows hit/miss/forceRefresh clearly
+Use cache unchecked reads from chain according to the selected cache mode
 ```
 
 ## Current Recommendation

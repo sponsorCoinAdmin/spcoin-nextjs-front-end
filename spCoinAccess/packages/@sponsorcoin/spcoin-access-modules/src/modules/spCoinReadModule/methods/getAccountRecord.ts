@@ -324,9 +324,9 @@ export async function getAccountRecordObjectCached(runtime, accountKey, readOpti
             key,
             runCachedRead(
                 getReadCacheContext(runtime),
-                "getAccountRecord",
+                "getAccountRelationshipRecord",
                 [accountKey],
-                getReadCacheOptions("getAccountRecord", readOptions),
+                getReadCacheOptions("getAccountRelationshipRecord", readOptions),
                 () => runtime.spCoinSerialize.getAccountRecordObject(accountKey),
             ),
         );
@@ -437,15 +437,26 @@ export async function getRateTransactionSetCached(runtime, setKey, readOptions =
         traceRelationshipCache(runtime, readOptions, `hit method=getRateTransactionSet key=${key}`);
     }
     const result = await cache.rateTransactionSet.get(key);
+    if (result && typeof result === "object" && !Array.isArray(result)) {
+        return {
+            setKey: result.setKey ?? setKey,
+            rate: String(result.rate ?? "0"),
+            creationTimeStamp: String(result.creationTimeStamp ?? "0"),
+            lastUpdateTimeStamp: String(result.lastUpdateTimeStamp ?? "0"),
+            totalStaked: String(result.totalStaked ?? "0"),
+            transactionCount: String(result.transactionCount ?? "0"),
+            inserted: Boolean(result.inserted),
+        };
+    }
     if (!Array.isArray(result))
         return null;
     return {
         setKey: result[0],
-        rate: result[1],
-        creationTimeStamp: result[2],
-        lastUpdateTimeStamp: result[3],
-        totalStaked: result[4],
-        transactionCount: result[5],
+        rate: String(result[1] ?? "0"),
+        creationTimeStamp: String(result[2] ?? "0"),
+        lastUpdateTimeStamp: String(result[3] ?? "0"),
+        totalStaked: String(result[4] ?? "0"),
+        transactionCount: String(result[5] ?? "0"),
         inserted: Boolean(result[6]),
     };
 }
@@ -525,10 +536,37 @@ async function getPendingRewardsSummary(runtime, accountKey, accountRecord = und
         };
     }
     const summaryPromise = (async () => {
-        const rewardsByType =
-            typeof runtime.estimateOffChainTotalRewards === "function"
-                ? await runtime.estimateOffChainTotalRewards(accountKey)
-                : await runtime.getAccountStakingRewards(accountKey);
+        const roleDisplay = getAccountRoleDisplay(accountRecord);
+        const roleEstimateCalls = [
+            roleDisplay.isSponsor && typeof runtime.estimateOffChainSponsorRewards === "function"
+                ? ["pendingSponsorRewards", runtime.estimateOffChainSponsorRewards]
+                : null,
+            roleDisplay.isRecipient && typeof runtime.estimateOffChainRecipientRewards === "function"
+                ? ["pendingRecipientRewards", runtime.estimateOffChainRecipientRewards]
+                : null,
+            roleDisplay.isAgent && typeof runtime.estimateOffChainAgentRewards === "function"
+                ? ["pendingAgentRewards", runtime.estimateOffChainAgentRewards]
+                : null,
+        ].filter(Boolean);
+        let rewardsByType;
+        if (roleEstimateCalls.length > 0) {
+            rewardsByType = {};
+            for (const [rewardKey, estimateMethod] of roleEstimateCalls) {
+                const estimateResult = await estimateMethod(accountKey);
+                const allRoles =
+                    estimateResult?.__pendingRewardsAllRoles &&
+                    typeof estimateResult.__pendingRewardsAllRoles === "object"
+                        ? estimateResult.__pendingRewardsAllRoles
+                        : {};
+                rewardsByType[rewardKey] = String(estimateResult?.[rewardKey] ?? allRoles?.[rewardKey] ?? "0");
+            }
+        }
+        if (!rewardsByType) {
+            rewardsByType =
+                typeof runtime.estimateOffChainTotalRewards === "function"
+                    ? await runtime.estimateOffChainTotalRewards(accountKey)
+                    : await runtime.getAccountStakingRewards(accountKey);
+        }
         const totalPending =
             toBigIntValue(rewardsByType?.pendingRewards) ||
             toBigIntValue(rewardsByType?.sponsorRewardsList?.stakingRewards) +

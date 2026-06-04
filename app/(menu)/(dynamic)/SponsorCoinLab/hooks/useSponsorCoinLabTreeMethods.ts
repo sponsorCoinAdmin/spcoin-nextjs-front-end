@@ -23,6 +23,7 @@ import {
   mirrorSpCoinLabAccountRecord,
 } from '@/lib/spCoinLab/accountRecordStore';
 import {
+  PENDING_REWARDS_ESTIMATE_METHODS,
   parsePendingRewardsActionClick,
   parsePendingRewardsMethodClick,
 } from './pendingRewardsTreeUtils';
@@ -300,7 +301,7 @@ export function useSponsorCoinLabTreeMethods({
             spCoinAccessSource: 'local',
             cacheNamespace: readCacheNamespace,
             traceCache: traceEnabled,
-            ...(options?.force ? { cacheMode: 'refresh' } : {}),
+            ...(options?.force ? { cacheMode: 'forceRefresh' } : {}),
             script: {
               id: `expand-account-record-${Date.now()}`,
               name: 'Expand Account Record',
@@ -558,6 +559,30 @@ export function useSponsorCoinLabTreeMethods({
         return;
       }
       if (pendingRewardsClick) {
+        const pendingMethods = pendingRewardsClick.methods?.length ? pendingRewardsClick.methods : [];
+        if (pendingMethods.length > 1) {
+          let finalPendingResult: Awaited<ReturnType<typeof expandPendingRewardsActionInline>> = 'unhandled';
+          for (const method of pendingMethods) {
+            const methodPathHint = pathHint && !pathHint.endsWith(`.${method}`) ? `${pathHint}.${method}` : pathHint;
+            finalPendingResult = await expandPendingRewardsActionInline(
+              {
+                ...pendingRewardsClick,
+                action: PENDING_REWARDS_ESTIMATE_METHODS.has(method) ? 'estimate' : 'claim',
+                method,
+                methods: undefined,
+              },
+              methodPathHint,
+              finalPendingResult === 'unhandled' ? rawDisplayOverride : undefined,
+            );
+            appendLog(
+              `[PENDING_REWARDS_TRACE] multi-method action result=${finalPendingResult} method=${method} path=${String(methodPathHint ?? '')}`,
+            );
+          }
+          if (finalPendingResult === 'expanded' || finalPendingResult === 'handled') {
+            setOutputPanelMode(/^tree-/i.test(String(pathHint ?? '').trim()) ? 'tree' : 'formatted');
+          }
+          return;
+        }
         const pendingResult = await expandPendingRewardsActionInline(pendingRewardsClick, pathHint, rawDisplayOverride);
         appendLog(`[PENDING_REWARDS_TRACE] action result=${pendingResult} path=${String(pathHint ?? '')}`);
         if (pendingResult === 'expanded' || pendingResult === 'handled') {

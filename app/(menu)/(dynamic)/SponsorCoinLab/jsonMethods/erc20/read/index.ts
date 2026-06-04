@@ -10,6 +10,7 @@ import { method as totalSupply } from './methods/totalSupply';
 
 export type Erc20ReadMethod = 'name' | 'symbol' | 'decimals' | 'totalSupply' | 'balanceOf' | 'allowance';
 export type Erc20ReadAlterMode = 'Standard' | 'All' | 'Test' | 'Todo';
+export const ERC20_TOKEN_ADDRESS_PARAM_LABEL = 'Token Address';
 
 export type Erc20ReadLabels = {
   title: string;
@@ -68,6 +69,7 @@ export function getErc20ReadLabels(selectedReadMethod: Erc20ReadMethod): Erc20Re
 type RunArgs = {
   selectedReadMethod: Erc20ReadMethod;
   activeReadLabels: Erc20ReadLabels;
+  readTokenAddress: string;
   readAddressA: string;
   readAddressB: string;
   requireContractAddress: () => string;
@@ -80,6 +82,7 @@ export async function runErc20ReadMethod(args: RunArgs): Promise<unknown> {
   const {
     selectedReadMethod,
     activeReadLabels,
+    readTokenAddress,
     readAddressA,
     readAddressB,
     requireContractAddress,
@@ -88,7 +91,13 @@ export async function runErc20ReadMethod(args: RunArgs): Promise<unknown> {
     setStatus,
   } = args;
 
-  const target = requireContractAddress();
+  const tokenAddress = readTokenAddress.trim() || requireContractAddress();
+  const target = /^0[xX][0-9a-fA-F]{40}$/.test(tokenAddress)
+    ? `0x${tokenAddress.slice(2).toLowerCase()}`
+    : tokenAddress;
+  if (!/^0x[0-9a-f]{40}$/.test(target)) {
+    throw new Error(`${ERC20_TOKEN_ADDRESS_PARAM_LABEL} is required.`);
+  }
   const runner = await ensureReadRunner();
   const contract = createSpCoinContract(target, runner) as Contract;
   const addressA = readAddressA.trim();
@@ -104,11 +113,11 @@ export async function runErc20ReadMethod(args: RunArgs): Promise<unknown> {
   const fn = METHODS[selectedReadMethod];
   const result = await fn.run(contract, addressA, addressB);
   if (selectedReadMethod === 'allowance') {
-    appendLog(`allowance(${addressA}, ${addressB}) -> ${String(result)}`);
+    appendLog(`allowance(${target}, ${addressA}, ${addressB}) -> ${String(result)}`);
   } else if (selectedReadMethod === 'balanceOf') {
-    appendLog(`balanceOf(${addressA}) -> ${String(result)}`);
+    appendLog(`balanceOf(${target}, ${addressA}) -> ${String(result)}`);
   } else {
-    appendLog(`${selectedReadMethod}() -> ${String(result)}`);
+    appendLog(`${selectedReadMethod}(${target}) -> ${String(result)}`);
   }
   setStatus(`${selectedReadMethod} read complete.`);
   return result;

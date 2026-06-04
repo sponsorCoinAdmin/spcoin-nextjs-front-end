@@ -634,7 +634,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
             contractAddress: activeContractAddr,
             rpcUrl,
             spCoinAccessSource: accessSource,
-            cacheMode: action === 'estimate' ? 'default' : 'refresh',
+            cacheMode: action === 'estimate' ? 'default' : 'forceRefresh',
             useCache: action === 'estimate',
             traceCache: traceEnabled,
             script: {
@@ -757,7 +757,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
             contractAddress: activeContractAddr,
             rpcUrl,
             spCoinAccessSource: accessSource,
-            cacheMode: action === 'estimate' ? 'default' : 'refresh',
+            cacheMode: action === 'estimate' ? 'default' : 'forceRefresh',
             useCache: action === 'estimate',
             traceCache: traceEnabled,
             script: {
@@ -837,6 +837,13 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
       traceEnabled,
     ],
   );
+
+  const runAvailableRoleRewardEstimates = useCallback(async () => {
+    for (const role of ['Sponsor', 'Recipient', 'Agent'] as RewardRoleName[]) {
+      if (!getAccountRoleAvailable(accountRecord, role)) continue;
+      await runRewardAction(role, 'estimate');
+    }
+  }, [accountRecord, runRewardAction]);
 
   useEffect(() => {
     if (isActive) return;
@@ -1212,13 +1219,13 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                     <button
                       type="button"
                       className={pendingBtnTw}
-                      onClick={onOpenRewardsByAccountType}
+                      onClick={() => void runTotalRewardAction('estimate')}
                       onContextMenu={(event) => {
                         event.preventDefault();
-                        void runTotalRewardAction('estimate');
+                        onOpenRewardsByAccountType();
                       }}
-                      aria-label="Open Pending Rewards by Account Type"
-                      title="Left click: open by-account-type rewards. Right click: estimate total pending rewards."
+                      aria-label="Estimate total pending rewards"
+                      title="Right Click to Expand"
                     >
                       Pending
                     </button>
@@ -1254,9 +1261,13 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                     <button
                       type="button"
                       className={pendingBtnTw}
-                      onClick={onCloseRewardsByAccountType}
-                      aria-label="Close Pending Rewards by Account Type"
-                      title="Close Pending Rewards by Account Type"
+                      onClick={() => void runAvailableRoleRewardEstimates()}
+                      onContextMenu={(event) => {
+                        event.preventDefault();
+                        onCloseRewardsByAccountType();
+                      }}
+                      aria-label="Estimate pending rewards by account type"
+                      title="Left Click to Estimate Roles. Right Click to Collapse"
                     >
                       Pending Rewards by Account Type
                     </button>

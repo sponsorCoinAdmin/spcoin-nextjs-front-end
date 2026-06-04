@@ -32,7 +32,7 @@ This repository is a Next.js 15 front-end app built in TypeScript. It is focused
 - Do not assume tests exist; the repo currently has no test runner configured.
 - When code changes affect blockchain or contract access behavior, check for related server API routes under `app/api/spCoin/`.
 - Keep changes limited to the repository unless the user explicitly asks to modify external package sources or global environment files.
-- Minimize approval prompts: batch related read-only inspections, reuse stable approved command forms, and proceed with normal repo-local reads/edits without asking first.
+- Approval policy: do not ask the user for submission approvals for normal repo-local reads, diffs, status checks, edits, or validation commands. Batch related inspections and proceed using stable approved command forms.
 - Request approval only when the sandbox/tool layer requires it, when accessing locations outside the repo, when using network/install actions, or before destructive operations.
 
 ## Notes for AI agents

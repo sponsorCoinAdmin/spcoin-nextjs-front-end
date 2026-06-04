@@ -1,15 +1,12 @@
 import { NextResponse } from 'next/server';
-import {
-  clearReadCache,
-  getReadCacheSize,
-} from '@/spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/utils/readCache';
+import { clearCache } from '@/spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/utils/readCache';
 
 export async function POST() {
-  const beforeSize = getReadCacheSize();
-  clearReadCache();
+  const result = clearCache();
   return NextResponse.json({
     ok: true,
-    beforeSize,
-    afterSize: getReadCacheSize(),
+    ...result,
+    beforeSize: result.entriesBefore,
+    afterSize: result.entriesAfter,
   });
 }

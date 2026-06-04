@@ -123,6 +123,8 @@ export function useControllerViewProps(args: UseControllerViewPropsArgs) {
     erc20ReadOptions: args.erc20ReadOptions,
     selectDropdownReadMethod: args.selectDropdownReadMethod,
     activeReadLabels: args.activeReadLabels,
+    readTokenAddress: args.readTokenAddress,
+    setReadTokenAddress: args.setReadTokenAddress,
     readAddressA: args.readAddressA,
     setReadAddressA: args.setReadAddressA,
     readAddressB: args.readAddressB,

@@ -172,7 +172,7 @@ async function calculateAgentSetRewards(runtime, sponsorKey, recipientKey, recip
 
 async function getRecipientRates(runtime, sponsorKey, recipientKey) {
     try {
-        const readOptions = { cache: "bypass" };
+        const readOptions = { cache: "forceRefresh" };
         return toRateList(await runtime.getRecipientRateList(sponsorKey, recipientKey, readOptions));
     }
     catch (_error) {
@@ -182,7 +182,7 @@ async function getRecipientRates(runtime, sponsorKey, recipientKey) {
 
 async function getRecipientRateAgents(runtime, sponsorKey, recipientKey, recipientRate) {
     try {
-        const readOptions = { cache: "bypass" };
+        const readOptions = { cache: "forceRefresh" };
         return toAddressList(await runtime.getRecipientRateAgentList(sponsorKey, recipientKey, recipientRate, readOptions));
     }
     catch (_error) {
@@ -192,7 +192,7 @@ async function getRecipientRateAgents(runtime, sponsorKey, recipientKey, recipie
 
 async function getAgentRates(runtime, sponsorKey, recipientKey, recipientRate, agentKey) {
     try {
-        const readOptions = { cache: "bypass" };
+        const readOptions = { cache: "forceRefresh" };
         return toRateList(await runtime.getAgentRateList(sponsorKey, recipientKey, recipientRate, agentKey, readOptions));
     }
     catch (_error) {

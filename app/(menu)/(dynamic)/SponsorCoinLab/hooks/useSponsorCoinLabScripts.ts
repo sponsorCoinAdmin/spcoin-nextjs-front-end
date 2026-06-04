@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from 'react';
 import {
+  ERC20_TOKEN_ADDRESS_PARAM_LABEL,
   getErc20ReadLabels,
   type Erc20ReadMethod,
 } from '../jsonMethods/erc20/read';
@@ -103,6 +104,7 @@ type Params = {
   formattedJsonViewEnabled: boolean;
   formattedOutputDisplay: string;
   selectedReadMethod: Erc20ReadMethod;
+  readTokenAddress: string;
   readAddressA: string;
   readAddressB: string;
   activeReadLabels: ReadLabels;
@@ -149,6 +151,7 @@ type Params = {
   setMode: (value: ConnectionMode) => void;
   setMethodPanelMode: (value: MethodPanelMode) => void;
   setSelectedReadMethod: (value: Erc20ReadMethod) => void;
+  setReadTokenAddress: (value: string) => void;
   setReadAddressA: (value: string) => void;
   setReadAddressB: (value: string) => void;
   setSelectedWriteMethod: (value: Erc20WriteMethod) => void;
@@ -282,6 +285,7 @@ export function useSponsorCoinLabScripts({
   formattedJsonViewEnabled,
   formattedOutputDisplay,
   selectedReadMethod,
+  readTokenAddress,
   readAddressA,
   readAddressB,
   activeReadLabels,
@@ -318,6 +322,7 @@ export function useSponsorCoinLabScripts({
   setMode,
   setMethodPanelMode,
   setSelectedReadMethod,
+  setReadTokenAddress,
   setReadAddressA,
   setReadAddressB,
   setSelectedWriteMethod,
@@ -622,17 +627,31 @@ export function useSponsorCoinLabScripts({
             typeof (param as { key?: unknown }).key === 'string',
         )
       ) {
-        return (step.params as LabScriptParam[])
+        const entries = (step.params as LabScriptParam[])
           .map((param) => ({ key: String(param.key || ''), value: String(param.value || '') }))
           .filter((param) => param.key !== 'msg.sender' && param.value.trim().length > 0);
+        if (
+          step.panel === 'ecr20_read' &&
+          !entries.some((param) => param.key === ERC20_TOKEN_ADDRESS_PARAM_LABEL) &&
+          String(readTokenAddress || '').trim()
+        ) {
+          return [
+            { key: ERC20_TOKEN_ADDRESS_PARAM_LABEL, value: String(readTokenAddress || '').trim() },
+            ...entries,
+          ];
+        }
+        return entries;
       }
 
       const legacyValues = Array.isArray(step.params) ? (step.params as unknown[]).map((value) => String(value || '')) : [];
 
       if (step.panel === 'ecr20_read') {
         const labels = getErc20ReadLabels(step.method as Erc20ReadMethod);
-        const keys = [labels.addressALabel, labels.addressBLabel].filter(Boolean);
-        return legacyValues
+        const keys = [ERC20_TOKEN_ADDRESS_PARAM_LABEL, labels.addressALabel, labels.addressBLabel].filter(Boolean);
+        const values = legacyValues.length > keys.length - 1
+          ? legacyValues
+          : [String(readTokenAddress || '').trim(), ...legacyValues];
+        return values
           .map((value, idx) => ({ key: keys[idx] || `param${idx + 1}`, value }))
           .filter((param) => param.value.trim().length > 0);
       }
@@ -669,7 +688,7 @@ export function useSponsorCoinLabScripts({
         .map((value, idx) => ({ key: writeDef?.params[idx]?.label || `param${idx + 1}`, value }))
         .filter((param) => param.value.trim().length > 0);
     },
-    [serializationTestMethodDefs, spCoinReadMethodDefs, spCoinWriteMethodDefs],
+    [readTokenAddress, serializationTestMethodDefs, spCoinReadMethodDefs, spCoinWriteMethodDefs],
   );
   const hasStepMissingRequiredParams = useCallback(
     (step: LabScriptStep): boolean => {
@@ -681,6 +700,7 @@ export function useSponsorCoinLabScripts({
 
       if (step.panel === 'ecr20_read') {
         const labels = getErc20ReadLabels(step.method as Erc20ReadMethod);
+        if (!findParamValue(ERC20_TOKEN_ADDRESS_PARAM_LABEL)) return true;
         if (labels.requiresAddressA && !findParamValue(labels.addressALabel)) return true;
         if (labels.requiresAddressB && !findParamValue(labels.addressBLabel)) return true;
         return false;
@@ -697,17 +717,17 @@ export function useSponsorCoinLabScripts({
 
       if (step.panel === 'spcoin_rread') {
         const def = spCoinReadMethodDefs[normalizeSpCoinReadMethod(step.method)];
-        return (def?.params || []).some((param) => !findParamValue(param.label));
+        return (def?.params || []).some((param) => !param.optional && !findParamValue(param.label));
       }
 
       if (step.panel === 'serialization_tests') {
         const def = serializationTestMethodDefs[normalizeSerializationTestMethodKey(step.method) as SerializationTestMethod];
-        return (def?.params || []).some((param) => !findParamValue(param.label));
+        return (def?.params || []).some((param) => !param.optional && !findParamValue(param.label));
       }
 
       const def = spCoinWriteMethodDefs[normalizeSpCoinWriteMethod(step.method)];
       if (stepMode === 'hardhat' && !sender) return true;
-      return (def?.params || []).some((param) => param.type !== 'date' && !findParamValue(param.label));
+      return (def?.params || []).some((param) => !param.optional && param.type !== 'date' && !findParamValue(param.label));
     },
     [
       getStepMode,
@@ -723,6 +743,7 @@ export function useSponsorCoinLabScripts({
   const normalizeScriptStep = useCallback(
     (step: LabScriptStep, index: number): LabScriptStep => {
       const hasMissingRequiredParams = hasStepMissingRequiredParams(step);
+      const hasStaleAutoBreakpoint = Boolean(step.hasMissingRequiredParams) && !hasMissingRequiredParams;
       return {
         step: index + 1,
         name: step.name,
@@ -730,7 +751,7 @@ export function useSponsorCoinLabScripts({
         method: step.method,
         'msg.sender': getStepSender(step) || undefined,
         params: getStepParamEntries(step),
-        breakpoint: Boolean(step.breakpoint) || hasMissingRequiredParams,
+        breakpoint: hasStaleAutoBreakpoint ? false : Boolean(step.breakpoint) || hasMissingRequiredParams,
         hasMissingRequiredParams,
       };
     },
@@ -814,8 +835,15 @@ export function useSponsorCoinLabScripts({
         const match = paramEntries.find((param) => keys.includes(param.key));
         return String(match?.value || '');
       };
+      const getParamLookupKeys = (label: string, idx: number) => {
+        const keys = [label || `param${idx + 1}`];
+        if (label === 'TTL') keys.push('TTL Ms');
+        return keys;
+      };
       const fillParamList = (defs: Array<{ label: string }>) =>
-        Array.from({ length: 7 }, (_, idx) => findParamValue([defs[idx]?.label || `param${idx + 1}`]));
+        Array.from({ length: Math.max(7, defs.length) }, (_, idx) =>
+          findParamValue(getParamLookupKeys(defs[idx]?.label || '', idx)),
+        );
 
       setSelectedScriptStepNumber(step.step);
       setMode(getStepMode(step, selectedScript?.network));
@@ -824,6 +852,7 @@ export function useSponsorCoinLabScripts({
       if (step.panel === 'ecr20_read') {
         setSelectedReadMethod(step.method as Erc20ReadMethod);
         const labels = getErc20ReadLabels(step.method as Erc20ReadMethod);
+        setReadTokenAddress(findParamValue([ERC20_TOKEN_ADDRESS_PARAM_LABEL]));
         setReadAddressA(findParamValue([labels.addressALabel]));
         setReadAddressB(findParamValue([labels.addressBLabel]));
         return;
@@ -868,6 +897,7 @@ export function useSponsorCoinLabScripts({
       selectedScript?.network,
       setMethodPanelMode,
       setMode,
+      setReadTokenAddress,
       setReadAddressA,
       setReadAddressB,
       setSelectedReadMethod,
@@ -1366,6 +1396,7 @@ export function useSponsorCoinLabScripts({
           hasMissingRequiredParams,
           'msg.sender': sender,
           params: [
+            { key: ERC20_TOKEN_ADDRESS_PARAM_LABEL, value: String(readTokenAddress || '').trim() },
             activeReadLabels.requiresAddressA ? { key: activeReadLabels.addressALabel, value: String(readAddressA || '').trim() } : null,
             activeReadLabels.requiresAddressB ? { key: activeReadLabels.addressBLabel, value: String(readAddressB || '').trim() } : null,
           ].filter((value): value is LabScriptParam => value !== null && value.value.length > 0),
@@ -1468,6 +1499,7 @@ export function useSponsorCoinLabScripts({
       activeWriteLabels.requiresAddressB,
       activeWriteLabels.title,
       effectiveScriptPanelMode,
+      readTokenAddress,
       readAddressA,
       readAddressB,
       selectedReadMethod,

@@ -23,7 +23,7 @@ This split makes cache behavior inconsistent. A read may cache in the browser wh
 
 1. Cache logic resides in the npm package.
 2. Every package read method supports the same cache options.
-3. Every read method can force blockchain read-through when cache is disabled globally.
+3. Every read method can force live blockchain/offline reads when cache is disabled globally.
 4. Every read method can invalidate its exact cache member with `ttlMs: 0`.
 5. The package exposes `clearCache` to remove the package cache.
 6. Writes invalidate affected cached reads after successful transactions.
@@ -32,7 +32,7 @@ This split makes cache behavior inconsistent. A read may cache in the browser wh
 
 ## Package Cache Subsystem
 
-The cache should be isolated as its own subsystem inside the npm package. This keeps cache design, keying, TTL policy, read-through behavior, and write invalidation in one containerized package area.
+The cache should be isolated as its own subsystem inside the npm package. This keeps cache design, keying, TTL policy, live-read behavior, and write invalidation in one containerized package area.
 
 Suggested structure:
 
@@ -81,10 +81,9 @@ Builds method/domain tags for cache entries. This is where method-specific depen
 Interprets cache options:
 
 - `cache`
-- `readThrough`
 - `ttlMs`
 - default TTLs
-- cache hit/miss/read-through decisions
+- cache hit/miss/live-read decisions
 
 `readCacheStore.ts`
 
@@ -140,11 +139,10 @@ SponsorCoinLab and app/server routes should not import cache internals. They may
 All package read methods should accept an optional final cache options parameter where required:
 
 ```ts
-export type SpCoinReadCacheMode = 'default' | 'refresh' | 'bypass' | 'only';
+export type SpCoinReadCacheMode = 'default' | 'forceRefresh' | 'useCacheOnly';
 
 export type SpCoinReadCacheOptions = {
   cache?: SpCoinReadCacheMode;
-  readThrough?: boolean;
   ttlMs?: number;
   cacheNamespace?: string;
   blockTag?: 'latest' | 'pending' | number;
@@ -159,25 +157,13 @@ export type SpCoinReadCacheOptions = {
 
 Use a fresh cached value if available. If no fresh value exists, read from chain/offline source and store the result.
 
-`cache: 'refresh'`
+`cache: 'forceRefresh'`
 
 Ignore any current cached value, read from chain/offline source, and replace the cached value.
 
-`cache: 'bypass'`
-
-Ignore cache and read from chain/offline source. Do not store the result. This is the global cache checkbox off behavior.
-
-`cache: 'only'`
+`cache: 'useCacheOnly'`
 
 Use cache only. Do not call chain. If no fresh cached value exists, return `null` or a defined cache-miss result.
-
-`readThrough: true`
-
-Allow chain/offline read-through on cache miss. This is the default for `cache: 'default'` and `cache: 'refresh'`.
-
-`readThrough: false`
-
-Do not call chain/offline source. This is equivalent to cache-only behavior unless combined with an explicit invalidation operation.
 
 `ttlMs > 0`
 
@@ -185,7 +171,7 @@ Override the TTL for this read call.
 
 `ttlMs: 0`
 
-Invalidate the exact cache member for this method, arguments, namespace, block tag, and timestamp override. After invalidation, behavior follows `cache` and `readThrough`.
+Invalidate the exact cache member for this method, arguments, namespace, block tag, and timestamp override. After invalidation, behavior follows `cache` mode.
 
 ## Global Cache Checkbox
 
@@ -195,8 +181,7 @@ When checked:
 
 ```ts
 {
-  cache: 'default',
-  readThrough: true
+  cache: 'default'
 }
 ```
 
@@ -204,19 +189,17 @@ When unchecked:
 
 ```ts
 {
-  cache: 'bypass',
-  readThrough: true
+  cache: 'forceRefresh'
 }
 ```
 
-Unchecked means "force live blockchain results." It should not use cached values and should not update the cache.
+Unchecked means "force live blockchain results." It should not use cached values, and it should replace the cached value with the live result.
 
 The Refresh button with cache checked should use:
 
 ```ts
 {
-  cache: 'refresh',
-  readThrough: true
+  cache: 'forceRefresh'
 }
 ```
 
@@ -226,12 +209,12 @@ Dropdown methods in SponsorCoinLab should expose cache parameters for read metho
 
 Suggested optional parameters:
 
-- `Cache Mode`: `default`, `refresh`, `bypass`, `only`
-- `Read Through`: `true`, `false`
-- `TTL Ms`: number, where `0` invalidates the exact cached member
+- `Cache Mode`: `default`, `forceRefresh`, `useCacheOnly`
+- `TTL`: defaults to 24 hours
+- `TTL Format`: `MS`, `Seconds`, `mm:ss.ms`, `hh:mm:ss.ms`, `ddd:hh:mm:ss.ms`; defaults to `hh:mm:ss.ms`
 - `Trace Cache`: `true`, `false`
 
-These are UI/runtime options, not Solidity arguments. They must be stripped from the Solidity/package method argument list and converted into the final `SpCoinReadCacheOptions` object.
+These are UI/runtime options, not Solidity arguments. They must be stripped from the Solidity/package method argument list and converted into the final `SpCoinReadCacheOptions` object. The UI stores `TTL` plus `TTL Format`; runtime converts that pair into package `ttlMs`.
 
 Example script params:
 
@@ -241,8 +224,8 @@ Example script params:
   "params": [
     { "key": "Account Key", "value": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266" },
     { "key": "Cache Mode", "value": "default" },
-    { "key": "Read Through", "value": "true" },
-    { "key": "TTL Ms", "value": "86400000" }
+    { "key": "TTL", "value": "24:00:00.000" },
+    { "key": "TTL Format", "value": "hh:mm:ss.ms" }
   ]
 }
 ```
@@ -252,7 +235,6 @@ Effective package call:
 ```ts
 await access.read.estimateOffChainSponsorRewards(accountKey, {
   cache: 'default',
-  readThrough: true,
   ttlMs: 86_400_000,
 });
 ```
@@ -406,7 +388,7 @@ If a hardhat claim runs server-side, it should not rely on browser cache state.
 
 ## Migration Plan
 
-1. Update package `readCache.ts` with `readThrough`, exact-entry invalidation, `ttlMs: 0`, and improved trace phases.
+1. Update package `readCache.ts` with exact-entry invalidation, `ttlMs: 0`, cache-mode policy, and improved trace phases.
 2. Ensure every package read method uses `runCachedRead` or a wrapper that delegates to it.
 3. Add method/domain tags for common read methods.
 4. Add package write invalidation after successful receipts.
@@ -428,13 +410,14 @@ With Cache unchecked:
 
 - Reads force blockchain/offline live execution.
 - Cached values are ignored.
-- Results are not written into cache.
+- Results replace the cached value.
 
-With `TTL Ms = 0` on a read method:
+With `TTL = 0` on a read method:
 
 - That exact cache member is invalidated.
-- If read-through is enabled, the method reads live and stores according to cache mode.
-- If read-through is disabled/cache-only, the method returns cache miss/null after invalidation.
+- `default` reads live and stores the replacement.
+- `forceRefresh` reads live and stores the replacement.
+- `useCacheOnly` returns cache miss/null after invalidation.
 
 ## Admin Utils clearCache Method
 
@@ -480,7 +463,7 @@ Expected result:
 
 `clearCache` is different from the global Cache checkbox:
 
-- Cache checkbox unchecked means bypass cache for reads.
+- Cache checkbox unchecked means force refresh cache for reads.
 - `clearCache` removes existing cached values.
 
 ## Open Decisions

@@ -6,9 +6,13 @@ import type { ParamDef } from '../../shared/types';
 import { normalizeStringListResult } from '../../shared/normalizeListResult';
 import { buildExternalserializedRResult, type SerializationBaseMethod } from '../../serializationTests';
 import { normalizePendingRewardsDisplayResult } from '@/lib/spCoinLab/pendingRewards';
+import { clearCache as clearPackageCache, setCacheTraceMode as setPackageCacheTraceMode } from '@/spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/cache';
+import { parseTtlMs } from '../../shared/cacheTtl';
 
 export type SpCoinReadMethod =
   | 'getInflationRate'
+  | 'clearCache'
+  | 'setCacheTraceMode'
   | 'calculateStakingRewards'
   | 'creationTime'
   | 'getSpCoinMetaData'
@@ -151,6 +155,8 @@ export const SPCOIN_OFFCHAIN_READ_METHODS: SpCoinReadMethod[] = [
 export const SPCOIN_COMPOUND_READ_METHODS = SPCOIN_OFFCHAIN_READ_METHODS;
 
 export const SPCOIN_ADMIN_READ_METHODS: SpCoinReadMethod[] = [
+  'clearCache',
+  'setCacheTraceMode',
   'calcDataTimeDiff',
   'calculateStakingRewards',
   'creationTime',
@@ -469,6 +475,31 @@ function isMissingContractReadError(error: unknown) {
   return code === 'CALL_EXCEPTION' || data === '0x' || /execution reverted|require\(false\)|no matching fragment/i.test(message);
 }
 
+const READ_CACHE_PARAM_LABELS = new Set(['cache mode', 'ttl', 'ttl format', 'ttl ms', 'trace cache']);
+
+function isReadCacheParam(label: string) {
+  return READ_CACHE_PARAM_LABELS.has(String(label || '').trim().toLowerCase());
+}
+
+function parseOptionalBoolean(value: unknown): boolean | undefined {
+  const text = String(value ?? '').trim().toLowerCase();
+  if (!text) return undefined;
+  if (['true', '1', 'yes', 'y', 'on'].includes(text)) return true;
+  if (['false', '0', 'no', 'n', 'off'].includes(text)) return false;
+  return undefined;
+}
+
+function normalizeCacheMode(value: unknown): 'default' | 'forceRefresh' | 'useCacheOnly' | undefined {
+  const text = String(value ?? '').trim().toLowerCase();
+  return text === 'default' || text === 'forcerefresh' || text === 'usecacheonly'
+    ? text === 'forcerefresh'
+      ? 'forceRefresh'
+      : text === 'usecacheonly'
+        ? 'useCacheOnly'
+      : text
+    : undefined;
+}
+
 type RunArgs = {
   selectedMethod: SpCoinReadMethod;
   spReadParams: string[];
@@ -517,6 +548,19 @@ export async function runSpCoinReadMethod(args: RunArgs): Promise<unknown> {
   if (!activeDef) {
     throw new Error(`SpCoin read method ${selectedMethod} is not registered.`);
   }
+  if (canonicalMethod === 'clearCache') {
+    const result = clearPackageCache();
+    appendLog(`${activeDef.title}() -> ${stringifyResult(result)}`);
+    setStatus(`${activeDef.title} complete.`);
+    return result;
+  }
+  if (canonicalMethod === 'setCacheTraceMode') {
+    const enabled = parseOptionalBoolean(spReadParams[0]) ?? false;
+    const result = setPackageCacheTraceMode(enabled);
+    appendLog(`${activeDef.title}(${String(enabled)}) -> ${stringifyResult(result)}`);
+    setStatus(`${activeDef.title} ${enabled ? 'enabled' : 'disabled'}.`);
+    return result;
+  }
   if (canonicalMethod === 'calcDataTimeDiff') {
     const fromRaw = String(spReadParams[0] || '').trim();
     const toRaw = String(spReadParams[1] || '').trim();
@@ -545,12 +589,26 @@ export async function runSpCoinReadMethod(args: RunArgs): Promise<unknown> {
   const read = access.read as SpCoinReadAccess | undefined;
   const staking = access.staking as SpCoinStakingAccess & Record<string, unknown>;
   const contract = access.contract as SpCoinContractAccess;
-  const methodArgs = activeDef.params.map((def, idx) => coerceParamValue(spReadParams[idx], def));
+  const paramEntries = activeDef.params.map((def, idx) => ({
+    def,
+    raw: spReadParams[idx],
+  }));
+  const cacheParamValue = (label: string) =>
+    paramEntries.find((entry) => String(entry.def.label || '').trim().toLowerCase() === label)?.raw;
+  const methodArgs = paramEntries
+    .filter((entry) => !isReadCacheParam(entry.def.label))
+    .map((entry) => coerceParamValue(entry.raw, entry.def));
   const effectiveReadCache = useReadCache ?? true;
+  const selectedCacheMode = normalizeCacheMode(cacheParamValue('cache mode'));
+  const ttlValue = cacheParamValue('ttl') ?? cacheParamValue('ttl ms');
+  const ttlFormat = cacheParamValue('ttl format') ?? (cacheParamValue('ttl ms') === undefined ? undefined : 'MS');
+  const selectedTtlMs = parseTtlMs(ttlValue, ttlFormat);
+  const selectedTraceCache = parseOptionalBoolean(cacheParamValue('trace cache'));
   const readCacheOptions = {
-    ...(effectiveReadCache === undefined ? {} : { cache: effectiveReadCache ? 'default' : 'bypass' }),
+    cache: selectedCacheMode ?? (effectiveReadCache ? 'default' : 'forceRefresh'),
+    ttlMs: selectedTtlMs,
     ...(readCacheNamespace ? { cacheNamespace: readCacheNamespace } : {}),
-    traceCache: true,
+    traceCache: selectedTraceCache ?? false,
   };
   if (canonicalMethod === 'getMasterAccountKeyCount') {
     appendLog(

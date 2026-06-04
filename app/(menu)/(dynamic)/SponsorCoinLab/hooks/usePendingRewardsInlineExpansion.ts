@@ -125,7 +125,7 @@ type ServerBackedTreeMethodRunner = (args: {
   method: string;
   params: { key: string; value: string }[];
   sender?: string;
-  cacheMode?: 'default' | 'refresh' | 'bypass' | 'only';
+  cacheMode?: 'default' | 'forceRefresh' | 'useCacheOnly';
   useCache?: boolean;
 }) => Promise<{
   result?: unknown;

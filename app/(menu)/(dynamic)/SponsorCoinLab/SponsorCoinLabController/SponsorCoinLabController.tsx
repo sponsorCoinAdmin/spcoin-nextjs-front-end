@@ -109,7 +109,6 @@ import {
   isSponsorCoinLabAccountTraceLine,
   recordSponsorCoinLabAccountTrace,
 } from '@/lib/spCoinLab/accountPopupTrace';
-import { clearReadCache } from '@/spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/utils/readCache';
 
 interface SponsorCoinLabControllerProps {
   initialContractDirectoryOptions?: ContractDirectoryOption[];
@@ -209,6 +208,7 @@ export default function SponsorCoinLabPage({
     handleDiscardConfirm,
   } = useControllerPopups();
   const previousContractAddressRef = useRef('');
+  const previousReadTokenContractAddressRef = useRef('');
   const [removedContractAddresses, setRemovedContractAddresses] = useState<string[]>([]);
 
   const [selectedWriteMethod, setSelectedWriteMethod] = useState<Erc20WriteMethod>('transfer');
@@ -220,6 +220,7 @@ export default function SponsorCoinLabPage({
   const [methodPanelMode, setMethodPanelMode] = useState<MethodPanelMode>('ecr20_read');
   const [isSpCoinTodoMode, setIsSpCoinTodoMode] = useState(false);
   const [selectedReadMethod, setSelectedReadMethod] = useState<Erc20ReadMethod>('name');
+  const [readTokenAddress, setReadTokenAddress] = useState('');
   const [readAddressA, setReadAddressA] = useState('');
   const [readAddressB, setReadAddressB] = useState('');
   const [selectedSpCoinReadMethod, setSelectedSpCoinReadMethod] =
@@ -248,8 +249,7 @@ export default function SponsorCoinLabPage({
   );
   const [methodSelectionSource, setMethodSelectionSource] = useState<MethodSelectionSource>('dropdown');
   const [editingScriptStepNumber, setEditingScriptStepNumber] = useState<number | null>(null);
-  const [readCacheNamespace, setReadCacheNamespace] = useState(() => createReadCacheNamespace());
-  const didClearReadCacheOnMountRef = useRef(false);
+  const [readCacheNamespace] = useState(() => createReadCacheNamespace());
   const { callAccessMethod, runningMethodPopup } = useAccessMethodCaller({ traceEnabled: writeTraceEnabled });
 
   const appendLog = useCallback((line: string) => {
@@ -324,6 +324,17 @@ export default function SponsorCoinLabPage({
     setStatus('Ready');
     appendLog('Active SponsorCoin contract changed; cleared prior test output results.');
   }, [appendLog, contractAddress]);
+
+  useEffect(() => {
+    const previousContract = normalizeAddressValue(previousReadTokenContractAddressRef.current);
+    const currentContract = normalizeAddressValue(contractAddress);
+    previousReadTokenContractAddressRef.current = contractAddress;
+    setReadTokenAddress((previousTokenAddress) => {
+      const normalizedPreviousToken = normalizeAddressValue(previousTokenAddress);
+      if (!normalizedPreviousToken || normalizedPreviousToken === previousContract) return currentContract;
+      return previousTokenAddress;
+    });
+  }, [contractAddress]);
   const copyTextToClipboard = useCallback(
     async (label: string, value: string) => {
       try {
@@ -375,35 +386,6 @@ export default function SponsorCoinLabPage({
     setLogs((prev) => prev.filter((line) => !TRACE_LOG_PATTERN.test(line)));
   }, []);
   const getRecentWriteTrace = useCallback(() => recentWriteTraceRef.current.slice(), []);
-  const resetReadCacheForRefresh = useCallback(() => {
-    clearReadCache();
-    const nextNamespace = createReadCacheNamespace();
-    setReadCacheNamespace(nextNamespace);
-    appendLog(`[TRACE] [SPCOIN_READ_CACHE_TRACE] phase=clear reason=console-refresh namespace=${nextNamespace}`);
-  }, [appendLog]);
-  useEffect(() => {
-    if (didClearReadCacheOnMountRef.current) return;
-    didClearReadCacheOnMountRef.current = true;
-    clearReadCache();
-    const namespace = readCacheNamespace;
-    appendLog(`[TRACE] [SPCOIN_READ_CACHE_TRACE] phase=clear scope=browser reason=lab-mount namespace=${namespace}`);
-    void fetch('/api/spCoin/read-cache', { method: 'POST' })
-      .then(async (response) => {
-        const payload = (await response.json().catch(() => null)) as
-          | { beforeSize?: unknown; afterSize?: unknown }
-          | null;
-        appendLog(
-          `[TRACE] [SPCOIN_READ_CACHE_TRACE] phase=clear scope=server reason=lab-mount beforeSize=${String(
-            payload?.beforeSize ?? '',
-          )} afterSize=${String(payload?.afterSize ?? '')} namespace=${namespace}`,
-        );
-      })
-      .catch((error) => {
-        const message = error instanceof Error ? error.message : 'Unknown server read cache clear error.';
-        appendLog(`[TRACE] [SPCOIN_READ_CACHE_TRACE] phase=clear-failed scope=server reason=lab-mount message=${message}`);
-      });
-  }, [appendLog, readCacheNamespace]);
-
   const {
     selectedSponsorCoinVersion,
     setSelectedSponsorCoinVersion,
@@ -626,6 +608,7 @@ export default function SponsorCoinLabPage({
     methodPanelMode,
     activeReadLabels,
     activeWriteLabels,
+    readTokenAddress,
     readAddressA,
     readAddressB,
     writeAddressA,
@@ -696,6 +679,7 @@ export default function SponsorCoinLabPage({
     mode,
     methodPanelMode,
     selectedReadMethod,
+    readTokenAddress,
     readAddressA,
     readAddressB,
     selectedWriteMethod,
@@ -834,6 +818,7 @@ export default function SponsorCoinLabPage({
     formattedJsonViewEnabled,
     formattedOutputDisplay,
     selectedReadMethod,
+    readTokenAddress,
     readAddressA,
     readAddressB,
     activeReadLabels,
@@ -870,6 +855,7 @@ export default function SponsorCoinLabPage({
     setMode,
     setMethodPanelMode,
     setSelectedReadMethod,
+    setReadTokenAddress,
     setReadAddressA,
     setReadAddressB,
     setSelectedWriteMethod,
@@ -892,6 +878,7 @@ export default function SponsorCoinLabPage({
     methodSelectionSource,
     editingScriptStepNumber,
     selectedReadMethod,
+    readTokenAddress,
     readAddressA,
     readAddressB,
     selectedWriteMethod,
@@ -1448,6 +1435,7 @@ export default function SponsorCoinLabPage({
     buildErc20WriteEditorDefaults,
     buildScriptEditorParamValues,
     resolveScriptEditorContractMetadata,
+    setReadTokenAddress,
     setReadAddressA,
     setReadAddressB,
     setSelectedWriteSenderAddress,
@@ -1490,7 +1478,6 @@ export default function SponsorCoinLabPage({
     selectedScriptStepNumber,
     runScriptStep,
     callAccessMethod,
-    resetReadCacheForRefresh,
     focusScriptStep,
     spCoinReadMethodDefs,
     spCoinWriteMethodDefs,
@@ -1627,6 +1614,8 @@ export default function SponsorCoinLabPage({
     erc20ReadOptions,
     selectDropdownReadMethod,
     activeReadLabels,
+    readTokenAddress,
+    setReadTokenAddress,
     readAddressA,
     setReadAddressA,
     readAddressB,

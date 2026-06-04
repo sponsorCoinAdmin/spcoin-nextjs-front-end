@@ -101,8 +101,8 @@ function normalizePendingRewardsOptions(optionsOrTimestampOverride = undefined, 
         options.readTtlMs ??
         options.relationshipReadTtlMs ??
         DEFAULT_STABLE_REWARDS_READ_CACHE_MS;
-    const bypassCache =
-        options.cache === "bypass" ||
+    const forceRefreshCache =
+        options.cache === "forceRefresh" ||
         options.cache === false ||
         options.useCache === false ||
         options.cacheEnabled === false;
@@ -112,12 +112,12 @@ function normalizePendingRewardsOptions(optionsOrTimestampOverride = undefined, 
     );
     return {
         timestampOverride: rawTimestampOverride,
-        bypassCache,
+        forceRefreshCache,
         cacheMs,
         readCacheOptions: {
-            cache: bypassCache
-                ? "bypass"
-                : options.cache === "refresh" || options.cache === "only"
+            cache: forceRefreshCache
+                ? "forceRefresh"
+                : options.cache === "forceRefresh" || options.cache === "useCacheOnly"
                     ? options.cache
                     : "default",
             ...(options.cacheNamespace ? { cacheNamespace: options.cacheNamespace } : {}),
@@ -136,16 +136,22 @@ function getOffChainRewardsEstimateCache(runtime) {
     return runtime.__pendingRewardsCache;
 }
 
-function getOffChainRewardsEstimateCacheKey(accountKey, timestampOverride) {
+function getOffChainRewardsEstimateCacheKey(accountKey, timestampOverride, cacheMs = DEFAULT_PENDING_REWARDS_CACHE_MS) {
     const normalizedAccount = String(accountKey ?? "").trim().toLowerCase();
     const normalizedTimestamp = toBigIntValue(timestampOverride);
-    return `${normalizedAccount}|${normalizedTimestamp > 0n ? normalizedTimestamp.toString() : "now"}`;
+    const normalizedCacheMs = Math.max(1, Number.isFinite(Number(cacheMs)) ? Number(cacheMs) : DEFAULT_PENDING_REWARDS_CACHE_MS);
+    const cacheWindowSeconds = Math.max(1, Math.floor(normalizedCacheMs / 1000));
+    const timestampBucket =
+        normalizedTimestamp > 0n
+            ? (normalizedTimestamp / BigInt(cacheWindowSeconds)).toString()
+            : "now";
+    return `${normalizedAccount}|bucket:${timestampBucket}|ttlMs:${normalizedCacheMs}`;
 }
 
 function tracePendingRewardsCache(runtime, options, message) {
     if (!options?.readCacheOptions?.traceCache)
         return;
-    const line = `[PENDING_REWARDS_CACHE_TRACE] ${message}`;
+    const line = `Cache Trace: method=calculateClaimedRewards ${message}`;
     runtime?.spCoinLogger?.logDetail?.(`JS => ${line}`);
     try {
         if (typeof window !== "undefined" && typeof window.dispatchEvent === "function") {
@@ -167,7 +173,7 @@ function describePendingRewardsOptions(options) {
     const readOptions = options?.readCacheOptions ?? {};
     return [
         `estimateTimestampOverride=${String(options?.timestampOverride ?? "")}`,
-        `estimateBypass=${String(Boolean(options?.bypassCache))}`,
+        `estimateForceRefresh=${String(Boolean(options?.forceRefreshCache))}`,
         `estimateCacheMs=${String(options?.cacheMs ?? "")}`,
         `readCacheMode=${String(readOptions.cache ?? "")}`,
         `readTtlMs=${String(readOptions.ttlMs ?? "")}`,
@@ -482,20 +488,20 @@ export async function calculateClaimedRewards(context, accountKey, optionsOrTime
     const cache = getOffChainRewardsEstimateCache(runtime);
     const cacheKey = getOffChainRewardsEstimateCacheKey(accountKey, options.timestampOverride);
     const nowMs = Date.now();
-    const cached = options.bypassCache ? null : cache.get(cacheKey);
+    const cached = options.forceRefreshCache ? null : cache.get(cacheKey);
     if (cached && cached.expiresAtMs > nowMs) {
-        tracePendingRewardsCache(runtime, options, `hit key=${cacheKey} ttlRemainingMs=${cached.expiresAtMs - nowMs}`);
+        tracePendingRewardsCache(runtime, options, `Cache Read Direct: phase=hit key=${cacheKey} ttlRemainingMs=${cached.expiresAtMs - nowMs}`);
         return clonePendingRewardsResult(await cached.promise);
     }
     tracePendingRewardsCache(
         runtime,
         options,
-        `${options.bypassCache ? "bypass" : cached ? "expired" : "miss"} key=${cacheKey} cacheMs=${options.cacheMs}`,
+        `${options.forceRefreshCache ? "Cache Readthrough Force Refresh: phase=forceRefresh" : cached ? "Cache Readthrough: phase=expired" : "Cache Readthrough: phase=miss"} key=${cacheKey} cacheMs=${options.cacheMs}`,
     );
     runtime.spCoinLogger.logFunctionHeader("calculateClaimedRewards(" + accountKey + ")");
     const pendingPromise = (async () => {
-        if (options.readCacheOptions?.cache === "refresh" || options.readCacheOptions?.cache === "bypass") {
-            tracePendingRewardsCache(runtime, options, `clear relationship cache cacheMode=${options.readCacheOptions.cache}`);
+        if (options.readCacheOptions?.cache === "forceRefresh") {
+            tracePendingRewardsCache(runtime, options, `Cache Clear: phase=relationship-cache cacheMode=${options.readCacheOptions.cache}`);
             delete runtime.__relationshipReadCache;
         }
         const currentTimeStamp = await getCurrentBlockTimestamp(runtime, options.timestampOverride);
@@ -539,12 +545,11 @@ export async function calculateClaimedRewards(context, accountKey, optionsOrTime
         runtime.spCoinLogger.logExitFunction();
         return pending;
     })();
-    if (!options.bypassCache) {
-        cache.set(cacheKey, {
-            expiresAtMs: nowMs + options.cacheMs,
-            promise: pendingPromise,
-        });
-    }
+    cache.set(cacheKey, {
+        expiresAtMs: nowMs + options.cacheMs,
+        promise: pendingPromise,
+    });
+    tracePendingRewardsCache(runtime, options, `Cache Update: phase=set key=${cacheKey} ttlMs=${options.cacheMs} expiresAtMs=${nowMs + options.cacheMs}`);
     try {
         return clonePendingRewardsResult(await pendingPromise);
     }

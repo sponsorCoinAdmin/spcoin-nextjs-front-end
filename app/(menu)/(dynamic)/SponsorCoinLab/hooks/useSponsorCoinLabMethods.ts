@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, type Dispatch, type SetStateAction } from 'react';
 import type { MethodDef, ParamDef } from '../jsonMethods/shared/types';
-import type { Erc20ReadMethod } from '../jsonMethods/erc20/read';
+import { ERC20_TOKEN_ADDRESS_PARAM_LABEL, type Erc20ReadMethod } from '../jsonMethods/erc20/read';
 import type { Erc20WriteMethod } from '../jsonMethods/erc20/write';
 import type { SpCoinReadMethod } from '../jsonMethods/spCoin/read';
 import { normalizeSpCoinWriteMethod, type SpCoinWriteMethod } from '../jsonMethods/spCoin/write';
@@ -42,6 +42,7 @@ interface Params {
   mode: ConnectionMode;
   methodPanelMode: MethodPanelMode;
   selectedReadMethod: Erc20ReadMethod;
+  readTokenAddress: string;
   readAddressA: string;
   readAddressB: string;
   selectedWriteMethod: Erc20WriteMethod;
@@ -142,6 +143,7 @@ export function useSponsorCoinLabMethods({
   mode,
   methodPanelMode,
   selectedReadMethod,
+  readTokenAddress,
   readAddressA,
   readAddressB,
   selectedWriteMethod,
@@ -249,6 +251,9 @@ export function useSponsorCoinLabMethods({
 
   const erc20ReadMissingEntries = useMemo(() => {
     const missingEntries: Entry[] = [];
+    if (!String(readTokenAddress || '').trim()) {
+      missingEntries.push({ id: 'erc20-read-token-address', label: ERC20_TOKEN_ADDRESS_PARAM_LABEL });
+    }
     if (activeReadLabels.requiresAddressA && !String(readAddressA || '').trim()) {
       missingEntries.push({ id: 'erc20-read-address-a', label: activeReadLabels.addressALabel });
     }
@@ -261,6 +266,7 @@ export function useSponsorCoinLabMethods({
     activeReadLabels.addressBLabel,
     activeReadLabels.requiresAddressA,
     activeReadLabels.requiresAddressB,
+    readTokenAddress,
     readAddressA,
     readAddressB,
   ]);
@@ -271,9 +277,10 @@ export function useSponsorCoinLabMethods({
         .map((param, idx) => ({
           id: `spcoin-read-param-${idx}`,
           label: param.label,
+          optional: Boolean(param.optional),
           value: String(spReadParams[idx] || '').trim(),
         }))
-        .filter((entry) => !entry.value)
+        .filter((entry) => !entry.optional && !entry.value)
         .map(({ id, label }) => ({ id, label })),
     [activeSpCoinReadDef.params, spReadParams],
   );
@@ -739,6 +746,7 @@ export function useSponsorCoinLabMethods({
       panel: 'ecr20_read',
       method: selectedReadMethod,
       params: [
+        { key: ERC20_TOKEN_ADDRESS_PARAM_LABEL, value: readTokenAddress },
         ...(activeReadLabels.requiresAddressA ? [{ key: activeReadLabels.addressALabel, value: readAddressA }] : []),
         ...(activeReadLabels.requiresAddressB ? [{ key: activeReadLabels.addressBLabel, value: readAddressB }] : []),
       ],
@@ -771,6 +779,7 @@ export function useSponsorCoinLabMethods({
     erc20ReadMissingEntries,
     executeMethodDescriptor,
     formatFormattedPanelPayload,
+    readTokenAddress,
     readAddressA,
     readAddressB,
     selectedReadMethod,

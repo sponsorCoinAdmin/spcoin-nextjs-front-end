@@ -30,8 +30,7 @@ export * from '../cache';
 
 In cache/types.ts define:
 
-cache?: 'default' | 'refresh' | 'bypass' | 'only';
-readThrough?: boolean;
+cache?: 'default' | 'forceRefresh' | 'useCacheOnly';
 ttlMs?: number;
 cacheNamespace?: string;
 blockTag?: 'latest' | 'pending' | number;
@@ -45,22 +44,16 @@ Do not add invalidate?: boolean. ttlMs: 0 is the exact-member invalidation signa
 In readCachePolicy.ts:
 
 cache: default
-  Use fresh cache if available. Otherwise read through and store.
+  Use fresh cache if available. Otherwise perform a live read and store.
 
-cache: refresh
-  Force read through and replace cache.
+cache: forceRefresh
+  Force a live read and replace cache.
 
-cache: bypass
-  Force read through and do not store.
-
-cache: only
+cache: useCacheOnly
   Cache-only. Do not call chain/offline source.
 
-readThrough: false
-  Cache-only behavior.
-
 ttlMs: 0
-  Invalidate the exact cache member first. Then continue according to cache/readThrough mode.
+  Invalidate the exact cache member first. Then continue according to cache mode.
 
 5. Implement exact cache invalidation
 
@@ -114,8 +107,8 @@ It should:
 - build exact key
 - invalidate exact key when ttlMs: 0
 - check cache
-- call loader when read-through is allowed/required
-- store result unless mode is bypass
+- call loader when cache mode allows/requires a live read
+- store every live-read result
 - trace decisions
 
 9. Apply cache to every package read method
@@ -182,27 +175,35 @@ SponsorCoinLab should pass package cache options:
 Cache checked:
 
 {
-  cache: 'default',
-  readThrough: true
+  cache: 'default'
 }
 
 Cache unchecked:
 
 {
-  cache: 'bypass',
-  readThrough: true
+  cache: 'forceRefresh'
 }
 
-Cache unchecked means force live chain/offline execution and do not store results.
+Cache unchecked means force live chain/offline execution and replace the cached result.
 
 14. Add dropdown cache params
 
 For read/dropdown methods, add optional cache params where relevant:
 
 - Cache Mode
-- Read Through
-- TTL Ms
+- TTL
+- TTL Format
 - Trace Cache
+
+TTL should default to 24 hours. TTL Format should default to `hh:mm:ss.ms`.
+
+Supported TTL Format values:
+
+- MS
+- Seconds
+- mm:ss.ms
+- hh:mm:ss.ms
+- ddd:hh:mm:ss.ms
 
 These must be stripped from Solidity/package positional args and converted into SpCoinReadCacheOptions.
 
@@ -234,7 +235,7 @@ Test:
 - first estimate after refresh reads chain
 - second estimate hits cache
 - Cache unchecked forces chain read
-- TTL Ms = 0 invalidates exact cached member
+- TTL = 0 invalidates exact cached member
 - clearCache empties package cache
 - claim only sends claim transaction
 - writes invalidate affected cached reads

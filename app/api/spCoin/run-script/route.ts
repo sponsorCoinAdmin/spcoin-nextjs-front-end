@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createSpCoinModuleAccess, type SpCoinAccessSource } from '@/app/(menu)/(dynamic)/SponsorCoinLab/jsonMethods/shared/spCoinAccessIncludes';
 import { getSpCoinLabAbi } from '@/app/(menu)/(dynamic)/SponsorCoinLab/jsonMethods/shared/spCoinAbi';
 import { createTracedHardhatJsonRpcProvider } from '@/app/(menu)/(dynamic)/SponsorCoinLab/jsonMethods/shared/spCoinRpcTrace';
+import { parseTtlMs } from '@/app/(menu)/(dynamic)/SponsorCoinLab/jsonMethods/shared/cacheTtl';
 import {
   attachReceiptGasToOnChainCall,
   buildMethodTimingMeta,
@@ -24,10 +25,14 @@ import {
   invalidateCachedAccountRecord as invalidatePersistentAccountRecord,
 } from '@/spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/utils/accountCache';
 import {
-  clearReadCache,
-  getReadCacheSize,
+  clearCache as clearPackageReadCache,
+  invalidateAfterWrite,
   invalidateReadCacheForAccount,
+  runCachedRead,
+  setCacheTraceMode as setPackageCacheTraceMode,
+  type SpCoinReadCacheOptions,
 } from '@/spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/utils/readCache';
+import { applyMethodCacheDefaults } from '@/spCoinAccess/packages/@sponsorcoin/spcoin-access-modules/src/utils/readCacheTtl';
 
 type LabScriptParam = {
   key: string;
@@ -68,12 +73,46 @@ type RunScriptRequest = {
   stopAfterCurrentStep?: boolean;
   spCoinAccessSource?: SpCoinAccessSource;
   useCache?: boolean;
-  cacheMode?: 'default' | 'refresh' | 'bypass' | 'only';
+  cacheMode?: 'default' | 'forceRefresh' | 'useCacheOnly';
   cacheNamespace?: string;
   traceCache?: boolean;
-  clearReadCache?: boolean;
-  preClaimEstimateResult?: unknown;
 };
+
+type ReadCacheMode = 'default' | 'forceRefresh' | 'useCacheOnly';
+
+function parseOptionalBoolean(value: unknown): boolean | undefined {
+  const text = String(value ?? '').trim().toLowerCase();
+  if (!text) return undefined;
+  if (['true', '1', 'yes', 'y', 'on'].includes(text)) return true;
+  if (['false', '0', 'no', 'n', 'off'].includes(text)) return false;
+  return undefined;
+}
+
+function normalizeCacheMode(value: unknown): ReadCacheMode | undefined {
+  const text = String(value ?? '').trim().toLowerCase();
+  if (text === 'forcerefresh') return 'forceRefresh';
+  if (text === 'usecacheonly') return 'useCacheOnly';
+  return text === 'default' ? text : undefined;
+}
+
+function buildStepReadCacheOptions(
+  defaultOptions: { cache: ReadCacheMode; cacheNamespace?: string; traceCache?: boolean },
+  params: { key: string; value: string }[],
+) {
+  const findCacheParam = (label: string) =>
+    params.find((entry) => String(entry.key || '').trim().toLowerCase() === label)?.value;
+  const cache = normalizeCacheMode(findCacheParam('cache mode'));
+  const ttlValue = findCacheParam('ttl') ?? findCacheParam('ttl ms');
+  const ttlFormat = findCacheParam('ttl format') ?? (findCacheParam('ttl ms') === undefined ? undefined : 'MS');
+  const ttlMs = parseTtlMs(ttlValue, ttlFormat);
+  const traceCache = parseOptionalBoolean(findCacheParam('trace cache'));
+  return {
+    ...defaultOptions,
+    ...(cache ? { cache } : {}),
+    ttlMs,
+    ...(traceCache === undefined ? {} : { traceCache }),
+  };
+}
 
 type StepPayload =
   | {
@@ -1328,6 +1367,13 @@ function buildClaimRewardCalculationMeta(params: {
   });
 }
 
+function getEstimateMethodForClaimMethod(methodName: RewardUpdateWriteMethod): string {
+  if (methodName === 'claimOnChainSponsorRewards') return 'estimateOffChainSponsorRewards';
+  if (methodName === 'claimOnChainRecipientRewards') return 'estimateOffChainRecipientRewards';
+  if (methodName === 'claimOnChainAgentRewards') return 'estimateOffChainAgentRewards';
+  return 'estimateOffChainTotalRewards';
+}
+
 type ClaimedRewardsByAccount = Record<string, {
   accountKey: string;
   claimedSponsorRewards: string;
@@ -1663,7 +1709,11 @@ async function getLatestBlockClock(provider: JsonRpcProvider) {
   };
 }
 
-async function readAccountRewardSnapshot(contract: Contract, accountKey: string): Promise<AccountRewardSnapshot> {
+async function readAccountRewardSnapshot(
+  contract: Contract,
+  accountKey: string,
+  readCacheOptions?: SpCoinReadCacheOptions,
+): Promise<AccountRewardSnapshot> {
   const readableContract = contract as unknown as {
     getAccountRecord?: (accountKey: string) => Promise<unknown>;
     getAccountRewardTotals?: (accountKey: string) => Promise<unknown>;
@@ -1675,8 +1725,22 @@ async function readAccountRewardSnapshot(contract: Contract, accountKey: string)
     throw new Error('getAccountRewardTotals is not available on the current SpCoin contract access path.');
   }
 
-  const accountRecord = await readableContract.getAccountRecord(accountKey);
-  const rewardTotals = await readableContract.getAccountRewardTotals(accountKey);
+  const cacheContext = { spCoinContractDeployed: contract };
+  const baseCacheOptions = readCacheOptions ?? { cache: 'default' };
+  const accountRecord = await runCachedRead(
+    cacheContext,
+    'getAccountRewardSnapshotRecord',
+    [accountKey],
+    applyMethodCacheDefaults('getAccountRewardSnapshotRecord', baseCacheOptions),
+    () => readableContract.getAccountRecord!(accountKey),
+  );
+  const rewardTotals = await runCachedRead(
+    cacheContext,
+    'getAccountRewardTotals',
+    [accountKey],
+    applyMethodCacheDefaults('getAccountRewardTotals', baseCacheOptions),
+    () => readableContract.getAccountRewardTotals!(accountKey),
+  );
   const accountRecordValues = Array.isArray(accountRecord) ? accountRecord : [];
   const rewardTotalValues = Array.isArray(rewardTotals) ? rewardTotals : [];
 
@@ -1713,11 +1777,11 @@ export async function POST(request: NextRequest) {
     const startIndex = Math.max(0, Number(body?.startIndex ?? 0) || 0);
     const stopAfterCurrentStep = body?.stopAfterCurrentStep === true;
     const source: SpCoinAccessSource = body?.spCoinAccessSource === 'local' ? 'local' : 'node_modules';
-    const cacheMode =
-      body?.cacheMode === 'refresh' || body?.cacheMode === 'bypass' || body?.cacheMode === 'only'
+    const cacheMode: ReadCacheMode =
+      body?.cacheMode === 'forceRefresh' || body?.cacheMode === 'useCacheOnly'
         ? body.cacheMode
         : body?.useCache === false
-          ? 'bypass'
+          ? 'forceRefresh'
         : body?.useCache === true
           ? 'default'
           : 'default';
@@ -1726,12 +1790,6 @@ export async function POST(request: NextRequest) {
       cacheNamespace: String(body?.cacheNamespace || '').trim() || undefined,
       traceCache: body?.traceCache === true,
     };
-    const shouldClearReadCache = body?.clearReadCache === true;
-    const readCacheSizeBeforeClear = shouldClearReadCache ? getReadCacheSize() : null;
-    if (shouldClearReadCache) {
-      clearReadCache();
-    }
-
     if (!script || !Array.isArray(script.steps)) {
       return NextResponse.json({ ok: false, message: 'A script with steps is required.' }, { status: 400 });
     }
@@ -1787,14 +1845,9 @@ export async function POST(request: NextRequest) {
         };
         appendTrace(`resolved hardhat sender=${senderAddress}`);
         appendTrace(`spCoinAccessSource=${source}`);
-        appendTrace(`readCacheMode=${cacheMode}; readCacheNamespace=${readCacheOptions.cacheNamespace || ''}`);
-        if (shouldClearReadCache) {
-          appendTrace(
-            `[SPCOIN_READ_CACHE_TRACE] phase=clear scope=server reason=request clearReadCache=true beforeSize=${String(
-              readCacheSizeBeforeClear ?? 0,
-            )} afterSize=${String(getReadCacheSize())} namespace=${readCacheOptions.cacheNamespace || ''}`,
-          );
-        }
+        const stepReadCacheOptions = buildStepReadCacheOptions(readCacheOptions, paramEntries);
+        const stepCacheMode = stepReadCacheOptions.cache;
+        appendTrace(`readCacheMode=${stepCacheMode}; readCacheNamespace=${stepReadCacheOptions.cacheNamespace || ''}`);
         const access = createSpCoinModuleAccess(contract, signer, source, appendTrace);
         const initialLatestBlockClock = await getLatestBlockClock(provider);
         const initialWallClockTimestamp = String(Math.floor(Date.now() / 1000));
@@ -1915,9 +1968,9 @@ export async function POST(request: NextRequest) {
                   let accountRecord: unknown;
                   if (typeof (access.read as Record<string, unknown>).getAccountRecord === 'function') {
                     appendTrace(`getSummaryRecord loading account via access.read.getAccountRecord; accountKey=${targetAccountKey}`);
-                    accountRecord = await access.read.getAccountRecord(targetAccountKey, readCacheOptions);
+                    accountRecord = await access.read.getAccountRecord(targetAccountKey, stepReadCacheOptions);
                   } else if (typeof (contract as Record<string, unknown>).getAccountRecord === 'function') {
-                    const cachedRecord = cacheMode === 'bypass' ? null : getCachedAccountRecord(contractAddress, targetAccountKey);
+                    const cachedRecord = stepCacheMode === 'forceRefresh' ? null : getCachedAccountRecord(contractAddress, targetAccountKey);
                     if (cachedRecord !== null && hasAccountRecordCounts(cachedRecord)) {
                       appendTrace(`getSummaryRecord loading cached account record; accountKey=${targetAccountKey}`);
                       accountRecord = cachedRecord;
@@ -1929,7 +1982,7 @@ export async function POST(request: NextRequest) {
                       accountRecord = normalizeOnChainAccountRecordResult(await (
                         contract as unknown as { getAccountRecord: (accountKey: string) => Promise<unknown> }
                       ).getAccountRecord(targetAccountKey), targetAccountKey);
-                      if (cacheMode !== 'bypass' && !isEmptyNormalizedAccountRecord(accountRecord)) {
+                      if (!isEmptyNormalizedAccountRecord(accountRecord)) {
                         setCachedAccountRecord(contractAddress, targetAccountKey, accountRecord);
                       }
                     }
@@ -2005,14 +2058,14 @@ export async function POST(request: NextRequest) {
                   appendTrace(`${methodLabel} using access.read.getAccountRecord`);
                   stepResult = withLazyAccountRelationBuckets(
                     await withAccountRoleFlags(
-                      await access.read.getAccountRecord(accountKey, readCacheOptions),
+                      await access.read.getAccountRecord(accountKey, stepReadCacheOptions),
                       accountKey,
                       access.read,
                     ),
                     accountKey,
                   );
                 } else if (typeof (contract as Record<string, unknown>).getAccountRecord === 'function') {
-                  const cachedRecord = cacheMode === 'bypass' ? null : getCachedAccountRecord(contractAddress, accountKey);
+                  const cachedRecord = stepCacheMode === 'forceRefresh' ? null : getCachedAccountRecord(contractAddress, accountKey);
                   if (cachedRecord !== null && hasAccountRecordCounts(cachedRecord)) {
                     appendTrace(`${methodLabel} using cached normalized contract record`);
                     stepResult = withLazyAccountRelationBuckets(
@@ -2023,8 +2076,8 @@ export async function POST(request: NextRequest) {
                     if (cachedRecord !== null) {
                       appendTrace(`${methodLabel} invalidating incomplete cached record`);
                       invalidateCachedAccountRecord(contractAddress, accountKey);
-                    } else if (cacheMode === 'bypass') {
-                      appendTrace(`${methodLabel} persistent normalized contract cache bypassed`);
+                    } else if (stepCacheMode === 'forceRefresh') {
+                      appendTrace(`${methodLabel} persistent normalized contract cache force refreshed`);
                     }
                     appendTrace(`${methodLabel} using direct contract fallback`);
                     stepResult = withLazyAccountRelationBuckets(
@@ -2037,7 +2090,7 @@ export async function POST(request: NextRequest) {
                       ),
                       accountKey,
                     );
-                    if (cacheMode !== 'bypass') {
+                    if (stepCacheMode !== 'useCacheOnly') {
                       setCachedAccountRecord(contractAddress, accountKey, stepResult);
                     }
                   }
@@ -2053,7 +2106,7 @@ export async function POST(request: NextRequest) {
               }
               stepResult = await (
                 access.read as unknown as { getAccountRecordShallow: (accountKey: string, options?: unknown) => Promise<unknown> }
-              ).getAccountRecordShallow(findParam('Account Key'), readCacheOptions);
+              ).getAccountRecordShallow(findParam('Account Key'), stepReadCacheOptions);
               break;
             case 'getAccountRewardUpdateTimestamps': {
               const accountKey = requireAddressParam('Account Key', 'getAccountRewardUpdateTimestamps');
@@ -2107,10 +2160,10 @@ export async function POST(request: NextRequest) {
                 appendTrace(`getAccountStakingRewards using access.read.getAccountStakingRewards; accountKey=${accountKey}`);
                 stepResult = await (
                   readHost.getAccountStakingRewards as (accountKey: string, options?: unknown) => Promise<unknown>
-                )(accountKey, readCacheOptions);
+                )(accountKey, stepReadCacheOptions);
               } else {
                 appendTrace(`getAccountStakingRewards using contract reward snapshot fallback; accountKey=${accountKey}`);
-                const snapshot = await readAccountRewardSnapshot(contract, accountKey);
+                const snapshot = await readAccountRewardSnapshot(contract, accountKey, stepReadCacheOptions);
                 stepResult = {
                   sponsorRewardsList: {
                     TYPE: 'SPONSOR',
@@ -2131,6 +2184,23 @@ export async function POST(request: NextRequest) {
               }
               break;
             }
+            case 'clearCache': {
+              const result = clearPackageReadCache();
+              appendTrace(
+                `Cache Clear: method=clearCache phase=clear-cache scope=server entriesBefore=${String(result.entriesBefore)} entriesAfter=${String(result.entriesAfter)}`,
+              );
+              stepResult = result;
+              break;
+            }
+            case 'setCacheTraceMode': {
+              const enabled = parseOptionalBoolean(findParam('Trace Cache')) ?? false;
+              const result = setPackageCacheTraceMode(enabled);
+              appendTrace(
+                `Cache Trace Mode: method=setCacheTraceMode phase=set-cache-trace-mode scope=server enabled=${String(enabled)}`,
+              );
+              stepResult = result;
+              break;
+            }
             case 'estimateOffChainTotalRewards':
             case 'estimateOffChainSponsorRewards':
             case 'estimateOffChainRecipientRewards':
@@ -2144,7 +2214,7 @@ export async function POST(request: NextRequest) {
               appendTrace(`${String(step.method)} using access.read.${String(step.method)}; accountKey=${accountKey}`);
               const wallClockTimestamp = String(Math.floor(Date.now() / 1000));
               const latestBlockTimestamp = initialLatestBlockClock.timeStamp;
-              const pendingRewardsOptions = { ...readCacheOptions, timestampOverride: wallClockTimestamp };
+              const pendingRewardsOptions = { ...stepReadCacheOptions, timestampOverride: wallClockTimestamp };
               appendTrace(
                 `[REWARD_CALC_TRACE] estimate clock method=${String(
                   step.method,
@@ -2158,7 +2228,7 @@ export async function POST(request: NextRequest) {
                   pendingRewardsOptions,
                 ),
               );
-              const accountSnapshot = await readAccountRewardSnapshot(contract, accountKey);
+              const accountSnapshot = await readAccountRewardSnapshot(contract, accountKey, stepReadCacheOptions);
               stepRewardCalculationMeta = getEstimateRewardCalculationMeta(
                 String(step.method),
                 stepResult,
@@ -2496,8 +2566,7 @@ export async function POST(request: NextRequest) {
               );
               const receipt = await tx.wait();
               stepResult = formatReceiptResult('addRecipientTransaction', tx, receipt, timingCollector);
-              invalidateCachedAccountRecord(contractAddress, sponsorKey);
-              invalidateCachedAccountRecord(contractAddress, recipientKey);
+              invalidateAfterWrite(String(step.method), [sponsorKey, recipientKey]);
               break;
             }
             case 'addAgentTransaction':
@@ -2523,9 +2592,7 @@ export async function POST(request: NextRequest) {
               );
               const receipt = await tx.wait();
               stepResult = formatReceiptResult('addAgentTransaction', tx, receipt, timingCollector);
-              invalidateCachedAccountRecord(contractAddress, sponsorKey);
-              invalidateCachedAccountRecord(contractAddress, recipientKey);
-              invalidateCachedAccountRecord(contractAddress, agentKey);
+              invalidateAfterWrite(String(step.method), [sponsorKey, recipientKey, agentKey]);
               break;
             }
             case 'addBackDatedSponsorship':
@@ -2556,8 +2623,7 @@ export async function POST(request: NextRequest) {
               );
               const receipt = await tx.wait();
               stepResult = formatReceiptResult('addBackDatedRecipientTransaction', tx, receipt, timingCollector);
-              invalidateCachedAccountRecord(contractAddress, sponsorKey);
-              invalidateCachedAccountRecord(contractAddress, recipientKey);
+              invalidateAfterWrite(String(step.method), [sponsorKey, recipientKey]);
               break;
             }
             case 'addBackDatedAgentSponsorship':
@@ -2588,9 +2654,7 @@ export async function POST(request: NextRequest) {
               );
               const receipt = await tx.wait();
               stepResult = formatReceiptResult('addBackDatedAgentTransaction', tx, receipt, timingCollector);
-              invalidateCachedAccountRecord(contractAddress, sponsorKey);
-              invalidateCachedAccountRecord(contractAddress, recipientKey);
-              invalidateCachedAccountRecord(contractAddress, agentKey);
+              invalidateAfterWrite(String(step.method), [sponsorKey, recipientKey, agentKey]);
               break;
             }
             case 'backDateRecipientTransaction': {
@@ -2608,8 +2672,7 @@ export async function POST(request: NextRequest) {
               );
               const receipt = await tx.wait();
               stepResult = formatReceiptResult('backDateRecipientTransaction', tx, receipt, timingCollector);
-              invalidateCachedAccountRecord(contractAddress, sponsorKey);
-              invalidateCachedAccountRecord(contractAddress, recipientKey);
+              invalidateAfterWrite(String(step.method), [sponsorKey, recipientKey]);
               break;
             }
             case 'backDateAgentTransaction': {
@@ -2631,9 +2694,7 @@ export async function POST(request: NextRequest) {
               );
               const receipt = await tx.wait();
               stepResult = formatReceiptResult('backDateAgentTransaction', tx, receipt, timingCollector);
-              invalidateCachedAccountRecord(contractAddress, sponsorKey);
-              invalidateCachedAccountRecord(contractAddress, recipientKey);
-              invalidateCachedAccountRecord(contractAddress, agentKey);
+              invalidateAfterWrite(String(step.method), [sponsorKey, recipientKey, agentKey]);
               break;
             }
             case 'backDateRateTransactionSet': {
@@ -2744,8 +2805,7 @@ export async function POST(request: NextRequest) {
                 receipt as { hash?: string; blockNumber?: bigint | number | null; status?: number | bigint | null },
                 timingCollector,
               );
-              invalidateCachedAccountRecord(contractAddress, sponsorKey);
-              invalidateCachedAccountRecord(contractAddress, recipientKey);
+              invalidateAfterWrite(String(step.method), [sponsorKey, recipientKey]);
               break;
             }
             case 'deleteSponsor': {
@@ -2767,7 +2827,7 @@ export async function POST(request: NextRequest) {
                 receipt as { hash?: string; blockNumber?: bigint | number | null; status?: number | bigint | null },
                 timingCollector,
               );
-              invalidateCachedAccountRecord(contractAddress, sponsorKey);
+              invalidateAfterWrite(String(step.method), [sponsorKey]);
               break;
             }
             case 'deleteAgentNode': {
@@ -2810,9 +2870,7 @@ export async function POST(request: NextRequest) {
                 receipt as { hash?: string; blockNumber?: bigint | number | null; status?: number | bigint | null },
                 timingCollector,
               );
-              invalidateCachedAccountRecord(contractAddress, sponsorKey);
-              invalidateCachedAccountRecord(contractAddress, recipientKey);
-              invalidateCachedAccountRecord(contractAddress, agentKey);
+              invalidateAfterWrite(String(step.method), [sponsorKey, recipientKey, agentKey]);
               break;
             }
             case 'delAccountAgentSponsorship':
@@ -2846,9 +2904,7 @@ export async function POST(request: NextRequest) {
                 receipt as { hash?: string; blockNumber?: bigint | number | null; status?: number | bigint | null },
                 timingCollector,
               );
-              invalidateCachedAccountRecord(contractAddress, sponsorKey);
-              invalidateCachedAccountRecord(contractAddress, recipientKey);
-              invalidateCachedAccountRecord(contractAddress, agentKey);
+              invalidateAfterWrite(String(step.method), [sponsorKey, recipientKey, agentKey]);
               break;
             }
             case 'claimOnChainTotalRewards':
@@ -2857,19 +2913,33 @@ export async function POST(request: NextRequest) {
             case 'claimOnChainAgentRewards': {
               const methodName = step.method as RewardUpdateWriteMethod;
               const accountKey = findParam('Account Key') || senderAddress;
+              const estimateMethodName = getEstimateMethodForClaimMethod(methodName);
+              const readHost = access.read as Record<string, unknown>;
+              const preClaimEstimateMethod = readHost[estimateMethodName];
+              if (typeof preClaimEstimateMethod !== 'function') {
+                throw new Error(`${estimateMethodName} is not available on the current SpCoin access path.`);
+              }
+              const preClaimTimestamp = String(Math.floor(Date.now() / 1000));
+              const preClaimReadCacheOptions = {
+                ...stepReadCacheOptions,
+                cache: 'forceRefresh' as ReadCacheMode,
+                timestampOverride: preClaimTimestamp,
+                traceRewardFormula: true,
+              };
               appendTrace(
-                `[SPCOIN_READ_CACHE_TRACE] claim pre-read method=${methodName} account=${accountKey} cacheMode=${cacheMode} namespace=${readCacheOptions.cacheNamespace || ''}`,
+                `[REWARD_CALC_TRACE] beforeClaim estimate method=${estimateMethodName} claimMethod=${methodName} account=${accountKey} timestamp=${preClaimTimestamp}`,
               );
-              const hasSuppliedPreClaimEstimate = body?.preClaimEstimateResult !== undefined;
-              appendTrace(
-                `[SPCOIN_READ_CACHE_TRACE] claim pre-read source=${
-                  hasSuppliedPreClaimEstimate ? 'client-estimate-snapshot' : 'server-estimate'
-                } method=${methodName} account=${accountKey}`,
+              const preClaimCalculatedRewardsResult = await (
+                preClaimEstimateMethod as (accountKey: string, options?: unknown) => Promise<unknown>
+              )(
+                accountKey,
+                preClaimReadCacheOptions,
               );
-              const preClaimCalculatedRewardsResult = hasSuppliedPreClaimEstimate
-                ? body.preClaimEstimateResult
-                : null;
               const affectedPendingRewardsByAccount = readPendingRewardsByAccount(preClaimCalculatedRewardsResult);
+              const beforeSnapshot = await readAccountRewardSnapshot(contract, accountKey, {
+                ...stepReadCacheOptions,
+                cache: 'forceRefresh',
+              });
               const tx = await sendSignedContractTransaction({
                 label: methodName,
                 contract: writeContract,
@@ -2901,21 +2971,22 @@ export async function POST(request: NextRequest) {
               const invalidatedAccounts = Array.from(
                 new Set([accountKey, ...Object.keys(claimedRewardsByAccount)].map((value) => normalizeAddressDisplay(value)).filter(Boolean)),
               );
-              for (const invalidatedAccount of invalidatedAccounts) {
-                invalidateCachedAccountRecord(contractAddress, invalidatedAccount);
-              }
-              clearReadCache();
+              const invalidatedPackageCacheEntries = invalidateAfterWrite(methodName, invalidatedAccounts.length > 0 ? invalidatedAccounts : [accountKey]);
               appendTrace(
-                `[SPCOIN_READ_CACHE_TRACE] phase=clear scope=server reason=claim-write method=${methodName} accounts=${invalidatedAccounts.join(',') || normalizeAddressDisplay(accountKey)}`,
+                `Cache Clear: method=${methodName} phase=invalidate-after-write scope=server accounts=${invalidatedAccounts.join(',') || normalizeAddressDisplay(accountKey)} invalidated=${String(invalidatedPackageCacheEntries)}`,
               );
+              const afterSnapshot = await readAccountRewardSnapshot(contract, accountKey, {
+                ...stepReadCacheOptions,
+                cache: 'forceRefresh',
+              });
               traceRewardFormulaEntries('beforeClaim', preClaimCalculatedRewardsResult, appendTrace);
               stepRewardCalculationMeta = buildClaimRewardCalculationMeta({
                 methodName,
                 accountKey,
                 claimedAmount,
                 settlementTimestamp,
-                beforeSnapshot: null,
-                afterSnapshot: null,
+                beforeSnapshot,
+                afterSnapshot,
               });
               appendTrace(
                 `[REWARD_CALC_TRACE] claim replay method=${methodName} account=${accountKey} settlementTimestamp=${String(settlementTimestamp || '')} claimedAmount=${claimedAmount} accounts=${Object.keys(claimedRewardsByAccount).join(',')}`,

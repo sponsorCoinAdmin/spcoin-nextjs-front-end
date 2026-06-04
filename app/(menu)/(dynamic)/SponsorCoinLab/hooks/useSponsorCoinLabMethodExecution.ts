@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import type { MethodDef, ParamDef } from '../jsonMethods/shared/types';
 import {
+  ERC20_TOKEN_ADDRESS_PARAM_LABEL,
   getErc20ReadLabels,
   runErc20ReadMethod,
   type Erc20ReadMethod,
@@ -62,7 +63,6 @@ export interface MethodExecutionDescriptor {
   params: MethodParamEntry[];
   sender?: string;
   mode?: ConnectionMode;
-  preClaimEstimateResult?: unknown;
 }
 
 export interface MethodExecutionResult {
@@ -304,8 +304,6 @@ export function useSponsorCoinLabMethodExecution({
       sender?: string,
       modeOverride: ConnectionMode = mode,
       executionSignal?: AbortSignal,
-      clearReadCache?: boolean,
-      preClaimEstimateResult?: unknown,
     ): Promise<ServerBackedStepResult> => {
       const target = requireContractAddress();
       appendWriteTrace(
@@ -322,8 +320,6 @@ export function useSponsorCoinLabMethodExecution({
           ...(useReadCache === undefined ? {} : { useCache: useReadCache }),
           cacheNamespace: readCacheNamespace,
           traceCache: traceEnabled,
-          ...(clearReadCache ? { clearReadCache: true } : {}),
-          ...(preClaimEstimateResult === undefined ? {} : { preClaimEstimateResult }),
           script: {
             id: `spcoin-rread-${method}-${Date.now()}`,
             name: method,
@@ -395,7 +391,7 @@ export function useSponsorCoinLabMethodExecution({
   const executeMethodDescriptor = useCallback(
     async (
       descriptor: MethodExecutionDescriptor,
-      options?: { executionSignal?: AbortSignal; clearReadCache?: boolean },
+      options?: { executionSignal?: AbortSignal },
     ): Promise<MethodExecutionResult> => {
       const executionStartedAtMs = Date.now();
       const executionTimingCollector = traceEnabled ? createMethodTimingCollector(executionStartedAtMs) : null;
@@ -471,15 +467,18 @@ export function useSponsorCoinLabMethodExecution({
         if (panel === 'ecr20_read') {
           const selectedMethod = method as Erc20ReadMethod;
           const labels = getErc20ReadLabels(selectedMethod);
+          const readTokenAddress = findParamValue(ERC20_TOKEN_ADDRESS_PARAM_LABEL) || requireContractAddress();
           const readAddressA = labels.requiresAddressA ? findParamValue(labels.addressALabel) : '';
           const readAddressB = labels.requiresAddressB ? findParamValue(labels.addressBLabel) : '';
           const call = buildMethodCallEntry(selectedMethod, [
+            { label: ERC20_TOKEN_ADDRESS_PARAM_LABEL, value: readTokenAddress },
             ...(labels.requiresAddressA ? [{ label: labels.addressALabel, value: readAddressA }] : []),
             ...(labels.requiresAddressB ? [{ label: labels.addressBLabel, value: readAddressB }] : []),
           ]);
           const result = await runErc20ReadMethod({
             selectedReadMethod: selectedMethod,
             activeReadLabels: labels,
+            readTokenAddress,
             readAddressA,
             readAddressB,
             requireContractAddress,
@@ -636,6 +635,8 @@ export function useSponsorCoinLabMethodExecution({
               'getAccountKeyCount',
               'getMasterAccountListSize',
               'getAccountListSize',
+              'clearCache',
+              'setCacheTraceMode',
               'estimateOffChainTotalRewards',
               'estimateOffChainSponsorRewards',
               'estimateOffChainRecipientRewards',
@@ -650,12 +651,10 @@ export function useSponsorCoinLabMethodExecution({
                 def.params.map((param, idx) => ({
                   key: param.label,
                   value: resolvedReadParams[idx] || '',
-                })),
+              })),
               undefined,
               effectiveMode,
               executionSignal,
-              options?.clearReadCache === true,
-              undefined,
             );
               result = serverResult.result;
               warning = serverResult.warning;
@@ -901,8 +900,6 @@ export function useSponsorCoinLabMethodExecution({
               signer,
               effectiveMode,
               executionSignal,
-              options?.clearReadCache === true,
-              descriptor.preClaimEstimateResult,
             )
            : await runSpCoinWriteMethod({
                selectedMethod,

@@ -29,6 +29,8 @@ type Props = {
   erc20ReadOptions: string[];
   setSelectedReadMethod: (value: string) => void;
   activeReadLabels: ActiveReadLabels;
+  readTokenAddress: string;
+  setReadTokenAddress: (value: string) => void;
   readAddressA: string;
   setReadAddressA: (value: string) => void;
   readAddressB: string;
@@ -58,6 +60,8 @@ export default function Erc20ReadController(props: Props) {
     erc20ReadOptions,
     setSelectedReadMethod,
     activeReadLabels,
+    readTokenAddress,
+    setReadTokenAddress,
     readAddressA,
     setReadAddressA,
     readAddressB,
@@ -152,6 +156,25 @@ export default function Erc20ReadController(props: Props) {
         </div>
       ) : null}
       <div id="JSON_METHOD" className="grid grid-cols-1 gap-3 rounded-lg border border-[#31416F] p-3">
+        {hasVisibleReadMethods && (
+          <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+            <label htmlFor="erc20-read-token-address" className="text-sm font-semibold text-[#8FA8FF]">
+              Token Address
+            </label>
+            <input
+              id="erc20-read-token-address"
+              data-field-id="erc20-read-token-address"
+              className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('erc20-read-token-address')}`}
+              value={readTokenAddress}
+              onChange={(event) => {
+                markEditorAsUserEdited();
+                clearInvalidField('erc20-read-token-address');
+                setReadTokenAddress(normalizeAccountValue(event.target.value));
+              }}
+              placeholder="Token contract address"
+            />
+          </div>
+        )}
         {hasVisibleReadMethods && activeReadLabels.requiresAddressA && (
           <AccountSelection
             label={activeReadLabels.addressALabel}

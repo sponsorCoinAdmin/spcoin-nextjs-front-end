@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-06-03T19:31:15.128Z",
+  "updatedAt": "2026-06-04T20:08:46.102Z",
   "lists": {
     "serialization": {
       "Basic": {
@@ -122,6 +122,8 @@
     "spCoinRead": {
       "Basic": {
         "getInflationRate": false,
+        "clearCache": false,
+        "setCacheTraceMode": true,
         "calculateStakingRewards": false,
         "creationTime": false,
         "getMasterAccountMetaData": false,
@@ -214,6 +216,8 @@
       },
       "Standard": {
         "getInflationRate": false,
+        "clearCache": false,
+        "setCacheTraceMode": true,
         "calculateStakingRewards": false,
         "creationTime": false,
         "getMasterAccountMetaData": false,
@@ -306,6 +310,8 @@
       },
       "Test": {
         "getInflationRate": true,
+        "clearCache": false,
+        "setCacheTraceMode": false,
         "calculateStakingRewards": true,
         "creationTime": true,
         "getMasterAccountMetaData": true,
@@ -398,6 +404,8 @@
       },
       "Todo": {
         "getInflationRate": false,
+        "clearCache": false,
+        "setCacheTraceMode": false,
         "calculateStakingRewards": false,
         "creationTime": false,
         "getMasterAccountMetaData": false,
@@ -490,6 +498,8 @@
       },
       "Complete": {
         "getInflationRate": false,
+        "clearCache": false,
+        "setCacheTraceMode": false,
         "calculateStakingRewards": false,
         "creationTime": false,
         "getMasterAccountMetaData": false,
@@ -864,6 +874,8 @@
     "erc20Write:approve": "erc20",
     "erc20Write:transferFrom": "erc20",
     "spCoinRead:getInflationRate": "admin_utils",
+    "spCoinRead:clearCache": "admin_utils",
+    "spCoinRead:setCacheTraceMode": "admin_utils",
     "spCoinRead:calculateStakingRewards": "admin_utils",
     "spCoinRead:creationTime": "admin_utils",
     "spCoinRead:getMasterAccountMetaData": "admin_utils",

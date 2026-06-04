@@ -149,6 +149,8 @@ export type BuildMethodsPanelCardPropsArgs = {
   erc20ReadOptions: string[];
   selectDropdownReadMethod: (value: Erc20ReadMethod) => void;
   activeReadLabels: ActiveAddressLabels;
+  readTokenAddress: string;
+  setReadTokenAddress: StateSetter<string>;
   readAddressA: string;
   setReadAddressA: StateSetter<string>;
   readAddressB: string;
@@ -331,6 +333,8 @@ export function buildMethodsPanelCardProps(args: BuildMethodsPanelCardPropsArgs)
       erc20ReadOptions: args.erc20ReadOptions,
       setSelectedReadMethod: (value: string) => args.selectDropdownReadMethod(value as Erc20ReadMethod),
       activeReadLabels: args.activeReadLabels,
+      readTokenAddress: args.readTokenAddress,
+      setReadTokenAddress: args.setReadTokenAddress,
       readAddressA: args.readAddressA,
       setReadAddressA: args.setReadAddressA,
       readAddressB: args.readAddressB,

@@ -12,18 +12,21 @@ function toDisplayString(value: unknown, fallback = '') {
   return fallback;
 }
 
+export type PendingRewardsMethodName =
+  | 'estimateOffChainTotalRewards'
+  | 'estimateOffChainSponsorRewards'
+  | 'estimateOffChainRecipientRewards'
+  | 'estimateOffChainAgentRewards'
+  | 'claimOnChainTotalRewards'
+  | 'claimOnChainSponsorRewards'
+  | 'claimOnChainRecipientRewards'
+  | 'claimOnChainAgentRewards';
+
 export type PendingRewardsActionClick = {
   accountKey: string;
   action: 'claim' | 'estimate';
-  method?:
-    | 'estimateOffChainTotalRewards'
-    | 'estimateOffChainSponsorRewards'
-    | 'estimateOffChainRecipientRewards'
-    | 'estimateOffChainAgentRewards'
-    | 'claimOnChainTotalRewards'
-    | 'claimOnChainSponsorRewards'
-    | 'claimOnChainRecipientRewards'
-    | 'claimOnChainAgentRewards';
+  method?: PendingRewardsMethodName;
+  methods?: PendingRewardsMethodName[];
 };
 
 export const PENDING_REWARDS_ESTIMATE_METHODS = new Set([
@@ -39,6 +42,10 @@ export const PENDING_REWARDS_CLAIM_METHODS = new Set([
   'claimOnChainRecipientRewards',
   'claimOnChainAgentRewards',
 ]);
+
+function isPendingRewardsMethodName(value: string): value is PendingRewardsMethodName {
+  return PENDING_REWARDS_ESTIMATE_METHODS.has(value) || PENDING_REWARDS_CLAIM_METHODS.has(value);
+}
 
 const PENDING_REWARDS_METHOD_KEYS = [
   'estimateOffChainTotalRewards',
@@ -107,6 +114,21 @@ export function parsePendingRewardsMethodClick(
   try {
     const parsed = JSON.parse(String(value || '')) as Record<string, unknown>;
     if (!parsed || parsed.__loadPendingRewardsMethod !== true) return null;
+    const methods = Array.isArray(parsed.methods)
+      ? parsed.methods
+          .map((entry) => String(entry || '').trim())
+          .filter(isPendingRewardsMethodName)
+      : [];
+    if (methods.length > 0) {
+      const firstMethod = methods[0];
+      const action = PENDING_REWARDS_ESTIMATE_METHODS.has(firstMethod) ? 'estimate' : 'claim';
+      return {
+        accountKey: normalizeAddressValue(toDisplayString(parsed.accountKey)),
+        action,
+        method: firstMethod,
+        methods,
+      };
+    }
     const method = String(parsed.method || '').trim();
     if (!PENDING_REWARDS_ESTIMATE_METHODS.has(method) && !PENDING_REWARDS_CLAIM_METHODS.has(method)) return null;
     return {

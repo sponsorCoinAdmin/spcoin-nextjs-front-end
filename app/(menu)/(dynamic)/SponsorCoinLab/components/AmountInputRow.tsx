@@ -34,7 +34,7 @@ export default function AmountInputRow({
   decimals,
 }: Props) {
   const resolvedPlaceholder =
-    placeholder ?? (unit === 'TOKEN' ? 'Token amount' : 'Raw base-unit amount');
+    unit === 'RAW' ? 'Raw base-unit amount (integer)' : placeholder ?? 'Token amount';
   const handleValueChange = (nextValue: string) => {
     onValueChange(unit === 'RAW' ? normalizeRawAmountInput(nextValue) : normalizeTokenAmountInput(nextValue));
   };

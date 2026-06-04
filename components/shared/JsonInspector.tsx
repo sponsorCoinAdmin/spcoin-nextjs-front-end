@@ -412,12 +412,12 @@ function readCallParameterValue(callRecord: Record<string, unknown> | null, keys
 }
 
 function getMethodDisplayParameterValue(methodName: string, callRecord: Record<string, unknown> | null): string {
+  if (PENDING_REWARDS_METHOD_NAMES.has(methodName) || methodName === 'getAccountRecord') {
+    return '';
+  }
   const parameterKeys: Record<string, string[]> = {
-    getAccountRecord: ['Account Key', 'Account'],
     addRecipientTransaction: ['Recipient Key', 'Recipient'],
     addAgentTransaction: ['Agent Key', 'Agent'],
-    estimateOffChainSponsorRewards: ['Account Key', 'Account'],
-    estimateOffChainRecipientRewards: ['Account Key', 'Account'],
   };
   return readCallParameterValue(callRecord, parameterKeys[methodName] ?? ['Account Key', 'Account']);
 }
@@ -2390,17 +2390,53 @@ function getPendingRewardsRecordResultSummaryValue(
   return null;
 }
 
-function getPendingRewardsDefaultEstimateMethod(data: unknown): string {
-  const summaryMethod = getPendingRewardsRecordResultSummaryValue(data)?.methodName;
-  if (summaryMethod && PENDING_REWARDS_ESTIMATE_METHOD_NAMES.has(summaryMethod)) return summaryMethod;
-  if (summaryMethod && PENDING_REWARDS_CLAIM_METHOD_NAMES.has(summaryMethod)) {
-    return summaryMethod.replace(/^claimOnChain/, 'estimateOffChain');
-  }
+function getPreferredEstimateMethodFromRoleSource(data: unknown): string {
   const counts = getAccountRoleCounts(data);
   const roleSource = getRoleSingleSource(counts);
   if (roleSource.isAgent) return 'estimateOffChainAgentRewards';
   if (roleSource.isRecipient) return 'estimateOffChainRecipientRewards';
-  return 'estimateOffChainSponsorRewards';
+  if (roleSource.isSponsor) return 'estimateOffChainSponsorRewards';
+  return '';
+}
+
+function getRoleEstimateMethodsFromRoleSource(data: unknown): string[] {
+  const counts = getAccountRoleCounts(data);
+  const roleSource = getRoleSingleSource(counts);
+  const methods: string[] = [];
+  if (roleSource.isAgent) methods.push('estimateOffChainAgentRewards');
+  if (roleSource.isRecipient) methods.push('estimateOffChainRecipientRewards');
+  if (roleSource.isSponsor) methods.push('estimateOffChainSponsorRewards');
+  return methods;
+}
+
+function getPendingRewardsEstimateMethods(data: unknown, roleContext?: unknown): string[] {
+  const roleMethods = [
+    ...getRoleEstimateMethodsFromRoleSource(roleContext),
+    ...getRoleEstimateMethodsFromRoleSource(data),
+  ];
+  const uniqueRoleMethods = [...new Set(roleMethods)];
+  if (uniqueRoleMethods.length > 0) return uniqueRoleMethods;
+  return [getPendingRewardsDefaultEstimateMethod(data, roleContext)];
+}
+
+function getPendingRewardsDefaultEstimateMethod(data: unknown, roleContext?: unknown): string {
+  const summaryMethod = getPendingRewardsRecordResultSummaryValue(data)?.methodName;
+  const preferredRoleMethod =
+    getPreferredEstimateMethodFromRoleSource(roleContext) ||
+    getPreferredEstimateMethodFromRoleSource(data);
+  if (
+    preferredRoleMethod &&
+    (summaryMethod === 'estimateOffChainTotalRewards' ||
+      summaryMethod === 'claimOnChainTotalRewards' ||
+      !summaryMethod)
+  ) {
+    return preferredRoleMethod;
+  }
+  if (summaryMethod && PENDING_REWARDS_ESTIMATE_METHOD_NAMES.has(summaryMethod)) return summaryMethod;
+  if (summaryMethod && PENDING_REWARDS_CLAIM_METHOD_NAMES.has(summaryMethod)) {
+    return summaryMethod.replace(/^claimOnChain/, 'estimateOffChain');
+  }
+  return preferredRoleMethod || 'estimateOffChainSponsorRewards';
 }
 
 function roleFromPendingRewardsMethod(methodName: string): DisplayAccountRole | '' {
@@ -3653,8 +3689,11 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     ? getPendingRewardsRecordResultSummaryValue(data)
     : null;
   const getPendingRewardsEstimateMethod = isGetPendingRewardsNode
-    ? getPendingRewardsDefaultEstimateMethod(data)
+    ? getPendingRewardsDefaultEstimateMethod(data, pendingRewardsParentRecord ?? effectiveAccountRoleCounts)
     : '';
+  const getPendingRewardsRoleEstimateMethods = isGetPendingRewardsNode
+    ? getPendingRewardsEstimateMethods(data, pendingRewardsParentRecord ?? effectiveAccountRoleCounts)
+    : [];
   const getPendingRewardsResultSummaryDisplay = getPendingRewardsResultSummary
     ? `${formatDisplayScalar(
         getPendingRewardsResultSummary.key,
@@ -4109,7 +4148,17 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     inlineStepMethodDisplayName === displayPathLabel
       ? ''
       : inlineStepMethodDisplayName;
-  const showStepAddressAfterMethod = Boolean(inlineStepMethodAddress && stepCallRecord && visibleInlineStepMethod);
+  const visibleInlineStepMethodSummaryDisplay =
+    visibleInlineStepMethod && PENDING_REWARDS_METHOD_NAMES.has(inlineStepMethod)
+      ? pendingRewardsMethodHeaderSummaryDisplay
+      : '';
+  const showStepAddressAfterMethod = Boolean(
+    inlineStepMethodAddress &&
+      stepCallRecord &&
+      visibleInlineStepMethod &&
+      !PENDING_REWARDS_METHOD_NAMES.has(inlineStepMethod) &&
+      inlineStepMethod !== 'getAccountRecord',
+  );
   const promotedStepEntries = moveStepResultMetaFields(
     stepCallRecord && !Array.isArray(stepCallRecord)
       ? [
@@ -4418,6 +4467,11 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
         data-script-step-draggable={isDraggableScriptStep ? 'true' : 'false'}
         onMouseDown={beginScriptStepDrag}
         onDoubleClick={handleScriptStepDoubleClick}
+        onContextMenu={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          closeBranch('contextmenu');
+        }}
         style={isDraggableScriptStep ? { cursor: 'grab' } : undefined}
         className={`whitespace-nowrap rounded-sm ${isDraggableScriptStep ? 'cursor-pointer select-none' : ''}`}
       >
@@ -4473,20 +4527,29 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
               onClick={(event) => {
                 event.stopPropagation();
                 if (!getPendingRewardsAccount) return;
+                const estimateMethods =
+                  getPendingRewardsRoleEstimateMethods.length > 0
+                    ? getPendingRewardsRoleEstimateMethods
+                    : [getPendingRewardsEstimateMethod];
                 onTrace?.(
-                  `[PENDING_REWARDS_TRACE] getPendingRewards label click path=${path ?? ''} method=${getPendingRewardsEstimateMethod} account=${getPendingRewardsAccount}`,
+                  `[PENDING_REWARDS_TRACE] getPendingRewards label click path=${path ?? ''} methods=${estimateMethods.join(',')} account=${getPendingRewardsAccount}`,
                 );
                 onLeafValueClick?.(
                   JSON.stringify({
                     __loadPendingRewardsMethod: true,
                     accountKey: getPendingRewardsAccount,
-                    method: getPendingRewardsEstimateMethod,
+                    method: estimateMethods[0] ?? getPendingRewardsEstimateMethod,
+                    methods: estimateMethods,
                   }),
-                  `${path ?? ''}.${getPendingRewardsEstimateMethod}`,
-                  getPendingRewardsEstimateMethod,
+                  `${path ?? ''}.${estimateMethods[0] ?? getPendingRewardsEstimateMethod}`,
+                  estimateMethods[0] ?? getPendingRewardsEstimateMethod,
                 );
               }}
-              title={`Run ${getPendingRewardsEstimateMethod || 'pending rewards estimate'}`}
+              title={`Run ${
+                getPendingRewardsRoleEstimateMethods.length > 1
+                  ? 'role pending rewards estimates'
+                  : getPendingRewardsEstimateMethod || 'pending rewards estimate'
+              }`}
             >
               getPendingRewards
             </button>
@@ -4735,19 +4798,33 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
         )}
         {visibleInlineStepMethod ? (
           isDraggableScriptStep && scriptStepDragState?.onStepMethodClick && draggableScriptStepNumberWithLabel !== null ? (
-            <button
-              type="button"
-              className={`ml-3 inline-flex bg-transparent p-0 text-left font-semibold transition-colors hover:text-white focus:outline-none ${
-                isHighlighted ? highlightColorClass : 'text-green-400'
-              }`}
-              onClick={handleScriptStepMethodClick}
-              title={`Rerun ${visibleInlineStepMethod}`}
-            >
-              {visibleInlineStepMethod}
-            </button>
+            <>
+              <button
+                type="button"
+                className={`ml-3 inline-flex bg-transparent p-0 text-left font-semibold transition-colors hover:text-white focus:outline-none ${
+                  isHighlighted ? highlightColorClass : 'text-green-400'
+                }`}
+                onClick={handleScriptStepMethodClick}
+                title={`Rerun ${visibleInlineStepMethod}`}
+              >
+                {visibleInlineStepMethodSummaryDisplay ? `${visibleInlineStepMethod}:` : visibleInlineStepMethod}
+              </button>
+              {visibleInlineStepMethodSummaryDisplay ? (
+                <span className={`ml-1 ${isHighlighted ? highlightColorClass : 'text-green-400'}`}>
+                  {renderDisplayLabelWithStatusSuffix(visibleInlineStepMethodSummaryDisplay)}
+                </span>
+              ) : null}
+            </>
           ) : (
             <span className={`ml-3 ${isHighlighted ? highlightColorClass : 'text-green-400'}`}>
-              {visibleInlineStepMethod}
+              {visibleInlineStepMethodSummaryDisplay ? (
+                <>
+                  {visibleInlineStepMethod}:{' '}
+                  {renderDisplayLabelWithStatusSuffix(visibleInlineStepMethodSummaryDisplay)}
+                </>
+              ) : (
+                visibleInlineStepMethod
+              )}
             </span>
           )
         ) : null}

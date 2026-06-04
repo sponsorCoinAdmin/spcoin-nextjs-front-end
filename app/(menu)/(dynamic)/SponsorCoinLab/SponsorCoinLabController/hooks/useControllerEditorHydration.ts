@@ -27,7 +27,7 @@ type Props = {
   activeSpCoinReadDef: { params: ControllerParamDef[] };
   activeSpCoinWriteDef: { params: ControllerParamDef[] };
   activeSerializationTestDef: { params: ControllerParamDef[] };
-  buildErc20ReadEditorDefaults: (labels: AddressFieldLabels) => { addressA: string; addressB: string };
+  buildErc20ReadEditorDefaults: (labels: AddressFieldLabels) => { tokenAddress: string; addressA: string; addressB: string };
   buildErc20WriteEditorDefaults: (labels: AddressFieldLabels) => {
     senderAddress?: string;
     addressA: string;
@@ -39,6 +39,7 @@ type Props = {
     metadata?: ControllerContractMetadata,
   ) => string[];
   resolveScriptEditorContractMetadata: (params: ControllerParamDef[]) => Promise<ControllerContractMetadata>;
+  setReadTokenAddress: React.Dispatch<React.SetStateAction<string>>;
   setReadAddressA: React.Dispatch<React.SetStateAction<string>>;
   setReadAddressB: React.Dispatch<React.SetStateAction<string>>;
   setSelectedWriteSenderAddress: React.Dispatch<React.SetStateAction<string>>;
@@ -72,6 +73,7 @@ export function useControllerEditorHydration({
   buildErc20WriteEditorDefaults,
   buildScriptEditorParamValues,
   resolveScriptEditorContractMetadata,
+  setReadTokenAddress,
   setReadAddressA,
   setReadAddressB,
   setSelectedWriteSenderAddress,
@@ -102,6 +104,7 @@ export function useControllerEditorHydration({
       queueEditorBaselineReset();
       if (methodPanelMode === 'ecr20_read') {
         const nextDefaults = buildErc20ReadEditorDefaults(activeReadLabels);
+        setReadTokenAddress((prev) => (prev === nextDefaults.tokenAddress ? prev : nextDefaults.tokenAddress));
         setReadAddressA((prev) => (prev === nextDefaults.addressA ? prev : nextDefaults.addressA));
         setReadAddressB((prev) => (prev === nextDefaults.addressB ? prev : nextDefaults.addressB));
         return;
@@ -157,6 +160,7 @@ export function useControllerEditorHydration({
     selectedSpCoinReadMethod,
     selectedSpCoinWriteMethod,
     selectedWriteMethod,
+    setReadTokenAddress,
     setReadAddressA,
     setReadAddressB,
     setSerializationTestParams,

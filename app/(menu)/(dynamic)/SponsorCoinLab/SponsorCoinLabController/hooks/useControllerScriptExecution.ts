@@ -26,7 +26,6 @@ interface ScriptRunOptions {
   executionSignal?: AbortSignal;
   executionLabel?: string;
   scriptNetwork?: string;
-  clearReadCache?: boolean;
 }
 function toDisplayString(value: unknown, fallback = '') {
   if (value == null) return fallback;
@@ -164,7 +163,6 @@ interface Params {
     options: ScriptRunOptions,
   ) => Promise<ScriptRunResult>;
   callAccessMethod: AccessMethodCaller;
-  resetReadCacheForRefresh?: () => void;
   focusScriptStep: (step: LabScriptStep) => void;
   spCoinReadMethodDefs: Record<string, unknown>;
   spCoinWriteMethodDefs: Record<string, unknown>;
@@ -195,7 +193,6 @@ export function useControllerScriptExecution({
   selectedScriptStepNumber,
   runScriptStep,
   callAccessMethod,
-  resetReadCacheForRefresh,
   focusScriptStep,
   spCoinReadMethodDefs,
   spCoinWriteMethodDefs,
@@ -206,7 +203,7 @@ export function useControllerScriptExecution({
   const isRefreshingDisplayedOutputRef = useRef(false);
 
   const runScriptStepWithPopup = useCallback(
-    async (step: LabScriptStep, options: { formattedOutputBase: string; clearReadCache?: boolean }) =>
+    async (step: LabScriptStep, options: { formattedOutputBase: string }) =>
       callAccessMethod(step.name || step.method, ({ executionSignal, executionLabel }) =>
         runScriptStep(step, {
           ...options,
@@ -219,7 +216,7 @@ export function useControllerScriptExecution({
   );
 
   const runScriptStepWithPopupAtOutputBlock = useCallback(
-    async (step: LabScriptStep, options: { formattedOutputBase: string; replaceOutputBlockIndex: number; clearReadCache?: boolean }) =>
+    async (step: LabScriptStep, options: { formattedOutputBase: string; replaceOutputBlockIndex: number }) =>
       callAccessMethod(step.name || step.method, ({ executionSignal, executionLabel }) =>
         runScriptStep(step, {
           ...options,
@@ -362,8 +359,6 @@ export function useControllerScriptExecution({
     scriptDebugStopRef.current = true;
     setIsScriptDebugRunning(false);
     setScriptStepExecutionErrors({});
-    resetReadCacheForRefresh?.();
-
     let accumulatedOutput = '(no output yet)';
     setFormattedOutputDisplay(accumulatedOutput);
     setIsScriptDebugRunning(true);
@@ -382,7 +377,6 @@ export function useControllerScriptExecution({
         const syntheticStep = buildDisplayedOutputSyntheticStep(call, index + 1, panel);
         const result = await runScriptStepWithPopup(syntheticStep, {
           formattedOutputBase: accumulatedOutput,
-          clearReadCache: index === 0,
         });
         if (!result) return;
         setScriptStepExecutionErrors((prev) => ({
@@ -406,7 +400,6 @@ export function useControllerScriptExecution({
     isRefreshingDisplayedOutputRef,
     displayedOutputCalls,
     runScriptStepWithPopup,
-    resetReadCacheForRefresh,
     serializationTestMethodDefs,
     setFormattedOutputDisplay,
     setIsScriptDebugRunning,
@@ -436,13 +429,11 @@ export function useControllerScriptExecution({
       return;
     }
     if (outputPanelMode === 'tree') {
-      resetReadCacheForRefresh?.();
       requestRefreshSelectedTreeAccount();
       return;
     }
     if (activeMethodPanelTab === 'admin_utils') {
       if (methodPanelMode === 'spcoin_rread') {
-        resetReadCacheForRefresh?.();
         void runSelectedSpCoinReadMethod();
         return;
       }
@@ -462,7 +453,6 @@ export function useControllerScriptExecution({
       return;
     }
     if (activeMethodPanelTab === 'spcoin_rread') {
-      resetReadCacheForRefresh?.();
       void runSelectedSpCoinReadMethod();
       return;
     }
@@ -474,7 +464,6 @@ export function useControllerScriptExecution({
     methodPanelMode,
     outputPanelMode,
     requestRefreshSelectedTreeAccount,
-    resetReadCacheForRefresh,
     runSelectedReadMethod,
     runSelectedSerializationTestMethod,
     runSelectedSpCoinReadMethod,

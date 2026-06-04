@@ -16,6 +16,14 @@ import { getMethodOptionColor } from './methodOptionColors';
 import { NativeSelectChevron } from './SelectChevron';
 import type { MethodDef } from '../jsonMethods/shared/types';
 import { normalizeSpCoinReadMethod } from '../jsonMethods/spCoin/read';
+import {
+  DEFAULT_CACHE_TTL_MS,
+  DEFAULT_TTL_FORMAT,
+  TTL_FORMAT_OPTIONS,
+  formatTtlValue,
+  normalizeTtlFormat,
+  parseTtlMs,
+} from '../jsonMethods/shared/cacheTtl';
 
 const DATE_DIFF_UNITS = ['Years', 'Months', 'Weeks', 'Days', 'Hours', 'Minutes', 'Seconds'] as const;
 const DATE_DIFF_DIVISORS: Record<(typeof DATE_DIFF_UNITS)[number], number> = {
@@ -36,6 +44,7 @@ const DATE_DIFF_UNIT_LABELS: Record<(typeof DATE_DIFF_UNITS)[number], string> = 
   Minutes: 'mm',
   Seconds: 'ss',
 };
+const CACHE_MODE_OPTIONS = ['default', 'forceRefresh', 'useCacheOnly'] as const;
 
 function pad2(value: number | string) {
   return String(value).padStart(2, '0');
@@ -268,6 +277,18 @@ export default function SpCoinReadController(props: Props) {
       : `h-[36px] rounded px-4 py-[0.28rem] text-center font-bold transition-colors ${
           hoveredBlockedAction === buttonKind ? 'bg-red-600 text-white' : 'bg-[#E5B94F] text-black hover:bg-[#d7ae45]'
         }`;
+  const setReadParamValue = React.useCallback(
+    (idx: number, value: string) => {
+      markEditorAsUserEdited();
+      setSpReadParams((prev) => {
+        clearInvalidField(`spcoin-read-param-${idx}`);
+        const next = [...prev];
+        next[idx] = value;
+        return next;
+      });
+    },
+    [clearInvalidField, markEditorAsUserEdited, setSpReadParams],
+  );
   const normalizeAccountValue = (value: string) => {
     const trimmed = String(value || '').trim();
     return /^0[xX][0-9a-fA-F]{40}$/.test(trimmed) ? `0x${trimmed.slice(2).toLowerCase()}` : trimmed;
@@ -509,6 +530,33 @@ export default function SpCoinReadController(props: Props) {
     });
   }, [activeContractAddress, activeSpCoinReadDef.params, setSpReadParams]);
   React.useEffect(() => {
+    setSpReadParams((prev) => {
+      let changed = false;
+      const next = [...prev];
+      activeSpCoinReadDef.params.forEach((param, idx) => {
+        if (param.label === 'TTL Format' && !String(next[idx] || '').trim()) {
+          next[idx] = DEFAULT_TTL_FORMAT;
+          changed = true;
+          return;
+        }
+        if (param.label !== 'TTL') return;
+        const formatIdx = activeSpCoinReadDef.params.findIndex(
+          (entry, entryIdx) => entryIdx > idx && entry.label === 'TTL Format',
+        );
+        const format = normalizeTtlFormat(formatIdx >= 0 ? next[formatIdx] : undefined);
+        if (formatIdx >= 0 && !String(next[formatIdx] || '').trim()) {
+          next[formatIdx] = format;
+          changed = true;
+        }
+        if (!String(next[idx] || '').trim()) {
+          next[idx] = formatTtlValue(DEFAULT_CACHE_TTL_MS, format);
+          changed = true;
+        }
+      });
+      return changed ? next : prev;
+    });
+  }, [activeSpCoinReadDef.params, setSpReadParams]);
+  React.useEffect(() => {
     if (selectedSpCoinReadMethod !== 'calcDataTimeDiff') return;
     setSpReadParams((prev) => {
       const next = [...prev];
@@ -525,6 +573,10 @@ export default function SpCoinReadController(props: Props) {
     hasVisibleReadMethods
       ? getVisibleReadMethodValue(selectableReadMethods, selectedSpCoinReadMethod) || '__no_methods__'
       : '__no_methods__';
+  const hasOnlyTraceCacheParam =
+    hasVisibleReadMethods &&
+    activeSpCoinReadDef.params.length === 1 &&
+    activeSpCoinReadDef.params[0]?.label === 'Trace Cache';
 
   return (
     <div className="grid grid-cols-1 gap-3">
@@ -627,9 +679,18 @@ export default function SpCoinReadController(props: Props) {
           <NativeSelectChevron />
         </div>
       </div> : null}
-      <div id="JSON_METHOD" className="grid grid-cols-1 gap-3 rounded-lg border border-[#31416F] p-3">
+      <div
+        id="JSON_METHOD"
+        className={
+          hasOnlyTraceCacheParam
+            ? 'grid grid-cols-1 gap-3'
+            : 'grid grid-cols-1 gap-3 rounded-lg border border-[#31416F] p-3'
+        }
+      >
         {!hasVisibleReadMethods ? <div className="text-sm text-slate-400">(no SpCoin read methods match the current filter)</div> : null}
-        {hasVisibleReadMethods ? activeSpCoinReadDef.params.map((param, idx) => (
+        {hasVisibleReadMethods ? activeSpCoinReadDef.params.map((param, idx) => {
+          if (param.label === 'TTL Format') return null;
+          return (
           <div key={`sp-read-param-${param.label}-${idx}`} className="grid grid-cols-1 gap-3">
           {selectedSpCoinReadMethod === 'calcDataTimeDiff' && (param.label === 'From Date/Time' || param.label === 'To Date/Time') ? (
             <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
@@ -765,6 +826,96 @@ export default function SpCoinReadController(props: Props) {
                 placeholder={param.placeholder}
               />
             </label>
+          ) : param.label === 'Cache Mode' ? (
+            <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+              <span className="text-sm font-semibold text-[#8FA8FF]">{param.label}</span>
+              <div className="relative w-full min-w-0">
+                <select
+                  data-field-id={`spcoin-read-param-${idx}`}
+                  className={`peer w-full min-w-0 appearance-none rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 pr-10 text-sm text-white${invalidClass(`spcoin-read-param-${idx}`)}`}
+                  value={String(spReadParams[idx] || 'default').trim() || 'default'}
+                  onChange={(event) => setReadParamValue(idx, event.target.value)}
+                >
+                  {CACHE_MODE_OPTIONS.map((option) => (
+                    <option key={`spcoin-read-cache-mode-${option}`} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+                <NativeSelectChevron />
+              </div>
+            </label>
+          ) : param.label === 'TTL' ? (
+            <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+              <span className="text-sm font-semibold text-[#8FA8FF]">{param.label}</span>
+              <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(8.5rem,12rem)] gap-2">
+                <input
+                  data-field-id={`spcoin-read-param-${idx}`}
+                  className={`${inputStyle}${invalidClass(`spcoin-read-param-${idx}`)}`}
+                  value={spReadParams[idx] || formatTtlValue(DEFAULT_CACHE_TTL_MS, spReadParams[idx + 1] || DEFAULT_TTL_FORMAT)}
+                  onChange={(event) => setReadParamValue(idx, event.target.value)}
+                  placeholder={param.placeholder}
+                />
+                <div className="relative min-w-0">
+                  <select
+                    data-field-id={`spcoin-read-param-${idx + 1}`}
+                    className={`peer w-full min-w-0 appearance-none rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 pr-10 text-sm text-white${invalidClass(`spcoin-read-param-${idx + 1}`)}`}
+                    value={normalizeTtlFormat(spReadParams[idx + 1] || DEFAULT_TTL_FORMAT)}
+                    onChange={(event) => {
+                      const nextFormat = normalizeTtlFormat(event.target.value);
+                      markEditorAsUserEdited();
+                      setSpReadParams((prev) => {
+                        clearInvalidField(`spcoin-read-param-${idx}`);
+                        clearInvalidField(`spcoin-read-param-${idx + 1}`);
+                        const next = [...prev];
+                        const currentFormat = normalizeTtlFormat(next[idx + 1] || DEFAULT_TTL_FORMAT);
+                        const currentTtlMs = parseTtlMs(next[idx] || formatTtlValue(DEFAULT_CACHE_TTL_MS, currentFormat), currentFormat);
+                        next[idx] = formatTtlValue(currentTtlMs, nextFormat);
+                        next[idx + 1] = nextFormat;
+                        return next;
+                      });
+                    }}
+                  >
+                    {TTL_FORMAT_OPTIONS.map((option) => (
+                      <option key={`spcoin-read-ttl-format-${option}`} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                  <NativeSelectChevron />
+                </div>
+              </div>
+            </label>
+          ) : param.label === 'Trace Cache' ? (
+            <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+              <span className="text-sm font-semibold text-[#8FA8FF]">{param.label}</span>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-0 text-xs text-[#8FA8FF]">
+                {[
+                  { label: 'On', value: 'true' },
+                  { label: 'Off', value: 'false' },
+                ].map((option) => {
+                  const currentValue = String(spReadParams[idx] || 'false').trim().toLowerCase();
+                  const active = currentValue === option.value;
+                  return (
+                    <label
+                      key={`spcoin-read-trace-cache-${option.value}`}
+                      className="inline-flex flex-row items-center gap-2"
+                    >
+                      <input
+                        type="radio"
+                        name={`spcoin-read-trace-cache-${idx}`}
+                        value={option.value}
+                        checked={active}
+                        onChange={() => setReadParamValue(idx, option.value)}
+                        data-field-id={`spcoin-read-param-${idx}`}
+                        className="order-first h-3.5 w-3.5 shrink-0 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
+                      />
+                      <span className={active ? 'text-green-400' : 'text-[#8FA8FF]'}>{option.label}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
           ) : ['Recipient Rate Key', 'Recipient Rate'].includes(param.label) ? (
             <RateSliderRow
               label="Recipient Rate"
@@ -865,7 +1016,8 @@ export default function SpCoinReadController(props: Props) {
             </label>
           )}
           </div>
-        )) : null}
+          );
+        }) : null}
         {hasVisibleReadMethods && selectedSpCoinReadMethod === 'calcDataTimeDiff' ? (
           <div className="grid grid-cols-1 gap-3">
             <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
