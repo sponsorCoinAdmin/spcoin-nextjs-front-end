@@ -15,6 +15,7 @@ import { AssetSelectProvider } from '@/lib/context/AssetSelectPanels/AssetSelect
 import ToDo from '@/lib/utils/components/ToDo';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { resolveSpCoinAccountRoles } from '@/lib/spCoinLab/accountRoles';
 
 import { msTableTw } from './msTableTw';
 
@@ -45,6 +46,8 @@ type RoleRewardState = {
   error?: string;
   trace?: string;
 };
+
+const REWARD_ROLES = ['Sponsor', 'Recipient', 'Agent'] as const satisfies readonly RewardRoleName[];
 
 const REWARD_ROLE_CONFIG: Record<RewardRoleName, {
   accountType: AccountType;
@@ -207,6 +210,7 @@ function isTruthyRecordFlag(value: unknown): boolean {
 function getAccountRoleAvailable(record: unknown, role: RewardRoleName): boolean {
   if (!record || typeof record !== 'object' || Array.isArray(record)) return false;
   const account = record as Record<string, unknown>;
+  if (resolveSpCoinAccountRoles(account).includes(role)) return true;
   const roleConfig = REWARD_ROLE_CONFIG[role];
   if (isTruthyRecordFlag(account[roleConfig.roleFlag])) return true;
   const roleText = String(account.role ?? account.roles ?? '').trim();
@@ -458,6 +462,8 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
 
     const loadAccountRecord = async () => {
       setAccountRecordLoading(true);
+      setTotalReward({});
+      setRoleRewards({ Sponsor: {}, Recipient: {}, Agent: {} });
       try {
         recordTrace('request');
         const response = await fetch('/api/spCoin/run-script', {
@@ -617,6 +623,63 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
     return formatAccountRecordAmount(rawStaked, activeContractDecimals);
   }, [accountRecord, accountRecordLoading, activeAccountAddr, activeContractAddr, activeContractDecimals]);
 
+  const runRewardScript = useCallback(
+    async (method: string, action: RewardAction): Promise<unknown> => {
+      const response = await fetch('/api/spCoin/run-script', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contractAddress: activeContractAddr,
+          rpcUrl,
+          spCoinAccessSource: accessSource,
+          cacheMode: action === 'estimate' ? 'default' : 'forceRefresh',
+          useCache: action === 'estimate',
+          traceCache: traceEnabled,
+          script: {
+            id: `manage-sponsorships-${method}-${Date.now()}`,
+            name: method,
+            network: readMode,
+            steps: [
+              {
+                step: 1,
+                name: method,
+                panel: action === 'estimate' ? 'spcoin_rread' : 'spcoin_write',
+                method,
+                mode: readMode,
+                params: [{ key: 'Account Key', value: activeAccountAddr }],
+              },
+            ],
+          },
+        }),
+      });
+      const payload = (await response.json()) as {
+        ok?: boolean;
+        message?: string;
+        results?: Array<{
+          success?: boolean;
+          payload?: {
+            result?: unknown;
+            error?: { message?: unknown };
+          };
+        }>;
+      };
+
+      const firstResult = Array.isArray(payload?.results) ? payload.results[0] : undefined;
+      if (!response.ok || !firstResult?.success) {
+        throw new Error(
+          String(
+            firstResult?.payload?.error?.message ??
+            payload?.message ??
+            `${method} failed.`,
+          ),
+        );
+      }
+
+      return firstResult.payload?.result;
+    },
+    [accessSource, activeAccountAddr, activeContractAddr, readMode, rpcUrl, traceEnabled],
+  );
+
   const runTotalRewardAction = useCallback(
     async (action: RewardAction) => {
       if (!activeContractAddr || !activeAccountAddr) return;
@@ -627,57 +690,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
       setTotalReward((current) => ({ ...current, loading: true, action, error: undefined }));
 
       try {
-        const response = await fetch('/api/spCoin/run-script', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contractAddress: activeContractAddr,
-            rpcUrl,
-            spCoinAccessSource: accessSource,
-            cacheMode: action === 'estimate' ? 'default' : 'forceRefresh',
-            useCache: action === 'estimate',
-            traceCache: traceEnabled,
-            script: {
-              id: `manage-sponsorships-${method}-${Date.now()}`,
-              name: method,
-              network: readMode,
-              steps: [
-                {
-                  step: 1,
-                  name: method,
-                  panel: action === 'estimate' ? 'spcoin_rread' : 'spcoin_write',
-                  method,
-                  mode: readMode,
-                  params: [{ key: 'Account Key', value: activeAccountAddr }],
-                },
-              ],
-            },
-          }),
-        });
-        const payload = (await response.json()) as {
-          ok?: boolean;
-          message?: string;
-          results?: Array<{
-            success?: boolean;
-            payload?: {
-              result?: unknown;
-              error?: { message?: unknown };
-            };
-          }>;
-        };
-
-        const firstResult = Array.isArray(payload?.results) ? payload.results[0] : undefined;
-        if (!response.ok || !firstResult?.success) {
-          throw new Error(
-            String(
-              firstResult?.payload?.error?.message ??
-              payload?.message ??
-              `${method} failed.`,
-            ),
-          );
-        }
-
-        const result = firstResult.payload?.result;
+        const result = await runRewardScript(method, action);
         const rawAmount = getTotalRewardResultAmount(result);
         setTotalReward({
           amount: formatAccountRecordAmount(rawAmount, activeContractDecimals),
@@ -698,7 +711,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
         if (action === 'estimate') {
           setRoleRewards((current) => {
             const next = { ...current };
-            for (const role of ['Sponsor', 'Recipient', 'Agent'] as RewardRoleName[]) {
+            for (const role of REWARD_ROLES) {
               if (!getAccountRoleAvailable(accountRecord, role)) continue;
               next[role] = {
                 ...next[role],
@@ -726,14 +739,11 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
       }
     },
     [
-      accessSource,
       activeAccountAddr,
       activeContractAddr,
       activeContractDecimals,
       accountRecord,
-      readMode,
-      rpcUrl,
-      traceEnabled,
+      runRewardScript,
     ],
   );
 
@@ -750,57 +760,8 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
       }));
 
       try {
-        const response = await fetch('/api/spCoin/run-script', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contractAddress: activeContractAddr,
-            rpcUrl,
-            spCoinAccessSource: accessSource,
-            cacheMode: action === 'estimate' ? 'default' : 'forceRefresh',
-            useCache: action === 'estimate',
-            traceCache: traceEnabled,
-            script: {
-              id: `manage-sponsorships-${method}-${Date.now()}`,
-              name: method,
-              network: readMode,
-              steps: [
-                {
-                  step: 1,
-                  name: method,
-                  panel: action === 'estimate' ? 'spcoin_rread' : 'spcoin_write',
-                  method,
-                  mode: readMode,
-                  params: [{ key: 'Account Key', value: activeAccountAddr }],
-                },
-              ],
-            },
-          }),
-        });
-        const payload = (await response.json()) as {
-          ok?: boolean;
-          message?: string;
-          results?: Array<{
-            success?: boolean;
-            payload?: {
-              result?: unknown;
-              error?: { message?: unknown };
-            };
-          }>;
-        };
-
-        const firstResult = Array.isArray(payload?.results) ? payload.results[0] : undefined;
-        if (!response.ok || !firstResult?.success) {
-          throw new Error(
-            String(
-              firstResult?.payload?.error?.message ??
-              payload?.message ??
-              `${method} failed.`,
-            ),
-          );
-        }
-
-        const rawAmount = getRewardResultAmount(firstResult.payload?.result, role);
+        const result = await runRewardScript(method, action);
+        const rawAmount = action === 'estimate' ? getRewardResultAmount(result, role) : 0;
         setRoleRewards((current) => ({
           ...current,
           [role]: {
@@ -827,19 +788,16 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
       }
     },
     [
-      accessSource,
       activeAccountAddr,
       activeContractAddr,
       activeContractDecimals,
       accountRecord,
-      readMode,
-      rpcUrl,
-      traceEnabled,
+      runRewardScript,
     ],
   );
 
   const runAvailableRoleRewardEstimates = useCallback(async () => {
-    for (const role of ['Sponsor', 'Recipient', 'Agent'] as RewardRoleName[]) {
+    for (const role of REWARD_ROLES) {
       if (!getAccountRoleAvailable(accountRecord, role)) continue;
       await runRewardAction(role, 'estimate');
     }
@@ -899,7 +857,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
   ]);
 
   const rewardRows = useMemo(() => (
-    (['Sponsor', 'Recipient', 'Agent'] as RewardRoleName[]).map((role) => {
+    REWARD_ROLES.map((role) => {
       const available = getAccountRoleAvailable(accountRecord, role);
       const state = roleRewards[role] ?? {};
       const seededAmount = formatAccountRecordAmount(getAccountRecordPendingReward(accountRecord, role), activeContractDecimals);
