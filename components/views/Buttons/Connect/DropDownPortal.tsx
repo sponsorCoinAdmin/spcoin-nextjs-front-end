@@ -14,7 +14,7 @@ type Props = {
 const DROPDOWN_STYLES = `
   .dropdown-portal {
     position: fixed;
-    z-index: 9999;
+    z-index: 10020;
     top: var(--dp-top, -9999px);
     left: var(--dp-left, -9999px);
   }

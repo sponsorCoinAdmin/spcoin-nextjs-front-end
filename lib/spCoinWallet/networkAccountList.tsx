@@ -21,6 +21,7 @@ type NetworkAccountListProps = {
   onConnectMetaMask: () => void;
   onOpenAccountPanel: (account: SpCoinWalletAccount) => void;
   onSelectAccount: (account: SpCoinWalletAccount) => void;
+  showSummaryBar?: boolean;
 };
 
 function sourceLabel(source: SpCoinWalletAccount['source']): string {
@@ -149,40 +150,43 @@ export default function NetworkAccountList({
   onConnectMetaMask,
   onOpenAccountPanel,
   onSelectAccount,
+  showSummaryBar = true,
 }: NetworkAccountListProps) {
   return (
     <>
-      <div className="flex items-center justify-between px-5 py-3">
-        <div className="flex-1 text-center">
-          <div className="text-[18px] font-semibold text-slate-400">
-            {walletSource === 'hardhat'
-              ? `${hardhatAccountsCount} Hardhat account${hardhatAccountsCount === 1 ? '' : 's'}`
-              : metamaskAuthorized
-                ? 'MetaMask authorized account'
-                : 'MetaMask not authorized'}
+      {showSummaryBar ? (
+        <div className="flex items-center justify-between px-5 py-3">
+          <div className="flex-1 text-center">
+            <div className="text-[18px] font-semibold text-slate-400">
+              {walletSource === 'hardhat'
+                ? `${hardhatAccountsCount} Hardhat account${hardhatAccountsCount === 1 ? '' : 's'}`
+                : metamaskAuthorized
+                  ? 'MetaMask authorized account'
+                  : 'MetaMask not authorized'}
+            </div>
           </div>
+          {walletSource === 'hardhat' ? (
+            <button
+              type="button"
+              onClick={onRefreshHardhatAccounts}
+              className="flex h-9 w-9 items-center justify-center rounded bg-[#1d2542] hover:bg-[#29345c]"
+              title="Refresh accounts"
+            >
+              <RefreshCw className={['h-4 w-4', hardhatAccountsLoading ? 'animate-spin' : ''].join(' ')} />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={onConnectMetaMask}
+              className="rounded bg-[#dba84f] px-4 py-2 text-sm font-bold text-black hover:bg-[#e9bb68]"
+            >
+              {connectStatus === 'pending' ? 'Connecting' : 'Connect MetaMask'}
+            </button>
+          )}
         </div>
-        {walletSource === 'hardhat' ? (
-          <button
-            type="button"
-            onClick={onRefreshHardhatAccounts}
-            className="flex h-9 w-9 items-center justify-center rounded bg-[#1d2542] hover:bg-[#29345c]"
-            title="Refresh accounts"
-          >
-            <RefreshCw className={['h-4 w-4', hardhatAccountsLoading ? 'animate-spin' : ''].join(' ')} />
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={onConnectMetaMask}
-            className="rounded bg-[#dba84f] px-4 py-2 text-sm font-bold text-black hover:bg-[#e9bb68]"
-          >
-            {connectStatus === 'pending' ? 'Connecting' : 'Connect MetaMask'}
-          </button>
-        )}
-      </div>
+      ) : null}
 
-      <div className="scrollbar-hide max-h-[360px] overflow-y-auto border-t border-slate-700/70">
+      <div className={['scrollbar-hide max-h-[360px] overflow-y-auto', showSummaryBar ? 'border-t border-slate-700/70' : ''].join(' ')}>
         {hardhatAccountsError && walletSource === 'hardhat' ? (
           <div className="p-4 text-sm text-red-200">{hardhatAccountsError}</div>
         ) : null}
