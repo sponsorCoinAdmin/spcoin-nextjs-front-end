@@ -9,6 +9,7 @@ import { getMethodOptionColor } from './methodOptionColors';
 import { NativeSelectChevron } from './SelectChevron';
 import type { MethodDef } from '../jsonMethods/shared/types';
 import { isAmountParam, type AmountUnit } from '../utils/amountUnits';
+import { useSpCoinWallet } from '@/lib/spCoinWallet';
 
 type Props = {
   invalidFieldIds: string[];
@@ -188,6 +189,7 @@ export default function SpCoinWriteController(props: Props) {
   const [hoveredBlockedAction, setHoveredBlockedAction] = React.useState<'execute' | 'add' | null>(null);
   const [recipientRateValue, setRecipientRateValue] = React.useState('0');
   const [agentRateValue, setAgentRateValue] = React.useState('0');
+  const { openAccountSelection } = useSpCoinWallet();
   const activeHoverInvalidFieldIds = hoveredBlockedAction ? missingFieldIds : [];
   const invalidClass = (fieldId: string) =>
     invalidFieldIds.includes(fieldId) || activeHoverInvalidFieldIds.includes(fieldId)
@@ -254,6 +256,34 @@ export default function SpCoinWriteController(props: Props) {
       })),
     [hardhatAccounts],
   );
+  const openSenderWalletSelection = React.useCallback(() => {
+    traceAccountPopup('[ACCOUNT_POPUP_TRACE] write.sender open spCoinWallet');
+    openAccountSelection({
+      label: 'Select msg.sender',
+      currentAddress: selectedWriteSenderAddress || writeSenderDisplayValue,
+      preferredSource: mode === 'hardhat' ? 'hardhat' : 'metamask',
+      allowedRoles: ['signer'],
+      requirePrivateKeySigner: mode === 'hardhat',
+      onSelect: (result) => {
+        const normalized = normalizeAccountValue(result.address);
+        traceAccountPopup(
+          `[ACCOUNT_POPUP_TRACE] write.sender wallet result source=${result.source} address=${normalized}`,
+        );
+        markEditorAsUserEdited();
+        clearInvalidField('spcoin-write-sender');
+        setSelectedWriteSenderAddress(normalized);
+      },
+    });
+  }, [
+    clearInvalidField,
+    markEditorAsUserEdited,
+    mode,
+    openAccountSelection,
+    selectedWriteSenderAddress,
+    setSelectedWriteSenderAddress,
+    traceAccountPopup,
+    writeSenderDisplayValue,
+  ]);
   React.useEffect(() => {
     setOpenAddressFields({});
   }, [selectedSpCoinWriteMethod]);
@@ -460,35 +490,18 @@ export default function SpCoinWriteController(props: Props) {
         traceLabel="write.msg.sender"
         onTrace={traceAccountPopup}
         control={
-          mode === 'hardhat' ? (
-            <AccountDropdownInput
-              dataFieldId="spcoin-write-sender"
-              inputAriaLabel="Sender account"
-              inputTitle="Sender account"
-              className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white${invalidClass('spcoin-write-sender')}`}
-              value={selectedWriteSenderAddress}
-              onChange={(value) => {
-                const normalized = normalizeAccountValue(value);
-                traceAccountPopup(`[ACCOUNT_POPUP_TRACE] write.sender change raw=${value} normalized=${normalized}`);
-                markEditorAsUserEdited();
-                clearInvalidField('spcoin-write-sender');
-                setSelectedWriteSenderAddress(normalized);
-              }}
-              placeholder="Select account"
-              options={accountOptions}
-              traceLabel="write.msg.sender"
-              onTrace={traceAccountPopup}
-            />
-          ) : (
-            <input
-              aria-label="Connected signer address"
-              title="Connected signer address"
-              className={inputStyle}
-              readOnly
-              value={writeSenderDisplayValue}
-              placeholder="Connected signer address"
-            />
-          )
+          <button
+            type="button"
+            data-field-id="spcoin-write-sender"
+            aria-label="Sender account"
+            title="Open SponsorCoin wallet account selector"
+            onClick={openSenderWalletSelection}
+            className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-left text-sm text-white transition-colors hover:border-[#7893ff] hover:bg-[#151c32]${invalidClass('spcoin-write-sender')}`}
+          >
+            <span className="block truncate font-mono">
+              {selectedWriteSenderAddress || writeSenderDisplayValue || 'Select account'}
+            </span>
+          </button>
         }
         metadata={getMetadataForAddress(selectedWriteSenderAddress || '')}
         extraDetails={

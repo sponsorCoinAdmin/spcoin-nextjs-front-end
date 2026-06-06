@@ -7,6 +7,7 @@ import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { suppressNextOverlayClose } from '@/lib/context/exchangeContext/hooks/useOverlayCloseHandler';
+import useOpenAccountComponent from '@/lib/context/hooks/useOpenAccountComponent';
 import { useBuyTokenContract, usePreviewTokenContract, useSellTokenContract } from '@/lib/context/hooks';
 
 // ✅ ExchangeContext access (for accounts.* + address/logo)
@@ -231,8 +232,8 @@ function getAccountDisplayName(acct: any): string {
 
 export function useHeaderController() {
   const panelTree = usePanelTree();
-  const openPanel = (panelTree as any).openPanel;
   const closePanel = (panelTree as any).closePanel;
+  const openAccountComponent = useOpenAccountComponent();
 
   const [isConfigOpen, setIsConfigOpen] = useState(false);
 
@@ -455,27 +456,24 @@ export function useHeaderController() {
         onClick: isAccountPanelActive
           ? undefined
           : () => {
-              suppressNextOverlayClose('Header:ActiveLogo->AccountPanel', 'HeaderController');
-
-              // If rewards panel is active, preselect account mode before opening ACCOUNT_PANEL
-              if (currentDisplay === SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL) {
-                const modeToOpen =
-                  unSponsor || claimSponsor
+              const modeToOpen =
+                currentDisplay === SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL
+                  ? unSponsor || claimSponsor
                     ? SP_COIN_DISPLAY.SPONSOR_ACCOUNT
                     : claimRecipient
                       ? SP_COIN_DISPLAY.RECIPIENT_ACCOUNT
                       : claimAgent
                         ? SP_COIN_DISPLAY.AGENT_ACCOUNT
-                        : null;
+                        : SP_COIN_DISPLAY.ACTIVE_ACCOUNT
+                  : SP_COIN_DISPLAY.ACTIVE_ACCOUNT;
 
-                if (modeToOpen != null) {
-                  openPanel(modeToOpen, 'Header:ActiveLogoClick:preselectAccountMode');
-                }
-              } else {
-                openPanel(SP_COIN_DISPLAY.ACTIVE_ACCOUNT, 'Header:ActiveLogoClick:preselectActiveAccount');
-              }
-
-              openPanel(SP_COIN_DISPLAY.ACCOUNT_PANEL, 'Header:ActiveLogoClick');
+              openAccountComponent({
+                account: headerAccount,
+                mode: modeToOpen,
+                source: 'Header:ActiveLogoClick',
+                suppressOverlayCloseReason: 'Header:ActiveLogo->AccountPanel',
+                suppressOverlayCloseSource: 'HeaderController',
+              });
             },
       },
       React.createElement('img', {
@@ -499,7 +497,7 @@ export function useHeaderController() {
     tokenState,
     headerAccountLogoURL,
     headerAccountAddress,
-    openPanel,
+    openAccountComponent,
     activeDefault,
     claimSponsor,
     claimRecipient,

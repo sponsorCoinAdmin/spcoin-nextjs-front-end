@@ -24,6 +24,7 @@ import {
   resolveAppChainId,
   getEffectiveChainId,
 } from '@/lib/utils/network';
+import { useSpCoinWallet } from '@/lib/spCoinWallet';
 
 export type ConnectNetworkButtonProps = {
   showName?: boolean;
@@ -70,6 +71,7 @@ export default function ConnectNetworkButton({
   // 🔹 App chain id (single source of truth for UI/network selection)
   const [appChainId, setAppChainId] = useAppChainId();
   const { exchangeContext, setExchangeContext } = useExchangeContext();
+  const { openWallet } = useSpCoinWallet();
 
   // wallet actions (with cancel/pending guards)
   const { connectMetaMask } = useWalletActions({
@@ -134,8 +136,11 @@ export default function ConnectNetworkButton({
         }
 
         // click handlers
-        const onButtonClick = toggle;
-        const onImageClick = toggle;
+        const onButtonClick = () => {
+          close();
+          openWallet();
+        };
+        const onImageClick = onButtonClick;
         const onChevronClick = toggle;
 
         const onConnectTextClick =

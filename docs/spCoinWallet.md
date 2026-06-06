@@ -37,6 +37,14 @@ Build an in-app SponsorCoin wallet popup.
 
 Any account selection should open the wallet. The account list should live in the wallet, not inside every screen that needs an account.
 
+Target interaction:
+
+```txt
+click account field -> open spCoinWallet -> choose account -> field updates
+```
+
+The target is to replace inline account dropdowns with wallet-popup selection. A field may still display the selected account inline, but the selection UI should be centralized in `spCoinWallet`.
+
 The wallet should own:
 
 - Wallet source selection
@@ -109,7 +117,7 @@ Today, account selection appears inline in forms, for example the SponsorCoinLab
 Target behavior:
 
 1. User clicks any account field.
-2. The `spCoinWallet` popup opens.
+2. The field opens the `spCoinWallet` popup instead of an inline dropdown.
 3. The wallet receives a selection request context:
    - field name
    - allowed account roles
@@ -120,6 +128,13 @@ Target behavior:
 6. Caller updates its field.
 
 This makes account selection reusable everywhere.
+
+The calling screen should not own account-list rendering. It should only own:
+
+- The field label
+- The current selected address
+- The requested account role/source constraints
+- The handler that receives the selected wallet result
 
 ## Selection Request Model
 
@@ -217,6 +232,14 @@ This is a major simplification because it creates a single source for:
 - Whether Hardhat direct signing is available
 
 Screens should stop inventing their own account dropdowns. They should request account selection from `spCoinWallet`.
+
+In practical UI terms:
+
+- Account fields remain visible in their original forms.
+- Clicking an account field opens the shared wallet popup.
+- The wallet popup shows the account list.
+- The selected account is returned to the requesting field.
+- Inline account dropdowns should be removed as each field is migrated.
 
 ## First Implementation Pass
 

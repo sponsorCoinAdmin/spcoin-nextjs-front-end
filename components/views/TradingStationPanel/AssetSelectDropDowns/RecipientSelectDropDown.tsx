@@ -9,6 +9,7 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
 import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
+import useOpenAccountComponent from '@/lib/context/hooks/useOpenAccountComponent';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
@@ -29,6 +30,7 @@ const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount }) => {
   // ✅ New transitions API
   const { openOverlay } = usePanelTransitions();
   const { openPanel } = usePanelTree();
+  const openAccountComponent = useOpenAccountComponent();
 
   const logoSrc = useMemo(
     () => recipientAccount?.logoURL?.trim() || defaultMissingImage,
@@ -87,16 +89,14 @@ const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount }) => {
     (e: React.SyntheticEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      openPanel(
-        SP_COIN_DISPLAY.RECIPIENT_ACCOUNT,
-        'RecipientSelectDropDown:openRecipientAccountPanel:setRecipientMode',
-      );
-      openPanel(
-        SP_COIN_DISPLAY.ACCOUNT_PANEL,
-        'RecipientSelectDropDown:openRecipientAccountPanel:openAccountPanel',
-      );
+      if (!recipientAccount) return;
+      openAccountComponent({
+        account: recipientAccount,
+        mode: SP_COIN_DISPLAY.RECIPIENT_ACCOUNT,
+        source: 'RecipientSelectDropDown:openRecipientAccountPanel',
+      });
     },
-    [openPanel],
+    [openAccountComponent, recipientAccount],
   );
 
   return (

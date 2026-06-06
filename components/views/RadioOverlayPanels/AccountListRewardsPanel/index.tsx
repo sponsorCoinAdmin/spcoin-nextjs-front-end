@@ -6,9 +6,8 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 
 import { AccountType, SP_COIN_DISPLAY, type spCoinAccount } from '@/lib/structure';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
-import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
-import { suppressNextOverlayClose } from '@/lib/context/exchangeContext/hooks/useOverlayCloseHandler';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
+import useOpenAccountComponent from '@/lib/context/hooks/useOpenAccountComponent';
 import ToDo from '@/lib/utils/components/ToDo';
 import AddressSelect from '../../AssetSelectPanels/AddressSelect';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
@@ -55,6 +54,10 @@ function isPendingPanel(p: SP_COIN_DISPLAY) {
 }
 
 type RoleKind = 'sponsor' | 'recipient' | 'agent' | 'unknown';
+type AccountPanelMode =
+  | SP_COIN_DISPLAY.SPONSOR_ACCOUNT
+  | SP_COIN_DISPLAY.RECIPIENT_ACCOUNT
+  | SP_COIN_DISPLAY.AGENT_ACCOUNT;
 
 function roleLabelToRoleKind(roleLabel: string): RoleKind {
   const s = (roleLabel ?? '').toString().trim().toLowerCase();
@@ -64,7 +67,7 @@ function roleLabelToRoleKind(roleLabel: string): RoleKind {
   return 'unknown';
 }
 
-function roleKindToAccountPanelMode(role: RoleKind): SP_COIN_DISPLAY | null {
+function roleKindToAccountPanelMode(role: RoleKind): AccountPanelMode | null {
   if (role === 'recipient') return SP_COIN_DISPLAY.RECIPIENT_ACCOUNT;
   if (role === 'agent') return SP_COIN_DISPLAY.AGENT_ACCOUNT;
   if (role === 'sponsor') return SP_COIN_DISPLAY.SPONSOR_ACCOUNT;
@@ -77,12 +80,7 @@ export default function AccountListRewardsPanel({
   containerType,
 }: Props) {
   const ctx = useContext(ExchangeContextState);
-
-  // ✅ panel navigation (openPanel)
-  const panelTree = usePanelTree();
-  const openPanel = (panelTree as any)?.openPanel as
-    | ((p: SP_COIN_DISPLAY, invoker?: string, parent?: SP_COIN_DISPLAY) => void)
-    | undefined;
+  const openAccountComponent = useOpenAccountComponent();
 
   // ✅ Pending-mode flags (SSOT for mode)
   const cfgClaimAgent = usePanelVisible(SP_COIN_DISPLAY.PENDING_AGENT_REWARDS);
@@ -344,14 +342,15 @@ export default function AccountListRewardsPanel({
       // 3/4) open correct panels
       const modeToOpen = roleKindToAccountPanelMode(role);
       if (!modeToOpen) return;
-      if (typeof openPanel !== 'function') return;
-
-      suppressNextOverlayClose('AccountListRewardsPanel:pick->AccountPanel', 'AccountListRewardsPanel');
-
-      openPanel(modeToOpen, `AccountListRewardsPanel:pick:${roleLabel}`);
-      openPanel(SP_COIN_DISPLAY.ACCOUNT_PANEL, `AccountListRewardsPanel:openAccountPanel`);
+      openAccountComponent({
+        account: picked,
+        mode: modeToOpen,
+        source: `AccountListRewardsPanel:pick:${roleLabel}`,
+        suppressOverlayCloseReason: 'AccountListRewardsPanel:pick->AccountPanel',
+        suppressOverlayCloseSource: 'AccountListRewardsPanel',
+      });
     },
-    [setRoleAccountInContext, setAccountCallBack, openPanel],
+    [openAccountComponent, setRoleAccountInContext, setAccountCallBack],
   );
 
   return (

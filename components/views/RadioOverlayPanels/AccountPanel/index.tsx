@@ -4,7 +4,7 @@
 import React, { useContext, useMemo } from 'react';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { SP_COIN_DISPLAY, type spCoinAccount } from '@/lib/structure';
-import DisplayInfo from './AccointInfo';
+import AccountComponent from '@/components/views/accountComponent';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
@@ -85,7 +85,7 @@ export default function AccountPanel(_props: Props) {
         <div id="AGENT_ACCOUNT" className="hidden" aria-hidden="true" />
       )}
       {isActiveAccount ? (
-        <DisplayInfo />
+        <AccountComponent />
       ) : (
         <div className="p-4 text-sm text-slate-200">
           <p className="mb-2 font-semibold">No active account selected.</p>
