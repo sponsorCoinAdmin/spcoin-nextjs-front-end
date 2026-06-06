@@ -6,7 +6,7 @@ import AccountSelection from './AccountSelection';
 import AmountInputRow from './AmountInputRow';
 import RateSliderRow from './RateSliderRow';
 import { getMethodOptionColor } from './methodOptionColors';
-import { NativeSelectChevron } from './SelectChevron';
+import { NativeSelectChevron, SelectChevron } from './SelectChevron';
 import type { MethodDef } from '../jsonMethods/shared/types';
 import { isAmountParam, type AmountUnit } from '../utils/amountUnits';
 import { useSpCoinWallet } from '@/lib/spCoinWallet';
@@ -496,10 +496,13 @@ export default function SpCoinWriteController(props: Props) {
             aria-label="Sender account"
             title="Open SponsorCoin wallet account selector"
             onClick={openSenderWalletSelection}
-            className={`w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-left text-sm text-white transition-colors hover:border-[#7893ff] hover:bg-[#151c32]${invalidClass('spcoin-write-sender')}`}
+            className={`flex w-full items-center justify-between gap-3 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-left text-sm text-white transition-colors hover:border-[#7893ff] hover:bg-[#151c32]${invalidClass('spcoin-write-sender')}`}
           >
-            <span className="block truncate font-mono">
+            <span className="block min-w-0 truncate font-mono">
               {selectedWriteSenderAddress || writeSenderDisplayValue || 'Select account'}
+            </span>
+            <span className="inline-flex shrink-0 items-center justify-center text-[#8FA8FF] transition-colors">
+              <SelectChevron open={false} />
             </span>
           </button>
         }

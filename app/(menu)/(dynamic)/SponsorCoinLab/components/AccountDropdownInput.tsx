@@ -57,6 +57,7 @@ export default function AccountDropdownInput({
     trace(`wallet open current=${summarizeValue(value)} totalOptions=${options.length}`);
     openAccountSelection({
       label,
+      currentAddress: value,
       preferredSource: 'hardhat',
       onSelect: (account) => {
         trace(`wallet selected=${summarizeValue(account.address)} label=${summarizeValue(account.label ?? '')}`);

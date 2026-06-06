@@ -11,6 +11,7 @@ import React, {
 import { useAccount, useChainId } from 'wagmi';
 
 import { useExchangeContext } from '@/lib/context/hooks';
+import { STATUS, type spCoinAccount } from '@/lib/structure';
 import { normalizeAddress } from '@/lib/utils/address';
 import { loadHardhatWalletAccounts } from './accountSelection';
 import type {
@@ -63,7 +64,7 @@ export function SpCoinWalletProvider({ children }: { children: React.ReactNode }
   const [hardhatAccountsError, setHardhatAccountsError] = useState('');
   const [selectedHardhatSignerAddress, setSelectedHardhatSignerAddressState] = useState('');
 
-  const { exchangeContext } = useExchangeContext();
+  const { exchangeContext, setExchangeContext } = useExchangeContext();
   const { address: metamaskAddress, isConnected } = useAccount();
   const walletChainId = useChainId();
   const appChainId = Number(exchangeContext?.network?.appChainId ?? 0);
@@ -174,6 +175,31 @@ export function SpCoinWalletProvider({ children }: { children: React.ReactNode }
         if (account.source === 'hardhat') {
           setSelectedHardhatSignerAddressState(account.address);
         }
+        setExchangeContext((prev) => {
+          const cloned = structuredClone(prev);
+          if (!cloned.accounts) return cloned;
+
+          const currentActive = cloned.accounts.activeAccount;
+          const sameAsCurrentActive =
+            normalizeAddress(String(currentActive?.address ?? '')) === normalizeAddress(account.address);
+
+          const nextActive: spCoinAccount = {
+            name: String(account.name || account.label || currentActive?.name || 'Unnamed account').trim(),
+            symbol: String(account.symbol || currentActive?.symbol || '').trim(),
+            type: currentActive?.type || 'account',
+            website: sameAsCurrentActive ? currentActive?.website || '' : '',
+            description: sameAsCurrentActive ? currentActive?.description || '' : '',
+            status: sameAsCurrentActive ? currentActive?.status || STATUS.INFO : STATUS.INFO,
+            address: account.address as spCoinAccount['address'],
+            ...(account.logoURL || (sameAsCurrentActive ? currentActive?.logoURL : undefined)
+              ? { logoURL: account.logoURL || currentActive?.logoURL }
+              : {}),
+            balance: sameAsCurrentActive ? currentActive?.balance || 0n : 0n,
+          };
+
+          cloned.accounts.activeAccount = nextActive;
+          return cloned;
+        });
         return;
       }
       const result: SpCoinWalletSelectionResult = {
@@ -185,7 +211,7 @@ export function SpCoinWalletProvider({ children }: { children: React.ReactNode }
       setSelectionRequest(undefined);
       setIsOpen(false);
     },
-    [selectionRequest],
+    [selectionRequest, setExchangeContext],
   );
 
   const setSelectedHardhatSignerAddress = useCallback((address: string) => {
