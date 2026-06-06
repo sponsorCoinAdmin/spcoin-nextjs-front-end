@@ -9,6 +9,7 @@ import AccountComponent from '@/components/views/accountComponent';
 import ConnectNetworkButton from '@/components/views/Buttons/Connect/ConnectNetworkButton';
 import { NetworkAccountList, useSpCoinWallet } from '@/lib/spCoinWallet';
 import useOpenAccountComponent from '@/lib/context/hooks/useOpenAccountComponent';
+import { getBlockChainName } from '@/lib/context/helpers/NetworkHelpers';
 import type { SpCoinWalletAccount } from '@/lib/spCoinWallet';
 import { SP_COIN_DISPLAY, STATUS, type spCoinAccount } from '@/lib/structure';
 import { normalizeAddress } from '@/lib/utils/address';
@@ -63,6 +64,12 @@ export default function SpCoinWalletPopup() {
 
   const normalizedWorkingAddress = normalizeAddress(session.activeAccountAddress || '');
   const connectedMeta = [connectedAccount?.label, connectedAccount?.symbol].filter(Boolean).join(' | ');
+  const currentNetworkName = Number.isFinite(session.appChainId) && session.appChainId > 0
+    ? getBlockChainName(session.appChainId) || `Chain ${session.appChainId}`
+    : 'Unknown Network';
+  const currentNetworkTitle = Number.isFinite(session.appChainId) && session.appChainId > 0
+    ? `${currentNetworkName} (Chain ID: ${session.appChainId})`
+    : currentNetworkName;
 
   const connectMetaMask = async () => {
     const injected = connectors.find((connector) => connector.id === 'injected') ?? connectors[0];
@@ -116,8 +123,11 @@ export default function SpCoinWalletPopup() {
           aria-modal="true"
           aria-label="Select Network Account"
         >
-          <div className="relative border-b border-slate-700/70 px-5 pt-3 pb-[6px]">
-            <span className="absolute left-[0.625rem] top-2 flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#11162A]">
+          <div className="relative border-b border-slate-700/70 px-5 pt-3 pb-[8px]">
+            <span
+              className="absolute left-[0.625rem] top-2 flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#11162A]"
+              title={currentNetworkTitle}
+            >
               {Number.isFinite(session.appChainId) && session.appChainId > 0 ? (
                 <img
                   src={`/assets/blockchains/${session.appChainId}/logo.png`}
@@ -131,14 +141,15 @@ export default function SpCoinWalletPopup() {
             <h2 className="pointer-events-none text-center text-xl font-bold leading-none">
               Select Network Account
             </h2>
-            <div className="-mt-1 flex items-center justify-center gap-[2px]">
-              <div className="text-[18px] font-semibold text-slate-400">{selectionSummary}</div>
+            <div className="-mt-1 flex items-center justify-center gap-1">
+              <div className="relative top-[2px] text-base font-semibold text-slate-400">{selectionSummary}</div>
               {walletSource === 'hardhat' ? (
                 <button
                   type="button"
                   onClick={() => void refreshHardhatAccounts()}
-                  className="relative left-[-5px] top-[0px] flex h-[34px] w-[34px] items-center justify-center text-[#91a5ff] hover:text-white"
-                  title="Refresh accounts"
+                  className="relative top-[3px] flex items-center justify-center text-[#91a5ff] hover:text-white"
+                  title={`Refresh ${currentNetworkName} Accounts`}
+                  aria-label={`Refresh ${currentNetworkName} Accounts`}
                 >
                   <RefreshCw className={['h-[15px] w-[15px]', hardhatAccountsLoading ? 'animate-spin' : ''].join(' ')} />
                 </button>

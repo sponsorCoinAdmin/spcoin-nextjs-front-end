@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Check, Copy, RefreshCw, Wallet } from 'lucide-react';
+import { RefreshCw, Wallet } from 'lucide-react';
 
 import { defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
 import { normalizeAddress } from '@/lib/utils/address';
@@ -43,7 +43,6 @@ function AccountRow({
   onOpenAccountPanel: () => void;
   onSelect: () => void;
 }) {
-  const [copied, setCopied] = useState(false);
   const [imageSrc, setImageSrc] = useState(account.logoURL || defaultMissingImage);
   const [imageFailed, setImageFailed] = useState(false);
   const meta = [account.label, account.symbol].filter(Boolean).join(' | ');
@@ -52,17 +51,6 @@ function AccountRow({
     setImageSrc(account.logoURL || defaultMissingImage);
     setImageFailed(false);
   }, [account.logoURL]);
-
-  const copyAddress = async (event: React.MouseEvent) => {
-    event.stopPropagation();
-    try {
-      await navigator.clipboard?.writeText(account.address);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 900);
-    } catch {
-      setCopied(false);
-    }
-  };
 
   return (
     <div
@@ -76,7 +64,7 @@ function AccountRow({
         }
       }}
       className={[
-        'grid w-full grid-cols-[36px_1fr_auto] items-center gap-3 px-3 py-2 text-left',
+        'grid w-full grid-cols-[36px_1fr] items-center gap-3 px-3 py-2 text-left',
         'border-b border-slate-700/70 transition-colors hover:bg-slate-700/50',
         'cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7893ff]',
         isActiveRow ? 'bg-green-500/20 hover:bg-green-500/25' : selected ? 'bg-[#273250]' : 'bg-transparent',
@@ -114,23 +102,6 @@ function AccountRow({
           {meta || sourceLabel(account.source)}
         </span>
         <span className="block truncate font-mono text-xs text-slate-300">{account.address}</span>
-      </span>
-      <span className="flex items-center gap-2">
-        <span
-          role="button"
-          tabIndex={0}
-          onClick={copyAddress}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter' || event.key === ' ') {
-              event.preventDefault();
-              void copyAddress(event as unknown as React.MouseEvent);
-            }
-          }}
-          className="flex h-8 w-8 items-center justify-center rounded bg-slate-800 text-slate-200 hover:bg-slate-700"
-          title="Copy address"
-        >
-          {copied ? <Check className="h-4 w-4 text-green-300" /> : <Copy className="h-4 w-4" />}
-        </span>
       </span>
     </div>
   );
