@@ -9,6 +9,7 @@ import AccountComponent from '@/components/views/accountComponent';
 import ConnectNetworkButton from '@/components/views/Buttons/Connect/ConnectNetworkButton';
 import { useSpCoinWallet } from '@/lib/spCoinWallet';
 import useOpenAccountComponent from '@/lib/context/hooks/useOpenAccountComponent';
+import { useActiveAccount } from '@/lib/context/hooks/ExchangeContext/nested/accounts/useActiveAccount';
 import { getBlockChainName } from '@/lib/context/helpers/NetworkHelpers';
 import type { SpCoinWalletAccount } from '@/lib/spCoinWallet';
 import { SP_COIN_DISPLAY, STATUS, type spCoinAccount } from '@/lib/structure';
@@ -29,12 +30,17 @@ export default function SpCoinWalletPopup() {
     selectAccount,
   } = useSpCoinWallet();
   const openAccountComponent = useOpenAccountComponent();
+  const [, setActiveAccount] = useActiveAccount();
   const { connectAsync, connectors, status: connectStatus } = useConnect();
   const [previewAccount, setPreviewAccount] = useState<spCoinAccount | undefined>(undefined);
+  const [traceEnabled, setTraceEnabled] = useState(false);
+  const [traceOutput, setTraceOutput] = useState<string[]>([]);
   const selectedAddressKey = normalizeAddress(
     selectionRequest?.currentAddress || session.signerAddress || session.activeAccountAddress || '',
   );
-  const walletActiveAddressKey = normalizeAddress(session.activeAccountAddress || '');
+  const walletActiveAddressKey = normalizeAddress(
+    session.signerAddress || session.activeAccountAddress || '',
+  );
 
   const visibleAccounts = useMemo(() => {
     if (walletSource === 'hardhat') return hardhatAccounts;
@@ -50,7 +56,9 @@ export default function SpCoinWalletPopup() {
     return [];
   }, [hardhatAccounts, session.metamaskAuthorized, session.signerAddress, walletSource]);
 
-  const normalizedWorkingAddress = normalizeAddress(session.activeAccountAddress || '');
+  const normalizedWorkingAddress = normalizeAddress(
+    session.signerAddress || session.activeAccountAddress || '',
+  );
   const currentNetworkName = Number.isFinite(session.appChainId) && session.appChainId > 0
     ? getBlockChainName(session.appChainId) || `Chain ${session.appChainId}`
     : 'Unknown Network';
@@ -62,6 +70,56 @@ export default function SpCoinWalletPopup() {
     const injected = connectors.find((connector) => connector.id === 'injected') ?? connectors[0];
     if (!injected) return;
     await connectAsync({ connector: injected });
+  };
+
+  const trace = (message: string, data?: any) => {
+    const timestamp = new Date().toLocaleTimeString();
+    const logMessage = `[${timestamp}] ${message}${data ? ': ' + JSON.stringify(data) : ''}`;
+    console.log(logMessage);
+    if (traceEnabled) {
+      setTraceOutput((prev) => [...prev, logMessage]);
+    }
+  };
+
+  const handleSelectAccount = (account: SpCoinWalletAccount) => {
+    trace('handleSelectAccount called', {
+      accountAddress: account.address,
+      accountLabel: account.label,
+      accountSource: account.source,
+      selectionRequest: !!selectionRequest,
+    });
+
+    // Call the wallet context selectAccount to update wallet source
+    trace('Calling selectAccount from context');
+    selectAccount(account);
+
+    // If not in selection mode, also set as active account
+    if (!selectionRequest) {
+      trace('Not in selection mode, setting active account');
+      const nextActive: spCoinAccount = {
+        name: String(account.name || account.label || 'Unnamed account').trim(),
+        symbol: String(account.symbol || '').trim(),
+        type: 'account',
+        website: '',
+        description: '',
+        status: STATUS.INFO,
+        address: account.address as spCoinAccount['address'],
+        ...(account.logoURL ? { logoURL: account.logoURL } : {}),
+        balance: 0n,
+      };
+      
+      trace('Built nextActive object', {
+        name: nextActive.name,
+        address: nextActive.address,
+        symbol: nextActive.symbol,
+      });
+      
+      trace('Calling setActiveAccount');
+      setActiveAccount(nextActive);
+      trace('setActiveAccount called, state update queued');
+    } else {
+      trace('In selection mode, skipping active account set');
+    }
   };
 
   const openAccountPanel = (account: SpCoinWalletAccount) => {
@@ -77,16 +135,16 @@ export default function SpCoinWalletPopup() {
       balance: 0n,
     };
 
-    if (isSelectionMode) {
-      setPreviewAccount(nextAccount);
-      return;
-    }
-
-    openAccountComponent({
-      account: nextAccount,
-      close: closeWallet,
-      source: 'SpCoinWalletPopup:openAccountPanel',
+    trace('openAccountPanel called', {
+      accountAddress: nextAccount.address,
+      accountName: nextAccount.name,
+      isSelectionMode,
     });
+
+    trace('openAccountPanel using wallet preview mode', {
+      accountAddress: nextAccount.address,
+    });
+    setPreviewAccount(nextAccount);
   };
 
   if (!isOpen) return null;
@@ -171,8 +229,40 @@ export default function SpCoinWalletPopup() {
             hardhatAccountsLoading={hardhatAccountsLoading}
             hardhatAccountsError={hardhatAccountsError}
             onOpenAccountPanel={openAccountPanel}
-            onSelectAccount={selectAccount}
+            onSelectAccount={handleSelectAccount}
           />
+
+          {/* Trace Controls */}
+          <div className="border-t border-slate-700/50 px-5 py-3">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="wallet-trace-toggle"
+                checked={traceEnabled}
+                onChange={(e) => {
+                  setTraceEnabled(e.target.checked);
+                  if (!e.target.checked) setTraceOutput([]);
+                }}
+                className="h-4 w-4 cursor-pointer"
+              />
+              <label htmlFor="wallet-trace-toggle" className="text-sm text-[#91a5ff] cursor-pointer">
+                Trace Selection
+              </label>
+            </div>
+          </div>
+
+          {/* Trace Output */}
+          {traceEnabled && traceOutput.length > 0 && (
+            <div className="border-t border-slate-700/50 px-5 py-3 max-h-48 overflow-y-auto bg-[#0a0d16]">
+              <div className="text-xs font-mono text-[#7893ff] space-y-1">
+                {traceOutput.map((line, idx) => (
+                  <div key={idx} className="text-[#91a5ff]">
+                    {line}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {previewAccount ? (
@@ -281,9 +371,89 @@ export default function SpCoinWalletPopup() {
           hardhatAccountsLoading={hardhatAccountsLoading}
           hardhatAccountsError={hardhatAccountsError}
           onOpenAccountPanel={openAccountPanel}
-          onSelectAccount={selectAccount}
+          onSelectAccount={handleSelectAccount}
         />
+
+        {/* Trace Controls */}
+        <div className="border-t border-slate-700/50 px-5 py-3">
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="wallet-trace-toggle"
+              checked={traceEnabled}
+              onChange={(e) => {
+                setTraceEnabled(e.target.checked);
+                if (!e.target.checked) setTraceOutput([]);
+              }}
+              className="h-4 w-4 cursor-pointer"
+            />
+            <label htmlFor="wallet-trace-toggle" className="text-sm text-[#91a5ff] cursor-pointer">
+              Trace Selection
+            </label>
+          </div>
+        </div>
+
+        {/* Trace Output */}
+        {traceEnabled && traceOutput.length > 0 && (
+          <div className="border-t border-slate-700/50 px-5 py-3 max-h-48 overflow-y-auto bg-[#0a0d16]">
+            <div className="text-xs font-mono text-[#7893ff] space-y-1">
+              {traceOutput.map((line, idx) => (
+                <div key={idx} className="text-[#91a5ff]">
+                  {line}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
+
+      {previewAccount ? (
+        <div className="fixed inset-0 z-[10001]">
+          <div
+            className={[
+              'pointer-events-auto absolute left-1/2 top-1/2 w-[min(520px,calc(100vw-2rem))] max-h-[calc(100vh-2rem)] -translate-x-1/2 -translate-y-1/2 overflow-hidden',
+              'rounded-[15px] border border-[#2e3654] bg-[#0b0e19] text-white shadow-2xl',
+            ].join(' ')}
+            role="dialog"
+            aria-modal="true"
+            aria-label={previewAccount.name ? `Account ${previewAccount.name}` : 'Account details'}
+          >
+            <div className="relative border-b border-slate-700/70 px-5 py-4">
+              <div className="flex items-center gap-3">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#11162A]">
+                  {previewAccount.logoURL ? (
+                    <img
+                      src={previewAccount.logoURL}
+                      alt={previewAccount.name || 'Account'}
+                      className="h-full w-full object-contain"
+                    />
+                  ) : (
+                    <Wallet className="h-5 w-5 text-[#7893ff]" />
+                  )}
+                </span>
+              </div>
+              <h2 className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 text-center text-xl font-bold leading-tight">
+                {previewAccount.name ? `Account ${previewAccount.name}` : 'Account Details'}
+              </h2>
+              <button
+                type="button"
+                onClick={() => setPreviewAccount(undefined)}
+                className="absolute right-5 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-[#303b68] hover:bg-[#3c487a]"
+                aria-label="Close account details"
+              >
+                <X className="h-6 w-6 text-[#91a5ff]" />
+              </button>
+            </div>
+
+            <div className="px-5 py-4">
+              <AccountComponent
+                account={previewAccount}
+                mode={SP_COIN_DISPLAY.ACTIVE_ACCOUNT}
+              />
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -171,47 +171,36 @@ export function SpCoinWalletProvider({ children }: { children: React.ReactNode }
 
   const selectAccount = useCallback(
     (account: SpCoinWalletAccount) => {
-      if (!selectionRequest) {
-        if (account.source === 'hardhat') {
-          setSelectedHardhatSignerAddressState(account.address);
-        }
-        setExchangeContext((prev) => {
-          const cloned = structuredClone(prev);
-          if (!cloned.accounts) return cloned;
+      console.log('selectAccount called in provider', {
+        accountAddress: account.address,
+        hasSelectionRequest: !!selectionRequest,
+        isOpen: isOpen,
+      });
 
-          const currentActive = cloned.accounts.activeAccount;
-          const sameAsCurrentActive =
-            normalizeAddress(String(currentActive?.address ?? '')) === normalizeAddress(account.address);
-
-          const nextActive: spCoinAccount = {
-            name: String(account.name || account.label || currentActive?.name || 'Unnamed account').trim(),
-            symbol: String(account.symbol || currentActive?.symbol || '').trim(),
-            type: currentActive?.type || 'account',
-            website: sameAsCurrentActive ? currentActive?.website || '' : '',
-            description: sameAsCurrentActive ? currentActive?.description || '' : '',
-            status: sameAsCurrentActive ? currentActive?.status || STATUS.INFO : STATUS.INFO,
-            address: account.address as spCoinAccount['address'],
-            ...(account.logoURL || (sameAsCurrentActive ? currentActive?.logoURL : undefined)
-              ? { logoURL: account.logoURL || currentActive?.logoURL }
-              : {}),
-            balance: sameAsCurrentActive ? currentActive?.balance || 0n : 0n,
-          };
-
-          cloned.accounts.activeAccount = nextActive;
-          return cloned;
-        });
+      if (selectionRequest) {
+        // Selection mode: return the selected account to the requester and close
+        console.log('In selection mode - closing wallet');
+        const result: SpCoinWalletSelectionResult = {
+          address: account.address,
+          source: account.source,
+          label: account.label ?? account.name ?? account.symbol,
+        };
+        selectionRequest?.onSelect?.(result);
+        setSelectionRequest(undefined);
+        setIsOpen(false);
         return;
       }
-      const result: SpCoinWalletSelectionResult = {
-        address: account.address,
-        source: account.source,
-        label: account.label ?? account.name ?? account.symbol,
-      };
-      selectionRequest?.onSelect?.(result);
-      setSelectionRequest(undefined);
-      setIsOpen(false);
+
+      // Normal mode: update wallet source for hardhat accounts
+      // Keep the wallet open so user can select another account if needed
+      console.log('In normal mode - keeping wallet open');
+      if (account.source === 'hardhat') {
+        console.log('Updating hardhat wallet source');
+        setWalletSource('hardhat');
+        setSelectedHardhatSignerAddressState(account.address);
+      }
     },
-    [selectionRequest, setExchangeContext],
+    [selectionRequest, isOpen],
   );
 
   const setSelectedHardhatSignerAddress = useCallback((address: string) => {

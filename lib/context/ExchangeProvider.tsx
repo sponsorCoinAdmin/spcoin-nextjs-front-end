@@ -643,6 +643,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
   } = useProviderSetters(setExchangeContext);
 
   const activeHydrateReqRef = useRef(0);
+  const prevWalletAddressRef = useRef<string | undefined>(undefined);
   const activeAccountAddress = contextState?.accounts?.activeAccount?.address;
   const activeAccountHydrated = isHydratedAccount(
     contextState?.accounts?.activeAccount,
@@ -655,6 +656,10 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       ? (address?.trim() as Address | undefined)
       : undefined;
 
+    const prevWalletAddress = prevWalletAddressRef.current;
+    const walletAddressChanged = lower(nextAddr) !== lower(prevWalletAddress);
+    prevWalletAddressRef.current = nextAddr;
+
     if (!isConnected || !nextAddr) {
       const logKey = `${isConnected ? 'connected' : 'disconnected'}:${nextAddr ?? ''}:${activeAccountAddress ?? ''}`;
       if (lastDisconnectedLogKeyRef.current !== logKey) {
@@ -666,13 +671,17 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    lastDisconnectedLogKeyRef.current = undefined;
-
     const current = contextState.accounts?.activeAccount;
     const currentAddr = current?.address ? (current.address as string) : undefined;
-
     const sameAddr =
       !!currentAddr && lower(currentAddr) === lower(nextAddr as unknown as string);
+
+    if (!walletAddressChanged && !sameAddr) {
+      // Do not override a manually selected active account if the wallet address is unchanged.
+      return;
+    }
+
+    lastDisconnectedLogKeyRef.current = undefined;
     const shouldForceActiveRefresh =
       accountAssetsRefreshTick > activeAssetsRefreshHandledRef.current;
 

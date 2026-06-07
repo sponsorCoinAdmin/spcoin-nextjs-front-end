@@ -51,28 +51,17 @@ function AccountRow({
   }, [account.logoURL]);
 
   return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={onSelect}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          onSelect();
-        }
-      }}
-      className={[
-        'grid w-full grid-cols-[36px_1fr] items-center gap-3 px-3 py-2 text-left',
-        'border-b border-slate-700/70 transition-colors hover:bg-slate-700/50',
-        'cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7893ff]',
-        isActiveMarker ? 'bg-green-500/20 hover:bg-green-500/25' : selected ? 'bg-[#273250]' : 'bg-transparent',
-      ].join(' ')}
-    >
+    <div className="grid w-full grid-cols-[36px_1fr] items-center gap-3 px-3 py-2 text-left border-b border-slate-700/70 transition-colors hover:bg-slate-700/50">
       <button
         type="button"
         onClick={(event) => {
           event.preventDefault();
           event.stopPropagation();
+          console.debug('Account icon clicked', {
+            address: account.address,
+            label: account.label,
+            source: account.source,
+          });
           onOpenAccountPanel();
         }}
         className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-[#11162A]"
@@ -95,18 +84,24 @@ function AccountRow({
           <Wallet className="h-5 w-5 text-[#7893ff]" />
         )}
       </button>
-      <div className="grid min-w-0 grid-cols-[1fr_auto] items-center gap-2">
-        <span className="min-w-0">
-          <span className="flex items-center gap-2 truncate text-sm font-semibold text-white">
-            <span className="truncate">{meta || sourceLabel(account.source)}</span>
-            {isActiveMarker ? (
-              <span className="shrink-0 rounded bg-green-500/25 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-green-200">
-                Active
-              </span>
-            ) : null}
+      <div className={['grid min-w-0 grid-cols-[1fr_auto] items-center gap-2', isActiveMarker ? 'bg-green-500/20 hover:bg-green-500/25' : selected ? 'bg-[#273250]' : 'bg-transparent'].join(' ')}>
+        <button
+          type="button"
+          onClick={onSelect}
+          className="min-w-0 rounded-none border-none bg-transparent px-0 py-0 text-left text-inherit focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7893ff]"
+        >
+          <span className="min-w-0">
+            <span className="flex items-center gap-2 truncate text-sm font-semibold text-white">
+              <span className="truncate">{meta || sourceLabel(account.source)}</span>
+              {isActiveMarker ? (
+                <span className="shrink-0 rounded bg-green-500/25 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-green-200">
+                  Active
+                </span>
+              ) : null}
+            </span>
+            <span className="block truncate font-mono text-xs text-slate-300">{account.address}</span>
           </span>
-          <span className="block truncate font-mono text-xs text-slate-300">{account.address}</span>
-        </span>
+        </button>
         {isActiveMarker ? (
           <button
             type="button"
