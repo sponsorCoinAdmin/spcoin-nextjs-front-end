@@ -85,7 +85,7 @@ export default function AccountPanel(_props: Props) {
         <div id="AGENT_ACCOUNT" className="hidden" aria-hidden="true" />
       )}
       {isActiveAccount ? (
-        <AccountComponent />
+        <AccountComponent showHeader={false} />
       ) : (
         <div className="p-4 text-sm text-slate-200">
           <p className="mb-2 font-semibold">No active account selected.</p>

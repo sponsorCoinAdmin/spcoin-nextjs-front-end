@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { ChevronDown, ChevronUp, Wallet, X } from 'lucide-react';
+import { ChevronDown, ChevronUp, Wallet } from 'lucide-react';
 
 import AccountComponent from '@/components/views/accountComponent';
 import { defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
@@ -257,42 +257,12 @@ export default function Accounts({
       ) : null}
 
       {displayState === 'ACCOUNT_META' && previewAccount ? (
-        <div className="border-t border-slate-700/70 bg-[#0b0e19]">
-          <div className="relative border-b border-slate-700/70 px-5 py-4">
-            <div className="flex items-center gap-3">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#11162A]">
-                {previewAccount.logoURL ? (
-                  <img
-                    src={previewAccount.logoURL}
-                    alt={previewAccount.name || 'Account'}
-                    className="h-full w-full object-contain"
-                  />
-                ) : (
-                  <Wallet className="h-5 w-5 text-[#7893ff]" />
-                )}
-              </span>
-            </div>
-            <h2 className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 text-center text-xl font-bold leading-tight">
-              {previewAccount.name ? `Account ${previewAccount.name}` : 'Account Details'}
-            </h2>
-            {onClosePreview ? (
-              <button
-                type="button"
-                onClick={handleClosePreview}
-                className="absolute right-5 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-[#303b68] hover:bg-[#3c487a]"
-                aria-label="Close account details"
-              >
-                <X className="h-6 w-6 text-[#91a5ff]" />
-              </button>
-            ) : null}
-          </div>
-
-          <div className="px-5 py-4">
-            <AccountComponent
-              account={previewAccount}
-              mode={SP_COIN_DISPLAY.ACTIVE_ACCOUNT}
-            />
-          </div>
+        <div className="border-t border-slate-700/70">
+          <AccountComponent
+            account={previewAccount}
+            onClose={handleClosePreview}
+            mode={SP_COIN_DISPLAY.ACTIVE_ACCOUNT}
+          />
         </div>
       ) : null}
     </>

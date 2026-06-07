@@ -2,6 +2,7 @@
 
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Wallet, X } from 'lucide-react';
 
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { SP_COIN_DISPLAY, type spCoinAccount } from '@/lib/structure';
@@ -48,12 +49,53 @@ function normalizeAddressKey(value: unknown) {
 
 type AccountComponentProps = {
   account?: spCoinAccount;
+  onClose?: () => void;
+  showHeader?: boolean;
   mode?:
     | SP_COIN_DISPLAY.ACTIVE_ACCOUNT
     | SP_COIN_DISPLAY.SPONSOR_ACCOUNT
     | SP_COIN_DISPLAY.RECIPIENT_ACCOUNT
     | SP_COIN_DISPLAY.AGENT_ACCOUNT;
 };
+
+type AccountHeaderProps = {
+  title: string;
+  logoURL?: string;
+  onClose?: () => void;
+};
+
+function AccountHeader({ title, logoURL, onClose }: AccountHeaderProps) {
+  return (
+    <div className="relative border-b border-slate-700/70 px-5 py-4">
+      <div className="flex items-center gap-3">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#11162A]">
+          {logoURL ? (
+            <img
+              src={logoURL}
+              alt={title}
+              className="h-full w-full object-contain"
+            />
+          ) : (
+            <Wallet className="h-5 w-5 text-[#7893ff]" />
+          )}
+        </span>
+      </div>
+      <h2 className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 text-center text-xl font-bold leading-tight">
+        {title}
+      </h2>
+      {onClose ? (
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute right-5 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-[#303b68] hover:bg-[#3c487a]"
+          aria-label="Close account details"
+        >
+          <X className="h-6 w-6 text-[#91a5ff]" />
+        </button>
+      ) : null}
+    </div>
+  );
+}
 
 type AccountAddressPillProps = {
   label: string;
@@ -64,8 +106,8 @@ function AccountAddressPill({ label, address }: AccountAddressPillProps) {
   return (
     <div className="mb-2 flex items-center gap-2 text-sm text-slate-300/80">
       <span className="whitespace-nowrap">{label}</span>
-      <div className="mb-0 flex w-full min-w-0 flex-1 items-center justify-center gap-2 rounded-[22px] bg-[#243056] px-1 py-1 text-base text-[#5981F3]">
-        <span className="w-full break-all text-center font-mono">{address}</span>
+      <div className="mb-0 flex w-full min-w-0 flex-1 items-center justify-center gap-2 rounded-[22px] bg-[#243056] px-1 py-1 text-sm text-[#5981F3]">
+        <span className="w-full truncate whitespace-nowrap text-center font-mono">{address}</span>
       </div>
     </div>
   );
@@ -182,7 +224,12 @@ function AccountMetaTable({
   );
 }
 
-export default function AccountComponent({ account: forcedAccount, mode }: AccountComponentProps) {
+export default function AccountComponent({
+  account: forcedAccount,
+  onClose,
+  showHeader = true,
+  mode,
+}: AccountComponentProps) {
   const router = useRouter();
   const ctx = useContext(ExchangeContextState);
   const accounts = ctx?.exchangeContext?.accounts;
@@ -259,9 +306,13 @@ export default function AccountComponent({ account: forcedAccount, mode }: Accou
   if (!accountToRender) return null;
 
   const depositAddr = formatShortAddress(String(accountToRender?.address ?? '').trim());
+  const title = accountToRender.name ? `Account ${accountToRender.name}` : 'Account Details';
 
   return (
-    <div id="ACCOUNT_INFO">
+    <div id="ACCOUNT_INFO" className="bg-[#0b0e19]">
+      {showHeader ? <AccountHeader title={title} logoURL={accountToRender.logoURL} onClose={onClose} /> : null}
+
+      <div className="px-5 py-4">
       {depositAddr ? <AccountAddressPill label={depositLabel} address={depositAddr} /> : null}
 
       <AccountMetaTable
@@ -274,6 +325,7 @@ export default function AccountComponent({ account: forcedAccount, mode }: Accou
         canEditAccount={canEditAccount}
         onEdit={() => router.push('/EditAccount')}
       />
+      </div>
     </div>
   );
 }
