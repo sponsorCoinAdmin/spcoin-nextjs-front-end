@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { ChevronDown, ChevronUp, Wallet } from 'lucide-react';
+import { ChevronDown, ChevronUp, Wallet, X } from 'lucide-react';
 
+import AccountComponent from '@/components/views/accountComponent';
 import { defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
+import { SP_COIN_DISPLAY, type spCoinAccount } from '@/lib/structure';
 import { normalizeAddress } from '@/lib/utils/address';
 import type { SpCoinWalletAccount } from './types';
 
@@ -16,7 +18,11 @@ type AccountsProps = {
   hardhatAccountsError: string;
   onOpenAccountPanel: (account: SpCoinWalletAccount) => void;
   onSelectAccount: (account: SpCoinWalletAccount) => void;
+  previewAccount?: spCoinAccount;
+  onClosePreview?: () => void;
 };
+
+type AccountsDisplayState = 'ACCOUNT_LIST' | 'ACCOUNT_META';
 
 function sourceLabel(source: SpCoinWalletAccount['source']): string {
   if (source === 'hardhat') return 'Hardhat Wallet';
@@ -24,7 +30,7 @@ function sourceLabel(source: SpCoinWalletAccount['source']): string {
   return 'Offline';
 }
 
-function AccountRow({
+function Account({
   account,
   isActiveMarker,
   selected,
@@ -122,20 +128,29 @@ function AccountRow({
   );
 }
 
-export default function Accounts({
+function EmbeddedAccountList({
   accounts,
   walletSource,
+  activeAddressKey,
   selectedAddressKey,
-  normalizedWorkingAddress,
   hardhatAccountsLoading,
   hardhatAccountsError,
+  isCollapsed,
   onOpenAccountPanel,
   onSelectAccount,
-}: AccountsProps) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const normalizedSelectedKey = selectedAddressKey || normalizedWorkingAddress;
-  const fallbackAddress = accounts[0] ? normalizeAddress(accounts[0].address) : '';
-  const activeAddressKey = normalizedSelectedKey || fallbackAddress;
+  onToggleCollapse,
+}: {
+  accounts: SpCoinWalletAccount[];
+  walletSource: 'hardhat' | 'metamask' | 'offline';
+  activeAddressKey: string;
+  selectedAddressKey: string;
+  hardhatAccountsLoading: boolean;
+  hardhatAccountsError: string;
+  isCollapsed: boolean;
+  onOpenAccountPanel: (account: SpCoinWalletAccount) => void;
+  onSelectAccount: (account: SpCoinWalletAccount) => void;
+  onToggleCollapse: () => void;
+}) {
   const orderedAccounts = [...accounts].sort((left, right) => {
     const leftIsActive = normalizeAddress(left.address) === activeAddressKey ? 1 : 0;
     const rightIsActive = normalizeAddress(right.address) === activeAddressKey ? 1 : 0;
@@ -145,37 +160,141 @@ export default function Accounts({
     ? orderedAccounts.filter((account) => normalizeAddress(account.address) === activeAddressKey)
     : orderedAccounts;
 
+  if (hardhatAccountsError && walletSource === 'hardhat') {
+    return <div className="p-4 text-sm text-red-200">{hardhatAccountsError}</div>;
+  }
+
+  if (accounts.length === 0) {
+    return (
+      <div className="p-5 text-sm text-slate-300">
+        {walletSource === 'metamask'
+          ? 'Connect MetaMask to select a MetaMask account.'
+          : hardhatAccountsLoading
+            ? 'Loading Hardhat accounts...'
+            : 'No accounts available.'}
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {visibleAccounts.map((account) => (
+        <Account
+          key={`${account.source}:${account.address}`}
+          account={account}
+          isActiveMarker={normalizeAddress(account.address) === activeAddressKey}
+          selected={normalizeAddress(account.address) === selectedAddressKey}
+          isCollapsed={isCollapsed}
+          onOpenAccountPanel={() => onOpenAccountPanel(account)}
+          onSelect={() => onSelectAccount(account)}
+          onToggleCollapse={onToggleCollapse}
+        />
+      ))}
+    </>
+  );
+}
+
+export default function Accounts({
+  accounts,
+  walletSource,
+  selectedAddressKey,
+  normalizedWorkingAddress,
+  hardhatAccountsLoading,
+  hardhatAccountsError,
+  onOpenAccountPanel,
+  onSelectAccount,
+  previewAccount,
+  onClosePreview,
+}: AccountsProps) {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [displayState, setDisplayState] = useState<AccountsDisplayState>('ACCOUNT_LIST');
+  const normalizedSelectedKey = selectedAddressKey || normalizedWorkingAddress;
+  const fallbackAddress = accounts[0] ? normalizeAddress(accounts[0].address) : '';
+  const activeAddressKey = normalizedSelectedKey || fallbackAddress;
+
   useEffect(() => {
     setIsCollapsed(false);
   }, [activeAddressKey, walletSource]);
 
+  useEffect(() => {
+    if (!previewAccount) {
+      setDisplayState('ACCOUNT_LIST');
+    }
+  }, [previewAccount]);
+
+  const handleOpenAccountPanel = (account: SpCoinWalletAccount) => {
+    onOpenAccountPanel(account);
+    setDisplayState('ACCOUNT_META');
+  };
+
+  const handleClosePreview = () => {
+    onClosePreview?.();
+    setDisplayState('ACCOUNT_LIST');
+  };
+
   return (
-    <div className="scrollbar-hide max-h-[360px] overflow-y-auto border-t border-slate-700/70">
-      {hardhatAccountsError && walletSource === 'hardhat' ? (
-        <div className="p-4 text-sm text-red-200">{hardhatAccountsError}</div>
-      ) : null}
-      {accounts.length === 0 ? (
-        <div className="p-5 text-sm text-slate-300">
-          {walletSource === 'metamask'
-            ? 'Connect MetaMask to select a MetaMask account.'
-            : hardhatAccountsLoading
-              ? 'Loading Hardhat accounts...'
-              : 'No accounts available.'}
-        </div>
-      ) : (
-        visibleAccounts.map((account) => (
-          <AccountRow
-            key={`${account.source}:${account.address}`}
-            account={account}
-            isActiveMarker={normalizeAddress(account.address) === activeAddressKey}
-            selected={normalizeAddress(account.address) === selectedAddressKey}
+    <>
+      {displayState === 'ACCOUNT_LIST' ? (
+        <div
+          className={[
+            'scrollbar-hide overflow-y-auto border-t border-slate-700/70',
+            'max-h-[360px]',
+          ].join(' ')}
+        >
+          <EmbeddedAccountList
+            accounts={accounts}
+            walletSource={walletSource}
+            activeAddressKey={activeAddressKey}
+            selectedAddressKey={selectedAddressKey}
+            hardhatAccountsLoading={hardhatAccountsLoading}
+            hardhatAccountsError={hardhatAccountsError}
             isCollapsed={isCollapsed}
-            onOpenAccountPanel={() => onOpenAccountPanel(account)}
-            onSelect={() => onSelectAccount(account)}
+            onOpenAccountPanel={handleOpenAccountPanel}
+            onSelectAccount={onSelectAccount}
             onToggleCollapse={() => setIsCollapsed((value) => !value)}
           />
-        ))
-      )}
-    </div>
+        </div>
+      ) : null}
+
+      {displayState === 'ACCOUNT_META' && previewAccount ? (
+        <div className="border-t border-slate-700/70 bg-[#0b0e19]">
+          <div className="relative border-b border-slate-700/70 px-5 py-4">
+            <div className="flex items-center gap-3">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#11162A]">
+                {previewAccount.logoURL ? (
+                  <img
+                    src={previewAccount.logoURL}
+                    alt={previewAccount.name || 'Account'}
+                    className="h-full w-full object-contain"
+                  />
+                ) : (
+                  <Wallet className="h-5 w-5 text-[#7893ff]" />
+                )}
+              </span>
+            </div>
+            <h2 className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 text-center text-xl font-bold leading-tight">
+              {previewAccount.name ? `Account ${previewAccount.name}` : 'Account Details'}
+            </h2>
+            {onClosePreview ? (
+              <button
+                type="button"
+                onClick={handleClosePreview}
+                className="absolute right-5 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-[#303b68] hover:bg-[#3c487a]"
+                aria-label="Close account details"
+              >
+                <X className="h-6 w-6 text-[#91a5ff]" />
+              </button>
+            ) : null}
+          </div>
+
+          <div className="px-5 py-4">
+            <AccountComponent
+              account={previewAccount}
+              mode={SP_COIN_DISPLAY.ACTIVE_ACCOUNT}
+            />
+          </div>
+        </div>
+      ) : null}
+    </>
   );
 }

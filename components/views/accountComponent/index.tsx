@@ -55,6 +55,133 @@ type AccountComponentProps = {
     | SP_COIN_DISPLAY.AGENT_ACCOUNT;
 };
 
+type AccountAddressPillProps = {
+  label: string;
+  address: string;
+};
+
+function AccountAddressPill({ label, address }: AccountAddressPillProps) {
+  return (
+    <div className="mb-2 flex items-center gap-2 text-sm text-slate-300/80">
+      <span className="whitespace-nowrap">{label}</span>
+      <div className="mb-0 flex w-full min-w-0 flex-1 items-center justify-center gap-2 rounded-[22px] bg-[#243056] px-1 py-1 text-base text-[#5981F3]">
+        <span className="w-full break-all text-center font-mono">{address}</span>
+      </div>
+    </div>
+  );
+}
+
+type AccountMetaTableProps = {
+  name: string;
+  symbol: string;
+  address: string;
+  website: string;
+  email: string;
+  description: string;
+  canEditAccount: boolean;
+  onEdit: () => void;
+};
+
+function AccountMetaTable({
+  name,
+  symbol,
+  address,
+  website,
+  email,
+  description,
+  canEditAccount,
+  onEdit,
+}: AccountMetaTableProps) {
+  const th = 'px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-300/80';
+  const cell = 'px-3 py-3 text-sm align-middle';
+  const valueWrap = 'box-border w-full whitespace-normal break-all pr-[5px]';
+  const zebraA = 'bg-[rgba(56,78,126,0.35)]';
+  const zebraB = 'bg-[rgba(156,163,175,0.25)]';
+  const tableGrid = 'grid grid-cols-[max-content_minmax(0,1fr)]';
+
+  return (
+    <div
+      id="MANAGE ACCOUNT"
+      className="scrollbar-hide mb-4 mt-0 w-full min-w-0 overflow-x-hidden overflow-y-auto rounded-xl border border-black"
+    >
+      <div id="MANAGE ACCOUNT TABLE" className={`${tableGrid} w-full min-w-0`}>
+        <div className="contents">
+          <div className={`${msTableTw.theadRow} ${th} whitespace-nowrap border-b border-black`}>Field Name</div>
+          <div className={`${msTableTw.theadRow} ${th} border-b border-black`}>value</div>
+        </div>
+
+        <div className="contents">
+          <div className={`${zebraA} ${cell} whitespace-nowrap border-b border-black`}>address:</div>
+          <div className={`${zebraA} ${cell} min-w-0 border-b border-black`}>
+            <div className={valueWrap}><span className="block w-full break-all font-mono">{fallback(address)}</span></div>
+          </div>
+        </div>
+
+        <div className="contents">
+          <div className={`${zebraB} ${cell} whitespace-nowrap border-b border-black`}>Name</div>
+          <div className={`${zebraB} ${cell} min-w-0 border-b border-black`}><div className={valueWrap}>{name}</div></div>
+        </div>
+
+        <div className="contents">
+          <div className={`${zebraA} ${cell} whitespace-nowrap border-b border-black`}>Symbol</div>
+          <div className={`${zebraA} ${cell} min-w-0 border-b border-black`}><div className={valueWrap}>{symbol}</div></div>
+        </div>
+
+        <div className="contents">
+          <div className={`${zebraB} ${cell} whitespace-nowrap border-b border-black`}>webSite</div>
+          <div className={`${zebraB} ${cell} min-w-0 border-b border-black`}>
+            <div className={valueWrap}>
+              {website ? (
+                <a
+                  href={website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full break-all underline decoration-slate-400/60 underline-offset-2 hover:decoration-slate-200"
+                >
+                  {website}
+                </a>
+              ) : 'N/A'}
+            </div>
+          </div>
+        </div>
+
+        <div className="contents">
+          <div className={`${zebraA} ${cell} whitespace-nowrap border-b border-black`}>email:</div>
+          <div className={`${zebraA} ${cell} min-w-0 border-b border-black`}>
+            <div className={valueWrap}>
+              {email ? (
+                <a
+                  href={email.startsWith('mailto:') ? email : `mailto:${email}`}
+                  className="block w-full break-all underline decoration-slate-400/60 underline-offset-2 hover:decoration-slate-200"
+                >
+                  {email.replace(/^mailto:/i, '')}
+                </a>
+              ) : 'N/A'}
+            </div>
+          </div>
+        </div>
+
+        <div className={`${zebraB} ${cell} col-span-2 min-w-0`}>
+          <div className="mb-2 whitespace-nowrap text-center">Description:</div>
+          <div className={valueWrap}>{description}</div>
+        </div>
+
+        {canEditAccount ? (
+          <div className={`${zebraA} col-span-2 p-0`}>
+            <button
+              type="button"
+              onClick={onEdit}
+              className="flex h-[55px] w-full items-center justify-center rounded-[12px] bg-[#243056] text-[20px] font-bold text-[#5981F3] transition-[color,background-color] duration-300 hover:cursor-pointer hover:text-green-500"
+            >
+              Edit Account
+            </button>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 export default function AccountComponent({ account: forcedAccount, mode }: AccountComponentProps) {
   const router = useRouter();
   const ctx = useContext(ExchangeContextState);
@@ -129,107 +256,24 @@ export default function AccountComponent({ account: forcedAccount, mode }: Accou
     .toString()
     .trim();
 
-  const th = 'px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-300/80';
-  const cell = 'px-3 py-3 text-sm align-middle';
-  const valueWrap = 'box-border w-full whitespace-normal break-all pr-[5px]';
-  const zebraA = 'bg-[rgba(56,78,126,0.35)]';
-  const zebraB = 'bg-[rgba(156,163,175,0.25)]';
-  const tableGrid = 'grid grid-cols-[max-content_minmax(0,1fr)]';
-
   if (!accountToRender) return null;
 
   const depositAddr = formatShortAddress(String(accountToRender?.address ?? '').trim());
 
   return (
     <div id="ACCOUNT_INFO">
-      {depositAddr ? (
-        <div className="mb-2 flex items-center gap-2 text-sm text-slate-300/80">
-          <span className="whitespace-nowrap">{depositLabel}</span>
-          <div className="mb-0 flex w-full min-w-0 flex-1 items-center justify-center gap-2 rounded-[22px] bg-[#243056] px-1 py-1 text-base text-[#5981F3]">
-            <span className="w-full break-all text-center font-mono">{depositAddr}</span>
-          </div>
-        </div>
-      ) : null}
+      {depositAddr ? <AccountAddressPill label={depositLabel} address={depositAddr} /> : null}
 
-      <div
-        id="MANAGE ACCOUNT"
-        className="scrollbar-hide mb-4 mt-0 w-full min-w-0 overflow-x-hidden overflow-y-auto rounded-xl border border-black"
-      >
-        <div id="MANAGE ACCOUNT TABLE" className={`${tableGrid} w-full min-w-0`}>
-          <div className="contents">
-            <div className={`${msTableTw.theadRow} ${th} whitespace-nowrap border-b border-black`}>Field Name</div>
-            <div className={`${msTableTw.theadRow} ${th} border-b border-black`}>value</div>
-          </div>
-
-          <div className="contents">
-            <div className={`${zebraA} ${cell} whitespace-nowrap border-b border-black`}>Name</div>
-            <div className={`${zebraA} ${cell} min-w-0 border-b border-black`}><div className={valueWrap}>{name}</div></div>
-          </div>
-
-          <div className="contents">
-            <div className={`${zebraB} ${cell} whitespace-nowrap border-b border-black`}>Symbol</div>
-            <div className={`${zebraB} ${cell} min-w-0 border-b border-black`}><div className={valueWrap}>{symbol}</div></div>
-          </div>
-
-          <div className="contents">
-            <div className={`${zebraA} ${cell} whitespace-nowrap border-b border-black`}>address:</div>
-            <div className={`${zebraA} ${cell} min-w-0 border-b border-black`}>
-              <div className={valueWrap}><span className="block w-full break-all font-mono">{fallback(address)}</span></div>
-            </div>
-          </div>
-
-          <div className="contents">
-            <div className={`${zebraB} ${cell} whitespace-nowrap border-b border-black`}>webSite</div>
-            <div className={`${zebraB} ${cell} min-w-0 border-b border-black`}>
-              <div className={valueWrap}>
-                {website ? (
-                  <a
-                    href={website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block w-full break-all underline decoration-slate-400/60 underline-offset-2 hover:decoration-slate-200"
-                  >
-                    {website}
-                  </a>
-                ) : 'N/A'}
-              </div>
-            </div>
-          </div>
-
-          <div className="contents">
-            <div className={`${zebraA} ${cell} whitespace-nowrap border-b border-black`}>email:</div>
-            <div className={`${zebraA} ${cell} min-w-0 border-b border-black`}>
-              <div className={valueWrap}>
-                {email ? (
-                  <a
-                    href={email.startsWith('mailto:') ? email : `mailto:${email}`}
-                    className="block w-full break-all underline decoration-slate-400/60 underline-offset-2 hover:decoration-slate-200"
-                  >
-                    {email.replace(/^mailto:/i, '')}
-                  </a>
-                ) : 'N/A'}
-              </div>
-            </div>
-          </div>
-
-          <div className={`${zebraB} ${cell} col-span-2 min-w-0`}>
-            <div className="mb-2 whitespace-nowrap text-center">Description:</div>
-            <div className={valueWrap}>{description}</div>
-          </div>
-
-          {canEditAccount ? (
-            <div className={`${zebraA} col-span-2 p-0`}>
-              <button
-                type="button"
-                onClick={() => router.push('/EditAccount')}
-                className="flex h-[55px] w-full items-center justify-center rounded-[12px] bg-[#243056] text-[20px] font-bold text-[#5981F3] transition-[color,background-color] duration-300 hover:cursor-pointer hover:text-green-500"
-              >
-                Edit Account
-              </button>
-            </div>
-          ) : null}
-        </div>
-      </div>
+      <AccountMetaTable
+        name={name}
+        symbol={symbol}
+        address={address}
+        website={website}
+        email={email}
+        description={description}
+        canEditAccount={canEditAccount}
+        onEdit={() => router.push('/EditAccount')}
+      />
     </div>
   );
 }

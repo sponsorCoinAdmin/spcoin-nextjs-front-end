@@ -5,14 +5,12 @@ import Image from 'next/image';
 import { RefreshCw, Wallet, X } from 'lucide-react';
 import { useConnect } from 'wagmi';
 
-import AccountComponent from '@/components/views/accountComponent';
 import ConnectNetworkButton from '@/components/views/Buttons/Connect/ConnectNetworkButton';
 import { useSpCoinWallet } from '@/lib/spCoinWallet';
-import useOpenAccountComponent from '@/lib/context/hooks/useOpenAccountComponent';
 import { useActiveAccount } from '@/lib/context/hooks/ExchangeContext/nested/accounts/useActiveAccount';
 import { getBlockChainName } from '@/lib/context/helpers/NetworkHelpers';
 import type { SpCoinWalletAccount } from '@/lib/spCoinWallet';
-import { SP_COIN_DISPLAY, STATUS, type spCoinAccount } from '@/lib/structure';
+import { STATUS, type spCoinAccount } from '@/lib/structure';
 import { normalizeAddress } from '@/lib/utils/address';
 import Accounts from '@/lib/spCoinWallet/accounts';
 
@@ -29,7 +27,6 @@ export default function SpCoinWalletPopup() {
     selectionRequest,
     selectAccount,
   } = useSpCoinWallet();
-  const openAccountComponent = useOpenAccountComponent();
   const [, setActiveAccount] = useActiveAccount();
   const { connectAsync, connectors, status: connectStatus } = useConnect();
   const [previewAccount, setPreviewAccount] = useState<spCoinAccount | undefined>(undefined);
@@ -147,6 +144,14 @@ export default function SpCoinWalletPopup() {
     setPreviewAccount(nextAccount);
   };
 
+  const handlePrimaryClose = () => {
+    if (previewAccount) {
+      setPreviewAccount(undefined);
+      return;
+    }
+    closeWallet();
+  };
+
   if (!isOpen) return null;
 
   const isSelectionMode = Boolean(selectionRequest);
@@ -210,10 +215,7 @@ export default function SpCoinWalletPopup() {
             </div>
             <button
               type="button"
-              onClick={() => {
-                setPreviewAccount(undefined);
-                closeWallet();
-              }}
+              onClick={handlePrimaryClose}
               className="absolute right-[0.625rem] top-2 flex h-11 w-11 items-center justify-center rounded-full bg-[#303b68] hover:bg-[#3c487a]"
               aria-label="Close account selection"
             >
@@ -230,6 +232,8 @@ export default function SpCoinWalletPopup() {
             hardhatAccountsError={hardhatAccountsError}
             onOpenAccountPanel={openAccountPanel}
             onSelectAccount={handleSelectAccount}
+            previewAccount={previewAccount}
+            onClosePreview={() => setPreviewAccount(undefined)}
           />
 
           {/* Trace Controls */}
@@ -265,53 +269,6 @@ export default function SpCoinWalletPopup() {
           )}
         </div>
 
-        {previewAccount ? (
-          <div className="fixed inset-0 z-[10001]">
-            <div
-              className={[
-                'pointer-events-auto absolute left-1/2 top-1/2 w-[min(520px,calc(100vw-2rem))] max-h-[calc(100vh-2rem)] -translate-x-1/2 -translate-y-1/2 overflow-hidden',
-                'rounded-[15px] border border-[#2e3654] bg-[#0b0e19] text-white shadow-2xl',
-              ].join(' ')}
-              role="dialog"
-              aria-modal="true"
-              aria-label={previewAccount.name ? `Account ${previewAccount.name}` : 'Account details'}
-            >
-              <div className="relative border-b border-slate-700/70 px-5 py-4">
-                <div className="flex items-center gap-3">
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#11162A]">
-                    {previewAccount.logoURL ? (
-                      <img
-                        src={previewAccount.logoURL}
-                        alt={previewAccount.name || 'Account'}
-                        className="h-full w-full object-contain"
-                      />
-                    ) : (
-                      <Wallet className="h-5 w-5 text-[#7893ff]" />
-                    )}
-                  </span>
-                </div>
-                <h2 className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 text-center text-xl font-bold leading-tight">
-                  {previewAccount.name ? `Account ${previewAccount.name}` : 'Account Details'}
-                </h2>
-                <button
-                  type="button"
-                  onClick={() => setPreviewAccount(undefined)}
-                  className="absolute right-5 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-[#303b68] hover:bg-[#3c487a]"
-                  aria-label="Close account details"
-                >
-                  <X className="h-6 w-6 text-[#91a5ff]" />
-                </button>
-              </div>
-
-              <div className="px-5 py-4">
-                <AccountComponent
-                  account={previewAccount}
-                  mode={SP_COIN_DISPLAY.ACTIVE_ACCOUNT}
-                />
-              </div>
-            </div>
-          </div>
-        ) : null}
       </div>
     );
   }
@@ -344,7 +301,7 @@ export default function SpCoinWalletPopup() {
           </h2>
           <button
             type="button"
-            onClick={closeWallet}
+            onClick={handlePrimaryClose}
             className="absolute right-5 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-[#303b68] hover:bg-[#3c487a]"
             aria-label="Close SponsorCoin wallet"
           >
@@ -372,6 +329,8 @@ export default function SpCoinWalletPopup() {
           hardhatAccountsError={hardhatAccountsError}
           onOpenAccountPanel={openAccountPanel}
           onSelectAccount={handleSelectAccount}
+          previewAccount={previewAccount}
+          onClosePreview={() => setPreviewAccount(undefined)}
         />
 
         {/* Trace Controls */}
@@ -407,53 +366,6 @@ export default function SpCoinWalletPopup() {
         )}
       </div>
 
-      {previewAccount ? (
-        <div className="fixed inset-0 z-[10001]">
-          <div
-            className={[
-              'pointer-events-auto absolute left-1/2 top-1/2 w-[min(520px,calc(100vw-2rem))] max-h-[calc(100vh-2rem)] -translate-x-1/2 -translate-y-1/2 overflow-hidden',
-              'rounded-[15px] border border-[#2e3654] bg-[#0b0e19] text-white shadow-2xl',
-            ].join(' ')}
-            role="dialog"
-            aria-modal="true"
-            aria-label={previewAccount.name ? `Account ${previewAccount.name}` : 'Account details'}
-          >
-            <div className="relative border-b border-slate-700/70 px-5 py-4">
-              <div className="flex items-center gap-3">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#11162A]">
-                  {previewAccount.logoURL ? (
-                    <img
-                      src={previewAccount.logoURL}
-                      alt={previewAccount.name || 'Account'}
-                      className="h-full w-full object-contain"
-                    />
-                  ) : (
-                    <Wallet className="h-5 w-5 text-[#7893ff]" />
-                  )}
-                </span>
-              </div>
-              <h2 className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 text-center text-xl font-bold leading-tight">
-                {previewAccount.name ? `Account ${previewAccount.name}` : 'Account Details'}
-              </h2>
-              <button
-                type="button"
-                onClick={() => setPreviewAccount(undefined)}
-                className="absolute right-5 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-[#303b68] hover:bg-[#3c487a]"
-                aria-label="Close account details"
-              >
-                <X className="h-6 w-6 text-[#91a5ff]" />
-              </button>
-            </div>
-
-            <div className="px-5 py-4">
-              <AccountComponent
-                account={previewAccount}
-                mode={SP_COIN_DISPLAY.ACTIVE_ACCOUNT}
-              />
-            </div>
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 }

@@ -199,8 +199,36 @@ export function SpCoinWalletProvider({ children }: { children: React.ReactNode }
         setWalletSource('hardhat');
         setSelectedHardhatSignerAddressState(account.address);
       }
+
+      const currentActiveAccount = exchangeContext?.accounts?.activeAccount;
+      const nextActive: spCoinAccount = {
+        name: String(account.name || account.label || currentActiveAccount?.name || 'Unnamed account').trim(),
+        symbol: String(account.symbol || currentActiveAccount?.symbol || '').trim(),
+        type: currentActiveAccount?.type ?? 'account',
+        website: currentActiveAccount?.website ?? '',
+        description: currentActiveAccount?.description ?? '',
+        status: currentActiveAccount?.status ?? STATUS.INFO,
+        address: account.address as spCoinAccount['address'],
+        ...(account.logoURL
+          ? { logoURL: account.logoURL }
+          : currentActiveAccount?.logoURL
+            ? { logoURL: currentActiveAccount.logoURL }
+            : {}),
+        balance: currentActiveAccount?.balance ?? 0n,
+      };
+
+      setExchangeContext(
+        (prev) => ({
+          ...prev,
+          accounts: {
+            ...prev.accounts,
+            activeAccount: nextActive,
+          },
+        }),
+        'SpCoinWalletProvider:selectAccount',
+      );
     },
-    [selectionRequest, isOpen],
+    [exchangeContext?.accounts?.activeAccount, isOpen, selectionRequest, setExchangeContext],
   );
 
   const setSelectedHardhatSignerAddress = useCallback((address: string) => {
