@@ -69,7 +69,6 @@ export function useCreateAccountForm({
   const [baselineData, setBaselineData] = useState<AccountFormData>({
     ...EMPTY_FORM_DATA,
   });
-  const [savedAccountName, setSavedAccountName] = useState('');
   const [accountExists, setAccountExists] = useState<boolean>(false);
   const [isLoadingAccount, setIsLoadingAccount] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -77,7 +76,6 @@ export function useCreateAccountForm({
   const [resolvedAccountAddress, setResolvedAccountAddress] = useState<string>('');
   const [invalidAddressPopupPreviousAddress, setInvalidAddressPopupPreviousAddress] =
     useState<string | null>(null);
-  const [, setHasServerLogo] = useState(false);
   const [serverLogoURL, setServerLogoURL] = useState(DEFAULT_ACCOUNT_LOGO_URL);
   const logoFileInputRef = useRef<HTMLInputElement>(null);
   const descriptionTextareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -93,12 +91,10 @@ export function useCreateAccountForm({
     setPublicKey('');
     setFormData({ ...EMPTY_FORM_DATA });
     setBaselineData({ ...EMPTY_FORM_DATA });
-    setSavedAccountName('');
     setAccountExists(false);
     setResolvedAccountAddress('');
     setErrors({});
     setLogoFile(null);
-    setHasServerLogo(false);
     setServerLogoURL(DEFAULT_ACCOUNT_LOGO_URL);
   };
 
@@ -180,13 +176,8 @@ export function useCreateAccountForm({
         setAccountExists(true);
         setFormData(loaded);
         setBaselineData(loaded);
-        setSavedAccountName(loaded.name.trim());
         setErrors({});
         setLogoFile(null);
-        setHasServerLogo(
-          resolvedLogoURL !== DEFAULT_ACCOUNT_LOGO_URL &&
-            !resolvedLogoURL.endsWith('/assets/miscellaneous/Anonymous.png'),
-        );
         setServerLogoURL(withCacheBust(resolvedLogoURL));
       } catch {
         if (!abortController.signal.aborted) {
@@ -195,10 +186,8 @@ export function useCreateAccountForm({
           setAccountExists(false);
           setFormData({ ...EMPTY_FORM_DATA });
           setBaselineData({ ...EMPTY_FORM_DATA });
-          setSavedAccountName('');
           setErrors({});
           setLogoFile(null);
-          setHasServerLogo(false);
           setServerLogoURL(DEFAULT_ACCOUNT_LOGO_URL);
         }
       } finally {
@@ -244,7 +233,6 @@ export function useCreateAccountForm({
     logoFile,
     isLoadingAccount,
     isSaving,
-    savedAccountName,
   });
 
   const loadAccountByAddress = async (nextAddress: string, previousAddress: string) => {
@@ -290,13 +278,8 @@ export function useCreateAccountForm({
       setAccountExists(true);
       setFormData(loaded);
       setBaselineData(loaded);
-      setSavedAccountName(loaded.name.trim());
       setErrors({});
       setLogoFile(null);
-      setHasServerLogo(
-        resolvedLogoURL !== DEFAULT_ACCOUNT_LOGO_URL &&
-          !resolvedLogoURL.endsWith('/assets/miscellaneous/Anonymous.png'),
-      );
       setServerLogoURL(withCacheBust(resolvedLogoURL));
     } catch {
       setPublicKey(normalizedAddress);
@@ -304,9 +287,7 @@ export function useCreateAccountForm({
       setAccountExists(false);
       setFormData({ ...EMPTY_FORM_DATA });
       setBaselineData({ ...EMPTY_FORM_DATA });
-      setSavedAccountName('');
       setLogoFile(null);
-      setHasServerLogo(false);
       setServerLogoURL(DEFAULT_ACCOUNT_LOGO_URL);
       setErrors((prev) => {
         const next = { ...prev };
@@ -645,14 +626,12 @@ export function useCreateAccountForm({
         setAccountExists(true);
         setFormData(savedForm);
         setBaselineData(savedForm);
-        setSavedAccountName(savedForm.name.trim());
         setErrors({});
       }
 
       if (shouldSaveLogo) {
         const canonicalLogoURL = getAccountLogoURL(derived.publicKeyTrimmed);
         setLogoFile(null);
-        setHasServerLogo(true);
         setServerLogoURL(withCacheBust(canonicalLogoURL));
       }
 
@@ -717,7 +696,6 @@ export function useCreateAccountForm({
     publicKey,
     formData,
     errors,
-    savedAccountName,
     accountExists,
     isLoadingAccount,
     isSaving,

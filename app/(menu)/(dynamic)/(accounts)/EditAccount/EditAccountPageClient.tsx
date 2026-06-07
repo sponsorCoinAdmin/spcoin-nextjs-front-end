@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -8,14 +8,13 @@ import { useAccount } from 'wagmi';
 import { useWalletActionOverlay } from '@/lib/context/WalletActionOverlayContext';
 import { useExchangeContext } from '@/lib/context/hooks';
 import OpenCloseBtn from '@/components/views/Buttons/OpenCloseBtn';
-import WalletAccountSelection, {
-  type WalletAccountSelectionValue,
-} from '@/components/views/Buttons/WalletAccountSelection';
 import ValidationPopup from '../../SponsorCoinLab/components/ValidationPopup';
 import { CreateAccountAvatarPanel, CreateAccountFormPanel } from '../CreateAccount/components';
 import { useCreateAccountForm } from '../CreateAccount/hooks';
 import { ACCEPTED_IMAGE_INPUT_ACCEPT, normalizeAddress } from '../CreateAccount/utils';
 import spCoin_png from '@/public/assets/miscellaneous/spCoin.png';
+
+const BAD_ACCOUNT_IMAGE_SRC = '/assets/miscellaneous/badTokenAddressImage.png';
 
 export default function EditAccountPageClient() {
   const router = useRouter();
@@ -26,23 +25,40 @@ export default function EditAccountPageClient() {
   const connected = Boolean(isConnected);
   const activeAddress = address;
   const requestedAccountAddress = String(searchParams.get('account') ?? '').trim() || undefined;
+  const requestedNormalizedAccountAddress = useMemo(() => {
+    const value = String(requestedAccountAddress ?? '').trim();
+    return /^0[xX][0-9a-fA-F]{40}$/.test(value) ? normalizeAddress(value) : '';
+  }, [requestedAccountAddress]);
   const appChainId = Number(exchangeContext?.network?.appChainId ?? 0);
   const hardhatSignerAvailable = true;
-  const [walletSelection, setWalletSelection] = useState<WalletAccountSelectionValue>({
-    source: hardhatSignerAvailable ? 'ec2-base' : 'metamask',
-    accountNumber: 0,
-  });
-  const [requestedMetaMaskAddress, setRequestedMetaMaskAddress] = useState('');
   const [hardhatDeploymentAccounts, setHardhatDeploymentAccounts] = useState<string[]>([]);
-  const [hardhatDeploymentAccountCount, setHardhatDeploymentAccountCount] = useState(20);
-  const authSignerSource = walletSelection.source;
-  const hardhatDeploymentAccountNumber = walletSelection.accountNumber;
-  const effectiveMetaMaskAddress = String(
-    requestedMetaMaskAddress || (connected ? activeAddress : '') || '',
-  ).trim();
+  const effectiveMetaMaskAddress = String((connected ? activeAddress : '') || '').trim();
+  const requestedHardhatAccountIndex = useMemo(() => {
+    if (!requestedNormalizedAccountAddress) return -1;
+    return hardhatDeploymentAccounts.findIndex(
+      (entryAddress) => normalizeAddress(entryAddress) === requestedNormalizedAccountAddress,
+    );
+  }, [hardhatDeploymentAccounts, requestedNormalizedAccountAddress]);
+  const requestedMatchesMetaMask =
+    Boolean(requestedNormalizedAccountAddress) &&
+    Boolean(effectiveMetaMaskAddress) &&
+    normalizeAddress(effectiveMetaMaskAddress) === requestedNormalizedAccountAddress;
+  const requestedAccountNotFound =
+    Boolean(requestedNormalizedAccountAddress) &&
+    hardhatDeploymentAccounts.length > 0 &&
+    requestedHardhatAccountIndex < 0 &&
+    !requestedMatchesMetaMask;
+  const authSignerSource = useMemo<'ec2-base' | 'metamask'>(() => {
+    if (requestedHardhatAccountIndex >= 0) return 'ec2-base';
+    if (requestedMatchesMetaMask) return 'metamask';
+    return hardhatSignerAvailable ? 'ec2-base' : 'metamask';
+  }, [hardhatSignerAvailable, requestedHardhatAccountIndex, requestedMatchesMetaMask]);
+  const hardhatDeploymentAccountNumber =
+    requestedHardhatAccountIndex >= 0 ? requestedHardhatAccountIndex : 0;
   const editSessionReady =
-    (authSignerSource === 'metamask' && Boolean(effectiveMetaMaskAddress)) ||
-    (hardhatSignerAvailable && authSignerSource === 'ec2-base');
+    authSignerSource === 'metamask'
+      ? Boolean(effectiveMetaMaskAddress)
+      : hardhatSignerAvailable;
 
   const {
     publicKey,
@@ -50,7 +66,6 @@ export default function EditAccountPageClient() {
     errors,
     handlePublicKeyChange,
     handlePublicKeyBlur,
-    handleSelectPublicKey,
     handleChange,
     handleFieldBlur,
     handleRevertChanges,
@@ -75,7 +90,7 @@ export default function EditAccountPageClient() {
   } = useCreateAccountForm({
     connected: editSessionReady,
     activeAddress: authSignerSource === 'metamask' ? effectiveMetaMaskAddress || undefined : undefined,
-    targetAddress: requestedAccountAddress,
+    targetAddress: requestedNormalizedAccountAddress || requestedAccountAddress,
     authSignerSource,
     hardhatDeploymentAccountNumber,
     appChainId,
@@ -83,98 +98,8 @@ export default function EditAccountPageClient() {
     runWithWalletAction,
   });
 
-  const [showAllBorders, setShowAllBorders] = useState(false);
-  const [showBorderToggleButton, setShowBorderToggleButton] = useState(false);
+  const [showAllBorders] = useState(false);
   const [expandedPanel, setExpandedPanel] = useState<'avatar' | 'form' | null>(null);
-  const previousAuthSignerSourceRef = useRef<'ec2-base' | 'metamask'>(authSignerSource);
-
-  useEffect(() => {
-    if (!hardhatSignerAvailable && authSignerSource !== 'metamask') {
-      setWalletSelection((previous) => ({
-        ...previous,
-        source: 'metamask',
-      }));
-    }
-  }, [authSignerSource, hardhatSignerAvailable]);
-
-  useEffect(() => {
-    if (!connected) return;
-    const normalizedActiveAddress = String(activeAddress ?? '').trim();
-    if (!normalizedActiveAddress) return;
-    setRequestedMetaMaskAddress((previous) => {
-      const normalizedPrevious = String(previous || '').trim();
-      return normalizedPrevious === normalizedActiveAddress ? previous : normalizedActiveAddress;
-    });
-  }, [activeAddress, connected]);
-
-  useEffect(() => {
-    if (authSignerSource !== 'ec2-base') return;
-    if (!hardhatSignerAvailable) return;
-
-    const nextAddress = String(
-      hardhatDeploymentAccounts[hardhatDeploymentAccountNumber] ?? '',
-    ).trim();
-    if (!nextAddress) return;
-    if (
-      publicKey &&
-      normalizeAddress(String(publicKey)) === normalizeAddress(nextAddress)
-    ) {
-      return;
-    }
-
-    void handleSelectPublicKey(nextAddress);
-  }, [
-    authSignerSource,
-    hardhatDeploymentAccountNumber,
-    hardhatDeploymentAccounts,
-    hardhatSignerAvailable,
-    handleSelectPublicKey,
-    publicKey,
-  ]);
-
-  useEffect(() => {
-    const previousSource = previousAuthSignerSourceRef.current;
-    previousAuthSignerSourceRef.current = authSignerSource;
-    if (authSignerSource !== 'metamask') return;
-    if (previousSource === 'metamask') return;
-
-    const ethereum = (window as any)?.ethereum;
-    if (!ethereum?.request) return;
-
-    const connectMetaMaskForEditAccount = async () => {
-      try {
-        const requestedAccounts = (await runWithWalletAction(
-          () =>
-            ethereum.request({
-              method: 'eth_requestAccounts',
-            }),
-          'MetaMask action in progress',
-          'Approve the account request in MetaMask to continue.',
-        )) as string[];
-        const nextAddress = String(requestedAccounts?.[0] ?? '').trim();
-        if (!nextAddress) return;
-        const normalizedNextAddress = normalizeAddress(nextAddress);
-        setRequestedMetaMaskAddress(normalizedNextAddress);
-        await handleSelectPublicKey(normalizedNextAddress);
-      } catch {
-        // The user may decline the prompt or MetaMask may not expose an account.
-      }
-    };
-
-    void connectMetaMaskForEditAccount();
-  }, [authSignerSource, handleSelectPublicKey, runWithWalletAction]);
-
-  useEffect(() => {
-    if (authSignerSource !== 'metamask') return;
-    if (!effectiveMetaMaskAddress) return;
-    if (
-      publicKey &&
-      normalizeAddress(String(publicKey)) === normalizeAddress(effectiveMetaMaskAddress)
-    ) {
-      return;
-    }
-    void handleSelectPublicKey(effectiveMetaMaskAddress);
-  }, [authSignerSource, effectiveMetaMaskAddress, handleSelectPublicKey, publicKey]);
 
   useEffect(() => {
     if (!hardhatSignerAvailable) return;
@@ -198,21 +123,7 @@ export default function EditAccountPageClient() {
           .map((entryAddress) => normalizeAddress(entryAddress));
 
         setHardhatDeploymentAccounts(normalizedAccounts);
-        setHardhatDeploymentAccountCount(entries.length);
 
-        const normalizedPublicKey = String(publicKey ?? '').trim();
-        if (!normalizedPublicKey) return;
-
-        const matchedIndex = normalizedAccounts.findIndex(
-          (entryAddress) => entryAddress === normalizeAddress(normalizedPublicKey),
-        );
-
-        if (matchedIndex >= 0) {
-          setWalletSelection((previous) => ({
-            ...previous,
-            accountNumber: matchedIndex,
-          }));
-        }
       } catch {
         // Keep the default selector range when the local account seed list is unavailable.
       }
@@ -220,21 +131,7 @@ export default function EditAccountPageClient() {
 
     void loadHardhatAccounts();
     return () => abortController.abort();
-  }, [hardhatSignerAvailable, publicKey]);
-
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (!event.altKey || event.key.toLowerCase() !== 't') return;
-      event.preventDefault();
-      setShowBorderToggleButton((prev) => {
-        const next = !prev;
-        if (next) setShowAllBorders(true);
-        return next;
-      });
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, []);
+  }, [hardhatSignerAvailable]);
 
   const panelMarginClass = 'mx-auto';
   const sponsorInnerPanelClass = 'rounded-xl border border-[#31416F] bg-[#0B1220]';
@@ -244,17 +141,34 @@ export default function EditAccountPageClient() {
     : sponsorInnerPanelClass;
   const loadingInputMessage =
     'Loading or updating account data. Input is temporarily disabled.';
-  const accountDataHeading = `${formData.name.trim() || 'Account'} Account Data`;
+  const accountNotFoundHeading = 'Error: Account not Found';
+  const accountDataHeading = requestedAccountNotFound
+    ? accountNotFoundHeading
+    : `${formData.name.trim() || 'Account'} Account Data`;
   const swappedOuterCardClass =
     'rounded-2xl border border-[#2B3A67] bg-[#0B1220] p-4 shadow-[0_12px_40px_rgba(0,0,0,0.25)] md:p-5';
   const releaseStyleOuterShellClass = 'rounded-[28px] bg-[#192134] p-4 md:p-5';
   const showAvatarPanel = expandedPanel === null || expandedPanel === 'avatar';
   const showFormPanel = expandedPanel === null || expandedPanel === 'form';
-  const showHardhatAccountSelector = hardhatSignerAvailable && authSignerSource === 'ec2-base';
-
-  const handleWalletSelectionChange = (nextSelection: WalletAccountSelectionValue) => {
-    setWalletSelection(nextSelection);
-  };
+  const displayPublicKey = requestedAccountNotFound
+    ? requestedNormalizedAccountAddress
+    : publicKey;
+  const displayFormData = requestedAccountNotFound
+    ? {
+        name: 'N/A',
+        symbol: 'N/A',
+        email: 'N/A',
+        website: 'N/A',
+        description: 'N/A',
+        recipientNetwork: [],
+      }
+    : formData;
+  const displayLogoPreviewSrc = requestedAccountNotFound
+    ? BAD_ACCOUNT_IMAGE_SRC
+    : logoPreviewSrc;
+  const displayConnected = requestedAccountNotFound || editSessionReady;
+  const displayInputLocked = requestedAccountNotFound;
+  const displayIsEditMode = requestedAccountNotFound ? false : isEditMode;
 
   const renderAvatarCard = (
     panelKey: 'avatar' | 'form',
@@ -304,15 +218,19 @@ export default function EditAccountPageClient() {
         <CreateAccountAvatarPanel
           panelMarginClass={panelMarginClass}
           avatarPanelBorderClass={avatarPanelBorderClass}
-          avatarHeading={formData.name.trim() ? `${formData.name.trim()}'s Avatar` : 'Users Avatar'}
-          headingContent={headingContent}
-          logoPreviewSrc={logoPreviewSrc}
-          connected={editSessionReady}
-          isEditMode={isEditMode}
-          inputLocked={false}
+          avatarHeading={requestedAccountNotFound ? accountNotFoundHeading : formData.name.trim() ? `${formData.name.trim()}'s Avatar` : 'Users Avatar'}
+          headingContent={requestedAccountNotFound ? (
+            <h2 className="mb-4 w-full text-center text-lg font-semibold text-red-500">
+              {accountNotFoundHeading}
+            </h2>
+          ) : headingContent}
+          logoPreviewSrc={displayLogoPreviewSrc}
+          connected={displayConnected}
+          isEditMode={displayIsEditMode}
+          inputLocked={displayInputLocked}
           previewButtonLabel="Select Preview Image"
           loadingInputMessage={loadingInputMessage}
-          isLoading={isLoading}
+          isLoading={requestedAccountNotFound ? false : isLoading}
           acceptedInput={ACCEPTED_IMAGE_INPUT_ACCEPT}
           logoFileInputRef={logoFileInputRef}
           onFileChange={handleLogoFileChange}
@@ -364,7 +282,9 @@ export default function EditAccountPageClient() {
       <div
         className={`${swappedOuterCardClass} scrollbar-hide flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto pr-1`}
       >
-        <h2 className="mx-auto mb-4 w-full max-w-[46rem] text-center text-lg font-semibold text-[#5981F3]">
+        <h2 className={`mx-auto mb-4 w-full max-w-[46rem] text-center text-lg font-semibold ${
+          requestedAccountNotFound ? 'text-red-500' : 'text-[#5981F3]'
+        }`}>
           {accountDataHeading}
         </h2>
         <CreateAccountFormPanel
@@ -375,34 +295,24 @@ export default function EditAccountPageClient() {
           contentWidthClass="max-w-none"
           idPrefix="edit-account-top-right-"
           formHeading=""
-          topRowContent={(
-            <WalletAccountSelection
-              className="px-3"
-              showHardhatAccountSelector={showHardhatAccountSelector}
-              hardhatSignerAvailable={hardhatSignerAvailable}
-              hardhatDeploymentAccountCount={hardhatDeploymentAccountCount}
-              disabled={isSaving}
-              value={walletSelection}
-              onChange={handleWalletSelectionChange}
-            />
-          )}
-          connected={editSessionReady}
-          publicKey={publicKey}
+          connected={displayConnected}
+          publicKey={displayPublicKey}
           publicKeyLocked
-          formData={formData}
-          errors={errors}
+          formData={displayFormData}
+          errors={requestedAccountNotFound ? {} : errors}
           descriptionTextareaRef={descriptionTextareaRef}
-          inputLocked={false}
-          isLoading={isLoading}
+          inputLocked={displayInputLocked}
+          isLoading={requestedAccountNotFound ? false : isLoading}
           loadingInputMessage={loadingInputMessage}
-          isSaving={isSaving}
-          isEditMode={isEditMode}
-          submitLabel={submitLabel}
-          hasUnsavedChanges={hasUnsavedChanges}
-          canCreateMissingAccount={canCreateMissingAccount}
-          disableSubmit={disableSubmit}
-          disableRevert={disableRevert}
-          isRevertNoop={isRevertNoop}
+          isSaving={requestedAccountNotFound ? false : isSaving}
+          isEditMode={displayIsEditMode}
+          submitLabel={requestedAccountNotFound ? 'Edit Account' : submitLabel}
+          hasUnsavedChanges={requestedAccountNotFound ? false : hasUnsavedChanges}
+          canCreateMissingAccount={requestedAccountNotFound ? false : canCreateMissingAccount}
+          disableSubmit={requestedAccountNotFound ? true : disableSubmit}
+          disableRevert={requestedAccountNotFound ? true : disableRevert}
+          isRevertNoop={requestedAccountNotFound ? true : isRevertNoop}
+          errorValueDisplay={requestedAccountNotFound}
           onPublicKeyChange={handlePublicKeyChange}
           onPublicKeyBlur={handlePublicKeyBlur}
           onChange={handleChange}
@@ -429,19 +339,6 @@ export default function EditAccountPageClient() {
             {pageTitle}
           </h1>
           <div className="flex items-center justify-self-end gap-2">
-            {showBorderToggleButton ? (
-              <button
-                type="button"
-                className={`rounded border px-3 py-1 text-sm font-semibold text-black ${
-                  showAllBorders
-                    ? 'border-green-500 bg-green-500 hover:bg-green-400'
-                    : 'border-red-500 bg-red-500 hover:bg-red-400'
-                }`}
-                onClick={() => setShowAllBorders((prev) => !prev)}
-              >
-                Toggle Borders
-              </button>
-            ) : null}
             <OpenCloseBtn
               id="createAccountBackButton"
               onClick={() => router.back()}

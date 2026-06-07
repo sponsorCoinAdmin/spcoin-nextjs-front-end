@@ -38,6 +38,7 @@ type Props = {
   disableSubmit: boolean;
   disableRevert: boolean;
   isRevertNoop: boolean;
+  errorValueDisplay?: boolean;
   onPublicKeyChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onPublicKeyBlur: () => void | Promise<void>;
   onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
@@ -69,6 +70,7 @@ export default function CreateAccountFormPanel({
   disableSubmit,
   disableRevert,
   isRevertNoop,
+  errorValueDisplay = false,
   onPublicKeyChange,
   onPublicKeyBlur,
   onChange,
@@ -93,6 +95,7 @@ export default function CreateAccountFormPanel({
     'Connection Required and input is prohibited until connection is established.';
   const disconnectedMetaMaskMessage = 'MetaMask Connection Required';
   const inputErrorClasses = 'border-red-500 bg-red-900/40';
+  const errorValueClasses = errorValueDisplay ? ' border-red-500 bg-red-900/40 font-semibold text-red-500' : '';
   const loadingFieldClasses = 'bg-red-900/60 border-red-500 cursor-not-allowed';
   const lockedInputMessage = isLoading ? loadingInputMessage : disconnectedInputMessage;
   const lockedPublicKeyMessage = 'Account Address cannot be edited from Edit Account.';
@@ -167,7 +170,7 @@ export default function CreateAccountFormPanel({
                     ? `Required for Code Account Operations | Error: ${errors.publicKey}`
                     : 'Required for Code Account Operations'
                 }
-                className={`${requiredInputClasses}${!connected ? ' text-center font-bold text-red-500' : ''}${errors.publicKey ? ` ${inputErrorClasses}` : ''}${getLoadingClassesForField('publicKey') ? ` ${getLoadingClassesForField('publicKey')}` : ''}`}
+                className={`${requiredInputClasses}${!connected ? ' text-center font-bold text-red-500' : ''}${errorValueClasses}${errors.publicKey ? ` ${inputErrorClasses}` : ''}${getLoadingClassesForField('publicKey') ? ` ${getLoadingClassesForField('publicKey')}` : ''}`}
                 onChange={onPublicKeyChange}
                 onBlur={onPublicKeyBlur}
                 onMouseEnter={() => setHoveredInput('publicKey')}
@@ -239,7 +242,7 @@ export default function CreateAccountFormPanel({
                               : 'Optional'
                           }
                           title={composedTitle}
-                          className={`${optionalInputClasses} min-h-[42px] resize-none overflow-hidden whitespace-pre-wrap break-words ${fieldError ? ` ${inputErrorClasses}` : ''}${getLoadingClassesForField(name) ? ` ${getLoadingClassesForField(name)}` : ''}`}
+                          className={`${optionalInputClasses}${errorValueClasses} min-h-[42px] resize-none overflow-hidden whitespace-pre-wrap break-words ${fieldError ? ` ${inputErrorClasses}` : ''}${getLoadingClassesForField(name) ? ` ${getLoadingClassesForField(name)}` : ''}`}
                           onMouseEnter={() => setHoveredInput(name)}
                           onMouseLeave={() => setHoveredInput(null)}
                           onBlur={() => onFieldBlur(key)}
@@ -260,7 +263,7 @@ export default function CreateAccountFormPanel({
                               : 'Optional'
                           }
                           title={composedTitle}
-                          className={`${optionalInputClasses}${isLinkField && href && hoveringLinkTextField === key ? ' underline text-blue-300 cursor-pointer' : ''}${fieldError ? ` ${inputErrorClasses}` : ''}${getLoadingClassesForField(name) ? ` ${getLoadingClassesForField(name)}` : ''}`}
+                          className={`${optionalInputClasses}${errorValueClasses}${isLinkField && href && hoveringLinkTextField === key ? ' underline text-blue-300 cursor-pointer' : ''}${fieldError ? ` ${inputErrorClasses}` : ''}${getLoadingClassesForField(name) ? ` ${getLoadingClassesForField(name)}` : ''}`}
                           onClick={(e) => {
                             if (!href || inputLocked) return;
                             const clickedOnText = shouldOpenLinkFromInputClick(

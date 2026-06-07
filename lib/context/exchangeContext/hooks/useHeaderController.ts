@@ -2,6 +2,7 @@
 'use client';
 
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
@@ -230,7 +231,12 @@ function getAccountDisplayName(acct: any): string {
   );
 }
 
+function normalizeAddressKey(value: unknown): string {
+  return String(value ?? '').trim().toLowerCase();
+}
+
 export function useHeaderController() {
+  const router = useRouter();
   const panelTree = usePanelTree();
   const closePanel = (panelTree as any).closePanel;
   const openAccountComponent = useOpenAccountComponent();
@@ -358,6 +364,9 @@ export function useHeaderController() {
 
   const headerAccountLogoURL = (headerAccount as any)?.logoURL;
   const headerAccountAddress = (headerAccount as any)?.address;
+  const canEditHeaderAccount =
+    normalizeAddressKey(headerAccountAddress) !== '' &&
+    normalizeAddressKey(headerAccountAddress) === normalizeAddressKey(activeAccount?.address);
 
   const headerAccountName = useMemo(() => {
     if (!headerAccount) return undefined;
@@ -428,6 +437,9 @@ export function useHeaderController() {
 
     const sizePx = 38;
     const isAccountPanelActive = currentDisplay === SP_COIN_DISPLAY.ACCOUNT_PANEL;
+    const editAccountHref = `/EditAccount?account=${encodeURIComponent(
+      String(headerAccountAddress ?? '').trim(),
+    )}`;
     const headerName = (headerAccountName ?? '').trim() || 'Unknown';
     const rewardsRoleLabel = unSponsor || claimSponsor
       ? 'Sponsor'
@@ -437,7 +449,9 @@ export function useHeaderController() {
           ? 'Agent'
           : 'Account';
     const headerLogoTitle =
-      currentDisplay === SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL
+      isAccountPanelActive && canEditHeaderAccount
+        ? `Edit ${headerName} Account`
+        : currentDisplay === SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL
         ? `${rewardsRoleLabel} ${headerName} Account Details`
         : 'Active Account';
 
@@ -446,15 +460,17 @@ export function useHeaderController() {
       {
         type: 'button',
         className: `bg-transparent p-0 m-0 focus:outline-none ${
-          isAccountPanelActive ? '' : 'hover:opacity-90'
+          isAccountPanelActive && !canEditHeaderAccount ? '' : 'hover:opacity-90'
         }`,
-        'aria-label': isAccountPanelActive ? 'Active Account' : 'Open Account Panel',
+        'aria-label': isAccountPanelActive && canEditHeaderAccount ? 'Edit Account' : isAccountPanelActive ? 'Active Account' : 'Open Account Panel',
         title: headerLogoTitle,
         'data-role': 'ActiveAccount',
         'data-address': headerAccountAddress ?? '',
-        disabled: isAccountPanelActive,
+        disabled: isAccountPanelActive && !canEditHeaderAccount,
         onClick: isAccountPanelActive
-          ? undefined
+          ? canEditHeaderAccount
+            ? () => router.push(editAccountHref)
+            : undefined
           : () => {
               const modeToOpen =
                 currentDisplay === SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL
@@ -485,11 +501,12 @@ export function useHeaderController() {
         loading: 'lazy',
         decoding: 'async',
         className: `h-[38px] w-[38px] object-contain rounded bg-transparent ${
-          isAccountPanelActive ? 'cursor-default' : 'cursor-pointer'
+          isAccountPanelActive && !canEditHeaderAccount ? 'cursor-default' : 'cursor-pointer'
         }`,
       }),
     );
   }, [
+    router,
     currentDisplay,
     previewToken,
     buyToken,
@@ -497,6 +514,7 @@ export function useHeaderController() {
     tokenState,
     headerAccountLogoURL,
     headerAccountAddress,
+    canEditHeaderAccount,
     openAccountComponent,
     activeDefault,
     claimSponsor,

@@ -16,7 +16,6 @@ type Params = {
   logoFile: File | null;
   isLoadingAccount: boolean;
   isSaving: boolean;
-  savedAccountName: string;
 };
 
 export function useCreateAccountDerivedState({
@@ -28,7 +27,6 @@ export function useCreateAccountDerivedState({
   logoFile,
   isLoadingAccount,
   isSaving,
-  savedAccountName,
 }: Params) {
   const publicKeyTrimmed = publicKey.trim();
 
@@ -64,7 +62,7 @@ export function useCreateAccountDerivedState({
       ? 'Update Account'
       : 'Edit Account';
   const isRevertNoop = !hasUnsavedChanges;
-  const pageTitle = savedAccountName ? 'Edit Account' : 'Edit Account';
+  const pageTitle = 'Edit Account';
 
   const isLoading = isLoadingAccount || isSaving;
   const isEditMode = !isLoadingAccount && !isSaving;

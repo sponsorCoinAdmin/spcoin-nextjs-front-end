@@ -62,23 +62,37 @@ type AccountHeaderProps = {
   title: string;
   logoURL?: string;
   onClose?: () => void;
+  onEdit?: () => void;
 };
 
-function AccountHeader({ title, logoURL, onClose }: AccountHeaderProps) {
+function AccountHeader({ title, logoURL, onClose, onEdit }: AccountHeaderProps) {
+  const iconClassName = 'flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#11162A]';
+  const iconContent = logoURL ? (
+    <img
+      src={logoURL}
+      alt={title}
+      className="h-full w-full object-contain"
+    />
+  ) : (
+    <Wallet className="h-5 w-5 text-[#7893ff]" />
+  );
+
   return (
     <div className="relative border-b border-slate-700/70 px-5 py-4">
       <div className="flex items-center gap-3">
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#11162A]">
-          {logoURL ? (
-            <img
-              src={logoURL}
-              alt={title}
-              className="h-full w-full object-contain"
-            />
-          ) : (
-            <Wallet className="h-5 w-5 text-[#7893ff]" />
-          )}
-        </span>
+        {onEdit ? (
+          <button
+            type="button"
+            onClick={onEdit}
+            className={`${iconClassName} transition-opacity hover:opacity-90`}
+            aria-label={`Edit ${title}`}
+            title={`Edit ${title}`}
+          >
+            {iconContent}
+          </button>
+        ) : (
+          <span className={iconClassName}>{iconContent}</span>
+        )}
       </div>
       <h2 className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 text-center text-xl font-bold leading-tight">
         {title}
@@ -120,8 +134,6 @@ type AccountMetaTableProps = {
   website: string;
   email: string;
   description: string;
-  canEditAccount: boolean;
-  onEdit: () => void;
 };
 
 function AccountMetaTable({
@@ -131,8 +143,6 @@ function AccountMetaTable({
   website,
   email,
   description,
-  canEditAccount,
-  onEdit,
 }: AccountMetaTableProps) {
   const th = 'px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-300/80';
   const cell = 'px-3 py-3 text-sm align-middle';
@@ -208,17 +218,6 @@ function AccountMetaTable({
           <div className={valueWrap}>{description}</div>
         </div>
 
-        {canEditAccount ? (
-          <div className={`${zebraA} col-span-2 p-0`}>
-            <button
-              type="button"
-              onClick={onEdit}
-              className="flex h-[55px] w-full items-center justify-center rounded-[12px] bg-[#243056] text-[20px] font-bold text-[#5981F3] transition-[color,background-color] duration-300 hover:cursor-pointer hover:text-green-500"
-            >
-              Edit Account
-            </button>
-          </div>
-        ) : null}
       </div>
     </div>
   );
@@ -307,10 +306,20 @@ export default function AccountComponent({
 
   const depositAddr = formatShortAddress(String(accountToRender?.address ?? '').trim());
   const title = accountToRender.name ? `Account ${accountToRender.name}` : 'Account Details';
+  const editAccountHref = `/EditAccount?account=${encodeURIComponent(
+    String(accountToRender?.address ?? '').trim(),
+  )}`;
 
   return (
     <div id="ACCOUNT_INFO" className="bg-[#0b0e19]">
-      {showHeader ? <AccountHeader title={title} logoURL={accountToRender.logoURL} onClose={onClose} /> : null}
+      {showHeader ? (
+        <AccountHeader
+          title={title}
+          logoURL={accountToRender.logoURL}
+          onClose={onClose}
+          onEdit={canEditAccount ? () => router.push(editAccountHref) : undefined}
+        />
+      ) : null}
 
       <div className="px-5 py-4">
       {depositAddr ? <AccountAddressPill label={depositLabel} address={depositAddr} /> : null}
@@ -322,8 +331,6 @@ export default function AccountComponent({
         website={website}
         email={email}
         description={description}
-        canEditAccount={canEditAccount}
-        onEdit={() => router.push('/EditAccount')}
       />
       </div>
     </div>

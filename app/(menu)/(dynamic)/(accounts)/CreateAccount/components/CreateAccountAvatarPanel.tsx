@@ -1,7 +1,6 @@
 'use client';
 
-import React from 'react';
-import { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import DisconnectedControl from './DisconnectedControl';
 
@@ -43,8 +42,31 @@ export default function CreateAccountAvatarPanel({
   headingContent,
 }: Props) {
   const [isUploadHovered, setIsUploadHovered] = useState(false);
+  const [previewSize, setPreviewSize] = useState(410);
+  const previewStageRef = useRef<HTMLDivElement | null>(null);
   const uploadControlClass = 'mx-auto w-full';
   const uploadControlTextClass = 'px-6 text-center text-[120%] font-bold';
+  const previewSizeBuffer = 50;
+  const minPreviewSize = 180;
+  const maxPreviewSize = 410;
+
+  useEffect(() => {
+    const stage = previewStageRef.current;
+    if (!stage || typeof ResizeObserver === 'undefined') return;
+
+    const updatePreviewSize = () => {
+      const rect = stage.getBoundingClientRect();
+      const availableSize = Math.min(rect.width, maxPreviewSize) - previewSizeBuffer;
+      const nextSize = Math.floor(Math.max(minPreviewSize, availableSize));
+      setPreviewSize((current) => (current === nextSize ? current : nextSize));
+    };
+
+    updatePreviewSize();
+    const observer = new ResizeObserver(updatePreviewSize);
+    observer.observe(stage);
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <section
       className={`${panelMarginClass} ${avatarPanelBorderClass} order-1 flex h-full w-full flex-col items-end justify-start pr-0 pt-4 pb-0 pl-0`}
@@ -56,21 +78,37 @@ export default function CreateAccountAvatarPanel({
           {avatarHeading}
         </h2>
       )}
-      <div className="flex h-full w-full max-w-[46rem] flex-1 min-h-0 flex-col items-center gap-4">
-        <div className="flex w-full max-w-[410px] flex-col gap-4">
+      <div className="flex w-full max-w-[46rem] flex-col items-center gap-4">
+        <div ref={previewStageRef} className="flex w-full justify-center">
           {showImage ? (
-            <div className="mx-auto flex h-[410px] w-[410px] items-center justify-center overflow-hidden rounded border border-slate-600 bg-[#0D1324] p-0">
+            <div
+              className="mx-auto flex shrink-0 items-center justify-center overflow-hidden rounded border border-slate-600 bg-[#0D1324] p-0"
+              style={{
+                width: `${previewSize}px`,
+                height: `${previewSize}px`,
+                maxWidth: '100%',
+                maxHeight: '100%',
+              }}
+            >
               {logoPreviewSrc ? (
                 <img
                   src={logoPreviewSrc}
                   alt="Account logo preview"
-                  className="h-full w-full object-cover"
+                  className="h-full w-full object-contain"
                 />
               ) : (
                 <span className="text-sm text-slate-300">No logo found on server</span>
               )}
             </div>
           ) : null}
+        </div>
+        <div
+          className="shrink-0"
+          style={{
+            width: `${previewSize}px`,
+            maxWidth: '100%',
+          }}
+        >
           <input
             ref={logoFileInputRef}
             id="logoFileUpload"
