@@ -492,6 +492,7 @@ export default function SponsorCoinLabPage({
     appendLog,
   });
   const {
+    allowContractNetworkModeSelection,
     activeContractChainIdDisplayValue,
     activeContractChainIdDisplayWidthCh,
     activeContractNetworkName,
@@ -1749,6 +1750,7 @@ export default function SponsorCoinLabPage({
     isRemovingContractFromApp,
     requestRemoveContractFromApp,
     setMode,
+    allowContractNetworkModeSelection,
     shouldPromptHardhatBaseConnect,
     connectHardhatBaseFromNetworkLabel,
     activeContractNetworkName,
