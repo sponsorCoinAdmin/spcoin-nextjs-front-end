@@ -14,6 +14,7 @@ import { useExchangeContext } from '@/lib/context/hooks';
 import { STATUS, type spCoinAccount } from '@/lib/structure';
 import { normalizeAddress } from '@/lib/utils/address';
 import { loadHardhatWalletAccounts } from './accountSelection';
+import { addWalletAccount, initializeWalletAccounts } from './walletAccounts';
 import type {
   SpCoinWalletAccount,
   SpCoinWalletSelectionRequest,
@@ -76,6 +77,7 @@ export function SpCoinWalletProvider({ children }: { children: React.ReactNode }
     try {
       const accounts = await loadHardhatWalletAccounts(31337);
       setHardhatAccounts(accounts);
+      initializeWalletAccounts(accounts);
     } catch (error) {
       setHardhatAccountsError(
         error instanceof Error ? error.message : 'Unable to load Hardhat wallet accounts.',
@@ -83,7 +85,7 @@ export function SpCoinWalletProvider({ children }: { children: React.ReactNode }
     } finally {
       setHardhatAccountsLoading(false);
     }
-  }, []);
+  }, [initializeWalletAccounts]);
 
   useEffect(() => {
     void refreshHardhatAccounts();
@@ -109,6 +111,13 @@ export function SpCoinWalletProvider({ children }: { children: React.ReactNode }
       setWalletSource('hardhat');
     }
   }, [appChainId, isConnected, walletSource]);
+
+  // Track MetaMask address in wallet accounts map
+  useEffect(() => {
+    if (metamaskAddress) {
+      addWalletAccount(metamaskAddress);
+    }
+  }, [metamaskAddress, addWalletAccount]);
 
   const session = useMemo<SpCoinWalletSession>(() => {
     const normalizedMetaMaskAddress = normalizeAddress(String(metamaskAddress ?? ''));

@@ -10,9 +10,11 @@ import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { suppressNextOverlayClose } from '@/lib/context/exchangeContext/hooks/useOverlayCloseHandler';
 import useOpenAccountComponent from '@/lib/context/hooks/useOpenAccountComponent';
 import { useBuyTokenContract, usePreviewTokenContract, useSellTokenContract } from '@/lib/context/hooks';
-
-// ✅ ExchangeContext access (for accounts.* + address/logo)
+import { isSpCoinWalletAccount } from '@/lib/spCoinWallet';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
+import { useSpCoinWallet } from '@/lib/spCoinWallet';
+
+const REOPEN_WALLET_KEY = 'spcoin-reopen-wallet-after-edit';
 
 /** Title override mapper */
 const headerTitleOverrides = new Map<SP_COIN_DISPLAY, string>();
@@ -240,6 +242,7 @@ export function useHeaderController() {
   const panelTree = usePanelTree();
   const closePanel = (panelTree as any).closePanel;
   const openAccountComponent = useOpenAccountComponent();
+  const { closeWallet, openWallet } = useSpCoinWallet();
 
   const [isConfigOpen, setIsConfigOpen] = useState(false);
 
@@ -366,7 +369,7 @@ export function useHeaderController() {
   const headerAccountAddress = (headerAccount as any)?.address;
   const canEditHeaderAccount =
     normalizeAddressKey(headerAccountAddress) !== '' &&
-    normalizeAddressKey(headerAccountAddress) === normalizeAddressKey(activeAccount?.address);
+    isSpCoinWalletAccount(headerAccountAddress);
 
   const headerAccountName = useMemo(() => {
     if (!headerAccount) return undefined;
@@ -469,7 +472,14 @@ export function useHeaderController() {
         disabled: isAccountPanelActive && !canEditHeaderAccount,
         onClick: isAccountPanelActive
           ? canEditHeaderAccount
-            ? () => router.push(editAccountHref)
+            ? () => {
+                closeWallet();
+                sessionStorage.setItem(REOPEN_WALLET_KEY, 'true');
+                if (typeof closePanel === 'function') {
+                  closePanel(SP_COIN_DISPLAY.ACCOUNT_PANEL, 'Header:EditAccountNav');
+                }
+                router.push(editAccountHref);
+              }
             : undefined
           : () => {
               const modeToOpen =
@@ -551,6 +561,13 @@ export function useHeaderController() {
     },
     [closePanel, currentDisplay],
   );
+
+  useEffect(() => {
+    if (currentDisplay === SP_COIN_DISPLAY.ACCOUNT_PANEL) return;
+    if (sessionStorage.getItem(REOPEN_WALLET_KEY) !== 'true') return;
+    sessionStorage.removeItem(REOPEN_WALLET_KEY);
+    openWallet();
+  }, [currentDisplay, openWallet]);
 
   return {
     title,

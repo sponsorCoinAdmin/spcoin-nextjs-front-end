@@ -1750,7 +1750,6 @@ export default function SponsorCoinLabPage({
     isRemovingContractFromApp,
     requestRemoveContractFromApp,
     setMode,
-    allowContractNetworkModeSelection,
     shouldPromptHardhatBaseConnect,
     connectHardhatBaseFromNetworkLabel,
     activeContractNetworkName,

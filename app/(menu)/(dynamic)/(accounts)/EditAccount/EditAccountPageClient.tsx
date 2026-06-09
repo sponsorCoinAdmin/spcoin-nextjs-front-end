@@ -14,6 +14,8 @@ import { useCreateAccountForm } from '../CreateAccount/hooks';
 import { ACCEPTED_IMAGE_INPUT_ACCEPT, normalizeAddress } from '../CreateAccount/utils';
 import spCoin_png from '@/public/assets/miscellaneous/spCoin.png';
 
+const REOPEN_WALLET_KEY = 'spcoin-reopen-wallet-after-edit';
+
 const BAD_ACCOUNT_IMAGE_SRC = '/assets/miscellaneous/badTokenAddressImage.png';
 
 export default function EditAccountPageClient() {
@@ -135,7 +137,6 @@ export default function EditAccountPageClient() {
 
   const panelMarginClass = 'mx-auto';
   const sponsorInnerPanelClass = 'rounded-xl border border-[#31416F] bg-[#0B1220]';
-  const sponsorSwappedPanelClass = 'rounded-xl border border-[#31416F] bg-[#11162A]';
   const avatarPanelBorderClass = showAllBorders
     ? `${sponsorInnerPanelClass} outline outline-2 outline-red-500`
     : sponsorInnerPanelClass;
@@ -290,8 +291,8 @@ export default function EditAccountPageClient() {
         <CreateAccountFormPanel
           panelMarginClass={panelMarginClass}
           accountPanelBorderClass={showAllBorders
-            ? `${sponsorSwappedPanelClass} outline outline-2 outline-yellow-400`
-            : sponsorSwappedPanelClass}
+            ? 'outline outline-2 outline-yellow-400'
+            : ''}
           contentWidthClass="max-w-none"
           idPrefix="edit-account-top-right-"
           formHeading=""
@@ -323,6 +324,11 @@ export default function EditAccountPageClient() {
     </section>
   );
 
+  const handleGoBack = () => {
+    sessionStorage.setItem(REOPEN_WALLET_KEY, 'true');
+    router.back();
+  };
+
   return (
     <main className="relative flex w-full flex-col overflow-hidden bg-[#0B1020] px-4 pt-3 pb-6 text-white md:px-6">
       <div className="mx-auto flex w-full max-w-[1720px] flex-1 flex-col">
@@ -341,7 +347,7 @@ export default function EditAccountPageClient() {
           <div className="flex items-center justify-self-end gap-2">
             <OpenCloseBtn
               id="createAccountBackButton"
-              onClick={() => router.back()}
+              onClick={handleGoBack}
               expandedTitle="Go Back"
               expandedAriaLabel="Go Back"
             />

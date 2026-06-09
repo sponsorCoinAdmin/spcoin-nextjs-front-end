@@ -2,11 +2,7 @@ import type { spCoinAccount } from '@/lib/structure';
 
 export const DEFAULT_ACCOUNT_REGISTRY_MAX_RECORDS = 64;
 
-export type AccountRegistryRecord = spCoinAccount & {
-  email?: string;
-  emailAddress?: string;
-  contactEmail?: string;
-};
+export type AccountRegistryRecord = spCoinAccount;
 
 type AccountRegistryEntry = {
   record: AccountRegistryRecord;

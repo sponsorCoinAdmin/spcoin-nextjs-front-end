@@ -3,11 +3,12 @@
 
 import React, { memo, useMemo } from 'react';
 import { getAccountLogo } from '@/lib/context/helpers/assetHelpers';
-import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import type { spCoinAccount } from '@/lib/structure';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
 import BaseListRow from './BaseListRow';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import useOpenAccountComponent from '@/lib/context/hooks/useOpenAccountComponent';
 
 const LOG_TIME = false as const;
 
@@ -37,6 +38,7 @@ function AccountListItem({
   role: _role,
   textMode = 'Standard',
 }: AccountListItemProps) {
+  const openAccountComponent = useOpenAccountComponent();
   const logo = getAccountLogo(account);
 
   const addrRaw = account?.address ?? '';
@@ -81,20 +83,34 @@ function AccountListItem({
     };
   })();
 
+  const modeFromRole = (role: string): SP_COIN_DISPLAY => {
+    const r = role.trim().toLowerCase();
+    if (r === 'recipient') return SP_COIN_DISPLAY.RECIPIENT_ACCOUNT;
+    if (r === 'agent') return SP_COIN_DISPLAY.AGENT_ACCOUNT;
+    if (r === 'sponsor') return SP_COIN_DISPLAY.SPONSOR_ACCOUNT;
+    return SP_COIN_DISPLAY.ACTIVE_ACCOUNT;
+  };
+
   return (
     <BaseListRow
       avatarSrc={logo}
       title={text.title}
       subtitle={text.subtitle}
+      avatarClickAction="select"
+      trailingControl="info"
       onAvatarClick={() => {
         debugLog.log?.('pick', { addressRaw: addrRaw, addressNormalized: addrNorm });
         onPick(account.address);
       }}
       onInfoClick={() => {
-        alert(`Wallet JSON:\n${JSON.stringify(account, null, 2)}`);
+        openAccountComponent({
+          account,
+          mode: modeFromRole(_role),
+          source: 'AccountListItem:onInfoClick',
+        });
       }}
       onInfoContextMenu={() => {
-        alert(`${account.name} Record:\n${stringifyBigInt(account.logoURL || '')}`);
+        debugLog.log?.('contextMenu:noop');
       }}
     />
   );

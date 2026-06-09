@@ -179,34 +179,6 @@ export default function ContractNetworkCard({
         <section className="rounded-xl border border-[#31416F] bg-[#0B1220] p-4">
           <h3 className="text-center text-lg font-semibold text-[#5981F3]">Network Controller</h3>
           <div className="grid grid-cols-1 gap-3">
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="ml-auto flex flex-wrap items-center justify-end gap-4">
-                <label className="flex items-center gap-2 text-[#8FA8FF]">
-                  <input
-                    type="radio"
-                    name="sponsorcoin-lab-network-mode"
-                    value="hardhat"
-                    checked={network.mode === 'hardhat'}
-                    disabled={!network.allowModeSelection}
-                    onChange={() => network.setMode('hardhat')}
-                    className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
-                  />
-                  <span>Hardhat EC2</span>
-                </label>
-                <label className="flex items-center gap-2 text-[#8FA8FF]">
-                  <input
-                    type="radio"
-                    name="sponsorcoin-lab-network-mode"
-                    value="metamask"
-                    checked={network.mode === 'metamask'}
-                    disabled={!network.allowModeSelection}
-                    onChange={() => network.setMode('metamask')}
-                    className="h-3.5 w-3.5 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
-                  />
-                  <span>MetaMask</span>
-                </label>
-              </div>
-            </div>
             <div className="grid gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto] md:items-center">
               <span
                 className={`text-sm font-semibold ${

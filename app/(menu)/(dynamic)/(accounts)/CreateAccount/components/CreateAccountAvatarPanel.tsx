@@ -69,7 +69,7 @@ export default function CreateAccountAvatarPanel({
 
   return (
     <section
-      className={`${panelMarginClass} ${avatarPanelBorderClass} order-1 flex h-full w-full flex-col items-end justify-start pr-0 pt-4 pb-0 pl-0`}
+      className={`${panelMarginClass} ${avatarPanelBorderClass} order-1 flex h-full w-full flex-col items-center justify-start pr-0 pt-4 pb-0 pl-0`}
     >
       {headingContent ? (
         <div className="mb-0 w-full max-w-[56rem] px-6 pt-0 md:px-8">{headingContent}</div>
@@ -82,7 +82,7 @@ export default function CreateAccountAvatarPanel({
         <div ref={previewStageRef} className="flex w-full justify-center">
           {showImage ? (
             <div
-              className="mx-auto flex shrink-0 items-center justify-center overflow-hidden rounded border border-slate-600 bg-[#0D1324] p-0"
+              className="mx-auto flex shrink-0 items-center justify-center overflow-hidden bg-[#0D1324] p-0"
               style={{
                 width: `${previewSize}px`,
                 height: `${previewSize}px`,

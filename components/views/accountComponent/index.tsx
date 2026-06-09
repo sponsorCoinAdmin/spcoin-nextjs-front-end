@@ -7,6 +7,8 @@ import { Wallet, X } from 'lucide-react';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { SP_COIN_DISPLAY, type spCoinAccount } from '@/lib/structure';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
+import { isSpCoinWalletAccount } from '@/lib/spCoinWallet';
+import { useSpCoinWallet } from '@/lib/spCoinWallet';
 import {
   accountRegistry,
   getAccountRegistryRecord,
@@ -20,7 +22,7 @@ function addressToText(addr: unknown): string {
   if (typeof addr === 'string') return addr;
   if (typeof addr === 'object') {
     const a = addr as Record<string, unknown>;
-    const candidates = [a['address'], a['hex'], a['bech32'], a['value'], a['id']].filter(Boolean) as string[];
+    const candidates = [a.address, a.hex, a.bech32, a.value, a.id].filter(Boolean) as string[];
     if (candidates.length > 0) return String(candidates[0]);
     try {
       return JSON.stringify(addr);
@@ -47,7 +49,7 @@ function normalizeAddressKey(value: unknown) {
   return (value ?? '').toString().trim().toLowerCase();
 }
 
-type AccountComponentProps = {
+interface AccountComponentProps {
   account?: spCoinAccount;
   onClose?: () => void;
   showHeader?: boolean;
@@ -56,16 +58,19 @@ type AccountComponentProps = {
     | SP_COIN_DISPLAY.SPONSOR_ACCOUNT
     | SP_COIN_DISPLAY.RECIPIENT_ACCOUNT
     | SP_COIN_DISPLAY.AGENT_ACCOUNT;
-};
+}
 
-type AccountHeaderProps = {
+interface AccountHeaderProps {
   title: string;
   logoURL?: string;
+  editAccountHref?: string;
   onClose?: () => void;
-  onEdit?: () => void;
-};
+  onEditClick?: () => void;
+}
 
-function AccountHeader({ title, logoURL, onClose, onEdit }: AccountHeaderProps) {
+function AccountHeader({ title, logoURL, editAccountHref, onClose, onEditClick }: AccountHeaderProps) {
+  const router = useRouter();
+  const { closeWallet } = useSpCoinWallet();
   const iconClassName = 'flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#11162A]';
   const iconContent = logoURL ? (
     <img
@@ -77,13 +82,26 @@ function AccountHeader({ title, logoURL, onClose, onEdit }: AccountHeaderProps) 
     <Wallet className="h-5 w-5 text-[#7893ff]" />
   );
 
+  const handleEditClick = () => {
+    if (onEditClick) {
+      onEditClick();
+    } else if (editAccountHref) {
+      closeWallet();
+      sessionStorage.setItem('spcoin-reopen-wallet-after-edit', 'true');
+      if (onClose) {
+        onClose();
+      }
+      router.push(editAccountHref);
+    }
+  };
+
   return (
     <div className="relative border-b border-slate-700/70 px-5 py-4">
       <div className="flex items-center gap-3">
-        {onEdit ? (
+        {editAccountHref ? (
           <button
             type="button"
-            onClick={onEdit}
+            onClick={handleEditClick}
             className={`${iconClassName} transition-opacity hover:opacity-90`}
             aria-label={`Edit ${title}`}
             title={`Edit ${title}`}
@@ -111,10 +129,10 @@ function AccountHeader({ title, logoURL, onClose, onEdit }: AccountHeaderProps) 
   );
 }
 
-type AccountAddressPillProps = {
+interface AccountAddressPillProps {
   label: string;
   address: string;
-};
+}
 
 function AccountAddressPill({ label, address }: AccountAddressPillProps) {
   return (
@@ -127,14 +145,14 @@ function AccountAddressPill({ label, address }: AccountAddressPillProps) {
   );
 }
 
-type AccountMetaTableProps = {
+interface AccountMetaTableProps {
   name: string;
   symbol: string;
   address: string;
   website: string;
   email: string;
   description: string;
-};
+}
 
 function AccountMetaTable({
   name,
@@ -229,7 +247,6 @@ export default function AccountComponent({
   showHeader = true,
   mode,
 }: AccountComponentProps) {
-  const router = useRouter();
   const ctx = useContext(ExchangeContextState);
   const accounts = ctx?.exchangeContext?.accounts;
   const [registryRefreshTick, setRegistryRefreshTick] = useState(0);
@@ -286,21 +303,14 @@ export default function AccountComponent({
 
   const canEditAccount =
     normalizeAddressKey(accountToRender?.address) !== '' &&
-    normalizeAddressKey(accountToRender?.address) === normalizeAddressKey(accounts?.activeAccount?.address);
+    isSpCoinWalletAccount(accountToRender?.address);
 
   const address = addressToText(accountToRender?.address);
   const name = fallback(accountToRender?.name);
   const symbol = fallback(accountToRender?.symbol);
   const description = fallback(accountToRender?.description);
   const website = (accountToRender?.website ?? '').toString().trim();
-  const email = (
-    (accountToRender as any)?.email ??
-    (accountToRender as any)?.emailAddress ??
-    (accountToRender as any)?.contactEmail ??
-    ''
-  )
-    .toString()
-    .trim();
+  const email = (accountToRender?.email ?? '').toString().trim();
 
   if (!accountToRender) return null;
 
@@ -317,7 +327,7 @@ export default function AccountComponent({
           title={title}
           logoURL={accountToRender.logoURL}
           onClose={onClose}
-          onEdit={canEditAccount ? () => router.push(editAccountHref) : undefined}
+          editAccountHref={canEditAccount ? editAccountHref : undefined}
         />
       ) : null}
 

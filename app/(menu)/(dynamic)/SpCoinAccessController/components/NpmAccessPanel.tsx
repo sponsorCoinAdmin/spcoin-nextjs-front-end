@@ -1,7 +1,8 @@
 // File: app/(menu)/(dynamic)/SpCoinAccessController/components/NpmAccessPanel.tsx
-import React from 'react';
+import React, { useState } from 'react';
 import OpenCloseBtn from '@/components/views/Buttons/OpenCloseBtn';
 import { NativeSelectChevron } from '@/components/views/SelectChevron';
+import { Eye, EyeOff } from 'lucide-react';
 import { NpmStatusBlock } from './StatusBlocks';
 import { normalizeProjectRelativePath } from '../helpers';
 
@@ -62,6 +63,7 @@ export default function NpmAccessPanel(props: NpmAccessPanelProps) {
     onAdjustVersion,
     onRunManagerAction,
   } = props;
+  const [showNpmOtp, setShowNpmOtp] = React.useState(false);
   const hasValidAuthenticatorCode = npmOtp.trim().length === 6;
   const isActiveSelectedVersion =
     String(selectedVersion || '').trim().length > 0 &&
@@ -193,18 +195,29 @@ export default function NpmAccessPanel(props: NpmAccessPanelProps) {
 
             <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
               <span className="text-sm font-semibold text-[#8FA8FF]">Authenticator</span>
-              <input
-                type="password"
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                value={npmOtp}
-                onChange={(event) => onNpmOtpChange(event.target.value.replace(/\D/g, '').slice(0, 6))}
-                placeholder="6-digit code from your npm authenticator app"
-                className={`w-full rounded-xl border border-[#31416F] px-4 py-2 text-white outline-none transition-colors focus:border-[#8FA8FF] ${
-                  showUploadAuthenticatorCodeRequired ? 'bg-red-500/25' : 'bg-[#0B1020]'
-                }`}
-                aria-label="Enter the current 6-digit code from your npm authenticator app"
-              />
+              <div className="relative">
+                <input
+                  type={showNpmOtp ? 'text' : 'password'}
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  value={npmOtp}
+                  onChange={(event) => onNpmOtpChange(event.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="6-digit code from your npm authenticator app"
+                  className={`w-full rounded-xl border border-[#31416F] px-4 py-2 pr-12 text-white outline-none transition-colors focus:border-[#8FA8FF] ${
+                    showUploadAuthenticatorCodeRequired ? 'bg-red-500/25' : 'bg-[#0B1020]'
+                  }`}
+                  aria-label="Enter the current 6-digit code from your npm authenticator app"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNpmOtp((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8FA8FF] hover:text-white"
+                  aria-label={showNpmOtp ? 'Hide authenticator code' : 'Show authenticator code'}
+                  title={showNpmOtp ? 'Hide code' : 'Show code'}
+                >
+                  {showNpmOtp ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </label>
 
             <div className="grid gap-3 md:grid-cols-3">

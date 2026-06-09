@@ -1,7 +1,7 @@
 // File: components/views/BrowserPanes/Header.tsx
 'use client';
 
-import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useMemo, useContext } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 
 import spCoin_png from '@/public/assets/miscellaneous/spCoin.png';
@@ -11,13 +11,14 @@ import ConnectNetworkButtonProps from '@/components/views/Buttons/Connect/Connec
 
 import { labelForPath, PATH_TO_ID, TAB_REGISTRY } from '@/lib/utils/tabs/registry';
 import { closeTabByHref, useTabs } from '@/lib/utils/tabs/tabsManager';
+import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 
-// ✅ NEW: prevent “double close” when header X also triggers overlay close handlers
+// NEW: prevent "double close" when header X also triggers overlay close handlers
 import { suppressNextOverlayClose } from '@/lib/context/exchangeContext/hooks/useOverlayCloseHandler';
 
 const NON_NAV_HOVER = '__non_nav_hover__';
 
-// ✅ Header X spam guard (per-tab). Keep small + explicit.
+// Header X spam guard (per-tab). Keep small + explicit.
 const HEADER_X_CLOSE_SPAM_DELAY_MS = 30;
 
 const normalizePath = (value: string) => {
@@ -28,6 +29,10 @@ const normalizePath = (value: string) => {
   return noQuery;
 };
 
+function normalizeAddressKey(value: unknown): string {
+  return String(value ?? '').trim().toLowerCase();
+}
+
 export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
@@ -35,16 +40,21 @@ export default function Header() {
 
   const [hoveredTab, setHoveredTab] = useState<string | null>(null);
 
-  // 🔹 Source of truth for open tabs (persists via localStorage inside useTabs)
+  // Source of truth for open tabs (persists via localStorage inside useTabs)
   const { hrefs: openTabs } = useTabs(); // hrefs = list of open tab paths
+
+  // Get activeAccount from ExchangeContext
+  const exchangeCtx = useContext(ExchangeContextState);
+  const accounts = exchangeCtx?.exchangeContext?.accounts;
+  const activeAccountAddress = accounts?.activeAccount?.address;
 
   const TEST_LINK = process.env.NEXT_PUBLIC_SHOW_TEST_TAB === 'true';
   const EXCHANGE_LINK = process.env.NEXT_PUBLIC_SHOW_EXCHANGE_TAB === 'true';
   const SPCOIN_LINK = process.env.NEXT_PUBLIC_SHOW_SPCOIN_TAB === 'true';
 
   const orderedOpenTabs = useMemo(() => {
-    const orderByPath = new Map<string, number>(
-      (Object.values(TAB_REGISTRY) as Array<{ path: string; order: number }>).map((tab) => [tab.path, tab.order]),
+    const orderByPath = new Map(
+      Object.values(TAB_REGISTRY).map((tab) => [tab.path, tab.order]),
     );
 
     return [...openTabs].sort((left, right) => {
@@ -58,7 +68,7 @@ export default function Header() {
   const orderedHeaderTabs = useMemo(() => {
     const testHref = TEST_LINK ? ['/Test'] : [];
     return [...testHref, ...orderedOpenTabs].sort((left, right) => {
-      const explicitOrder: Record<string, number> = {
+      const explicitOrder = {
         '/EditAccount': 24,
         '/Test': 25,
         '/SpCoinAccessController': 26,
@@ -71,9 +81,9 @@ export default function Header() {
     });
   }, [TEST_LINK, orderedOpenTabs]);
 
-  // ✅ Lock per-tab close clicks (prevents double-fire / bubbled duplicates)
-  const closingTabsRef = useRef<Set<string>>(new Set());
-  const closeTimersRef = useRef<Map<string, number>>(new Map());
+  // Lock per-tab close clicks (prevents double-fire / bubbled duplicates)
+  const closingTabsRef = useRef(new Set<string>());
+  const closeTimersRef = useRef(new Map<string, number>());
 
   // Cleanup pending timers on unmount (avoids stateful refs leaking timeouts in dev/hmr)
   useEffect(() => {
@@ -85,19 +95,19 @@ export default function Header() {
   }, []);
 
   useEffect(() => {
-    const onFocusLink = (event: Event) => {
-      const customEvent = event as CustomEvent<{ href?: string }>;
+    const onFocusLink = (event) => {
+      const customEvent = event;
       if (customEvent.detail?.href !== '/Exchange') return;
       exchangeLinkRef.current?.focus();
     };
 
-    window.addEventListener('header:focus-link', onFocusLink as EventListener);
-    return () => window.removeEventListener('header:focus-link', onFocusLink as EventListener);
+    window.addEventListener('header:focus-link', onFocusLink);
+    return () => window.removeEventListener('header:focus-link', onFocusLink);
   }, []);
 
   /** Close handler: delegate to tabsManager and navigate if the active tab is closed. */
   const closeTab = useCallback(
-    (href: string) => {
+    (href) => {
       if (closingTabsRef.current.has(href)) return;
 
       // Lock immediately
@@ -126,7 +136,7 @@ export default function Header() {
     [router],
   );
 
-  const linkClass = (href: string) => {
+  const linkClass = (href) => {
     const isHovered = hoveredTab === href;
     const isActive =
       normalizePath(pathname ?? '') === normalizePath(href) &&
@@ -140,8 +150,18 @@ export default function Header() {
     `;
   };
 
-  const onMouseEnter = (href: string) => () => setHoveredTab(href);
+  const onMouseEnter = (href) => () => setHoveredTab(href);
   const onMouseLeave = () => setHoveredTab(null);
+
+  // Compute the dynamic href for EditAccount tab with account parameter
+  const editAccountHref = useMemo(() => {
+    const address = String(activeAccountAddress ?? '').trim();
+    const hasAddress = normalizeAddressKey(address) !== '';
+    return hasAddress ? `/EditAccount?account=${encodeURIComponent(address)}` : '/EditAccount';
+  }, [activeAccountAddress]);
+
+  // Get base href (without query params) for active comparison
+  const getBaseHref = (href) => href.split('?')[0] ?? href;
 
   return (
     <header className="text-white border-b border-[#21273a] py-4 bg-[#77808e] px-[15px] lg:px-[33px]">
@@ -183,6 +203,9 @@ export default function Header() {
               {orderedHeaderTabs.map((href) => {
                 const isHovered = hoveredTab === href; // show 'X' only on hover
                 const isTestTab = href === '/Test';
+                // Use dynamic href for EditAccount tab
+                const actualHref = href === '/EditAccount' ? editAccountHref : href;
+                const baseHref = getBaseHref(actualHref);
                 return (
                   <div
                     key={`tab-${href}`}
@@ -190,7 +213,7 @@ export default function Header() {
                     onMouseEnter={onMouseEnter(href)}
                     onMouseLeave={onMouseLeave}
                   >
-                    <Link href={href} className={`${linkClass(href)} ${isTestTab ? '' : 'pr-7'}`}>
+                    <Link href={actualHref} className={`${linkClass(baseHref)} ${isTestTab ? '' : 'pr-7'}`}>
                       {href === '/Test' ? 'Test' : labelForPath(href)}
                     </Link>
 
@@ -205,7 +228,7 @@ export default function Header() {
                         ].join(' ')}
                         style={{ color: '#fb923c' }}
 
-                        // ✅ IMPORTANT: run suppression EARLY (pointer down), in CAPTURE phase
+                        // IMPORTANT: run suppression EARLY (pointer down), in CAPTURE phase
                         onPointerDownCapture={(e) => {
                           suppressNextOverlayClose(`header-tab-x:${href}`, 'Header:TabX');
                           e.preventDefault();

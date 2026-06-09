@@ -23,6 +23,7 @@ export interface spCoinAccount {
   status: STATUS;
   address: Address;
   logoURL?: string;
+  email?: string;
   balance: bigint;
 }
 
