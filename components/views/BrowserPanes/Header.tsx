@@ -53,8 +53,9 @@ export default function Header() {
   const SPCOIN_LINK = process.env.NEXT_PUBLIC_SHOW_SPCOIN_TAB === 'true';
 
   const orderedOpenTabs = useMemo(() => {
-    const orderByPath = new Map(
-      Object.values(TAB_REGISTRY).map((tab) => [tab.path, tab.order]),
+    const entries = Object.values(TAB_REGISTRY);
+    const orderByPath = new Map<string, number>(
+      entries.map((tab) => [tab.path, tab.order]),
     );
 
     return [...openTabs].sort((left, right) => {
@@ -68,7 +69,7 @@ export default function Header() {
   const orderedHeaderTabs = useMemo(() => {
     const testHref = TEST_LINK ? ['/Test'] : [];
     return [...testHref, ...orderedOpenTabs].sort((left, right) => {
-      const explicitOrder = {
+      const explicitOrder: Record<string, number> = {
         '/EditAccount': 24,
         '/Test': 25,
         '/SpCoinAccessController': 26,
@@ -95,8 +96,8 @@ export default function Header() {
   }, []);
 
   useEffect(() => {
-    const onFocusLink = (event) => {
-      const customEvent = event;
+    const onFocusLink = (event: Event) => {
+      const customEvent = event as CustomEvent<{ href?: string }>;
       if (customEvent.detail?.href !== '/Exchange') return;
       exchangeLinkRef.current?.focus();
     };
@@ -107,7 +108,7 @@ export default function Header() {
 
   /** Close handler: delegate to tabsManager and navigate if the active tab is closed. */
   const closeTab = useCallback(
-    (href) => {
+    (href: string) => {
       if (closingTabsRef.current.has(href)) return;
 
       // Lock immediately
@@ -136,7 +137,7 @@ export default function Header() {
     [router],
   );
 
-  const linkClass = (href) => {
+  const linkClass = (href: string) => {
     const isHovered = hoveredTab === href;
     const isActive =
       normalizePath(pathname ?? '') === normalizePath(href) &&
@@ -150,7 +151,7 @@ export default function Header() {
     `;
   };
 
-  const onMouseEnter = (href) => () => setHoveredTab(href);
+  const onMouseEnter = (href: string) => () => setHoveredTab(href);
   const onMouseLeave = () => setHoveredTab(null);
 
   // Compute the dynamic href for EditAccount tab with account parameter
@@ -161,7 +162,7 @@ export default function Header() {
   }, [activeAccountAddress]);
 
   // Get base href (without query params) for active comparison
-  const getBaseHref = (href) => href.split('?')[0] ?? href;
+  const getBaseHref = (href: string) => href.split('?')[0] ?? href;
 
   return (
     <header className="text-white border-b border-[#21273a] py-4 bg-[#77808e] px-[15px] lg:px-[33px]">
