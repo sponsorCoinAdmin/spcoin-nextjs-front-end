@@ -492,7 +492,6 @@ export default function SponsorCoinLabPage({
     appendLog,
   });
   const {
-    allowContractNetworkModeSelection,
     activeContractChainIdDisplayValue,
     activeContractChainIdDisplayWidthCh,
     activeContractNetworkName,
