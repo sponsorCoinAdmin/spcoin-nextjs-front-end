@@ -3,10 +3,13 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Wallet, X } from 'lucide-react';
+import { useAccount } from 'wagmi';
 
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { SP_COIN_DISPLAY, type spCoinAccount } from '@/lib/structure';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
+import { useWalletActionOverlay } from '@/lib/context/WalletActionOverlayContext';
+import { useExchangeContext } from '@/lib/context/hooks';
 import { isSpCoinWalletAccount } from '@/lib/spCoinWallet';
 import { useSpCoinWallet } from '@/lib/spCoinWallet';
 import {
@@ -16,6 +19,10 @@ import {
 } from '@/lib/context/accounts/accountRegistry';
 import { ACCOUNT_REGISTRY_UPDATED_EVENT } from '@/lib/accounts/accountEvents';
 import { msTableTw } from '@/components/views/RadioOverlayPanels/msTableTw';
+import CreateAccountAvatarPanel from '@/app/(menu)/(dynamic)/(accounts)/CreateAccount/components/CreateAccountAvatarPanel';
+import CreateAccountFormPanel from '@/app/(menu)/(dynamic)/(accounts)/CreateAccount/components/CreateAccountFormPanel';
+import { ACCEPTED_IMAGE_INPUT_ACCEPT } from '@/app/(menu)/(dynamic)/(accounts)/CreateAccount/utils';
+import { useCreateAccountForm } from '@/app/(menu)/(dynamic)/(accounts)/CreateAccount/hooks';
 
 function addressToText(addr: unknown): string {
   if (addr == null) return 'N/A';
@@ -312,6 +319,46 @@ export default function AccountComponent({
   const website = (accountToRender?.website ?? '').toString().trim();
   const email = (accountToRender?.email ?? '').toString().trim();
 
+  const { address: metamaskAddress, isConnected } = useAccount();
+  const { runWithWalletAction } = useWalletActionOverlay();
+  const { exchangeContext } = useExchangeContext();
+  const appChainId = Number(exchangeContext?.network?.appChainId ?? 0);
+  const walletSource = useSpCoinWallet().walletSource;
+
+  const {
+    publicKey,
+    formData,
+    errors,
+    handlePublicKeyChange,
+    handlePublicKeyBlur,
+    handleChange,
+    handleFieldBlur,
+    handleRevertChanges,
+    handleSubmit,
+    handleLogoFileChange,
+    logoFileInputRef,
+    descriptionTextareaRef,
+    logoPreviewSrc,
+    isLoading,
+    isSaving,
+    isEditMode,
+    hasUnsavedChanges,
+    canCreateMissingAccount,
+    disableSubmit,
+    disableRevert,
+    isRevertNoop,
+    submitLabel,
+  } = useCreateAccountForm({
+    connected: Boolean(isConnected || walletSource === 'hardhat'),
+    activeAddress: metamaskAddress,
+    targetAddress: String(accountToRender?.address ?? '').trim(),
+    authSignerSource: walletSource === 'hardhat' ? 'ec2-base' : 'metamask',
+    hardhatDeploymentAccountNumber: 0,
+    appChainId,
+    hardhatSignerAvailable: true,
+    runWithWalletAction,
+  });
+
   if (!accountToRender) return null;
 
   const depositAddr = formatShortAddress(String(accountToRender?.address ?? '').trim());
@@ -331,18 +378,66 @@ export default function AccountComponent({
         />
       ) : null}
 
-      <div className="px-5 py-4">
-      {depositAddr ? <AccountAddressPill label={depositLabel} address={depositAddr} /> : null}
+      <form onSubmit={handleSubmit} className="px-5 py-4">
+        {depositAddr ? <AccountAddressPill label={depositLabel} address={depositAddr} /> : null}
 
-      <AccountMetaTable
-        name={name}
-        symbol={symbol}
-        address={address}
-        website={website}
-        email={email}
-        description={description}
-      />
-      </div>
+        <CreateAccountAvatarPanel
+          panelMarginClass="mb-4"
+          avatarPanelBorderClass=""
+          avatarHeading={name}
+          logoPreviewSrc={logoPreviewSrc}
+          connected={Boolean(isConnected || walletSource === 'hardhat')}
+          isEditMode={isEditMode}
+          inputLocked={!isEditMode}
+          previewButtonLabel="Select Preview Image"
+          loadingInputMessage="Loading or updating account data. Input is temporarily disabled."
+          isLoading={isLoading}
+          acceptedInput={ACCEPTED_IMAGE_INPUT_ACCEPT}
+          logoFileInputRef={logoFileInputRef}
+          onFileChange={handleLogoFileChange}
+          showImage={true}
+          showButton={isEditMode}
+        />
+
+        <CreateAccountFormPanel
+          panelMarginClass="mb-4"
+          accountPanelBorderClass=""
+          contentWidthClass="max-w-[56rem]"
+          idPrefix="account-component-"
+          formHeading=""
+          connected={Boolean(isConnected || walletSource === 'hardhat')}
+          publicKey={publicKey}
+          publicKeyLocked
+          formData={formData}
+          errors={errors}
+          descriptionTextareaRef={descriptionTextareaRef}
+          inputLocked={!isEditMode}
+          isLoading={isLoading}
+          loadingInputMessage="Loading or updating account data. Input is temporarily disabled."
+          isSaving={isSaving}
+          isEditMode={isEditMode}
+          submitLabel={submitLabel}
+          hasUnsavedChanges={hasUnsavedChanges}
+          canCreateMissingAccount={canCreateMissingAccount}
+          disableSubmit={disableSubmit}
+          disableRevert={disableRevert}
+          isRevertNoop={isRevertNoop}
+          onPublicKeyChange={handlePublicKeyChange}
+          onPublicKeyBlur={handlePublicKeyBlur}
+          onChange={handleChange}
+          onFieldBlur={handleFieldBlur}
+          onRevert={handleRevertChanges}
+        />
+
+        <AccountMetaTable
+          name={name}
+          symbol={symbol}
+          address={address}
+          website={website}
+          email={email}
+          description={description}
+        />
+      </form>
     </div>
   );
 }
