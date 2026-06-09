@@ -8,7 +8,9 @@ import { SP_COIN_DISPLAY } from '@/lib/structure';
 import BaseListRow from './BaseListRow';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import useOpenAccountComponent from '@/lib/context/hooks/useOpenAccountComponent';
+import useOpenAccountComponent, {
+  type AccountComponentMode,
+} from '@/lib/context/hooks/useOpenAccountComponent';
 
 const LOG_TIME = false as const;
 
@@ -83,7 +85,7 @@ function AccountListItem({
     };
   })();
 
-  const modeFromRole = (role: string): SP_COIN_DISPLAY => {
+  const modeFromRole = (role: string): AccountComponentMode => {
     const r = role.trim().toLowerCase();
     if (r === 'recipient') return SP_COIN_DISPLAY.RECIPIENT_ACCOUNT;
     if (r === 'agent') return SP_COIN_DISPLAY.AGENT_ACCOUNT;

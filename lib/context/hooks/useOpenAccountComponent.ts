@@ -18,6 +18,8 @@ type AccountComponentMode =
   | SP_COIN_DISPLAY.RECIPIENT_ACCOUNT
   | SP_COIN_DISPLAY.AGENT_ACCOUNT;
 
+export type { AccountComponentMode };
+
 type OpenAccountComponentOptions = {
   account?: spCoinAccount;
   close?: () => void;
