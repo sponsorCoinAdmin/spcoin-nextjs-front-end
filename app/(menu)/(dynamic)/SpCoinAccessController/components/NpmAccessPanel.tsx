@@ -1,5 +1,5 @@
 // File: app/(menu)/(dynamic)/SpCoinAccessController/components/NpmAccessPanel.tsx
-import React, { useState } from 'react';
+import React from 'react';
 import OpenCloseBtn from '@/components/views/Buttons/OpenCloseBtn';
 import { NativeSelectChevron } from '@/components/views/SelectChevron';
 import { Eye, EyeOff } from 'lucide-react';
