@@ -12,33 +12,12 @@ import { useWalletActionOverlay } from '@/lib/context/WalletActionOverlayContext
 import { useExchangeContext } from '@/lib/context/hooks';
 import { isSpCoinWalletAccount } from '@/lib/spCoinWallet';
 import { useSpCoinWallet } from '@/lib/spCoinWallet';
-import {
-  accountRegistry,
-  getAccountRegistryRecord,
-  type AccountRegistryRecord,
-} from '@/lib/context/accounts/accountRegistry';
+import { accountRegistry, getAccountRegistryRecord, type AccountRegistryRecord } from '@/lib/context/accounts/accountRegistry';
 import { ACCOUNT_REGISTRY_UPDATED_EVENT } from '@/lib/accounts/accountEvents';
-import { msTableTw } from '@/components/views/RadioOverlayPanels/msTableTw';
 import CreateAccountAvatarPanel from '@/app/(menu)/(dynamic)/(accounts)/CreateAccount/components/CreateAccountAvatarPanel';
 import CreateAccountFormPanel from '@/app/(menu)/(dynamic)/(accounts)/CreateAccount/components/CreateAccountFormPanel';
 import { ACCEPTED_IMAGE_INPUT_ACCEPT } from '@/app/(menu)/(dynamic)/(accounts)/CreateAccount/utils';
 import { useCreateAccountForm } from '@/app/(menu)/(dynamic)/(accounts)/CreateAccount/hooks';
-
-function addressToText(addr: unknown): string {
-  if (addr == null) return 'N/A';
-  if (typeof addr === 'string') return addr;
-  if (typeof addr === 'object') {
-    const a = addr as Record<string, unknown>;
-    const candidates = [a.address, a.hex, a.bech32, a.value, a.id].filter(Boolean) as string[];
-    if (candidates.length > 0) return String(candidates[0]);
-    try {
-      return JSON.stringify(addr);
-    } catch {
-      return String(addr);
-    }
-  }
-  return String(addr);
-}
 
 const fallback = (v: unknown) => {
   const s = (v ?? '').toString().trim();
@@ -152,102 +131,6 @@ function AccountAddressPill({ label, address }: AccountAddressPillProps) {
   );
 }
 
-interface AccountMetaTableProps {
-  name: string;
-  symbol: string;
-  address: string;
-  website: string;
-  email: string;
-  description: string;
-}
-
-function AccountMetaTable({
-  name,
-  symbol,
-  address,
-  website,
-  email,
-  description,
-}: AccountMetaTableProps) {
-  const th = 'px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-300/80';
-  const cell = 'px-3 py-3 text-sm align-middle';
-  const valueWrap = 'box-border w-full whitespace-normal break-all pr-[5px]';
-  const zebraA = 'bg-[rgba(56,78,126,0.35)]';
-  const zebraB = 'bg-[rgba(156,163,175,0.25)]';
-  const tableGrid = 'grid grid-cols-[max-content_minmax(0,1fr)]';
-
-  return (
-    <div
-      id="MANAGE ACCOUNT"
-      className="scrollbar-hide mb-4 mt-0 w-full min-w-0 overflow-x-hidden overflow-y-auto rounded-xl border border-black"
-    >
-      <div id="MANAGE ACCOUNT TABLE" className={`${tableGrid} w-full min-w-0`}>
-        <div className="contents">
-          <div className={`${msTableTw.theadRow} ${th} whitespace-nowrap border-b border-black`}>Field Name</div>
-          <div className={`${msTableTw.theadRow} ${th} border-b border-black`}>value</div>
-        </div>
-
-        <div className="contents">
-          <div className={`${zebraA} ${cell} whitespace-nowrap border-b border-black`}>address:</div>
-          <div className={`${zebraA} ${cell} min-w-0 border-b border-black`}>
-            <div className={valueWrap}><span className="block w-full break-all font-mono">{fallback(address)}</span></div>
-          </div>
-        </div>
-
-        <div className="contents">
-          <div className={`${zebraB} ${cell} whitespace-nowrap border-b border-black`}>Name</div>
-          <div className={`${zebraB} ${cell} min-w-0 border-b border-black`}><div className={valueWrap}>{name}</div></div>
-        </div>
-
-        <div className="contents">
-          <div className={`${zebraA} ${cell} whitespace-nowrap border-b border-black`}>Symbol</div>
-          <div className={`${zebraA} ${cell} min-w-0 border-b border-black`}><div className={valueWrap}>{symbol}</div></div>
-        </div>
-
-        <div className="contents">
-          <div className={`${zebraB} ${cell} whitespace-nowrap border-b border-black`}>webSite</div>
-          <div className={`${zebraB} ${cell} min-w-0 border-b border-black`}>
-            <div className={valueWrap}>
-              {website ? (
-                <a
-                  href={website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block w-full break-all underline decoration-slate-400/60 underline-offset-2 hover:decoration-slate-200"
-                >
-                  {website}
-                </a>
-              ) : 'N/A'}
-            </div>
-          </div>
-        </div>
-
-        <div className="contents">
-          <div className={`${zebraA} ${cell} whitespace-nowrap border-b border-black`}>email:</div>
-          <div className={`${zebraA} ${cell} min-w-0 border-b border-black`}>
-            <div className={valueWrap}>
-              {email ? (
-                <a
-                  href={email.startsWith('mailto:') ? email : `mailto:${email}`}
-                  className="block w-full break-all underline decoration-slate-400/60 underline-offset-2 hover:decoration-slate-200"
-                >
-                  {email.replace(/^mailto:/i, '')}
-                </a>
-              ) : 'N/A'}
-            </div>
-          </div>
-        </div>
-
-        <div className={`${zebraB} ${cell} col-span-2 min-w-0`}>
-          <div className="mb-2 whitespace-nowrap text-center">Description:</div>
-          <div className={valueWrap}>{description}</div>
-        </div>
-
-      </div>
-    </div>
-  );
-}
-
 export default function AccountComponent({
   account: forcedAccount,
   onClose,
@@ -311,13 +194,6 @@ export default function AccountComponent({
   const canEditAccount =
     normalizeAddressKey(accountToRender?.address) !== '' &&
     isSpCoinWalletAccount(accountToRender?.address);
-
-  const address = addressToText(accountToRender?.address);
-  const name = fallback(accountToRender?.name);
-  const symbol = fallback(accountToRender?.symbol);
-  const description = fallback(accountToRender?.description);
-  const website = (accountToRender?.website ?? '').toString().trim();
-  const email = (accountToRender?.email ?? '').toString().trim();
 
   const { address: metamaskAddress, isConnected } = useAccount();
   const { runWithWalletAction } = useWalletActionOverlay();
@@ -384,7 +260,7 @@ export default function AccountComponent({
         <CreateAccountAvatarPanel
           panelMarginClass="mb-4"
           avatarPanelBorderClass=""
-          avatarHeading={name}
+          avatarHeading={fallback(accountToRender?.name)}
           logoPreviewSrc={logoPreviewSrc}
           connected={Boolean(isConnected || walletSource === 'hardhat')}
           isEditMode={isEditMode}
@@ -427,15 +303,6 @@ export default function AccountComponent({
           onChange={handleChange}
           onFieldBlur={handleFieldBlur}
           onRevert={handleRevertChanges}
-        />
-
-        <AccountMetaTable
-          name={name}
-          symbol={symbol}
-          address={address}
-          website={website}
-          email={email}
-          description={description}
         />
       </form>
     </div>

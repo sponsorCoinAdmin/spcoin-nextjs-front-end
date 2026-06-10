@@ -42,13 +42,13 @@ export default function CreateAccountAvatarPanel({
   headingContent,
 }: Props) {
   const [isUploadHovered, setIsUploadHovered] = useState(false);
-  const [previewSize, setPreviewSize] = useState(410);
+  const [previewSize, setPreviewSize] = useState(560);
   const previewStageRef = useRef<HTMLDivElement | null>(null);
   const uploadControlClass = 'mx-auto w-full';
   const uploadControlTextClass = 'px-6 text-center text-[120%] font-bold';
   const previewSizeBuffer = 50;
   const minPreviewSize = 180;
-  const maxPreviewSize = 410;
+  const maxPreviewSize = 560;
 
   useEffect(() => {
     const stage = previewStageRef.current;
@@ -71,14 +71,14 @@ export default function CreateAccountAvatarPanel({
     <section
       className={`${panelMarginClass} ${avatarPanelBorderClass} order-1 flex h-full w-full flex-col items-center justify-start pr-0 pt-4 pb-0 pl-0`}
     >
-      {headingContent ? (
+{headingContent ? (
         <div className="mb-0 w-full max-w-[56rem] px-6 pt-0 md:px-8">{headingContent}</div>
       ) : (
-        <h2 className="mb-4 w-full max-w-[46rem] text-center text-lg font-semibold text-[#5981F3]">
+        <h2 className="mb-4 w-full max-w-[56rem] text-center text-lg font-semibold text-[#5981F3]">
           {avatarHeading}
         </h2>
       )}
-      <div className="flex w-full max-w-[46rem] flex-col items-center gap-4">
+      <div className="flex w-full max-w-[56rem] flex-col items-center gap-4">
         <div ref={previewStageRef} className="flex w-full justify-center">
           {showImage ? (
             <div
