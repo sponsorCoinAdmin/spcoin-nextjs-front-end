@@ -4,9 +4,9 @@
 import React, { useContext, useMemo } from 'react';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { SP_COIN_DISPLAY, type spCoinAccount } from '@/lib/structure';
-import AccountComponent from '@/components/views/accountComponent';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import AccountPanelContent from '@/components/views/RadioOverlayPanels/AccountPanel/AccountPanelContent';
 
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_ACCOUNT_PANEL === 'true';
 const debugLog = createDebugLogger('AccountPanelEmpty', DEBUG_ENABLED, false);
@@ -52,6 +52,14 @@ export default function AccountPanel(_props: Props) {
   }, [accounts, activeMember]);
 
   const isActiveAccount = !!selectedAccount;
+  const contentMode =
+    activeMember === 'SPONSOR_ACCOUNT'
+      ? SP_COIN_DISPLAY.SPONSOR_ACCOUNT
+      : activeMember === 'RECIPIENT_ACCOUNT'
+        ? SP_COIN_DISPLAY.RECIPIENT_ACCOUNT
+        : activeMember === 'AGENT_ACCOUNT'
+          ? SP_COIN_DISPLAY.AGENT_ACCOUNT
+          : SP_COIN_DISPLAY.ACTIVE_ACCOUNT;
 
   // ✅ early return AFTER hooks
   if (!vAccountPanel) return null;
@@ -71,7 +79,7 @@ export default function AccountPanel(_props: Props) {
   }
 
   return (
-    <div id="ACCOUNT_PANEL">
+    <div id="ACCOUNT_PANEL" className="flex h-full min-h-0 flex-col">
       {activeMember === 'ACTIVE_ACCOUNT' && (
         <div id="ACTIVE_ACCOUNT" className="hidden" aria-hidden="true" />
       )}
@@ -85,7 +93,7 @@ export default function AccountPanel(_props: Props) {
         <div id="AGENT_ACCOUNT" className="hidden" aria-hidden="true" />
       )}
       {isActiveAccount ? (
-        <AccountComponent showHeader={false} />
+        <AccountPanelContent account={selectedAccount} showHeader={false} mode={contentMode} />
       ) : (
         <div className="p-4 text-sm text-slate-200">
           <p className="mb-2 font-semibold">No active account selected.</p>

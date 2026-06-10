@@ -1,1 +1,1 @@
-export { default } from '@/components/views/accountComponent';
+export { default } from './AccountPanelContent';

@@ -74,9 +74,11 @@ export default function CreateAccountAvatarPanel({
 {headingContent ? (
         <div className="mb-0 w-full max-w-[56rem] px-6 pt-0 md:px-8">{headingContent}</div>
       ) : (
-        <h2 className="mb-4 w-full max-w-[56rem] text-center text-lg font-semibold text-[#5981F3]">
-          {avatarHeading}
-        </h2>
+        avatarHeading ? (
+          <h2 className="mb-4 w-full max-w-[56rem] text-center text-lg font-semibold text-[#5981F3]">
+            {avatarHeading}
+          </h2>
+        ) : null
       )}
       <div className="flex w-full max-w-[56rem] flex-col items-center gap-4">
         <div ref={previewStageRef} className="flex w-full justify-center">

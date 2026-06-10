@@ -166,7 +166,7 @@ export default function SpCoinWalletPopup() {
       <div className="fixed inset-0 z-[10000] bg-black/35">
         <div
           className={[
-            'absolute left-1/2 top-1/2 w-[min(520px,calc(100vw-2rem))] max-h-[calc(100vh-2rem)] -translate-x-1/2 -translate-y-1/2 overflow-hidden',
+            'absolute left-1/2 top-1/2 flex h-[min(650px,calc(100vh-2rem))] w-[min(520px,calc(100vw-2rem))] flex-col -translate-x-1/2 -translate-y-1/2 overflow-hidden',
             'rounded-[15px] border border-[#2e3654] bg-[#0b0e19] text-white shadow-2xl',
           ].join(' ')}
           role="dialog"
@@ -275,9 +275,9 @@ export default function SpCoinWalletPopup() {
 
   return (
     <div className="fixed inset-0 z-[10000] bg-black/35">
-      <div
-        className={[
-          'absolute left-1/2 top-1/2 w-[min(520px,calc(100vw-2rem))] max-h-[calc(100vh-2rem)] -translate-x-1/2 -translate-y-1/2 overflow-hidden',
+        <div
+          className={[
+          'absolute left-1/2 top-1/2 flex h-[min(650px,calc(100vh-2rem))] w-[min(520px,calc(100vw-2rem))] flex-col -translate-x-1/2 -translate-y-1/2 overflow-hidden',
           'rounded-[15px] border border-[#2e3654] bg-[#0b0e19] text-white shadow-2xl',
         ].join(' ')}
         role="dialog"

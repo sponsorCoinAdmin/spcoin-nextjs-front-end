@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { ChevronDown, ChevronUp, Wallet } from 'lucide-react';
 
-import AccountComponent from '@/components/views/accountComponent';
+import AccountPanelContent from '@/components/views/RadioOverlayPanels/AccountPanel/AccountPanelContent';
 import { defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
 import { SP_COIN_DISPLAY, type spCoinAccount } from '@/lib/structure';
 import { normalizeAddress } from '@/lib/utils/address';
@@ -233,11 +233,11 @@ export default function Accounts({
   };
 
   return (
-    <>
+    <div className="flex min-h-0 flex-1 flex-col">
       {displayState === 'ACCOUNT_LIST' ? (
         <div
           className={[
-            'scrollbar-hide overflow-y-auto border-t border-slate-700/70',
+            'scrollbar-hide min-h-0 flex-1 overflow-y-auto border-t border-slate-700/70',
             'max-h-[360px]',
           ].join(' ')}
         >
@@ -257,14 +257,14 @@ export default function Accounts({
       ) : null}
 
       {displayState === 'ACCOUNT_META' && previewAccount ? (
-        <div className="border-t border-slate-700/70">
-          <AccountComponent
+        <div className="min-h-0 flex-1 border-t border-slate-700/70">
+          <AccountPanelContent
             account={previewAccount}
             onClose={handleClosePreview}
             mode={SP_COIN_DISPLAY.ACTIVE_ACCOUNT}
           />
         </div>
       ) : null}
-    </>
+    </div>
   );
 }

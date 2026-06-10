@@ -440,6 +440,7 @@ export function useHeaderController() {
 
     const sizePx = 38;
     const isAccountPanelActive = currentDisplay === SP_COIN_DISPLAY.ACCOUNT_PANEL;
+    const isActiveAccountPanelHeader = isAccountPanelActive && activeDefault;
     const editAccountHref = `/EditAccount?account=${encodeURIComponent(
       String(headerAccountAddress ?? '').trim(),
     )}`;
@@ -452,7 +453,9 @@ export function useHeaderController() {
           ? 'Agent'
           : 'Account';
     const headerLogoTitle =
-      isAccountPanelActive && canEditHeaderAccount
+      isActiveAccountPanelHeader
+        ? 'Active Account'
+        : isAccountPanelActive && canEditHeaderAccount
         ? `Edit ${headerName} Account`
         : currentDisplay === SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL
         ? `${rewardsRoleLabel} ${headerName} Account Details`
@@ -465,13 +468,15 @@ export function useHeaderController() {
         className: `bg-transparent p-0 m-0 focus:outline-none ${
           isAccountPanelActive && !canEditHeaderAccount ? '' : 'hover:opacity-90'
         }`,
-        'aria-label': isAccountPanelActive && canEditHeaderAccount ? 'Edit Account' : isAccountPanelActive ? 'Active Account' : 'Open Account Panel',
+        'aria-label': isActiveAccountPanelHeader || isAccountPanelActive && !canEditHeaderAccount ? 'Active Account' : isAccountPanelActive ? 'Edit Account' : 'Open Account Panel',
         title: headerLogoTitle,
         'data-role': 'ActiveAccount',
         'data-address': headerAccountAddress ?? '',
-        disabled: isAccountPanelActive && !canEditHeaderAccount,
+        disabled: isActiveAccountPanelHeader || isAccountPanelActive && !canEditHeaderAccount,
         onClick: isAccountPanelActive
-          ? canEditHeaderAccount
+          ? isActiveAccountPanelHeader
+            ? undefined
+            : canEditHeaderAccount
             ? () => {
                 closeWallet();
                 sessionStorage.setItem(REOPEN_WALLET_KEY, 'true');
@@ -511,7 +516,7 @@ export function useHeaderController() {
         loading: 'lazy',
         decoding: 'async',
         className: `h-[38px] w-[38px] object-contain rounded bg-transparent ${
-          isAccountPanelActive && !canEditHeaderAccount ? 'cursor-default' : 'cursor-pointer'
+          isActiveAccountPanelHeader || isAccountPanelActive && !canEditHeaderAccount ? 'cursor-default' : 'cursor-pointer'
         }`,
       }),
     );

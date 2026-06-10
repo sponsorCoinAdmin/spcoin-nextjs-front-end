@@ -8,6 +8,7 @@ import RadioOverlayPanelHost from '@/components/views/RadioOverlayPanelHost';
 
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import PanelGate from '@/components/utility/PanelGate';
+import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 
 const SHOW_ACTIVE =
   process.env.NEXT_PUBLIC_SHOW_ACTIVE_OVERLAY === 'true' ||
@@ -19,6 +20,8 @@ const AGENT_SUB_TITLE =
   process.env.NEXT_PUBLIC_AGENT_SUB_TITLE ?? 'Your Sponsor Agent';
 
 export default function MainTradingPanel() {
+  const accountPanelVisible = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_PANEL);
+
   return (
     <PanelGate panel={SP_COIN_DISPLAY.MAIN_TRADING_PANEL}>
       <div id="MAIN_TRADING_PANEL" style={{ position: 'relative' }}>
@@ -61,7 +64,15 @@ export default function MainTradingPanel() {
         {/* Spacer matches the lift so the panel doesn’t overlap the header */}
         <div aria-hidden className="h-[60px]" />
 
-        <div id="mainTradingPanel" className={styles.mainTradingPanel}>
+        <div
+          id="mainTradingPanel"
+          className={styles.mainTradingPanel}
+          style={
+            accountPanelVisible
+              ? { height: 'min(650px, calc(100vh - 230px))' }
+              : undefined
+          }
+        >
           <PanelGate panel={SP_COIN_DISPLAY.TRADE_CONTAINER_HEADER}>
             <div id="TRADE_CONTAINER_HEADER">
               <TradeContainerHeader />
