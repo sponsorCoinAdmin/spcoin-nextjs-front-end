@@ -20,6 +20,9 @@ type Props = {
   // Optional label-only actions
   onConnectTextClick?: () => void;     // when label is "Connect"
   onDisconnectTextClick?: () => void;  // when label is "Disconnect"
+
+  // Override the default button classes (e.g. for full-width edge-to-edge)
+  className?: string;
 };
 
 export default function ConnectMainButton({
@@ -34,6 +37,7 @@ export default function ConnectMainButton({
   onChevronClick,
   onConnectTextClick,
   onDisconnectTextClick,
+  className,
 }: Props) {
   const mainHoverClass = showHoverBg
     ? 'hover:bg-connect-hover-bg hover:text-connect-hover-color'
@@ -78,6 +82,7 @@ export default function ConnectMainButton({
         bg-connect-bg text-connect-color font-bold rounded-lg px-3 py-1.5
         flex items-center gap-2 text-sm outline-none border-0 focus:ring-0
         ${mainHoverClass}
+        ${className ?? ''}
       `}
     >
       {/* Network image — toggles dropdown only */}

@@ -7,7 +7,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import spCoin_png from '@/public/assets/miscellaneous/spCoin.png';
 import Image from 'next/image';
 import Link from 'next/link';
-import ConnectNetworkButtonProps from '@/components/views/Buttons/Connect/ConnectNetworkButton';
+import WalletConnectComponentProps from '@/components/views/Buttons/Connect/WalletConnectComponent';
 
 import { labelForPath, PATH_TO_ID, TAB_REGISTRY } from '@/lib/utils/tabs/registry';
 import { closeTabByHref, useTabs } from '@/lib/utils/tabs/tabsManager';
@@ -269,7 +269,7 @@ export default function Header() {
             onMouseDownCapture={(e) => e.stopPropagation()}
             onClick={(e) => e.stopPropagation()}
           >
-            <ConnectNetworkButtonProps
+            <WalletConnectComponentProps
               showName={false}
               showSymbol={true}
               showChevron={true}

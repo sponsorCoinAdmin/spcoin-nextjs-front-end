@@ -6,7 +6,7 @@ import Image from 'next/image';
 import cog_png from '@/public/assets/miscellaneous/cog.png';
 import { exchangeContextDump } from '@/lib/spCoin/guiUtils';
 import { useExchangeContext } from '@/lib/context/hooks';
-import ConnectNetworkButton from '@/components/views/Buttons/Connect/ConnectNetworkButton';
+import WalletConnectComponent from '@/components/views/Buttons/Connect/WalletConnectComponent';
 import { useHeaderController } from '@/lib/context/exchangeContext/hooks/useHeaderController';
 import OpenCloseBtn from '@/components/views/Buttons/OpenCloseBtn';
 import { SP_COIN_DISPLAY as SP_TREE, type spCoinAccount } from '@/lib/structure';
@@ -52,7 +52,7 @@ export default function TradeContainerHeader() {
     }
 
     return (
-      <ConnectNetworkButton
+      <WalletConnectComponent
         showName={false}
         showSymbol={false}
         showChevron={false}

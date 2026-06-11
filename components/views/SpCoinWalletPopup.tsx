@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import Image from 'next/image';
-import { RefreshCw, Wallet, X } from 'lucide-react';
 import { useConnect } from 'wagmi';
 
-import ConnectNetworkButton from '@/components/views/Buttons/Connect/ConnectNetworkButton';
+import WalletConnectComponent from '@/components/views/Buttons/Connect/WalletConnectComponent';
+import AccountRow from '@/lib/spCoinWallet/AccountRow';
+import WalletHeader from '@/components/views/WalletHeader';
 import { useSpCoinWallet } from '@/lib/spCoinWallet';
 import { useActiveAccount } from '@/lib/context/hooks/ExchangeContext/nested/accounts/useActiveAccount';
 import { getBlockChainName } from '@/lib/context/helpers/NetworkHelpers';
@@ -56,6 +56,29 @@ export default function SpCoinWalletPopup() {
   const normalizedWorkingAddress = normalizeAddress(
     session.signerAddress || session.activeAccountAddress || '',
   );
+
+  const headerAccount: SpCoinWalletAccount | undefined = useMemo(() => {
+    if (!normalizedWorkingAddress) return undefined;
+    if (walletSource === 'hardhat') {
+      return (
+        hardhatAccounts.find(
+          (a) => normalizeAddress(a.address) === normalizedWorkingAddress,
+        ) ?? {
+          address: session.signerAddress || session.activeAccountAddress || '',
+          label: 'Active Account',
+          source: 'hardhat' as const,
+        }
+      );
+    }
+    if (session.metamaskAuthorized && session.signerAddress) {
+      return {
+        address: session.signerAddress,
+        label: 'MetaMask Active Account',
+        source: 'metamask' as const,
+      };
+    }
+    return undefined;
+  }, [hardhatAccounts, normalizedWorkingAddress, session.signerAddress, session.activeAccountAddress, session.metamaskAuthorized, walletSource]);
   const currentNetworkName = Number.isFinite(session.appChainId) && session.appChainId > 0
     ? getBlockChainName(session.appChainId) || `Chain ${session.appChainId}`
     : 'Unknown Network';
@@ -173,55 +196,27 @@ export default function SpCoinWalletPopup() {
           aria-modal="true"
           aria-label="Select Network Account"
         >
-          <div className="relative border-b border-slate-700/70 px-5 pt-3 pb-[12px]">
-            <span
-              className="absolute left-[0.625rem] top-2 flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#11162A]"
-              title={currentNetworkTitle}
-            >
-              {Number.isFinite(session.appChainId) && session.appChainId > 0 ? (
-                <img
-                  src={`/assets/blockchains/${session.appChainId}/logo.png`}
-                  alt="Active network"
-                  className="h-8 w-8 rounded object-contain"
-                />
-              ) : (
-                <Wallet className="h-5 w-5 text-[#7893ff]" />
-              )}
-            </span>
-            <h2 className="pointer-events-none text-center text-xl font-bold leading-none">
-              Select Network Account
-            </h2>
-            <div className="-mt-[1px] flex items-center justify-center gap-2">
-              <div className="relative top-[4px] text-[15px] font-semibold text-slate-400">{selectionSummary}</div>
-              {walletSource === 'hardhat' ? (
-                <button
-                  type="button"
-                  onClick={() => void refreshHardhatAccounts()}
-                  className="relative top-[4px] flex items-center justify-center text-[#91a5ff] hover:text-white"
-                  title={`Refresh ${currentNetworkName} Accounts`}
-                  aria-label={`Refresh ${currentNetworkName} Accounts`}
-                >
-                  <RefreshCw className={['h-[15px] w-[15px]', hardhatAccountsLoading ? 'animate-spin' : ''].join(' ')} />
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => void connectMetaMask()}
-                  className="rounded bg-[#dba84f] px-3 py-2 text-sm font-bold text-black hover:bg-[#e9bb68]"
-                >
-                  {connectStatus === 'pending' ? 'Connecting' : 'Connect MetaMask'}
-                </button>
-              )}
-            </div>
-            <button
-              type="button"
-              onClick={handlePrimaryClose}
-              className="absolute right-[0.625rem] top-2 flex h-11 w-11 items-center justify-center rounded-full bg-[#303b68] hover:bg-[#3c487a]"
-              aria-label="Close account selection"
-            >
-              <X className="h-6 w-6 text-[#91a5ff]" />
-            </button>
-          </div>
+          <WalletHeader
+            mode="selection"
+            networkTitle={currentNetworkTitle}
+            appChainId={session.appChainId}
+            selectionSummary={selectionSummary}
+            walletSource={walletSource}
+            hardhatAccountsLoading={hardhatAccountsLoading}
+            connectStatus={connectStatus}
+            onRefresh={() => void refreshHardhatAccounts()}
+            onConnectMetaMask={() => void connectMetaMask()}
+            onClose={handlePrimaryClose}
+          />
+
+          {headerAccount ? (
+            <AccountRow
+              account={headerAccount}
+              isActiveMarker={true}
+              selected={true}
+              isCollapsed={false}
+            />
+          ) : null}
 
           <Accounts
             accounts={visibleAccounts}
@@ -284,33 +279,13 @@ export default function SpCoinWalletPopup() {
         aria-modal="true"
         aria-label="SponsorCoin Wallet"
       >
-        <div className="relative border-b border-slate-700/70 px-5 py-4">
-          <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-700 bg-[#20294a]">
-              <Image
-                src="/assets/miscellaneous/spCoin.png"
-                alt="SponsorCoin"
-                width={44}
-                height={44}
-                className="h-full w-full object-cover"
-              />
-            </span>
-          </div>
-          <h2 className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 text-center text-xl font-bold leading-tight">
-            SponsorCoin Wallet
-          </h2>
-          <button
-            type="button"
-            onClick={handlePrimaryClose}
-            className="absolute right-5 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-[#303b68] hover:bg-[#3c487a]"
-            aria-label="Close SponsorCoin wallet"
-          >
-            <X className="h-6 w-6 text-[#91a5ff]" />
-          </button>
-        </div>
+        <WalletHeader
+          mode="normal"
+          onClose={handlePrimaryClose}
+        />
 
-        <div className="px-5 py-4">
-          <ConnectNetworkButton
+        <div className="px-5 py-1.5">
+          <WalletConnectComponent
             showName={false}
             showSymbol={true}
             showChevron={true}
@@ -319,6 +294,15 @@ export default function SpCoinWalletPopup() {
             showHoverBg={true}
           />
         </div>
+
+        {headerAccount ? (
+          <AccountRow
+            account={headerAccount}
+            isActiveMarker={true}
+            selected={true}
+            isCollapsed={false}
+          />
+        ) : null}
 
         <Accounts
           accounts={visibleAccounts}

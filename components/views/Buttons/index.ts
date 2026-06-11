@@ -3,6 +3,7 @@
 export * from '../TradingStationPanel/BuySelectPanel/AddSponsorshipButton';
 export * from '../TradingStationPanel/SwapArrowButton';
 export * from './Connect/ConnectNetworkButton';
+export * from './Connect/WalletConnectComponent';
 export * from '../TradingStationPanel/CustomeConnectButton';
 export * from './ExchangeButton';
 export * from '../TradingStationPanel/SellSelectPanel/ManageSponsorsButton';

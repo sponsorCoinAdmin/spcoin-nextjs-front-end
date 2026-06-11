@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import ConnectNetworkButtonProps from '@/components/views/Buttons/Connect/ConnectNetworkButton';
+import WalletConnectComponentProps from '@/components/views/Buttons/Connect/WalletConnectComponent';
 import { msTableTw } from '@/components/views/RadioOverlayPanels/msTableTw';
 import type {
   AccountFormData,
@@ -293,7 +293,7 @@ export default function CreateAccountFormPanel({
           <div className="contents">
             <div className="col-span-2 border-t border-black/30">
               {!connected ? (
-                <ConnectNetworkButtonProps
+                <WalletConnectComponentProps
                   showName={false}
                   showSymbol={false}
                   showNetworkIcon={false}
@@ -301,7 +301,6 @@ export default function CreateAccountFormPanel({
                   showConnect={true}
                   showDisconnect={false}
                   showHoverBg={false}
-                  titleDisplay={true}
                   trimHorizontalPaddingPx={0}
                   connectLabel="Connect Wallet"
                 />
