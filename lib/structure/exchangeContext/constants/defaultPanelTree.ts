@@ -36,6 +36,9 @@ export const MUST_INCLUDE_ON_BOOT: readonly (readonly [SP, boolean])[] = [
   [SP.BUY_SELECT_PANEL, true],
   [SP.SWAP_ARROW_BUTTON, true],
   [SP.CONNECT_TRADE_BUTTON, true],
+  [SP.WALLET_CONNECT_COMPONENT, true],
+  [SP.WALLET_ACCOUNTS_COMPONENT, true],
+  [SP.WALLET_NETWORKS_COMPONENT, false],
   [SP.FEE_DISCLOSURE, true],
   [SP.AFFILIATE_FEE, false],
 
@@ -136,6 +139,9 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
 
       // Default-on widgets
       node(SP.SWAP_ARROW_BUTTON, true),
+      node(SP.WALLET_CONNECT_COMPONENT, true),
+      node(SP.WALLET_ACCOUNTS_COMPONENT, true),
+      node(SP.WALLET_NETWORKS_COMPONENT, false),
       node(SP.FEE_DISCLOSURE, true),
 
       // Default-off widget

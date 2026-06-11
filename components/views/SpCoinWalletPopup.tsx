@@ -1,18 +1,20 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useConnect } from 'wagmi';
 
 import WalletConnectComponent from '@/components/views/Buttons/Connect/WalletConnectComponent';
-import AccountRow from '@/lib/spCoinWallet/AccountRow';
 import WalletHeader from '@/components/views/WalletHeader';
+import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
+import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { useSpCoinWallet } from '@/lib/spCoinWallet';
-import { useActiveAccount } from '@/lib/context/hooks/ExchangeContext/nested/accounts/useActiveAccount';
 import { getBlockChainName } from '@/lib/context/helpers/NetworkHelpers';
+import { useActiveAccount } from '@/lib/context/hooks/ExchangeContext/nested/accounts/useActiveAccount';
 import type { SpCoinWalletAccount } from '@/lib/spCoinWallet';
-import { STATUS, type spCoinAccount } from '@/lib/structure';
+import { SP_COIN_DISPLAY, STATUS, type spCoinAccount } from '@/lib/structure';
 import { normalizeAddress } from '@/lib/utils/address';
 import Accounts from '@/lib/spCoinWallet/accounts';
+import Networks from '@/lib/spCoinWallet/networks';
 
 export default function SpCoinWalletPopup() {
   const {
@@ -32,6 +34,14 @@ export default function SpCoinWalletPopup() {
   const [previewAccount, setPreviewAccount] = useState<spCoinAccount | undefined>(undefined);
   const [traceEnabled, setTraceEnabled] = useState(false);
   const [traceOutput, setTraceOutput] = useState<string[]>([]);
+  const [selectionAccountsCollapsed, setSelectionAccountsCollapsed] = useState(false);
+  const [walletAccountsCollapsed, setWalletAccountsCollapsed] = useState(false);
+  const wasWalletOpenRef = useRef(false);
+  const wasNormalModeRef = useRef(false);
+  const { setPanelVisible } = usePanelTree();
+  const walletConnectVisible = usePanelVisible(SP_COIN_DISPLAY.WALLET_CONNECT_COMPONENT);
+  const walletAccountsVisible = usePanelVisible(SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT);
+  const walletNetworksVisible = usePanelVisible(SP_COIN_DISPLAY.WALLET_NETWORKS_COMPONENT);
   const selectedAddressKey = normalizeAddress(
     selectionRequest?.currentAddress || session.signerAddress || session.activeAccountAddress || '',
   );
@@ -57,34 +67,18 @@ export default function SpCoinWalletPopup() {
     session.signerAddress || session.activeAccountAddress || '',
   );
 
-  const headerAccount: SpCoinWalletAccount | undefined = useMemo(() => {
-    if (!normalizedWorkingAddress) return undefined;
-    if (walletSource === 'hardhat') {
-      return (
-        hardhatAccounts.find(
-          (a) => normalizeAddress(a.address) === normalizedWorkingAddress,
-        ) ?? {
-          address: session.signerAddress || session.activeAccountAddress || '',
-          label: 'Active Account',
-          source: 'hardhat' as const,
-        }
-      );
-    }
-    if (session.metamaskAuthorized && session.signerAddress) {
-      return {
-        address: session.signerAddress,
-        label: 'MetaMask Active Account',
-        source: 'metamask' as const,
-      };
-    }
-    return undefined;
-  }, [hardhatAccounts, normalizedWorkingAddress, session.signerAddress, session.activeAccountAddress, session.metamaskAuthorized, walletSource]);
   const currentNetworkName = Number.isFinite(session.appChainId) && session.appChainId > 0
     ? getBlockChainName(session.appChainId) || `Chain ${session.appChainId}`
     : 'Unknown Network';
   const currentNetworkTitle = Number.isFinite(session.appChainId) && session.appChainId > 0
     ? `${currentNetworkName} (Chain ID: ${session.appChainId})`
     : currentNetworkName;
+  const isSelectionMode = Boolean(selectionRequest);
+  const selectionSummary = walletSource === 'hardhat'
+    ? `${hardhatAccounts.length} Hardhat account${hardhatAccounts.length === 1 ? '' : 's'}`
+    : session.metamaskAuthorized
+      ? 'MetaMask authorized account'
+      : 'MetaMask not authorized';
 
   const connectMetaMask = async () => {
     const injected = connectors.find((connector) => connector.id === 'injected') ?? connectors[0];
@@ -101,6 +95,14 @@ export default function SpCoinWalletPopup() {
     }
   };
 
+  useEffect(() => {
+    setSelectionAccountsCollapsed(false);
+  }, [selectedAddressKey, walletSource]);
+
+  useEffect(() => {
+    setWalletAccountsCollapsed(false);
+  }, [walletActiveAddressKey, walletSource]);
+
   const handleSelectAccount = (account: SpCoinWalletAccount) => {
     trace('handleSelectAccount called', {
       accountAddress: account.address,
@@ -109,11 +111,9 @@ export default function SpCoinWalletPopup() {
       selectionRequest: !!selectionRequest,
     });
 
-    // Call the wallet context selectAccount to update wallet source
     trace('Calling selectAccount from context');
     selectAccount(account);
 
-    // If not in selection mode, also set as active account
     if (!selectionRequest) {
       trace('Not in selection mode, setting active account');
       const nextActive: spCoinAccount = {
@@ -127,13 +127,13 @@ export default function SpCoinWalletPopup() {
         ...(account.logoURL ? { logoURL: account.logoURL } : {}),
         balance: 0n,
       };
-      
+
       trace('Built nextActive object', {
         name: nextActive.name,
         address: nextActive.address,
         symbol: nextActive.symbol,
       });
-      
+
       trace('Calling setActiveAccount');
       setActiveAccount(nextActive);
       trace('setActiveAccount called, state update queued');
@@ -175,21 +175,65 @@ export default function SpCoinWalletPopup() {
     closeWallet();
   };
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    setPanelVisible(
+      SP_COIN_DISPLAY.WALLET_CONNECT_COMPONENT,
+      Boolean(isOpen && !isSelectionMode && !previewAccount),
+      'SpCoinWalletPopup:toggleWalletConnectComponent',
+    );
+    if (!isOpen || isSelectionMode || previewAccount) {
+      setPanelVisible(
+        SP_COIN_DISPLAY.WALLET_NETWORKS_COMPONENT,
+        false,
+        'SpCoinWalletPopup:hideWalletNetworksComponent',
+      );
+    }
+  }, [isOpen, isSelectionMode, previewAccount, setPanelVisible]);
 
-  const isSelectionMode = Boolean(selectionRequest);
-  const selectionSummary = walletSource === 'hardhat'
-    ? `${hardhatAccounts.length} Hardhat account${hardhatAccounts.length === 1 ? '' : 's'}`
-    : session.metamaskAuthorized
-      ? 'MetaMask authorized account'
-      : 'MetaMask not authorized';
+  useEffect(() => {
+    const isNormalMode = isOpen && !isSelectionMode;
+
+    if (!isOpen && wasWalletOpenRef.current) {
+      setPanelVisible(
+        SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT,
+        false,
+        'SpCoinWalletPopup:hideWalletAccountsOnClose',
+      );
+      setPanelVisible(
+        SP_COIN_DISPLAY.WALLET_NETWORKS_COMPONENT,
+        false,
+        'SpCoinWalletPopup:hideWalletNetworksOnClose',
+      );
+    }
+
+    if (isNormalMode && !wasNormalModeRef.current) {
+      setPanelVisible(
+        SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT,
+        true,
+        'SpCoinWalletPopup:showWalletAccountsOnOpen',
+      );
+    }
+
+    if (!isNormalMode && wasNormalModeRef.current) {
+      setPanelVisible(
+        SP_COIN_DISPLAY.WALLET_NETWORKS_COMPONENT,
+        false,
+        'SpCoinWalletPopup:hideWalletNetworksOnModeChange',
+      );
+    }
+
+    wasWalletOpenRef.current = isOpen;
+    wasNormalModeRef.current = isNormalMode;
+  }, [isOpen, isSelectionMode, setPanelVisible]);
+
+  if (!isOpen) return null;
 
   if (isSelectionMode) {
     return (
       <div className="fixed inset-0 z-[10000] bg-black/35">
         <div
           className={[
-            'absolute left-1/2 top-1/2 flex h-[min(650px,calc(100vh-2rem))] w-[min(520px,calc(100vw-2rem))] flex-col -translate-x-1/2 -translate-y-1/2 overflow-hidden',
+            'absolute left-1/2 top-1/2 flex max-h-[min(650px,calc(100vh-2rem))] w-[min(520px,calc(100vw-2rem))] flex-col -translate-x-1/2 -translate-y-1/2 overflow-x-hidden overflow-y-auto',
             'rounded-[15px] border border-[#2e3654] bg-[#0b0e19] text-white shadow-2xl',
           ].join(' ')}
           role="dialog"
@@ -209,27 +253,26 @@ export default function SpCoinWalletPopup() {
             onClose={handlePrimaryClose}
           />
 
-          {headerAccount ? (
-            <AccountRow
-              account={headerAccount}
-              isActiveMarker={true}
-              selected={true}
-              isCollapsed={false}
-            />
-          ) : null}
-
-          <Accounts
-            accounts={visibleAccounts}
-            walletSource={walletSource}
-            selectedAddressKey={selectedAddressKey}
-            normalizedWorkingAddress={normalizedWorkingAddress}
-            hardhatAccountsLoading={hardhatAccountsLoading}
-            hardhatAccountsError={hardhatAccountsError}
-            onOpenAccountPanel={openAccountPanel}
-            onSelectAccount={handleSelectAccount}
-            previewAccount={previewAccount}
-            onClosePreview={() => setPreviewAccount(undefined)}
-          />
+        <Accounts
+          accounts={visibleAccounts}
+          walletSource={walletSource}
+          selectedAddressKey={selectedAddressKey}
+          normalizedWorkingAddress={normalizedWorkingAddress}
+          isCollapsed={selectionAccountsCollapsed}
+          hardhatAccountsLoading={hardhatAccountsLoading}
+          hardhatAccountsError={hardhatAccountsError}
+          onOpenAccountPanel={openAccountPanel}
+          onSelectAccount={handleSelectAccount}
+          onToggleCollapse={() => {
+            trace('Selection mode account row chevron toggled', {
+              before: selectionAccountsCollapsed,
+            });
+            setSelectionAccountsCollapsed((prev) => !prev);
+          }}
+          onTrace={trace}
+          previewAccount={previewAccount}
+          onClosePreview={() => setPreviewAccount(undefined)}
+        />
 
           {/* Trace Controls */}
           <div className="border-t border-slate-700/50 px-5 py-3">
@@ -272,7 +315,7 @@ export default function SpCoinWalletPopup() {
     <div className="fixed inset-0 z-[10000] bg-black/35">
         <div
           className={[
-          'absolute left-1/2 top-1/2 flex h-[min(650px,calc(100vh-2rem))] w-[min(520px,calc(100vw-2rem))] flex-col -translate-x-1/2 -translate-y-1/2 overflow-hidden',
+          'absolute left-1/2 top-1/2 flex max-h-[min(650px,calc(100vh-2rem))] w-[min(520px,calc(100vw-2rem))] flex-col -translate-x-1/2 -translate-y-1/2 overflow-x-hidden overflow-y-auto',
           'rounded-[15px] border border-[#2e3654] bg-[#0b0e19] text-white shadow-2xl',
         ].join(' ')}
         role="dialog"
@@ -284,41 +327,100 @@ export default function SpCoinWalletPopup() {
           onClose={handlePrimaryClose}
         />
 
-        <div className="px-5 py-1.5">
-          <WalletConnectComponent
-            showName={false}
-            showSymbol={true}
-            showChevron={true}
-            showConnect={true}
-            showDisconnect={false}
-            showHoverBg={true}
-          />
-        </div>
+        {walletConnectVisible ? (
+          <div className="shrink-0 px-5 py-1.5">
+            <WalletConnectComponent
+              showName={false}
+              showSymbol={true}
+              showChevron={true}
+              showConnect={true}
+              showDisconnect={false}
+              showHoverBg={true}
+              onNetworkChevronClick={() => {
+                trace('WalletConnectComponent network chevron clicked', {
+                  before: walletNetworksVisible,
+                  accountsVisibleBefore: walletAccountsVisible,
+                });
+                if (walletNetworksVisible) {
+                  setPanelVisible(
+                    SP_COIN_DISPLAY.WALLET_NETWORKS_COMPONENT,
+                    false,
+                    'SpCoinWalletPopup:hideWalletNetworksComponent',
+                  );
+                  return;
+                }
 
-        {headerAccount ? (
-          <AccountRow
-            account={headerAccount}
-            isActiveMarker={true}
-            selected={true}
-            isCollapsed={false}
-          />
+                setPanelVisible(
+                  SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT,
+                  false,
+                  'SpCoinWalletPopup:hideWalletAccountsForNetworks',
+                );
+                setPanelVisible(
+                  SP_COIN_DISPLAY.WALLET_NETWORKS_COMPONENT,
+                  true,
+                  'SpCoinWalletPopup:showWalletNetworksComponent',
+                );
+              }}
+              networkChevronUp={walletNetworksVisible}
+              onAccountChevronClick={() => {
+                trace('WalletConnectComponent account chevron clicked', {
+                  before: walletAccountsVisible,
+                  networksVisibleBefore: walletNetworksVisible,
+                });
+                if (walletAccountsVisible) {
+                  setPanelVisible(
+                    SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT,
+                    false,
+                    'SpCoinWalletPopup:hideWalletAccountsComponent',
+                  );
+                  return;
+                }
+
+                setPanelVisible(
+                  SP_COIN_DISPLAY.WALLET_NETWORKS_COMPONENT,
+                  false,
+                  'SpCoinWalletPopup:hideWalletNetworksForAccounts',
+                );
+                setPanelVisible(
+                  SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT,
+                  true,
+                  'SpCoinWalletPopup:showWalletAccountsComponent',
+                );
+              }}
+              accountChevronUp={walletAccountsVisible}
+            />
+          </div>
         ) : null}
 
-        <Accounts
-          accounts={visibleAccounts}
-          walletSource={walletSource}
-          selectedAddressKey={walletActiveAddressKey}
-          normalizedWorkingAddress={normalizedWorkingAddress}
-          hardhatAccountsLoading={hardhatAccountsLoading}
-          hardhatAccountsError={hardhatAccountsError}
-          onOpenAccountPanel={openAccountPanel}
-          onSelectAccount={handleSelectAccount}
-          previewAccount={previewAccount}
-          onClosePreview={() => setPreviewAccount(undefined)}
-        />
+        <div className="min-h-0 flex-1 overflow-hidden">
+          {walletNetworksVisible ? <Networks /> : null}
+
+          {walletAccountsVisible ? (
+            <Accounts
+              accounts={visibleAccounts}
+              walletSource={walletSource}
+              selectedAddressKey={walletActiveAddressKey}
+              normalizedWorkingAddress={normalizedWorkingAddress}
+              isCollapsed={walletAccountsCollapsed}
+              hardhatAccountsLoading={hardhatAccountsLoading}
+              hardhatAccountsError={hardhatAccountsError}
+              onOpenAccountPanel={openAccountPanel}
+              onSelectAccount={handleSelectAccount}
+              onToggleCollapse={() => {
+                trace('Wallet account row chevron toggled account list collapse', {
+                  before: walletAccountsCollapsed,
+                });
+                setWalletAccountsCollapsed((prev) => !prev);
+              }}
+              onTrace={trace}
+              previewAccount={previewAccount}
+              onClosePreview={() => setPreviewAccount(undefined)}
+            />
+          ) : null}
+        </div>
 
         {/* Trace Controls */}
-        <div className="border-t border-slate-700/50 px-5 py-3">
+        <div className="shrink-0 border-t border-slate-700/50 px-5 py-3">
           <div className="flex items-center gap-2">
             <input
               type="checkbox"
@@ -338,7 +440,7 @@ export default function SpCoinWalletPopup() {
 
         {/* Trace Output */}
         {traceEnabled && traceOutput.length > 0 && (
-          <div className="border-t border-slate-700/50 px-5 py-3 max-h-48 overflow-y-auto bg-[#0a0d16]">
+          <div className="max-h-48 shrink-0 overflow-y-auto border-t border-slate-700/50 bg-[#0a0d16] px-5 py-3">
             <div className="text-xs font-mono text-[#7893ff] space-y-1">
               {traceOutput.map((line, idx) => (
                 <div key={idx} className="text-[#91a5ff]">

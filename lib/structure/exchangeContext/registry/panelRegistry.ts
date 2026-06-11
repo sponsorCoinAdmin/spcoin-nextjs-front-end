@@ -307,6 +307,9 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   // Controls
   def({ id: SP.SWAP_ARROW_BUTTON, kind: 'control', defaultVisible: true }),
   def({ id: SP.CONNECT_TRADE_BUTTON, kind: 'control', defaultVisible: true }),
+  def({ id: SP.WALLET_CONNECT_COMPONENT, kind: 'control', defaultVisible: true }),
+  def({ id: SP.WALLET_ACCOUNTS_COMPONENT, kind: 'control', defaultVisible: true }),
+  def({ id: SP.WALLET_NETWORKS_COMPONENT, kind: 'control', defaultVisible: false }),
 
   // NOTE: you used 'panel' kind here previously; keep it if consumers expect that.
   def({ id: SP.FEE_DISCLOSURE, kind: 'panel', defaultVisible: true }),

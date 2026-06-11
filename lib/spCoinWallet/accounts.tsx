@@ -13,10 +13,13 @@ type AccountsProps = {
   walletSource: 'hardhat' | 'metamask' | 'offline';
   selectedAddressKey: string;
   normalizedWorkingAddress: string;
+  isCollapsed: boolean;
   hardhatAccountsLoading: boolean;
   hardhatAccountsError: string;
   onOpenAccountPanel: (account: SpCoinWalletAccount) => void;
   onSelectAccount: (account: SpCoinWalletAccount) => void;
+  onToggleCollapse: () => void;
+  onTrace?: (message: string, data?: any) => void;
   previewAccount?: spCoinAccount;
   onClosePreview?: () => void;
 };
@@ -33,6 +36,7 @@ function EmbeddedAccountList({
   isCollapsed,
   onOpenAccountPanel,
   onSelectAccount,
+  onTrace,
   onToggleCollapse,
 }: {
   accounts: SpCoinWalletAccount[];
@@ -44,7 +48,8 @@ function EmbeddedAccountList({
   isCollapsed: boolean;
   onOpenAccountPanel: (account: SpCoinWalletAccount) => void;
   onSelectAccount: (account: SpCoinWalletAccount) => void;
-  onToggleCollapse: () => void;
+  onTrace?: (message: string, data?: any) => void;
+  onToggleCollapse: (account: SpCoinWalletAccount) => void;
 }) {
   const orderedAccounts = [...accounts].sort((left, right) => {
     const leftIsActive = normalizeAddress(left.address) === activeAddressKey ? 1 : 0;
@@ -80,9 +85,10 @@ function EmbeddedAccountList({
           isActiveMarker={normalizeAddress(account.address) === activeAddressKey}
           selected={normalizeAddress(account.address) === selectedAddressKey}
           isCollapsed={isCollapsed}
+          onTrace={onTrace}
           onOpenAccountPanel={() => onOpenAccountPanel(account)}
           onSelect={() => onSelectAccount(account)}
-          onToggleCollapse={onToggleCollapse}
+          onToggleCollapse={() => onToggleCollapse(account)}
         />
       ))}
     </>
@@ -94,22 +100,19 @@ export default function Accounts({
   walletSource,
   selectedAddressKey,
   normalizedWorkingAddress,
+  isCollapsed,
   hardhatAccountsLoading,
   hardhatAccountsError,
   onOpenAccountPanel,
   onSelectAccount,
+  onToggleCollapse,
+  onTrace,
   previewAccount,
-  onClosePreview,
 }: AccountsProps) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const [displayState, setDisplayState] = useState<AccountsDisplayState>('ACCOUNT_LIST');
   const normalizedSelectedKey = selectedAddressKey || normalizedWorkingAddress;
   const fallbackAddress = accounts[0] ? normalizeAddress(accounts[0].address) : '';
   const activeAddressKey = normalizedSelectedKey || fallbackAddress;
-
-  useEffect(() => {
-    setIsCollapsed(false);
-  }, [activeAddressKey, walletSource]);
 
   useEffect(() => {
     if (!previewAccount) {
@@ -122,18 +125,12 @@ export default function Accounts({
     setDisplayState('ACCOUNT_META');
   };
 
-  const handleClosePreview = () => {
-    onClosePreview?.();
-    setDisplayState('ACCOUNT_LIST');
-  };
-
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {displayState === 'ACCOUNT_LIST' ? (
         <div
           className={[
             'scrollbar-hide min-h-0 flex-1 overflow-y-auto border-t border-slate-700/70',
-            'max-h-[360px]',
           ].join(' ')}
         >
           <EmbeddedAccountList
@@ -146,7 +143,17 @@ export default function Accounts({
             isCollapsed={isCollapsed}
             onOpenAccountPanel={handleOpenAccountPanel}
             onSelectAccount={onSelectAccount}
-            onToggleCollapse={() => setIsCollapsed((prev) => !prev)}
+            onTrace={onTrace}
+            onToggleCollapse={(account) => {
+              onTrace?.('Accounts onToggleCollapse received', {
+                clickedAddress: account.address,
+                activeAddressKey,
+                clickedIsActive: normalizeAddress(account.address) === activeAddressKey,
+                isCollapsedBefore: isCollapsed,
+              });
+              if (normalizeAddress(account.address) !== activeAddressKey) return;
+              onToggleCollapse();
+            }}
           />
         </div>
       ) : null}
@@ -155,7 +162,8 @@ export default function Accounts({
         <div className="min-h-0 flex-1 border-t border-slate-700/70">
           <AccountPanelContent
             account={previewAccount}
-            onClose={handleClosePreview}
+            showHeader={false}
+            showSummaryRow={false}
             mode={SP_COIN_DISPLAY.ACTIVE_ACCOUNT}
           />
         </div>

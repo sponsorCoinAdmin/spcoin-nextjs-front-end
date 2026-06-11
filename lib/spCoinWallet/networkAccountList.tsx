@@ -49,6 +49,7 @@ export default function NetworkAccountList({
   refreshLabel,
   onClose,
 }: NetworkAccountListProps) {
+  const [isCollapsed, setIsCollapsed] = React.useState(false);
   const showHeaderCard = Boolean(headerTitle || headerSummary || onClose);
   const summaryText = headerSummary
     ?? (walletSource === 'hardhat'
@@ -142,10 +143,12 @@ export default function NetworkAccountList({
         walletSource={walletSource}
         selectedAddressKey={selectedAddressKey}
         normalizedWorkingAddress={normalizedWorkingAddress}
+        isCollapsed={isCollapsed}
         hardhatAccountsLoading={hardhatAccountsLoading}
         hardhatAccountsError={hardhatAccountsError}
         onOpenAccountPanel={onOpenAccountPanel}
         onSelectAccount={onSelectAccount}
+        onToggleCollapse={() => setIsCollapsed((prev) => !prev)}
       />
     </>
   );

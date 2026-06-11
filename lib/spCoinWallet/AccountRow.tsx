@@ -16,6 +16,8 @@ type AccountRowProps = {
   isActiveMarker?: boolean;
   selected?: boolean;
   isCollapsed?: boolean;
+  fullBleed?: boolean;
+  onTrace?: (message: string, data?: any) => void;
   onOpenAccountPanel?: () => void;
   onSelect?: () => void;
   onToggleCollapse?: () => void;
@@ -26,6 +28,8 @@ export default function AccountRow({
   isActiveMarker = false,
   selected = false,
   isCollapsed = false,
+  fullBleed = false,
+  onTrace = () => {},
   onOpenAccountPanel = () => {},
   onSelect = () => {},
   onToggleCollapse = () => {},
@@ -40,7 +44,12 @@ export default function AccountRow({
   }, [account.logoURL]);
 
   return (
-    <div className="grid w-full grid-cols-[36px_1fr] items-center gap-3 px-3 py-2 text-left border-b border-slate-700/70 transition-colors hover:bg-slate-700/50">
+    <div
+      className={[
+        'grid w-full grid-cols-[36px_1fr] items-center gap-3 py-2 text-left border-b border-slate-700/70 transition-colors hover:bg-slate-700/50',
+        fullBleed ? 'px-0' : 'px-5',
+      ].join(' ')}
+    >
       <button
         type="button"
         onClick={(event) => {
@@ -73,7 +82,12 @@ export default function AccountRow({
           <Wallet className="h-5 w-5 text-[#7893ff]" />
         )}
       </button>
-      <div className={['grid min-w-0 grid-cols-[1fr_auto] items-center gap-2', isActiveMarker ? 'bg-green-500/20 hover:bg-green-500/25' : selected ? 'bg-[#273250]' : 'bg-transparent'].join(' ')}>
+      <div
+        className={[
+          'grid min-w-0 grid-cols-[1fr_auto] items-center gap-2',
+          selected ? 'bg-[#273250]' : 'bg-transparent',
+        ].join(' ')}
+      >
         <button
           type="button"
           onClick={onSelect}
@@ -88,7 +102,7 @@ export default function AccountRow({
                 </span>
               ) : null}
             </span>
-            <span className="block truncate font-mono text-xs text-slate-300">{account.address}</span>
+            <span className="block truncate font-mono text-[13px] text-slate-300">{account.address}</span>
           </span>
         </button>
         {isActiveMarker ? (
@@ -97,6 +111,12 @@ export default function AccountRow({
             onClick={(event) => {
               event.preventDefault();
               event.stopPropagation();
+              onTrace('AccountRow chevron clicked', {
+                address: account.address,
+                label: account.label,
+                isCollapsed,
+                isActiveMarker,
+              });
               onToggleCollapse();
             }}
             className="flex h-8 w-8 items-center justify-center rounded text-slate-300 transition-colors hover:bg-[#1d2542] hover:text-white"

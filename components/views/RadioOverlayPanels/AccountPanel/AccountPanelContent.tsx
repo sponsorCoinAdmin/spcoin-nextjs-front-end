@@ -9,6 +9,8 @@ import { SP_COIN_DISPLAY, type spCoinAccount } from '@/lib/structure';
 import { useWalletActionOverlay } from '@/lib/context/WalletActionOverlayContext';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { useSpCoinWallet } from '@/lib/spCoinWallet';
+import AccountRow from '@/lib/spCoinWallet/AccountRow';
+import type { SpCoinWalletAccount } from '@/lib/spCoinWallet';
 import { isSpCoinWalletAccount } from '@/lib/spCoinWallet';
 import { ACCEPTED_IMAGE_INPUT_ACCEPT } from '@/app/(menu)/(dynamic)/(accounts)/CreateAccount/utils';
 import { useCreateAccountForm } from '@/app/(menu)/(dynamic)/(accounts)/CreateAccount/hooks';
@@ -31,6 +33,7 @@ interface AccountPanelContentProps {
   account: spCoinAccount;
   onClose?: () => void;
   showHeader?: boolean;
+  showSummaryRow?: boolean;
   mode?:
     | SP_COIN_DISPLAY.ACTIVE_ACCOUNT
     | SP_COIN_DISPLAY.SPONSOR_ACCOUNT
@@ -117,6 +120,7 @@ export default function AccountPanelContent({
   account,
   onClose,
   showHeader = true,
+  showSummaryRow = true,
   mode,
 }: AccountPanelContentProps) {
   const { address: metamaskAddress, isConnected } = useAccount();
@@ -174,6 +178,17 @@ export default function AccountPanelContent({
   const editAccountHref = isSpCoinWalletAccount(account.address)
     ? `/EditAccount?account=${encodeURIComponent(String(account.address ?? '').trim())}`
     : undefined;
+  const selectedWalletRow: SpCoinWalletAccount | undefined =
+    !showHeader && !showSummaryRow
+      ? {
+          address: String(account.address ?? '').trim(),
+          label: String(account.name || 'Unnamed account').trim(),
+          name: String(account.name || 'Unnamed account').trim(),
+          symbol: String(account.symbol || '').trim(),
+          logoURL: account.logoURL,
+          source: walletSource,
+        }
+      : undefined;
 
   return (
     <div id="ACCOUNT_INFO" className="flex h-full min-h-0 flex-col bg-[#0b0e19]">
@@ -187,12 +202,14 @@ export default function AccountPanelContent({
       ) : null}
 
       <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
-        <div className="shrink-0 px-5 pb-0 pt-[5px]">
-          {depositAddr ? <AccountAddressPill label={depositLabel} address={depositAddr} /> : null}
-          <h2 className="mb-[3px] w-full max-w-[56rem] text-center text-lg font-semibold text-[#5981F3]">
-            {fallback(account?.name)}
-          </h2>
-        </div>
+        {showSummaryRow ? (
+          <div className="shrink-0 px-5 pb-0 pt-[5px]">
+            {depositAddr ? <AccountAddressPill label={depositLabel} address={depositAddr} /> : null}
+            <h2 className="mb-[3px] w-full max-w-[56rem] text-center text-lg font-semibold text-[#5981F3]">
+              {fallback(account?.name)}
+            </h2>
+          </div>
+        ) : null}
 
         <div
           id={mode === SP_COIN_DISPLAY.ACTIVE_ACCOUNT ? 'ACTIVE_ACCOUNT_BODY' : undefined}
@@ -216,6 +233,15 @@ export default function AccountPanelContent({
             acceptedInput={ACCEPTED_IMAGE_INPUT_ACCEPT}
             logoFileInputRef={logoFileInputRef}
             onFileChange={handleLogoFileChange}
+            selectedRowContent={
+              selectedWalletRow ? (
+                <AccountRow
+                  account={selectedWalletRow}
+                  isActiveMarker={mode === SP_COIN_DISPLAY.ACTIVE_ACCOUNT}
+                  selected={mode !== SP_COIN_DISPLAY.ACTIVE_ACCOUNT}
+                />
+              ) : undefined
+            }
             showImage={true}
             showButton={isEditMode}
           />

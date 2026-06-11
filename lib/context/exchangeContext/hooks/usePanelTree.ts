@@ -247,6 +247,9 @@ export function usePanelTree() {
       SP_COIN_DISPLAY.RECIPIENT_LIST,
       SP_COIN_DISPLAY.AGENT_LIST,
       SP_COIN_DISPLAY.STAKE_TRADING_SPCOINS_PANEL,
+      SP_COIN_DISPLAY.WALLET_CONNECT_COMPONENT,
+      SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT,
+      SP_COIN_DISPLAY.WALLET_NETWORKS_COMPONENT,
     ];
 
     const hasAll = REQUIRED.every((p) => list.some((e) => Number(e.panel) === Number(p)));
@@ -360,6 +363,46 @@ export function usePanelTree() {
       }
     },
     [setExchangeContext, exchangeContext],
+  );
+
+  const setPanelVisible = useCallback(
+    (
+      panel: SP_COIN_DISPLAY,
+      visible: boolean,
+      hookName = 'usePanelTree:setPanelVisible',
+    ) => {
+      panelStore.setVisible(panel, visible);
+
+      setExchangeContextSafe(
+        (prev: any) => {
+          const flat0 = flattenPanelTree(prev?.settings?.spCoinPanelTree, KNOWN);
+          let found = false;
+          let changed = false;
+
+          const next = flat0.map((entry) => {
+            if (Number(entry.panel) !== Number(panel)) return entry;
+            found = true;
+            if (!!entry.visible === !!visible) return entry;
+            changed = true;
+            return { ...entry, visible: !!visible };
+          });
+
+          if (!found) {
+            changed = true;
+            next.push({
+              panel,
+              name: panelName(panel),
+              visible: !!visible,
+            } as PanelEntry);
+          }
+
+          if (!changed) return prev;
+          return writeFlatTree(prev, next);
+        },
+        hookName,
+      );
+    },
+    [setExchangeContextSafe],
   );
 
   const persistedIdsRef = useRef<SP_COIN_DISPLAY[]>([]);
@@ -1070,6 +1113,8 @@ export function usePanelTree() {
   return {
     activeMainOverlay,
     isVisible,
+    setPanelVisible,
+    setVisible: setPanelVisible,
     isTokenScrollVisible,
     getPanelChildren,
 
