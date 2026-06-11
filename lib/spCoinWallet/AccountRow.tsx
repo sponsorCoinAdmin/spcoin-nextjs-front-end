@@ -14,7 +14,6 @@ function sourceLabel(source: SpCoinWalletAccount['source']): string {
 type AccountRowProps = {
   account: SpCoinWalletAccount;
   isActiveMarker?: boolean;
-  selected?: boolean;
   isCollapsed?: boolean;
   fullBleed?: boolean;
   onTrace?: (message: string, data?: any) => void;
@@ -26,7 +25,6 @@ type AccountRowProps = {
 export default function AccountRow({
   account,
   isActiveMarker = false,
-  selected = false,
   isCollapsed = false,
   fullBleed = false,
   onTrace = () => {},
@@ -84,8 +82,8 @@ export default function AccountRow({
       </button>
       <div
         className={[
-          'grid min-w-0 grid-cols-[1fr_auto] items-center gap-2',
-          selected ? 'bg-[#273250]' : 'bg-transparent',
+          'min-w-0',
+          'bg-transparent',
         ].join(' ')}
       >
         <button
@@ -97,35 +95,33 @@ export default function AccountRow({
             <span className="flex items-center gap-2 truncate text-sm font-semibold text-white">
               <span className="truncate">{meta || sourceLabel(account.source)}</span>
               {isActiveMarker ? (
-                <span className="shrink-0 rounded bg-green-500/25 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-green-200">
-                  Active
+                <span className="inline-flex shrink-0 items-center gap-1 rounded bg-green-500/25 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-green-200">
+                  <span>Active</span>
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      onTrace('AccountRow chevron clicked', {
+                        address: account.address,
+                        label: account.label,
+                        isCollapsed,
+                        isActiveMarker,
+                      });
+                      onToggleCollapse();
+                    }}
+                    className="flex h-3.5 w-3.5 items-center justify-center rounded text-green-200 transition-colors hover:bg-[#1d2542] hover:text-white"
+                    aria-label={isCollapsed ? 'Show all accounts' : 'Hide other accounts'}
+                    title={isCollapsed ? 'Show all accounts' : 'Hide other accounts'}
+                  >
+                    {isCollapsed ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />}
+                  </button>
                 </span>
               ) : null}
             </span>
             <span className="block truncate font-mono text-[13px] text-slate-300">{account.address}</span>
           </span>
         </button>
-        {isActiveMarker ? (
-          <button
-            type="button"
-            onClick={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              onTrace('AccountRow chevron clicked', {
-                address: account.address,
-                label: account.label,
-                isCollapsed,
-                isActiveMarker,
-              });
-              onToggleCollapse();
-            }}
-            className="flex h-8 w-8 items-center justify-center rounded text-slate-300 transition-colors hover:bg-[#1d2542] hover:text-white"
-            aria-label={isCollapsed ? 'Show all accounts' : 'Hide other accounts'}
-            title={isCollapsed ? 'Show all accounts' : 'Hide other accounts'}
-          >
-            {isCollapsed ? <ChevronDown className="h-5 w-5" /> : <ChevronUp className="h-5 w-5" />}
-          </button>
-        ) : null}
       </div>
     </div>
   );

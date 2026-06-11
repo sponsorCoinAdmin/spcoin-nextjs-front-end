@@ -30,7 +30,6 @@ function EmbeddedAccountList({
   accounts,
   walletSource,
   activeAddressKey,
-  selectedAddressKey,
   hardhatAccountsLoading,
   hardhatAccountsError,
   isCollapsed,
@@ -42,7 +41,6 @@ function EmbeddedAccountList({
   accounts: SpCoinWalletAccount[];
   walletSource: 'hardhat' | 'metamask' | 'offline';
   activeAddressKey: string;
-  selectedAddressKey: string;
   hardhatAccountsLoading: boolean;
   hardhatAccountsError: string;
   isCollapsed: boolean;
@@ -83,7 +81,6 @@ function EmbeddedAccountList({
           key={`${account.source}:${account.address}`}
           account={account}
           isActiveMarker={normalizeAddress(account.address) === activeAddressKey}
-          selected={normalizeAddress(account.address) === selectedAddressKey}
           isCollapsed={isCollapsed}
           onTrace={onTrace}
           onOpenAccountPanel={() => onOpenAccountPanel(account)}
@@ -137,7 +134,6 @@ export default function Accounts({
             accounts={accounts}
             walletSource={walletSource}
             activeAddressKey={activeAddressKey}
-            selectedAddressKey={selectedAddressKey}
             hardhatAccountsLoading={hardhatAccountsLoading}
             hardhatAccountsError={hardhatAccountsError}
             isCollapsed={isCollapsed}

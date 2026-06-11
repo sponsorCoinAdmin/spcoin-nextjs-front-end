@@ -238,7 +238,6 @@ export default function AccountPanelContent({
                 <AccountRow
                   account={selectedWalletRow}
                   isActiveMarker={mode === SP_COIN_DISPLAY.ACTIVE_ACCOUNT}
-                  selected={mode !== SP_COIN_DISPLAY.ACTIVE_ACCOUNT}
                 />
               ) : undefined
             }
