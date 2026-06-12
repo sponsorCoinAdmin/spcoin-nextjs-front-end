@@ -110,6 +110,22 @@ footer {
   display: none; /* Chrome, Safari, Opera */
 }
 
+html.spcoin-wallet-open,
+body.spcoin-wallet-open {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+html.spcoin-wallet-open::-webkit-scrollbar,
+body.spcoin-wallet-open::-webkit-scrollbar,
+.spcoin-wallet-open *::-webkit-scrollbar {
+  display: none;
+}
+
+.spcoin-wallet-open * {
+  scrollbar-width: none;
+}
+
 .native-select-chevron-up {
   display: none !important;
 }

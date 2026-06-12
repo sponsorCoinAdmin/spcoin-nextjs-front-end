@@ -5,6 +5,7 @@ import { useConnect } from 'wagmi';
 
 import WalletConnectComponent from '@/components/views/Buttons/Connect/WalletConnectComponent';
 import AgentWalletPanel from '@/components/views/AgentWalletPanel';
+import WalletConfig from '@/components/views/WalletConfig';
 import WalletHeader from '@/components/views/WalletHeader';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
@@ -40,6 +41,9 @@ export default function SpCoinWalletPopup() {
   const [walletAccountsCollapsed, setWalletAccountsCollapsed] = useState(false);
   const [walletOptionsOpen, setWalletOptionsOpen] = useState(false);
   const [swapTokensOpen, setSwapTokensOpen] = useState(false);
+  const [walletConfigOpen, setWalletConfigOpen] = useState(false);
+  const [walletOptionsReturnMode, setWalletOptionsReturnMode] = useState<'normal' | 'swap' | 'config'>('normal');
+  const [showBackgroundPage, setShowBackgroundPage] = useState(false);
   const wasWalletOpenRef = useRef(false);
   const wasNormalModeRef = useRef(false);
   const tradingVisibilityRestoreRef = useRef<{
@@ -187,6 +191,9 @@ export default function SpCoinWalletPopup() {
     if (swapTokensOpen) {
       setSwapTokensOpen(false);
     }
+    if (walletConfigOpen) {
+      setWalletConfigOpen(false);
+    }
     closeWallet();
   };
 
@@ -256,7 +263,7 @@ export default function SpCoinWalletPopup() {
   };
 
   useEffect(() => {
-    if (!isOpen || isSelectionMode || previewAccount || walletOptionsOpen) {
+    if (!isOpen || isSelectionMode || previewAccount || walletOptionsOpen || walletConfigOpen) {
       setPanelVisible(
         SP_COIN_DISPLAY.WALLET_CONNECT_COMPONENT,
         false,
@@ -273,7 +280,7 @@ export default function SpCoinWalletPopup() {
         'SpCoinWalletPopup:hideWalletAccountsComponentForOptions',
       );
     }
-  }, [isOpen, isSelectionMode, previewAccount, setPanelVisible, walletOptionsOpen]);
+  }, [isOpen, isSelectionMode, previewAccount, setPanelVisible, walletConfigOpen, walletOptionsOpen]);
 
   useEffect(() => {
     const isNormalMode = isOpen && !isSelectionMode;
@@ -329,12 +336,16 @@ export default function SpCoinWalletPopup() {
     const previousBodyOverscroll = document.body.style.overscrollBehavior;
     const previousHtmlOverscroll = document.documentElement.style.overscrollBehavior;
 
+    document.body.classList.add('spcoin-wallet-open');
+    document.documentElement.classList.add('spcoin-wallet-open');
     document.body.style.overflow = 'hidden';
     document.documentElement.style.overflow = 'hidden';
     document.body.style.overscrollBehavior = 'contain';
     document.documentElement.style.overscrollBehavior = 'contain';
 
     return () => {
+      document.body.classList.remove('spcoin-wallet-open');
+      document.documentElement.classList.remove('spcoin-wallet-open');
       document.body.style.overflow = previousBodyOverflow;
       document.documentElement.style.overflow = previousHtmlOverflow;
       document.body.style.overscrollBehavior = previousBodyOverscroll;
@@ -346,34 +357,27 @@ export default function SpCoinWalletPopup() {
     if (isOpen) return;
     restoreTradingVisibility();
     setSwapTokensOpen(false);
+    setWalletConfigOpen(false);
+    setWalletOptionsReturnMode('normal');
   }, [isOpen]);
 
-  const toggleWalletOptions = () => {
-    trace('Wallet options menu clicked', {
+  const openWalletOptions = () => {
+    trace('Wallet menu opened', {
       before: walletOptionsOpen,
       swapTokensOpen,
+      walletConfigOpen,
     });
+    setWalletOptionsReturnMode('normal');
 
     if (swapTokensOpen) {
       restoreTradingVisibility();
       setSwapTokensOpen(false);
-      setWalletOptionsOpen(true);
-      return;
+      setWalletOptionsReturnMode('swap');
     }
 
-    if (walletOptionsOpen) {
-      setWalletOptionsOpen(false);
-      setPanelVisible(
-        SP_COIN_DISPLAY.WALLET_CONNECT_COMPONENT,
-        true,
-        'SpCoinWalletPopup:showWalletConnectComponentAfterOptions',
-      );
-      setPanelVisible(
-        SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT,
-        true,
-        'SpCoinWalletPopup:showWalletAccountsComponentAfterOptions',
-      );
-      return;
+    if (walletConfigOpen) {
+      setWalletConfigOpen(false);
+      setWalletOptionsReturnMode('config');
     }
 
     setPanelVisible(
@@ -393,6 +397,57 @@ export default function SpCoinWalletPopup() {
     );
     setWalletOptionsOpen(true);
   };
+
+  const returnFromWalletOptions = () => {
+    trace('Returning from wallet options', {
+      walletOptionsReturnMode,
+    });
+
+    setWalletOptionsOpen(false);
+
+    if (walletOptionsReturnMode === 'swap') {
+      setSwapTokensOpen(true);
+      return;
+    }
+
+    if (walletOptionsReturnMode === 'config') {
+      setWalletConfigOpen(true);
+      return;
+    }
+
+    setPanelVisible(
+      SP_COIN_DISPLAY.WALLET_CONNECT_COMPONENT,
+      true,
+      'SpCoinWalletPopup:returnFromWalletOptionsShowWalletConnect',
+    );
+    setPanelVisible(
+      SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT,
+      true,
+      'SpCoinWalletPopup:returnFromWalletOptionsShowWalletAccounts',
+    );
+  };
+
+  const returnToWalletOptions = () => {
+    trace('Returning to wallet options', {
+      swapTokensOpen,
+      walletConfigOpen,
+    });
+
+    if (swapTokensOpen) {
+      restoreTradingVisibility();
+      setSwapTokensOpen(false);
+      setWalletOptionsReturnMode('swap');
+    }
+
+    if (walletConfigOpen) {
+      setWalletConfigOpen(false);
+      setWalletOptionsReturnMode('config');
+    }
+
+    setWalletOptionsOpen(true);
+  };
+
+  const headerActionIsBack = walletConfigOpen || walletOptionsOpen;
 
   const handleWalletNetworkChevronClick = useCallback(() => {
     trace('Wallet network chevron clicked', {
@@ -434,17 +489,24 @@ export default function SpCoinWalletPopup() {
     }
   }, [setPanelVisible, trace, walletAccountsVisible, walletOptionsOpen]);
 
-  const popupShellClassName =
-    'absolute left-1/2 top-1/2 flex max-h-[min(650px,calc(100vh-2rem))] w-[min(520px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-[15px] border border-[#2e3654] bg-[#0b0e19] text-white shadow-2xl';
+  const popupShellClassName = [
+    'absolute left-1/2 top-1/2 flex max-h-[min(650px,calc(100vh-60px-2rem))] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden',
+    'rounded-[15px] border border-[#2e3654] bg-[#0b0e19] text-white shadow-2xl',
+    swapTokensOpen
+      ? 'w-[min(560px,calc(100vw-2rem))]'
+      : walletOptionsOpen
+        ? 'w-[min(700px,calc(100vw-2rem))]'
+      : 'w-[min(520px,calc(100vw-2rem))]',
+  ].join(' ');
 
   if (!isOpen) return null;
 
   if (isSelectionMode) {
     return (
-      <div className="fixed inset-0 z-[10000] bg-black/35">
+      <div className="fixed inset-x-0 bottom-0 top-[60px] z-[10000] bg-[#050711]">
         <div
           className={[
-            'absolute left-1/2 top-1/2 flex max-h-[min(650px,calc(100vh-2rem))] w-[min(520px,calc(100vw-2rem))] flex-col -translate-x-1/2 -translate-y-1/2 overflow-hidden',
+            'absolute left-1/2 top-1/2 flex max-h-[min(650px,calc(100vh-60px-2rem))] w-[min(520px,calc(100vw-2rem))] flex-col -translate-x-1/2 -translate-y-1/2 overflow-hidden',
             'rounded-[15px] border border-[#2e3654] bg-[#0b0e19] text-white shadow-2xl',
           ].join(' ')}
           role="dialog"
@@ -524,17 +586,13 @@ export default function SpCoinWalletPopup() {
     );
   }
 
-  if (swapTokensOpen) {
-    return (
-      <AgentWalletPanel
-        onBack={toggleWalletOptions}
-        onClose={handlePrimaryClose}
-      />
-    );
-  }
-
   return (
-    <div className="fixed inset-0 z-[10000] bg-black/35">
+    <div
+      className={[
+        'fixed inset-x-0 bottom-0 top-[60px] z-[10000]',
+        showBackgroundPage ? 'bg-black/35' : 'bg-[#050711]',
+      ].join(' ')}
+    >
         <div
           className={popupShellClassName}
           role="dialog"
@@ -543,13 +601,37 @@ export default function SpCoinWalletPopup() {
         >
         <WalletHeader
           mode="normal"
-          title={walletOptionsOpen ? 'Wallet Options' : 'SponsorCoin Wallet'}
-          onMenuClick={toggleWalletOptions}
+          title={
+            walletConfigOpen
+              ? 'Wallet Config'
+              : walletOptionsOpen
+                ? 'Wallet Options'
+                : 'SponsorCoin Wallet'
+          }
+          onMenuClick={
+            walletConfigOpen
+              ? returnToWalletOptions
+              : walletOptionsOpen
+                ? returnFromWalletOptions
+                : swapTokensOpen
+                  ? openWalletOptions
+                  : openWalletOptions
+          }
+          menuButtonKind={headerActionIsBack ? 'back' : 'menu'}
           onClose={handlePrimaryClose}
         />
 
-      <div className="min-h-0 flex-1 overflow-hidden">
-        {walletConnectVisible ? (
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        {swapTokensOpen ? <AgentWalletPanel /> : null}
+
+        {walletConfigOpen ? (
+          <WalletConfig
+            showBackgroundPage={showBackgroundPage}
+            onShowBackgroundPageChange={setShowBackgroundPage}
+          />
+        ) : null}
+
+        {!swapTokensOpen && !walletConfigOpen && (walletConnectVisible || walletOptionsOpen) ? (
           <div className="shrink-0 border-b border-slate-700/50 px-4 py-3">
             <WalletConnectComponent
               showHoverBg={false}
@@ -561,19 +643,22 @@ export default function SpCoinWalletPopup() {
           </div>
         ) : null}
 
-        {walletOptionsOpen ? (
+        {!swapTokensOpen && walletOptionsOpen ? (
           <WalletOptions
             onSelectOption={(label) => {
                 if (label === 'Swap Tokens') {
                   openSwapTokensPanel();
+                } else if (label === 'Config') {
+                  setWalletOptionsOpen(false);
+                  setWalletConfigOpen(true);
                 }
               }}
             />
           ) : null}
 
-          {walletNetworksVisible ? <Networks /> : null}
+          {!swapTokensOpen && !walletConfigOpen && walletNetworksVisible ? <Networks /> : null}
 
-          {walletAccountsVisible ? (
+          {!swapTokensOpen && !walletConfigOpen && walletAccountsVisible ? (
             <Accounts
               accounts={visibleAccounts}
               walletSource={walletSource}
@@ -597,6 +682,7 @@ export default function SpCoinWalletPopup() {
           ) : null}
       </div>
 
+        {!swapTokensOpen && !walletConfigOpen ? (
           <>
             {/* Trace Controls */}
             <div className="shrink-0 border-t border-slate-700/50 px-5 py-3">
@@ -630,6 +716,7 @@ export default function SpCoinWalletPopup() {
               </div>
             )}
           </>
+        ) : null}
       </div>
     </div>
   );
