@@ -9,7 +9,6 @@ import { SP_COIN_DISPLAY, type TokenContract } from '@/lib/structure';
 import { useBuyTokenContract, useSellTokenContract } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { clearFSMTraceFromMemory } from '@/components/debug/FSMTracePanel';
-import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { defaultMissingImage, getTokenLogoURL } from '@/lib/context/helpers/assetHelpers';
@@ -36,8 +35,6 @@ export default function TokenSelectDropDown({ containerType }: Props) {
     ? 'Select a new Token to Sell'
     : 'Select a new Token to Buy';
 
-  // ✅ new transitions API
-  const { openOverlay } = usePanelTransitions();
   const { isVisible, openPanel } = usePanelTree();
 
   // Guard against re-entrancy + help diagnose "flash close"
@@ -138,18 +135,26 @@ export default function TokenSelectDropDown({ containerType }: Props) {
       openingRef.current = true;
       lastOpenAtRef.current = performance.now();
 
-      // ✅ open via generic openOverlay
+      const nextMode = isSellRoot
+        ? SP_COIN_DISPLAY.SELL_CONTRACT
+        : SP_COIN_DISPLAY.BUY_CONTRACT;
+
+      // Open the mode and the list atomically so the popup stays in radio mode.
       if (isSellRoot) {
-        // SELL dropdown -> use SELL_CONTRACT mode
-        openPanel(SP_COIN_DISPLAY.SELL_CONTRACT, `${methodName}:setSellMode`);
-        openOverlay(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL, { methodName });
-        schedulePostChecks(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL);
+        openPanel(
+          SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL,
+          `${methodName}:openSellTokenList`,
+          nextMode,
+        );
       } else {
-        // BUY dropdown -> use BUY_CONTRACT mode
-        openPanel(SP_COIN_DISPLAY.BUY_CONTRACT, `${methodName}:setBuyMode`);
-        openOverlay(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL, { methodName });
-        schedulePostChecks(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL);
+        openPanel(
+          SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL,
+          `${methodName}:openBuyTokenList`,
+          nextMode,
+        );
       }
+
+      schedulePostChecks(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL);
 
       const listNow = isVisible(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL);
       const buyModeNow = isVisible(SP_COIN_DISPLAY.BUY_CONTRACT);
@@ -158,7 +163,7 @@ export default function TokenSelectDropDown({ containerType }: Props) {
         `openTokenSelectPanel → visible now { list: ${listNow}, buyMode: ${buyModeNow}, sellMode: ${sellModeNow} } (isSellRoot=${isSellRoot})`,
       );
     },
-    [isSellRoot, openOverlay, openPanel, isVisible, schedulePostChecks],
+    [isSellRoot, openPanel, isVisible, schedulePostChecks],
   );
 
   const openTokenContractPanel = useCallback(
@@ -170,12 +175,11 @@ export default function TokenSelectDropDown({ containerType }: Props) {
       if (!tokenContract) return;
 
       const methodName = 'TokenSelectDropDown:openTokenContractPanel';
-      if (isSellRoot) {
-        openPanel(SP_COIN_DISPLAY.SELL_CONTRACT, `${methodName}:setSellMode`);
-      } else {
-        openPanel(SP_COIN_DISPLAY.BUY_CONTRACT, `${methodName}:setBuyMode`);
-      }
-      openPanel(SP_COIN_DISPLAY.TOKEN_PANEL, `${methodName}:openTokenContractPanel`);
+      openPanel(
+        SP_COIN_DISPLAY.TOKEN_PANEL,
+        `${methodName}:openTokenContractPanel`,
+        isSellRoot ? SP_COIN_DISPLAY.SELL_CONTRACT : SP_COIN_DISPLAY.BUY_CONTRACT,
+      );
     },
     [isSellRoot, openPanel, tokenContract],
   );

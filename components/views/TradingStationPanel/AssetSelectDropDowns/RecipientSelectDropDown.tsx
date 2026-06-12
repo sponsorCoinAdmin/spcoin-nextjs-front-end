@@ -7,7 +7,6 @@ import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { ChevronDown } from 'lucide-react';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
-import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import useOpenAccountComponent from '@/lib/context/hooks/useOpenAccountComponent';
 
@@ -28,7 +27,6 @@ const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount }) => {
   const hasErroredRef = useRef(false);
 
   // ✅ New transitions API
-  const { openOverlay } = usePanelTransitions();
   const { openPanel } = usePanelTree();
   const openAccountComponent = useOpenAccountComponent();
 
@@ -75,14 +73,12 @@ const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount }) => {
 
       debugLog.log?.('📂 Opening Recipient dialog');
       openPanel(
+        SP_COIN_DISPLAY.ACCOUNT_LIST_SELECT_PANEL,
+        'RecipientSelectDropDown:showRecipientListSelectPanel',
         SP_COIN_DISPLAY.RECIPIENT_LIST,
-        'RecipientSelectDropDown:setRecipientListMode',
       );
-      openOverlay(SP_COIN_DISPLAY.ACCOUNT_LIST_SELECT_PANEL, {
-        methodName: 'RecipientSelectDropDown:showRecipientListSelectPanel',
-      });
     },
-    [openOverlay, openPanel],
+    [openPanel],
   );
 
   const openRecipientAccountPanel = useCallback(

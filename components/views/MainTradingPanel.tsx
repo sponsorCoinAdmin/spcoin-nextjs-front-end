@@ -19,12 +19,30 @@ const AGENT_TITLE =
 const AGENT_SUB_TITLE =
   process.env.NEXT_PUBLIC_AGENT_SUB_TITLE ?? 'Your Sponsor Agent';
 
-export default function MainTradingPanel() {
+type MainTradingPanelProps = {
+  embeddedInPopup?: boolean;
+};
+
+export default function MainTradingPanel({ embeddedInPopup = false }: MainTradingPanelProps) {
   const accountPanelVisible = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_PANEL);
 
   return (
     <PanelGate panel={SP_COIN_DISPLAY.MAIN_TRADING_PANEL}>
-      <div id="MAIN_TRADING_PANEL" style={{ position: 'relative' }}>
+      <div
+        id="MAIN_TRADING_PANEL"
+        style={
+          embeddedInPopup
+            ? {
+                position: 'relative',
+                transform: 'none',
+                width: '100%',
+                minHeight: 0,
+                maxHeight: 'none',
+                margin: 0,
+              }
+            : { position: 'relative' }
+        }
+      >
         <div id="UNDEFINED" className="hidden" aria-hidden="true" />
         {/* 🟢 Debug HUD: current active main overlay */}
         {SHOW_ACTIVE && (
@@ -50,27 +68,38 @@ export default function MainTradingPanel() {
           ></div>
         )}
 
-        {/* ⬆️ Lifted header block (moved up by an extra 25px → total -60px) */}
-        <div
-          id="MainTradingPanelHeader"
-          className="w-full text-center pt-[10px] pb-2 select-none relative -top-[80px]"
-        >
-          <h2 className="m-0 text-2xl md:text-3xl font-extrabold tracking-wide leading-tight text-[#5981F3]">
-            {AGENT_TITLE}
-          </h2>
-          <p className="m-0 mt-1 text-sm opacity-80">{AGENT_SUB_TITLE}</p>
-        </div>
+        {!embeddedInPopup ? (
+          <>
+            {/* ⬆️ Lifted header block (moved up by an extra 25px → total -60px) */}
+            <div
+              id="MainTradingPanelHeader"
+              className="w-full text-center pt-[10px] pb-2 select-none relative -top-[80px]"
+            >
+              <h2 className="m-0 text-2xl md:text-3xl font-extrabold tracking-wide leading-tight text-[#5981F3]">
+                {AGENT_TITLE}
+              </h2>
+              <p className="m-0 mt-1 text-sm opacity-80">{AGENT_SUB_TITLE}</p>
+            </div>
 
-        {/* Spacer matches the lift so the panel doesn’t overlap the header */}
-        <div aria-hidden className="h-[60px]" />
+            {/* Spacer matches the lift so the panel doesn’t overlap the header */}
+            <div aria-hidden className="h-[60px]" />
+          </>
+        ) : null}
 
         <div
           id="mainTradingPanel"
           className={styles.mainTradingPanel}
           style={
-            accountPanelVisible
-              ? { height: 'min(650px, calc(100vh - 230px))' }
-              : undefined
+            embeddedInPopup
+              ? {
+                  transform: 'none',
+                  width: '100%',
+                  maxHeight: 'none',
+                  margin: 0,
+                }
+              : accountPanelVisible
+                ? { height: 'min(650px, calc(100vh - 230px))' }
+                : undefined
           }
         >
           <PanelGate panel={SP_COIN_DISPLAY.TRADE_CONTAINER_HEADER}>

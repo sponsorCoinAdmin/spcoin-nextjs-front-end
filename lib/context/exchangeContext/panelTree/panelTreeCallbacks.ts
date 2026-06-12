@@ -252,6 +252,11 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
 
         let flat = ensurePanelPresent(flat0, panel);
 
+        if (typeof _parent === 'number' && Number.isFinite(Number(_parent))) {
+          flat = ensurePanelPresent(flat, _parent);
+          flat = setVisible(flat, _parent, true, withName);
+        }
+
         if (openingManageRadioChild) {
           const prevScoped = getActiveManageScoped(flat0);
           pushManageScopedHistory(prevScoped, panel);

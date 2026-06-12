@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useConnect } from 'wagmi';
 
+import WalletConnectComponent from '@/components/views/Buttons/Connect/WalletConnectComponent';
 import WalletHeader from '@/components/views/WalletHeader';
 import MainTradingPanel from '@/components/views/MainTradingPanel';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
@@ -49,6 +50,7 @@ export default function SpCoinWalletPopup() {
   const { setPanelVisible } = usePanelTree();
   const walletAccountsVisible = usePanelVisible(SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT);
   const walletNetworksVisible = usePanelVisible(SP_COIN_DISPLAY.WALLET_NETWORKS_COMPONENT);
+  const walletConnectVisible = usePanelVisible(SP_COIN_DISPLAY.WALLET_CONNECT_COMPONENT);
   const mainTradingPanelVisible = usePanelVisible(SP_COIN_DISPLAY.MAIN_TRADING_PANEL);
   const tradingStationPanelVisible = usePanelVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
   const exchangeTradingPairVisible = usePanelVisible(SP_COIN_DISPLAY.EXCHANGE_TRADING_PAIR);
@@ -256,6 +258,11 @@ export default function SpCoinWalletPopup() {
   useEffect(() => {
     if (!isOpen || isSelectionMode || previewAccount || walletOptionsOpen) {
       setPanelVisible(
+        SP_COIN_DISPLAY.WALLET_CONNECT_COMPONENT,
+        false,
+        'SpCoinWalletPopup:hideWalletConnectComponent',
+      );
+      setPanelVisible(
         SP_COIN_DISPLAY.WALLET_NETWORKS_COMPONENT,
         false,
         'SpCoinWalletPopup:hideWalletNetworksComponent',
@@ -285,6 +292,11 @@ export default function SpCoinWalletPopup() {
     }
 
     if (isNormalMode && !wasNormalModeRef.current) {
+      setPanelVisible(
+        SP_COIN_DISPLAY.WALLET_CONNECT_COMPONENT,
+        true,
+        'SpCoinWalletPopup:showWalletConnectComponentOnOpen',
+      );
       setPanelVisible(
         SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT,
         !walletOptionsOpen,
@@ -385,7 +397,7 @@ export default function SpCoinWalletPopup() {
   };
 
   const popupShellClassName = swapTokensOpen
-    ? 'absolute left-1/2 top-1/2 flex w-[min(760px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 flex-col overflow-visible rounded-[15px] border border-[#2e3654] bg-[#0b0e19] text-white shadow-2xl'
+    ? 'absolute left-1/2 top-1/2 inline-flex w-[min(560px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-[15px] border border-[#2e3654] bg-[#0b0e19] text-white shadow-2xl'
     : 'absolute left-1/2 top-1/2 flex max-h-[min(650px,calc(100vh-2rem))] w-[min(520px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-[15px] border border-[#2e3654] bg-[#0b0e19] text-white shadow-2xl';
 
   if (isSelectionMode) {
@@ -489,13 +501,23 @@ export default function SpCoinWalletPopup() {
         />
 
       <div className={swapTokensOpen ? 'min-h-0 flex-1 overflow-visible' : 'min-h-0 flex-1 overflow-hidden'}>
-          {swapTokensOpen ? (
-            <MainTradingPanel />
-          ) : null}
+        {swapTokensOpen ? (
+          <MainTradingPanel embeddedInPopup />
+        ) : null}
 
-          {walletOptionsOpen ? (
-            <WalletOptions
-              onSelectOption={(label) => {
+        {!swapTokensOpen && walletConnectVisible ? (
+          <div className="shrink-0 border-b border-slate-700/50 px-4 py-3">
+            <WalletConnectComponent
+              showHoverBg={false}
+              trimHorizontalPaddingPx={0}
+              allowWalletModal={false}
+            />
+          </div>
+        ) : null}
+
+        {walletOptionsOpen ? (
+          <WalletOptions
+            onSelectOption={(label) => {
                 if (label === 'Swap Tokens') {
                   openSwapTokensPanel();
                 }
