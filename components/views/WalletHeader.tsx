@@ -2,12 +2,13 @@
 
 import React from 'react';
 import Image from 'next/image';
-import { RefreshCw, Wallet, X } from 'lucide-react';
+import { Menu, RefreshCw, Wallet, X } from 'lucide-react';
 
 type WalletHeaderMode = 'selection' | 'normal';
 
 type WalletHeaderProps = {
   mode: WalletHeaderMode;
+  title?: string;
   networkTitle?: string;
   appChainId?: number;
   selectionSummary?: string;
@@ -16,11 +17,13 @@ type WalletHeaderProps = {
   connectStatus?: string;
   onRefresh?: () => void;
   onConnectMetaMask?: () => void;
+  onMenuClick?: () => void;
   onClose: () => void;
 };
 
 export default function WalletHeader({
   mode,
+  title,
   networkTitle,
   appChainId,
   selectionSummary,
@@ -29,6 +32,7 @@ export default function WalletHeader({
   connectStatus,
   onRefresh,
   onConnectMetaMask,
+  onMenuClick,
   onClose,
 }: WalletHeaderProps) {
   const isSelection = mode === 'selection';
@@ -99,8 +103,18 @@ export default function WalletHeader({
             </span>
           </div>
           <h2 className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 text-center text-xl font-bold leading-tight">
-            SponsorCoin Wallet
+            {title ?? 'SponsorCoin Wallet'}
           </h2>
+          {onMenuClick ? (
+            <button
+              type="button"
+              onClick={onMenuClick}
+              className="absolute right-[4.4rem] top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-[#303b68] hover:bg-[#3c487a]"
+              aria-label="Open wallet menu"
+            >
+              <Menu className="h-6 w-6 text-[#91a5ff]" />
+            </button>
+          ) : null}
           <button
             type="button"
             onClick={onClose}
