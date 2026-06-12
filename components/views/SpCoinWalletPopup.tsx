@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useConnect } from 'wagmi';
 
 import WalletConnectComponent from '@/components/views/Buttons/Connect/WalletConnectComponent';
@@ -396,6 +396,46 @@ export default function SpCoinWalletPopup() {
     setWalletOptionsOpen(true);
   };
 
+  const handleWalletNetworkChevronClick = useCallback(() => {
+    trace('Wallet network chevron clicked', {
+      wasVisible: walletNetworksVisible,
+      walletOptionsOpen,
+    });
+    setWalletOptionsOpen(false);
+    setPanelVisible(
+      SP_COIN_DISPLAY.WALLET_NETWORKS_COMPONENT,
+      !walletNetworksVisible,
+      'SpCoinWalletPopup:toggleWalletNetworksViaChevron',
+    );
+    if (!walletNetworksVisible) {
+      setPanelVisible(
+        SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT,
+        false,
+        'SpCoinWalletPopup:hideWalletAccountsWhenOpeningNetworks',
+      );
+    }
+  }, [setPanelVisible, trace, walletNetworksVisible, walletOptionsOpen]);
+
+  const handleWalletAccountChevronClick = useCallback(() => {
+    trace('Wallet account chevron clicked', {
+      wasVisible: walletAccountsVisible,
+      walletOptionsOpen,
+    });
+    setWalletOptionsOpen(false);
+    setPanelVisible(
+      SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT,
+      !walletAccountsVisible,
+      'SpCoinWalletPopup:toggleWalletAccountsViaChevron',
+    );
+    if (!walletAccountsVisible) {
+      setPanelVisible(
+        SP_COIN_DISPLAY.WALLET_NETWORKS_COMPONENT,
+        false,
+        'SpCoinWalletPopup:hideWalletNetworksWhenOpeningAccounts',
+      );
+    }
+  }, [setPanelVisible, trace, walletAccountsVisible, walletOptionsOpen]);
+
   const popupShellClassName = swapTokensOpen
     ? 'absolute left-1/2 top-1/2 inline-flex w-[min(560px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-[15px] border border-[#2e3654] bg-[#0b0e19] text-white shadow-2xl'
     : 'absolute left-1/2 top-1/2 flex max-h-[min(650px,calc(100vh-2rem))] w-[min(520px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-[15px] border border-[#2e3654] bg-[#0b0e19] text-white shadow-2xl';
@@ -511,6 +551,8 @@ export default function SpCoinWalletPopup() {
               showHoverBg={false}
               trimHorizontalPaddingPx={0}
               allowWalletModal={false}
+              onNetworkChevronClick={handleWalletNetworkChevronClick}
+              onAccountChevronClick={handleWalletAccountChevronClick}
             />
           </div>
         ) : null}

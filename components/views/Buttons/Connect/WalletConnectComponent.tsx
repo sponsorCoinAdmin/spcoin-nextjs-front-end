@@ -204,33 +204,29 @@ export default function WalletConnectComponent({
                   )}
                   <span className="font-bold truncate">{label || (showConnect ? connectLabel : '')}</span>
                   {showChevron && (
-                    networkChevronUp ? (
-                      <button
-                        type="button"
-                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded hover:bg-white/10"
-                        onClick={(event) => {
-                          event.preventDefault();
-                          event.stopPropagation();
-                          onNetworkChevronClick?.();
-                        }}
-                        aria-label="Hide networks"
-                      >
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded hover:bg-white/10"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        onNetworkChevronClick?.();
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key !== 'Enter' && event.key !== ' ') return;
+                        event.preventDefault();
+                        event.stopPropagation();
+                        onNetworkChevronClick?.();
+                      }}
+                      aria-label={networkChevronUp ? 'Hide networks' : 'Show networks'}
+                    >
+                      {networkChevronUp ? (
                         <ChevronUp className="h-5 w-5 opacity-75" />
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded hover:bg-white/10"
-                        onClick={(event) => {
-                          event.preventDefault();
-                          event.stopPropagation();
-                          onNetworkChevronClick?.();
-                        }}
-                        aria-label="Show networks"
-                      >
+                      ) : (
                         <ChevronDown className="h-5 w-5 opacity-75" />
-                      </button>
-                    )
+                      )}
+                    </span>
                   )}
                 </div>
                 <div className="flex items-center gap-2">
@@ -243,10 +239,17 @@ export default function WalletConnectComponent({
                   )}
                   <span className="text-sm opacity-80 font-mono truncate">{truncatedAddress ?? address ?? 'Not connected'}</span>
                   {accountChevronUp ? (
-                    <button
-                      type="button"
+                    <span
+                      role="button"
+                      tabIndex={0}
                       className="flex h-7 w-7 shrink-0 items-center justify-center rounded hover:bg-white/10"
                       onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        onAccountChevronClick?.();
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key !== 'Enter' && event.key !== ' ') return;
                         event.preventDefault();
                         event.stopPropagation();
                         onAccountChevronClick?.();
@@ -254,12 +257,19 @@ export default function WalletConnectComponent({
                       aria-label="Hide accounts"
                     >
                       <ChevronUp className="h-5 w-5 opacity-60" />
-                    </button>
+                    </span>
                   ) : (
-                    <button
-                      type="button"
+                    <span
+                      role="button"
+                      tabIndex={0}
                       className="flex h-7 w-7 shrink-0 items-center justify-center rounded hover:bg-white/10"
                       onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        onAccountChevronClick?.();
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key !== 'Enter' && event.key !== ' ') return;
                         event.preventDefault();
                         event.stopPropagation();
                         onAccountChevronClick?.();
@@ -267,7 +277,7 @@ export default function WalletConnectComponent({
                       aria-label="Show accounts"
                     >
                       <ChevronDown className="h-5 w-5 opacity-60" />
-                    </button>
+                    </span>
                   )}
                 </div>
               </div>
