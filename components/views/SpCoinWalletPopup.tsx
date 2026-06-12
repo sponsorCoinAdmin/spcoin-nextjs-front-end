@@ -4,8 +4,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useConnect } from 'wagmi';
 
 import WalletConnectComponent from '@/components/views/Buttons/Connect/WalletConnectComponent';
+import AgentWalletPanel from '@/components/views/AgentWalletPanel';
 import WalletHeader from '@/components/views/WalletHeader';
-import MainTradingPanel from '@/components/views/MainTradingPanel';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { useSpCoinWallet } from '@/lib/spCoinWallet';
@@ -348,8 +348,6 @@ export default function SpCoinWalletPopup() {
     setSwapTokensOpen(false);
   }, [isOpen]);
 
-  if (!isOpen) return null;
-
   const toggleWalletOptions = () => {
     trace('Wallet options menu clicked', {
       before: walletOptionsOpen,
@@ -436,9 +434,10 @@ export default function SpCoinWalletPopup() {
     }
   }, [setPanelVisible, trace, walletAccountsVisible, walletOptionsOpen]);
 
-  const popupShellClassName = swapTokensOpen
-    ? 'absolute left-1/2 top-1/2 inline-flex w-[min(560px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-[15px] border border-[#2e3654] bg-[#0b0e19] text-white shadow-2xl'
-    : 'absolute left-1/2 top-1/2 flex max-h-[min(650px,calc(100vh-2rem))] w-[min(520px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-[15px] border border-[#2e3654] bg-[#0b0e19] text-white shadow-2xl';
+  const popupShellClassName =
+    'absolute left-1/2 top-1/2 flex max-h-[min(650px,calc(100vh-2rem))] w-[min(520px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-[15px] border border-[#2e3654] bg-[#0b0e19] text-white shadow-2xl';
+
+  if (!isOpen) return null;
 
   if (isSelectionMode) {
     return (
@@ -525,27 +524,32 @@ export default function SpCoinWalletPopup() {
     );
   }
 
+  if (swapTokensOpen) {
+    return (
+      <AgentWalletPanel
+        onBack={toggleWalletOptions}
+        onClose={handlePrimaryClose}
+      />
+    );
+  }
+
   return (
     <div className="fixed inset-0 z-[10000] bg-black/35">
-      <div
-        className={popupShellClassName}
-        role="dialog"
-        aria-modal="true"
-        aria-label="SponsorCoin Wallet"
-      >
+        <div
+          className={popupShellClassName}
+          role="dialog"
+          aria-modal="true"
+          aria-label="SponsorCoin Wallet"
+        >
         <WalletHeader
           mode="normal"
-          title={swapTokensOpen ? 'Swap Tokens' : walletOptionsOpen ? 'Wallet Options' : 'SponsorCoin Wallet'}
+          title={walletOptionsOpen ? 'Wallet Options' : 'SponsorCoin Wallet'}
           onMenuClick={toggleWalletOptions}
           onClose={handlePrimaryClose}
         />
 
-      <div className={swapTokensOpen ? 'min-h-0 flex-1 overflow-visible' : 'min-h-0 flex-1 overflow-hidden'}>
-        {swapTokensOpen ? (
-          <MainTradingPanel embeddedInPopup />
-        ) : null}
-
-        {!swapTokensOpen && walletConnectVisible ? (
+      <div className="min-h-0 flex-1 overflow-hidden">
+        {walletConnectVisible ? (
           <div className="shrink-0 border-b border-slate-700/50 px-4 py-3">
             <WalletConnectComponent
               showHoverBg={false}
@@ -593,7 +597,6 @@ export default function SpCoinWalletPopup() {
           ) : null}
       </div>
 
-        {!swapTokensOpen ? (
           <>
             {/* Trace Controls */}
             <div className="shrink-0 border-t border-slate-700/50 px-5 py-3">
@@ -627,7 +630,6 @@ export default function SpCoinWalletPopup() {
               </div>
             )}
           </>
-        ) : null}
       </div>
     </div>
   );
