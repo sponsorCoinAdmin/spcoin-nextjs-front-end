@@ -10,6 +10,7 @@ import WalletHeader from '@/components/views/WalletHeader';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
+import useOpenAccountComponent from '@/lib/context/hooks/useOpenAccountComponent';
 import { useSpCoinWallet } from '@/lib/spCoinWallet';
 import {
   readMeritWalletLS,
@@ -66,6 +67,7 @@ export default function SpCoinWalletPopup() {
     exchangeTradingPair: boolean;
   } | null>(null);
   const { openPanel, setPanelVisible } = usePanelTree();
+  const openAccountComponent = useOpenAccountComponent();
   const { exchangeContext } = useExchangeContext();
   const walletAccountsVisible = usePanelVisible(SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT);
   const walletNetworksVisible = usePanelVisible(SP_COIN_DISPLAY.WALLET_NETWORKS_COMPONENT);
@@ -181,6 +183,15 @@ export default function SpCoinWalletPopup() {
     }
   };
 
+  const openSharedAccountPanel = (account: spCoinAccount, source: string) => {
+    openAccountComponent({
+      account,
+      mode: SP_COIN_DISPLAY.ACTIVE_ACCOUNT,
+      source,
+    });
+    setPreviewAccount(account);
+  };
+
   const openAccountPanel = (account: SpCoinWalletAccount) => {
     const nextAccount: spCoinAccount = {
       name: String(account.name || account.label || 'Unnamed account').trim(),
@@ -200,10 +211,10 @@ export default function SpCoinWalletPopup() {
       isSelectionMode,
     });
 
-    trace('openAccountPanel using wallet preview mode', {
+    trace('openAccountPanel using shared account panel mode', {
       accountAddress: nextAccount.address,
     });
-    setPreviewAccount(nextAccount);
+    openSharedAccountPanel(nextAccount, 'SpCoinWalletPopup:openAccountPanel');
   };
 
   const handlePrimaryClose = () => {
@@ -573,12 +584,12 @@ export default function SpCoinWalletPopup() {
       balance: 0n,
     };
 
-    setPreviewAccount(nextAccount);
+    openSharedAccountPanel(nextAccount, 'SpCoinWalletPopup:ManageAccount');
     trace('Manage account preview opened', {
       accountAddress: nextAccount.address,
       accountName: nextAccount.name,
     });
-  }, [exchangeContext?.accounts?.activeAccount]);
+  }, [exchangeContext?.accounts?.activeAccount, openAccountComponent]);
 
   const returnFromWalletOptions = () => {
     trace('Returning from wallet options', {
