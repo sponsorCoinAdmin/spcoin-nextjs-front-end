@@ -7,6 +7,7 @@ import { useExpandCollapse } from './hooks/useExpandCollapse';
 import { useExchangePageState } from './hooks/useExchangePageState';
 import TreeView from './components/Tree/TreeView';
 import Row from './components/Tree/Row';
+import DebugTracePanel from './components/DebugTracePanel';
 import { enumRegistry } from './state/enumRegistry';
 
 // Virtual tree builder (page-local)
@@ -192,6 +193,8 @@ export default function ExchangeContextTab({ onToggleAllReady }: ExchangeContext
 
         </div>
       </PanelGate>
+
+      <DebugTracePanel />
     </div>
   );
 }

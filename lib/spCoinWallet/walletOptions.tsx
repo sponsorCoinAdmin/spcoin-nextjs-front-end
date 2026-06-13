@@ -31,8 +31,8 @@ const WALLET_OPTIONS: WalletOption[] = [
 
 export default function WalletOptions({ onSelectOption }: WalletOptionsProps) {
   return (
-    <div className="min-h-0 flex-1 border-t border-slate-700/70 px-9 py-8">
-      <div className="grid grid-cols-2 items-stretch gap-5 sm:grid-cols-3 lg:grid-cols-5">
+    <div className="min-h-0 flex-1 border-t border-slate-700/70 px-7 py-6">
+      <div className="grid grid-cols-2 items-stretch gap-4 sm:grid-cols-3 lg:grid-cols-5">
         {WALLET_OPTIONS.map(({ label, icon }) => {
           const Icon = icon.type === 'component' ? icon.value : null;
 
@@ -42,25 +42,25 @@ export default function WalletOptions({ onSelectOption }: WalletOptionsProps) {
             type="button"
             onClick={() => onSelectOption?.(label)}
             className={[
-              'flex min-h-[176px] flex-col items-center justify-center gap-5',
-              'rounded-[18px] border border-slate-800 bg-[#161922] px-3 py-5 text-white',
+              'flex min-h-[168px] flex-col items-center justify-center gap-4',
+              'rounded-[18px] border border-slate-800 bg-[#161922] px-3 py-4 text-white',
               'transition-colors hover:bg-[#1b2130] hover:border-slate-700',
             ].join(' ')}
           >
-            <span className="flex h-16 w-16 items-center justify-center rounded-[16px] bg-[#1f2431] text-slate-200">
+            <span className="flex h-14 w-14 items-center justify-center rounded-[16px] bg-[#1f2431] text-slate-200">
               {Icon ? (
-                <Icon className="h-8 w-8" />
+                <Icon className="h-7 w-7" />
               ) : (
                 <Image
                   src={icon.value as StaticImageData}
-                  width={32}
-                  height={32}
+                  width={28}
+                  height={28}
                   alt="Config"
-                  className="h-8 w-8 object-contain"
+                  className="h-7 w-7 object-contain"
                 />
               )}
             </span>
-            <span className="max-w-full text-center text-[1rem] font-semibold leading-6">
+            <span className="max-w-full text-center text-[0.98rem] font-semibold leading-6">
               {label}
             </span>
           </button>

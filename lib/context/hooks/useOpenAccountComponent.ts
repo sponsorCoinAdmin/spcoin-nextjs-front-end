@@ -11,6 +11,7 @@ import {
   useSponsorAccount,
 } from '@/lib/context/hooks/nestedHooks/useAccounts';
 import { SP_COIN_DISPLAY, type spCoinAccount } from '@/lib/structure';
+import { appendDebugTrace } from '@/lib/utils/debugTrace';
 
 type AccountComponentMode =
   | SP_COIN_DISPLAY.ACTIVE_ACCOUNT
@@ -45,6 +46,12 @@ export default function useOpenAccountComponent() {
       suppressOverlayCloseReason,
       suppressOverlayCloseSource,
     }: OpenAccountComponentOptions = {}) => {
+      appendDebugTrace(`${source}:openAccountComponent`, {
+        hasAccount: Boolean(account),
+        mode,
+        hasCloseCallback: Boolean(close),
+      });
+
       if (account) {
         if (mode === SP_COIN_DISPLAY.SPONSOR_ACCOUNT) setSponsorAccount(account);
         else if (mode === SP_COIN_DISPLAY.RECIPIENT_ACCOUNT) setRecipientAccount(account);
@@ -59,9 +66,16 @@ export default function useOpenAccountComponent() {
         );
       }
 
-      close?.();
-      openPanel(mode, `${source}:setAccountMode`);
+      appendDebugTrace(`${source}:openingAccountPanelParent`, {
+        mode,
+      });
       openPanel(SP_COIN_DISPLAY.ACCOUNT_PANEL, `${source}:openAccountPanel`);
+
+      close?.();
+      appendDebugTrace(`${source}:openingAccountPanelMode`, {
+        mode,
+      });
+      openPanel(mode, `${source}:setAccountMode`);
     },
     [openPanel, setActiveAccount, setAgentAccount, setRecipientAccount, setSponsorAccount],
   );

@@ -113,9 +113,7 @@ export default function Accounts({
   const activeAddressKey = normalizedSelectedKey || fallbackAddress;
 
   useEffect(() => {
-    if (!previewAccount) {
-      setDisplayState('ACCOUNT_LIST');
-    }
+    setDisplayState(previewAccount ? 'ACCOUNT_META' : 'ACCOUNT_LIST');
   }, [previewAccount]);
 
   const handleOpenAccountPanel = (account: SpCoinWalletAccount) => {

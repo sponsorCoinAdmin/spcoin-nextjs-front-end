@@ -80,48 +80,45 @@ export default function AccountRow({
           <Wallet className="h-5 w-5 text-[#7893ff]" />
         )}
       </button>
-      <div
-        className={[
-          'min-w-0',
-          'bg-transparent',
-        ].join(' ')}
-      >
-        <button
-          type="button"
-          onClick={onSelect}
-          className="min-w-0 rounded-none border-none bg-transparent px-0 py-0 text-left text-inherit focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7893ff]"
-        >
-          <span className="min-w-0">
-            <span className="flex items-center gap-2 truncate text-sm font-semibold text-white">
-              <span className="truncate">{meta || sourceLabel(account.source)}</span>
-              {isActiveMarker ? (
-                <span className="inline-flex shrink-0 items-center gap-1 rounded bg-green-500/25 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-green-200">
-                  <span>Active</span>
-                  <button
-                    type="button"
-                    onClick={(event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      onTrace('AccountRow chevron clicked', {
-                        address: account.address,
-                        label: account.label,
-                        isCollapsed,
-                        isActiveMarker,
-                      });
-                      onToggleCollapse();
-                    }}
-                    className="flex h-3.5 w-3.5 items-center justify-center rounded text-green-200 transition-colors hover:bg-[#1d2542] hover:text-white"
-                    aria-label={isCollapsed ? 'Show all accounts' : 'Hide other accounts'}
-                    title={isCollapsed ? 'Show all accounts' : 'Hide other accounts'}
-                  >
-                    {isCollapsed ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />}
-                  </button>
-                </span>
-              ) : null}
+      <div className="min-w-0 bg-transparent">
+        <div className="flex min-w-0 items-center gap-2">
+          <button
+            type="button"
+            onClick={onSelect}
+            className="min-w-0 flex-1 rounded-none border-none bg-transparent px-0 py-0 text-left text-inherit focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7893ff]"
+          >
+            <span className="block truncate text-sm font-semibold text-white">
+              {meta || sourceLabel(account.source)}
             </span>
-            <span className="block truncate font-mono text-[13px] text-slate-300">{account.address}</span>
-          </span>
-        </button>
+          </button>
+          {isActiveMarker ? (
+            <>
+              <span className="inline-flex shrink-0 items-center rounded bg-green-500/25 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-green-200">
+                Active
+              </span>
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  onTrace('AccountRow chevron clicked', {
+                    address: account.address,
+                    label: account.label,
+                    isCollapsed,
+                    isActiveMarker,
+                  });
+                  onToggleCollapse();
+                }}
+                className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded text-green-200 transition-colors hover:bg-[#1d2542] hover:text-white"
+                aria-label={isCollapsed ? 'Show all accounts' : 'Hide other accounts'}
+                title={isCollapsed ? 'Show all accounts' : 'Hide other accounts'}
+              >
+                {isCollapsed ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />}
+              </button>
+            </>
+          ) : null}
+        </div>
+        <span className="block truncate font-mono text-[13px] text-slate-300">{account.address}</span>
       </div>
     </div>
   );

@@ -6,6 +6,7 @@ import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVis
 import { SP_COIN_DISPLAY, type spCoinAccount } from '@/lib/structure';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { appendDebugTrace } from '@/lib/utils/debugTrace';
 import AccountPanelContent from '@/components/views/RadioOverlayPanels/AccountPanel/AccountPanelContent';
 
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_ACCOUNT_PANEL === 'true';
@@ -77,6 +78,12 @@ export default function AccountPanel(_props: Props) {
       selectedAddr: (selectedAccount as spCoinAccount | undefined)?.address,
     });
   }
+
+  appendDebugTrace('AccountPanel render', {
+    activeMember,
+    hasSelectedAccount: Boolean(selectedAccount),
+    selectedAddress: selectedAccount?.address ?? '',
+  });
 
   return (
     <div id="ACCOUNT_PANEL" className="flex h-full min-h-0 flex-col">

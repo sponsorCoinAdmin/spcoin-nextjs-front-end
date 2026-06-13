@@ -21,6 +21,7 @@ import { useActiveAccount } from '@/lib/context/hooks/ExchangeContext/nested/acc
 import type { SpCoinWalletAccount } from '@/lib/spCoinWallet';
 import { SP_COIN_DISPLAY, STATUS, type spCoinAccount } from '@/lib/structure';
 import { normalizeAddress } from '@/lib/utils/address';
+import { appendDebugTrace, clearDebugTraceBuffer } from '@/lib/utils/debugTrace';
 import Accounts from '@/lib/spCoinWallet/accounts';
 import Networks from '@/lib/spCoinWallet/networks';
 import WalletOptions from '@/lib/spCoinWallet/walletOptions';
@@ -41,16 +42,14 @@ export default function SpCoinWalletPopup() {
   const [, setActiveAccount] = useActiveAccount();
   const { connectAsync, connectors, status: connectStatus } = useConnect();
   const [previewAccount, setPreviewAccount] = useState<spCoinAccount | undefined>(undefined);
-  const [traceEnabled, setTraceEnabled] = useState(false);
-  const [traceOutput, setTraceOutput] = useState<string[]>([]);
   const [selectionAccountsCollapsed, setSelectionAccountsCollapsed] = useState(false);
   const [walletAccountsCollapsed, setWalletAccountsCollapsed] = useState(false);
   const [walletOptionsOpen, setWalletOptionsOpen] = useState(false);
   const [swapTokensOpen, setSwapTokensOpen] = useState(false);
   const [walletConfigOpen, setWalletConfigOpen] = useState(false);
-  const [agentPanelMode, setAgentPanelMode] = useState<'trade' | 'manage'>('trade');
+  const [agentPanelMode, setAgentPanelMode] = useState<'trade' | 'rewards'>('trade');
   const [walletOptionsReturnMode, setWalletOptionsReturnMode] = useState<
-    'normal' | 'swap' | 'manage' | 'config'
+    'normal' | 'swap' | 'rewards' | 'config'
   >('normal');
   const [showBackgroundPage, setShowBackgroundPage] = useState(
     () => readMeritWalletLS().config.showBackgroundPage,
@@ -122,10 +121,18 @@ export default function SpCoinWalletPopup() {
     const timestamp = new Date().toLocaleTimeString();
     const logMessage = `[${timestamp}] ${message}${data ? ': ' + JSON.stringify(data) : ''}`;
     console.log(logMessage);
-    if (traceEnabled) {
-      setTraceOutput((prev) => [...prev, logMessage]);
-    }
+    appendDebugTrace(message, data);
   };
+
+  useEffect(() => {
+    if (!isOpen || wasWalletOpenRef.current) {
+      wasWalletOpenRef.current = isOpen;
+      return;
+    }
+
+    clearDebugTraceBuffer();
+    wasWalletOpenRef.current = true;
+  }, [isOpen]);
 
   useEffect(() => {
     setSelectionAccountsCollapsed(false);
@@ -246,6 +253,7 @@ export default function SpCoinWalletPopup() {
     };
 
     setWalletOptionsOpen(false);
+    setPreviewAccount(undefined);
     setPanelVisible(
       SP_COIN_DISPLAY.WALLET_CONNECT_COMPONENT,
       false,
@@ -410,7 +418,7 @@ export default function SpCoinWalletPopup() {
     if (swapTokensOpen) {
       restoreTradingVisibility();
       setSwapTokensOpen(false);
-      setWalletOptionsReturnMode(agentPanelMode === 'manage' ? 'manage' : 'swap');
+      setWalletOptionsReturnMode(agentPanelMode === 'rewards' ? 'rewards' : 'swap');
     }
 
     if (walletConfigOpen) {
@@ -482,15 +490,16 @@ export default function SpCoinWalletPopup() {
     setSwapTokensOpen(true);
   }, [openPanel, setPanelVisible]);
 
-  const openManageRewardsDefaultPanel = useCallback(() => {
-    trace('Opening manage rewards default panel', {
+  const openManageRewardsPanel = useCallback(() => {
+    trace('Opening manage rewards panel', {
       activeAccountAddress: String(exchangeContext?.accounts?.activeAccount?.address ?? '').trim(),
     });
     suppressDefaultPanelAutoOpenRef.current = true;
-    setAgentPanelMode('manage');
-    setWalletOptionsReturnMode('manage');
+    setAgentPanelMode('rewards');
+    setWalletOptionsReturnMode('rewards');
     setWalletOptionsOpen(false);
     setWalletConfigOpen(false);
+    setPreviewAccount(undefined);
     setSwapTokensOpen(true);
     setPanelVisible(
       SP_COIN_DISPLAY.WALLET_CONNECT_COMPONENT,
@@ -525,11 +534,11 @@ export default function SpCoinWalletPopup() {
     setPanelVisible(
       SP_COIN_DISPLAY.ACCOUNT_PANEL,
       false,
-      'SpCoinWalletPopup:hideAccountPanelForManageRewardsDefault',
+      'SpCoinWalletPopup:hideAccountPanelForManageRewards',
     );
     openPanel(
       SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
-      'SpCoinWalletPopup:openManageSponsorshipsPanelForManageRewardsDefault',
+      'SpCoinWalletPopup:openManageSponsorshipsPanelForManageRewards',
     );
   }, [exchangeContext?.accounts?.activeAccount, openPanel, setPanelVisible]);
 
@@ -541,19 +550,35 @@ export default function SpCoinWalletPopup() {
     if (!activeAccount) return;
 
     suppressDefaultPanelAutoOpenRef.current = true;
+    setPreviewAccount(undefined);
     setWalletOptionsOpen(false);
     setWalletConfigOpen(false);
     setSwapTokensOpen(false);
+    trace('Manage account popup state cleared', {
+      previewCleared: true,
+      walletOptionsOpen: false,
+      walletConfigOpen: false,
+      swapTokensOpen: false,
+    });
 
-    openAccountPanel({
-      address: String(activeAccount.address ?? '').trim(),
-      label: String(activeAccount.name ?? '').trim() || 'Active Account',
+    const nextAccount: spCoinAccount = {
+      address: String(activeAccount.address ?? '').trim() as spCoinAccount['address'],
       name: String(activeAccount.name ?? '').trim() || 'Active Account',
       symbol: String(activeAccount.symbol ?? '').trim(),
-      logoURL: activeAccount.logoURL,
-      source: walletSource,
+      type: 'account',
+      website: '',
+      description: '',
+      status: STATUS.INFO,
+      ...(activeAccount.logoURL ? { logoURL: activeAccount.logoURL } : {}),
+      balance: 0n,
+    };
+
+    setPreviewAccount(nextAccount);
+    trace('Manage account preview opened', {
+      accountAddress: nextAccount.address,
+      accountName: nextAccount.name,
     });
-  }, [exchangeContext?.accounts?.activeAccount, openAccountPanel, walletSource]);
+  }, [exchangeContext?.accounts?.activeAccount]);
 
   const returnFromWalletOptions = () => {
     trace('Returning from wallet options', {
@@ -567,8 +592,8 @@ export default function SpCoinWalletPopup() {
       return;
     }
 
-    if (walletOptionsReturnMode === 'manage') {
-      openManageRewardsDefaultPanel();
+    if (walletOptionsReturnMode === 'rewards') {
+      openManageRewardsPanel();
       return;
     }
 
@@ -598,7 +623,7 @@ export default function SpCoinWalletPopup() {
     if (swapTokensOpen) {
       restoreTradingVisibility();
       setSwapTokensOpen(false);
-      setWalletOptionsReturnMode(agentPanelMode === 'manage' ? 'manage' : 'swap');
+      setWalletOptionsReturnMode(agentPanelMode === 'rewards' ? 'rewards' : 'swap');
     }
 
     if (walletConfigOpen) {
@@ -630,13 +655,13 @@ export default function SpCoinWalletPopup() {
     }
 
     if (defaultPanel === 'MANAGE_REWARDS') {
-      openManageRewardsDefaultPanel();
+      openManageRewardsPanel();
     }
   }, [
     defaultPanel,
     isOpen,
     isSelectionMode,
-    openManageRewardsDefaultPanel,
+    openManageRewardsPanel,
     openTradeStationDefaultPanel,
     swapTokensOpen,
     walletConfigOpen,
@@ -684,13 +709,8 @@ export default function SpCoinWalletPopup() {
   }, [setPanelVisible, trace, walletAccountsVisible, walletOptionsOpen]);
 
   const popupShellClassName = [
-    'absolute left-1/2 top-1/2 flex max-h-[min(650px,calc(100vh-60px-2rem))] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden',
+    'absolute left-1/2 top-1/2 flex min-h-[300px] max-h-[650px] w-[min(520px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden',
     'rounded-[15px] border border-[#2e3654] bg-[#0b0e19] text-white shadow-2xl',
-    swapTokensOpen
-      ? 'w-[min(560px,calc(100vw-2rem))]'
-      : walletOptionsOpen
-        ? 'w-[min(700px,calc(100vw-2rem))]'
-      : 'w-[min(520px,calc(100vw-2rem))]',
   ].join(' ');
 
   if (!isOpen) return null;
@@ -700,7 +720,7 @@ export default function SpCoinWalletPopup() {
       <div className="fixed inset-x-0 bottom-0 top-[60px] z-[10000] bg-[#050711]">
         <div
           className={[
-            'absolute left-1/2 top-1/2 flex max-h-[min(650px,calc(100vh-60px-2rem))] w-[min(520px,calc(100vw-2rem))] flex-col -translate-x-1/2 -translate-y-1/2 overflow-hidden',
+            'absolute left-1/2 top-1/2 flex min-h-[300px] max-h-[650px] w-[min(520px,calc(100vw-2rem))] flex-col -translate-x-1/2 -translate-y-1/2 overflow-hidden',
             'rounded-[15px] border border-[#2e3654] bg-[#0b0e19] text-white shadow-2xl',
           ].join(' ')}
           role="dialog"
@@ -742,37 +762,6 @@ export default function SpCoinWalletPopup() {
               onClosePreview={() => setPreviewAccount(undefined)}
             />
 
-            {/* Trace Controls */}
-            <div className="border-t border-slate-700/50 px-5 py-3">
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="wallet-trace-toggle"
-                  checked={traceEnabled}
-                  onChange={(e) => {
-                    setTraceEnabled(e.target.checked);
-                    if (!e.target.checked) setTraceOutput([]);
-                  }}
-                  className="h-4 w-4 cursor-pointer"
-                />
-                <label htmlFor="wallet-trace-toggle" className="text-sm text-[#91a5ff] cursor-pointer">
-                  Trace Selection
-                </label>
-              </div>
-            </div>
-
-            {/* Trace Output */}
-            {traceEnabled && traceOutput.length > 0 && (
-              <div className="border-t border-slate-700/50 px-5 py-3 max-h-48 overflow-y-auto bg-[#0a0d16]">
-                <div className="text-xs font-mono text-[#7893ff] space-y-1">
-                  {traceOutput.map((line, idx) => (
-                    <div key={idx} className="text-[#91a5ff]">
-                      {line}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
@@ -824,7 +813,7 @@ export default function SpCoinWalletPopup() {
             onShowBackgroundPageChange={setShowBackgroundPage}
             defaultPanel={defaultPanel}
             onDefaultPanelChange={setDefaultPanel}
-            onManageRewardsOpen={openManageRewardsDefaultPanel}
+            onManageRewardsOpen={openManageRewardsPanel}
           />
         ) : null}
 
@@ -854,7 +843,7 @@ export default function SpCoinWalletPopup() {
               }
 
               if (label === 'Manage Rewards') {
-                openManageRewardsDefaultPanel();
+                openManageRewardsPanel();
                 return;
               }
 
@@ -875,7 +864,7 @@ export default function SpCoinWalletPopup() {
           <Networks />
         ) : null}
 
-          {!swapTokensOpen && !walletConfigOpen && walletAccountsVisible ? (
+        {!swapTokensOpen && !walletConfigOpen && (walletAccountsVisible || previewAccount) ? (
             <Accounts
               accounts={visibleAccounts}
               walletSource={walletSource}
@@ -899,41 +888,6 @@ export default function SpCoinWalletPopup() {
           ) : null}
       </div>
 
-        {!swapTokensOpen && !walletConfigOpen ? (
-          <>
-            {/* Trace Controls */}
-            <div className="shrink-0 border-t border-slate-700/50 px-5 py-3">
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="wallet-trace-toggle"
-                  checked={traceEnabled}
-                  onChange={(e) => {
-                    setTraceEnabled(e.target.checked);
-                    if (!e.target.checked) setTraceOutput([]);
-                  }}
-                  className="h-4 w-4 cursor-pointer"
-                />
-                <label htmlFor="wallet-trace-toggle" className="text-sm text-[#91a5ff] cursor-pointer">
-                  Trace Selection
-                </label>
-              </div>
-            </div>
-
-            {/* Trace Output */}
-            {traceEnabled && traceOutput.length > 0 && (
-              <div className="max-h-48 shrink-0 overflow-y-auto border-t border-slate-700/50 bg-[#0a0d16] px-5 py-3">
-                <div className="text-xs font-mono text-[#7893ff] space-y-1">
-                  {traceOutput.map((line, idx) => (
-                    <div key={idx} className="text-[#91a5ff]">
-                      {line}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </>
-        ) : null}
       </div>
     </div>
   );
