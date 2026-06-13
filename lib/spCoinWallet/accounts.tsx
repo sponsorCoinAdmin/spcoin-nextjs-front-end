@@ -105,6 +105,7 @@ export default function Accounts({
   onToggleCollapse,
   onTrace,
   previewAccount,
+  onClosePreview,
 }: AccountsProps) {
   const [displayState, setDisplayState] = useState<AccountsDisplayState>('ACCOUNT_LIST');
   const normalizedSelectedKey = selectedAddressKey || normalizedWorkingAddress;
@@ -158,8 +159,7 @@ export default function Accounts({
         <div className="min-h-0 flex-1 border-t border-slate-700/70">
           <AccountPanelContent
             account={previewAccount}
-            showHeader={false}
-            showSummaryRow={false}
+            onClose={onClosePreview}
             mode={SP_COIN_DISPLAY.ACTIVE_ACCOUNT}
           />
         </div>

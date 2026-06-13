@@ -23,8 +23,12 @@ import StakingSpCoinsPanel from '@/components/views/RadioOverlayPanels/StakingSp
 import TradingStationPanel from '@/components/views/TradingStationPanel';
 
 import { SP_COIN_DISPLAY } from '@/lib/structure';
+import { useEnforceRadioPanelGroups } from '@/lib/context/exchangeContext/hooks/useEnforceRadioPanelGroups';
+import { RADIO_PANEL_GROUPS } from '@/lib/structure/exchangeContext/constants/spCoinDisplay';
 
 export default function RadioOverlayPanelHost() {
+  useEnforceRadioPanelGroups(RADIO_PANEL_GROUPS);
+
   return (
     <>
       {/* ───────────────────────── Main overlays (radio group) ───────────────────────── */}

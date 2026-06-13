@@ -7,9 +7,15 @@ import WalletConnectComponent from '@/components/views/Buttons/Connect/WalletCon
 import AgentWalletPanel from '@/components/views/AgentWalletPanel';
 import WalletConfig from '@/components/views/WalletConfig';
 import WalletHeader from '@/components/views/WalletHeader';
+import { useExchangeContext } from '@/lib/context/hooks';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { useSpCoinWallet } from '@/lib/spCoinWallet';
+import {
+  readMeritWalletLS,
+  updateMeritWalletLS,
+  type MeritWalletDefaultPanel,
+} from '@/lib/spCoinWallet/meritWalletStorage';
 import { getBlockChainName } from '@/lib/context/helpers/NetworkHelpers';
 import { useActiveAccount } from '@/lib/context/hooks/ExchangeContext/nested/accounts/useActiveAccount';
 import type { SpCoinWalletAccount } from '@/lib/spCoinWallet';
@@ -42,16 +48,26 @@ export default function SpCoinWalletPopup() {
   const [walletOptionsOpen, setWalletOptionsOpen] = useState(false);
   const [swapTokensOpen, setSwapTokensOpen] = useState(false);
   const [walletConfigOpen, setWalletConfigOpen] = useState(false);
-  const [walletOptionsReturnMode, setWalletOptionsReturnMode] = useState<'normal' | 'swap' | 'config'>('normal');
-  const [showBackgroundPage, setShowBackgroundPage] = useState(false);
+  const [agentPanelMode, setAgentPanelMode] = useState<'trade' | 'manage'>('trade');
+  const [walletOptionsReturnMode, setWalletOptionsReturnMode] = useState<
+    'normal' | 'swap' | 'manage' | 'config'
+  >('normal');
+  const [showBackgroundPage, setShowBackgroundPage] = useState(
+    () => readMeritWalletLS().config.showBackgroundPage,
+  );
+  const [defaultPanel, setDefaultPanel] = useState<MeritWalletDefaultPanel>(
+    () => readMeritWalletLS().config.defaultPanel,
+  );
   const wasWalletOpenRef = useRef(false);
   const wasNormalModeRef = useRef(false);
+  const suppressDefaultPanelAutoOpenRef = useRef(false);
   const tradingVisibilityRestoreRef = useRef<{
     mainTradingPanel: boolean;
     tradingStationPanel: boolean;
     exchangeTradingPair: boolean;
   } | null>(null);
-  const { setPanelVisible } = usePanelTree();
+  const { openPanel, setPanelVisible } = usePanelTree();
+  const { exchangeContext } = useExchangeContext();
   const walletAccountsVisible = usePanelVisible(SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT);
   const walletNetworksVisible = usePanelVisible(SP_COIN_DISPLAY.WALLET_NETWORKS_COMPONENT);
   const walletConnectVisible = usePanelVisible(SP_COIN_DISPLAY.WALLET_CONNECT_COMPONENT);
@@ -221,6 +237,7 @@ export default function SpCoinWalletPopup() {
 
   const openSwapTokensPanel = () => {
     trace('Wallet option selected', { option: 'Swap Tokens' });
+    suppressDefaultPanelAutoOpenRef.current = true;
 
     tradingVisibilityRestoreRef.current = {
       mainTradingPanel: mainTradingPanelVisible,
@@ -245,14 +262,23 @@ export default function SpCoinWalletPopup() {
       'SpCoinWalletPopup:hideWalletNetworksForSwapTokens',
     );
     setPanelVisible(
+      SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
+      false,
+      'SpCoinWalletPopup:hideManageSponsorshipsForSwapTokens',
+    );
+    setPanelVisible(
+      SP_COIN_DISPLAY.ACCOUNT_PANEL,
+      false,
+      'SpCoinWalletPopup:hideAccountPanelForSwapTokens',
+    );
+    setPanelVisible(
       SP_COIN_DISPLAY.MAIN_TRADING_PANEL,
       true,
       'SpCoinWalletPopup:showMainTradingPanelForSwapTokens',
     );
-    setPanelVisible(
+    openPanel(
       SP_COIN_DISPLAY.TRADING_STATION_PANEL,
-      true,
-      'SpCoinWalletPopup:showTradingStationPanelForSwapTokens',
+      'SpCoinWalletPopup:openTradingStationPanelForSwapTokens',
     );
     setPanelVisible(
       SP_COIN_DISPLAY.EXCHANGE_TRADING_PAIR,
@@ -359,7 +385,19 @@ export default function SpCoinWalletPopup() {
     setSwapTokensOpen(false);
     setWalletConfigOpen(false);
     setWalletOptionsReturnMode('normal');
+    setAgentPanelMode('trade');
   }, [isOpen]);
+
+  useEffect(() => {
+    updateMeritWalletLS((previous) => ({
+      ...previous,
+      config: {
+        ...previous.config,
+        showBackgroundPage,
+        defaultPanel,
+      },
+    }));
+  }, [defaultPanel, showBackgroundPage]);
 
   const openWalletOptions = () => {
     trace('Wallet menu opened', {
@@ -372,7 +410,7 @@ export default function SpCoinWalletPopup() {
     if (swapTokensOpen) {
       restoreTradingVisibility();
       setSwapTokensOpen(false);
-      setWalletOptionsReturnMode('swap');
+      setWalletOptionsReturnMode(agentPanelMode === 'manage' ? 'manage' : 'swap');
     }
 
     if (walletConfigOpen) {
@@ -398,6 +436,125 @@ export default function SpCoinWalletPopup() {
     setWalletOptionsOpen(true);
   };
 
+  const openTradeStationDefaultPanel = useCallback(() => {
+    setAgentPanelMode('trade');
+    setWalletOptionsOpen(false);
+    setWalletConfigOpen(false);
+    setPanelVisible(
+      SP_COIN_DISPLAY.WALLET_CONNECT_COMPONENT,
+      false,
+      'SpCoinWalletPopup:hideWalletConnectForTradeStationDefault',
+    );
+    setPanelVisible(
+      SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT,
+      false,
+      'SpCoinWalletPopup:hideWalletAccountsForTradeStationDefault',
+    );
+    setPanelVisible(
+      SP_COIN_DISPLAY.WALLET_NETWORKS_COMPONENT,
+      false,
+      'SpCoinWalletPopup:hideWalletNetworksForTradeStationDefault',
+    );
+    setPanelVisible(
+      SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
+      false,
+      'SpCoinWalletPopup:hideManageSponsorshipsForTradeStationDefault',
+    );
+    setPanelVisible(
+      SP_COIN_DISPLAY.ACCOUNT_PANEL,
+      false,
+      'SpCoinWalletPopup:hideAccountPanelForTradeStationDefault',
+    );
+    setPanelVisible(
+      SP_COIN_DISPLAY.MAIN_TRADING_PANEL,
+      true,
+      'SpCoinWalletPopup:showMainTradingPanelForTradeStationDefault',
+    );
+    openPanel(
+      SP_COIN_DISPLAY.TRADING_STATION_PANEL,
+      'SpCoinWalletPopup:openTradingStationPanelForTradeStationDefault',
+    );
+    setPanelVisible(
+      SP_COIN_DISPLAY.EXCHANGE_TRADING_PAIR,
+      true,
+      'SpCoinWalletPopup:showExchangeTradingPairForTradeStationDefault',
+    );
+    setSwapTokensOpen(true);
+  }, [openPanel, setPanelVisible]);
+
+  const openManageRewardsDefaultPanel = useCallback(() => {
+    trace('Opening manage rewards default panel', {
+      activeAccountAddress: String(exchangeContext?.accounts?.activeAccount?.address ?? '').trim(),
+    });
+    suppressDefaultPanelAutoOpenRef.current = true;
+    setAgentPanelMode('manage');
+    setWalletOptionsReturnMode('manage');
+    setWalletOptionsOpen(false);
+    setWalletConfigOpen(false);
+    setSwapTokensOpen(true);
+    setPanelVisible(
+      SP_COIN_DISPLAY.WALLET_CONNECT_COMPONENT,
+      false,
+      'SpCoinWalletPopup:hideWalletConnectForManageRewardsDefault',
+    );
+    setPanelVisible(
+      SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT,
+      false,
+      'SpCoinWalletPopup:hideWalletAccountsForManageRewardsDefault',
+    );
+    setPanelVisible(
+      SP_COIN_DISPLAY.WALLET_NETWORKS_COMPONENT,
+      false,
+      'SpCoinWalletPopup:hideWalletNetworksForManageRewardsDefault',
+    );
+    setPanelVisible(
+      SP_COIN_DISPLAY.MAIN_TRADING_PANEL,
+      true,
+      'SpCoinWalletPopup:showMainTradingPanelForManageRewardsDefault',
+    );
+    setPanelVisible(
+      SP_COIN_DISPLAY.TRADING_STATION_PANEL,
+      false,
+      'SpCoinWalletPopup:hideTradingStationForManageRewardsDefault',
+    );
+    setPanelVisible(
+      SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
+      true,
+      'SpCoinWalletPopup:showManageSponsorshipsForManageRewardsDefault',
+    );
+    setPanelVisible(
+      SP_COIN_DISPLAY.ACCOUNT_PANEL,
+      false,
+      'SpCoinWalletPopup:hideAccountPanelForManageRewardsDefault',
+    );
+    openPanel(
+      SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
+      'SpCoinWalletPopup:openManageSponsorshipsPanelForManageRewardsDefault',
+    );
+  }, [exchangeContext?.accounts?.activeAccount, openPanel, setPanelVisible]);
+
+  const openManageAccountPanel = useCallback(() => {
+    trace('Opening manage account panel', {
+      activeAccountAddress: String(exchangeContext?.accounts?.activeAccount?.address ?? '').trim(),
+    });
+    const activeAccount = exchangeContext?.accounts?.activeAccount;
+    if (!activeAccount) return;
+
+    suppressDefaultPanelAutoOpenRef.current = true;
+    setWalletOptionsOpen(false);
+    setWalletConfigOpen(false);
+    setSwapTokensOpen(false);
+
+    openAccountPanel({
+      address: String(activeAccount.address ?? '').trim(),
+      label: String(activeAccount.name ?? '').trim() || 'Active Account',
+      name: String(activeAccount.name ?? '').trim() || 'Active Account',
+      symbol: String(activeAccount.symbol ?? '').trim(),
+      logoURL: activeAccount.logoURL,
+      source: walletSource,
+    });
+  }, [exchangeContext?.accounts?.activeAccount, openAccountPanel, walletSource]);
+
   const returnFromWalletOptions = () => {
     trace('Returning from wallet options', {
       walletOptionsReturnMode,
@@ -406,7 +563,12 @@ export default function SpCoinWalletPopup() {
     setWalletOptionsOpen(false);
 
     if (walletOptionsReturnMode === 'swap') {
-      setSwapTokensOpen(true);
+      openTradeStationDefaultPanel();
+      return;
+    }
+
+    if (walletOptionsReturnMode === 'manage') {
+      openManageRewardsDefaultPanel();
       return;
     }
 
@@ -436,7 +598,7 @@ export default function SpCoinWalletPopup() {
     if (swapTokensOpen) {
       restoreTradingVisibility();
       setSwapTokensOpen(false);
-      setWalletOptionsReturnMode('swap');
+      setWalletOptionsReturnMode(agentPanelMode === 'manage' ? 'manage' : 'swap');
     }
 
     if (walletConfigOpen) {
@@ -448,6 +610,38 @@ export default function SpCoinWalletPopup() {
   };
 
   const headerActionIsBack = walletConfigOpen || walletOptionsOpen;
+
+  useEffect(() => {
+    if (!isOpen || isSelectionMode) return;
+    if (walletOptionsOpen || walletConfigOpen || swapTokensOpen) return;
+    if (suppressDefaultPanelAutoOpenRef.current) {
+      suppressDefaultPanelAutoOpenRef.current = false;
+      return;
+    }
+
+    if (defaultPanel === 'MENU') {
+      openWalletOptions();
+      return;
+    }
+
+    if (defaultPanel === 'TRADE_STATION') {
+      openTradeStationDefaultPanel();
+      return;
+    }
+
+    if (defaultPanel === 'MANAGE_REWARDS') {
+      openManageRewardsDefaultPanel();
+    }
+  }, [
+    defaultPanel,
+    isOpen,
+    isSelectionMode,
+    openManageRewardsDefaultPanel,
+    openTradeStationDefaultPanel,
+    swapTokensOpen,
+    walletConfigOpen,
+    walletOptionsOpen,
+  ]);
 
   const handleWalletNetworkChevronClick = useCallback(() => {
     trace('Wallet network chevron clicked', {
@@ -605,7 +799,7 @@ export default function SpCoinWalletPopup() {
             walletConfigOpen
               ? 'Wallet Config'
               : walletOptionsOpen
-                ? 'Wallet Options'
+                ? 'Merit Wallet Options'
                 : 'SponsorCoin Wallet'
           }
           onMenuClick={
@@ -628,10 +822,16 @@ export default function SpCoinWalletPopup() {
           <WalletConfig
             showBackgroundPage={showBackgroundPage}
             onShowBackgroundPageChange={setShowBackgroundPage}
+            defaultPanel={defaultPanel}
+            onDefaultPanelChange={setDefaultPanel}
+            onManageRewardsOpen={openManageRewardsDefaultPanel}
           />
         ) : null}
 
-        {!swapTokensOpen && !walletConfigOpen && (walletConnectVisible || walletOptionsOpen) ? (
+        {!swapTokensOpen &&
+        !walletConfigOpen &&
+        !previewAccount &&
+        (walletConnectVisible || walletOptionsOpen) ? (
           <div className="shrink-0 border-b border-slate-700/50 px-4 py-3">
             <WalletConnectComponent
               showHoverBg={false}
@@ -646,17 +846,34 @@ export default function SpCoinWalletPopup() {
         {!swapTokensOpen && walletOptionsOpen ? (
           <WalletOptions
             onSelectOption={(label) => {
-                if (label === 'Swap Tokens') {
-                  openSwapTokensPanel();
-                } else if (label === 'Config') {
-                  setWalletOptionsOpen(false);
-                  setWalletConfigOpen(true);
-                }
-              }}
+              trace('Wallet option selected', { option: label });
+
+              if (label === 'Manage Account') {
+                openManageAccountPanel();
+                return;
+              }
+
+              if (label === 'Manage Rewards') {
+                openManageRewardsDefaultPanel();
+                return;
+              }
+
+              if (label === 'Swap Tokens') {
+                openSwapTokensPanel();
+                return;
+              }
+
+              if (label === 'Config') {
+                setWalletOptionsOpen(false);
+                setWalletConfigOpen(true);
+              }
+            }}
             />
           ) : null}
 
-          {!swapTokensOpen && !walletConfigOpen && walletNetworksVisible ? <Networks /> : null}
+        {!swapTokensOpen && !walletConfigOpen && !previewAccount && walletNetworksVisible ? (
+          <Networks />
+        ) : null}
 
           {!swapTokensOpen && !walletConfigOpen && walletAccountsVisible ? (
             <Accounts

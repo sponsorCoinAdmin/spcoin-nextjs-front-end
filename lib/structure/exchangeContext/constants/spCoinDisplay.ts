@@ -43,6 +43,47 @@ export const MAIN_RADIO_OVERLAY_PANELS = [
  */
 export const MANAGE_SCOPED = [] as const satisfies readonly SP[];
 
+// ACCOUNT_PANEL children: exactly 0 or 1 visible.
+export const ACCOUNT_PANEL_MODES = [
+  SP.ACTIVE_ACCOUNT,
+  SP.SPONSOR_ACCOUNT,
+  SP.RECIPIENT_ACCOUNT,
+  SP.AGENT_ACCOUNT,
+] as const satisfies readonly SP[];
+
+// TOKEN_PANEL children: exactly 0 or 1 visible.
+export const TOKEN_CONTRACT_PANEL_MODES = [
+  SP.BUY_CONTRACT,
+  SP.SELL_CONTRACT,
+  SP.PREVIEW_CONTRACT,
+] as const satisfies readonly SP[];
+
+// ACCOUNT_LIST_SELECT_PANEL children: exactly 0 or 1 visible.
+export const ACCOUNT_LIST_SELECT_PANEL_MODES = [
+  SP.SPONSOR_LIST,
+  SP.RECIPIENT_LIST,
+  SP.AGENT_LIST,
+] as const satisfies readonly SP[];
+
+// ACCOUNT_LIST_REWARDS_PANEL children: exactly 0 or 1 visible.
+export const REWARDS_GROUP_MODES = [
+  SP.ACTIVE_SPONSORSHIPS,
+  SP.PENDING_SPONSOR_REWARDS,
+  SP.PENDING_RECIPIENT_REWARDS,
+  SP.PENDING_AGENT_REWARDS,
+] as const satisfies readonly SP[];
+
+export const RADIO_PANEL_GROUPS = [
+  { name: 'MAIN_RADIO_OVERLAY_PANELS', members: MAIN_RADIO_OVERLAY_PANELS },
+  { name: 'ACCOUNT_PANEL_MODES', members: ACCOUNT_PANEL_MODES },
+  { name: 'TOKEN_CONTRACT_PANEL_MODES', members: TOKEN_CONTRACT_PANEL_MODES },
+  {
+    name: 'ACCOUNT_LIST_SELECT_PANEL_MODES',
+    members: ACCOUNT_LIST_SELECT_PANEL_MODES,
+  },
+  { name: 'REWARDS_GROUP_MODES', members: REWARDS_GROUP_MODES },
+] as const;
+
 /**
  * Stack components.
  * Right now it’s the same as main overlays (since manage-scoped is empty).

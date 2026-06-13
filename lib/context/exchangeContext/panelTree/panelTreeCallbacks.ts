@@ -277,19 +277,14 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
         }
 
         if (openingManageContainer) {
-          const next = applyGlobalRadio(
-            flat,
-            overlays,
-            manageCfg.manageContainer,
-            withName,
-          );
+          const next = setVisible(flat, manageCfg.manageContainer, true, withName);
 
           safeDiffAndPublish(toVisibilityMap(flat0), toVisibilityMap(next));
           return writeFlatTree(prev as any, next) as any;
         }
 
         if (openingGlobal) {
-          let next = applyGlobalRadio(flat, overlays, panel, withName);
+          let next = setVisible(flat, panel, true, withName);
 
           // ✅ When switching away from Manage, closeManageBranch must NOT touch Pending Rewards.
           if (Number(panel) !== Number(manageCfg.manageContainer)) {

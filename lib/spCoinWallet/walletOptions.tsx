@@ -22,8 +22,8 @@ interface WalletOptionsProps {
 }
 
 const WALLET_OPTIONS: WalletOption[] = [
-  { label: 'Register Account', icon: { type: 'component', value: UserRoundPlus } },
-  { label: 'Manage Account', icon: { type: 'component', value: FolderCog } },
+  { label: 'Manage Account', icon: { type: 'component', value: UserRoundPlus } },
+  { label: 'Manage Rewards', icon: { type: 'component', value: FolderCog } },
   { label: 'Swap Tokens', icon: { type: 'component', value: ArrowLeftRight } },
   { label: 'Sponsor Recipient', icon: { type: 'component', value: HandHeart } },
   { label: 'Config', icon: { type: 'image', value: cog_png } },

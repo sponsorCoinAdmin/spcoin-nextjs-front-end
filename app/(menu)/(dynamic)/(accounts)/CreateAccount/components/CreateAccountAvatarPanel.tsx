@@ -57,7 +57,6 @@ export default function CreateAccountAvatarPanel({
   const previewHeightBuffer = 24;
   const sectionBottomBuffer = 15;
   const minPreviewSize = 180;
-  const maxPreviewSize = 560;
   const hasSelectedRow = Boolean(selectedRowContent);
 
   useEffect(() => {
@@ -81,14 +80,14 @@ export default function CreateAccountAvatarPanel({
           current === availableSectionHeight ? current : availableSectionHeight,
         );
       }
-      const availableWidth = Math.min(rect.width, maxPreviewSize) - previewSizeBuffer;
+      const availableWidth = Math.min(rect.width, 560) - previewSizeBuffer;
       const availableHeight =
         (availableSectionHeight > 0 ? availableSectionHeight : sectionRect.height) -
         headingHeight -
         selectedRowHeight -
         controlsRect.height -
         previewHeightBuffer;
-      const boundedSize = Math.min(availableWidth, availableHeight, maxPreviewSize);
+      const boundedSize = Math.min(availableWidth, availableHeight, 560);
       const nextSize = Math.floor(Math.max(minPreviewSize, boundedSize));
       setPreviewSize((current) => (current === nextSize ? current : nextSize));
     };

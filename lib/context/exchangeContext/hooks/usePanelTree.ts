@@ -13,7 +13,11 @@ import {
 import { panelStore } from '@/lib/context/exchangeContext/panelStore';
 
 // ✅ STACK_COMPONENT gate (only these may be pushed/popped)
-import { IS_STACK_COMPONENT } from '@/lib/structure/exchangeContext/constants/spCoinDisplay';
+import {
+  ACCOUNT_PANEL_MODES,
+  IS_STACK_COMPONENT,
+  TOKEN_CONTRACT_PANEL_MODES,
+} from '@/lib/structure/exchangeContext/constants/spCoinDisplay';
 
 import {
   type PanelEntry,
@@ -156,50 +160,6 @@ const normalizeDisplayStackNodesToIds = (raw: unknown): SP_COIN_DISPLAY[] => {
 
   return ids.filter((x) => Number.isFinite(x)).map((x) => x as SP_COIN_DISPLAY);
 };
-
-/* ───────────────────────────── Exclusivity groups (radio or none) ───────────────────────────── */
-
-// ACCOUNT_PANEL children: exactly 0 or 1 visible
-const ACCOUNT_PANEL_MODES: readonly SP_COIN_DISPLAY[] = [
-  SP_COIN_DISPLAY.ACTIVE_ACCOUNT,
-  SP_COIN_DISPLAY.SPONSOR_ACCOUNT,
-  SP_COIN_DISPLAY.RECIPIENT_ACCOUNT,
-  SP_COIN_DISPLAY.AGENT_ACCOUNT,
-] as const;
-
-const isAccountPanelMode = (p: SP_COIN_DISPLAY) =>
-  ACCOUNT_PANEL_MODES.some((x) => Number(x) === Number(p));
-
-// ✅ TOKEN_PANEL children: exactly 0 or 1 visible
-const TOKEN_CONTRACT_PANEL_MODES: readonly SP_COIN_DISPLAY[] = [
-  SP_COIN_DISPLAY.BUY_CONTRACT,
-  SP_COIN_DISPLAY.SELL_CONTRACT,
-  SP_COIN_DISPLAY.PREVIEW_CONTRACT,
-] as const;
-
-const isTokenContractPanelMode = (p: SP_COIN_DISPLAY) =>
-  TOKEN_CONTRACT_PANEL_MODES.some((x) => Number(x) === Number(p));
-
-// ✅ ACCOUNT_LIST_SELECT_PANEL children: exactly 0 or 1 visible
-const ACCOUNT_LIST_SELECT_PANEL_MODES: readonly SP_COIN_DISPLAY[] = [
-  SP_COIN_DISPLAY.SPONSOR_LIST,
-  SP_COIN_DISPLAY.RECIPIENT_LIST,
-  SP_COIN_DISPLAY.AGENT_LIST,
-] as const;
-
-const isAccountListSelectMode = (p: SP_COIN_DISPLAY) =>
-  ACCOUNT_LIST_SELECT_PANEL_MODES.some((x) => Number(x) === Number(p));
-
-// Rewards modes: exactly 0 or 1 visible
-const REWARDS_GROUP_MODES: readonly SP_COIN_DISPLAY[] = [
-  SP_COIN_DISPLAY.ACTIVE_SPONSORSHIPS,
-  SP_COIN_DISPLAY.PENDING_SPONSOR_REWARDS,
-  SP_COIN_DISPLAY.PENDING_RECIPIENT_REWARDS,
-  SP_COIN_DISPLAY.PENDING_AGENT_REWARDS,
-] as const;
-
-const isRewardsGroupMode = (p: SP_COIN_DISPLAY) =>
-  REWARDS_GROUP_MODES.some((x) => Number(x) === Number(p));
 
 export function usePanelTree() {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
@@ -869,19 +829,6 @@ export function usePanelTree() {
       // ✅ Option A: sync accounts immediately when opening pending rewards panels
       syncRoleAccountForPending(panel, traceId, navInvoker);
 
-      // ✅ Enforce “radio or none” at the source of truth
-      if (isAccountPanelMode(panel)) {
-        for (const other of ACCOUNT_PANEL_MODES) {
-          if (Number(other) !== Number(panel) && panelStore.isVisible(other)) {
-            closePanelInternal(
-              other,
-              traceId,
-              `openPanel:${navInvoker}:accountPanelMode:closeOther`,
-            );
-          }
-        }
-      }
-
       if (Number(panel) === Number(SP_COIN_DISPLAY.ACCOUNT_PANEL)) {
         const hasActiveAccountMode = ACCOUNT_PANEL_MODES.some((mode) => panelStore.isVisible(mode));
         if (!hasActiveAccountMode) {
@@ -890,44 +837,6 @@ export function usePanelTree() {
             `${navInvoker}:accountPanelDefaultMode`,
             SP_COIN_DISPLAY.ACCOUNT_PANEL,
           );
-        }
-      }
-
-      // ✅ NEW: Token contract modes are mutually exclusive
-      if (isTokenContractPanelMode(panel)) {
-        for (const other of TOKEN_CONTRACT_PANEL_MODES) {
-          if (Number(other) !== Number(panel) && panelStore.isVisible(other)) {
-            closePanelInternal(
-              other,
-              traceId,
-              `openPanel:${navInvoker}:tokenContractMode:closeOther`,
-            );
-          }
-        }
-      }
-
-      // ✅ NEW: Account list select modes are mutually exclusive
-      if (isAccountListSelectMode(panel)) {
-        for (const other of ACCOUNT_LIST_SELECT_PANEL_MODES) {
-          if (Number(other) !== Number(panel) && panelStore.isVisible(other)) {
-            closePanelInternal(
-              other,
-              traceId,
-              `openPanel:${navInvoker}:accountListMode:closeOther`,
-            );
-          }
-        }
-      }
-
-      if (isRewardsGroupMode(panel)) {
-        for (const other of REWARDS_GROUP_MODES) {
-          if (Number(other) !== Number(panel) && panelStore.isVisible(other)) {
-            closePanelInternal(
-              other,
-              traceId,
-              `openPanel:${navInvoker}:rewardsMode:closeOther`,
-            );
-          }
         }
       }
 

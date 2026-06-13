@@ -14,6 +14,7 @@ import { useExchangeContext } from '@/lib/context/hooks';
 import { STATUS, type spCoinAccount } from '@/lib/structure';
 import { normalizeAddress } from '@/lib/utils/address';
 import { loadHardhatWalletAccounts } from './accountSelection';
+import { readMeritWalletLS, updateMeritWalletLS } from './meritWalletStorage';
 import { addWalletAccount, initializeWalletAccounts } from './walletAccounts';
 import type {
   SpCoinWalletAccount,
@@ -23,7 +24,7 @@ import type {
   SpCoinWalletSource,
 } from './types';
 
-type SpCoinWalletContextValue = {
+interface SpCoinWalletContextValue {
   isOpen: boolean;
   openWallet: () => void;
   closeWallet: () => void;
@@ -41,7 +42,7 @@ type SpCoinWalletContextValue = {
   selectedHardhatSignerAddress?: string;
   setSelectedHardhatSignerAddress: (address: string) => void;
   selectionRequest?: SpCoinWalletSelectionRequest;
-};
+}
 
 const SpCoinWalletContext = createContext<SpCoinWalletContextValue | null>(null);
 
@@ -57,7 +58,7 @@ function useInitialWalletSource(): SpCoinWalletSource {
 
 export function SpCoinWalletProvider({ children }: { children: React.ReactNode }) {
   const initialWalletSource = useInitialWalletSource();
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(() => readMeritWalletLS().active);
   const [walletSource, setWalletSource] = useState<SpCoinWalletSource>(initialWalletSource);
   const [selectionRequest, setSelectionRequest] = useState<SpCoinWalletSelectionRequest | undefined>();
   const [hardhatAccounts, setHardhatAccounts] = useState<SpCoinWalletAccount[]>([]);
@@ -90,6 +91,13 @@ export function SpCoinWalletProvider({ children }: { children: React.ReactNode }
   useEffect(() => {
     void refreshHardhatAccounts();
   }, [refreshHardhatAccounts]);
+
+  useEffect(() => {
+    updateMeritWalletLS((previous) => ({
+      ...previous,
+      active: isOpen,
+    }));
+  }, [isOpen]);
 
   useEffect(() => {
     if (hardhatAccounts.length === 0) return;
