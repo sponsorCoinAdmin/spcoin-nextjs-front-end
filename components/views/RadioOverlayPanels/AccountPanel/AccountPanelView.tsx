@@ -308,8 +308,8 @@ export default function AccountPanelView({
               />
             ) : null}
 
-            <div className="shrink-0 border-t border-slate-700/70 px-4 py-3 font-mono text-[#91a5ff]">
-              <div className="flex items-center gap-2 leading-tight">
+            <div className="px-4 pb-3 pt-1 font-mono text-[#91a5ff]">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 leading-tight">
                 <button
                   type="button"
                   onClick={() => setTraceExpanded((current) => !current)}
@@ -318,10 +318,12 @@ export default function AccountPanelView({
                   aria-label={traceExpanded ? 'Collapse trace log' : 'Expand trace log'}
                   title={traceExpanded ? 'Collapse trace log' : 'Expand trace log'}
                 >
-                  <span className="text-base leading-none">{traceExpanded ? '[-]' : '[+]'}</span>
+                  <span className="text-[#22c55e] text-base leading-none">
+                    {traceExpanded ? '[-]' : '[+]'}
+                  </span>
                   <span>Trace Log</span>
                 </button>
-                <label className="ml-2 inline-flex items-center gap-2 cursor-pointer select-none text-sm font-semibold text-[#91a5ff]">
+                <label className="inline-flex items-center gap-2 cursor-pointer select-none text-sm font-semibold text-[#91a5ff]">
                   <input
                     type="checkbox"
                     checked={traceEnabled}
@@ -334,7 +336,7 @@ export default function AccountPanelView({
               </div>
 
               {traceExpanded ? (
-                <div className="mt-2 max-h-52 overflow-y-auto scrollbar-hide">
+                <div className="ml-6 mt-1 max-h-52 overflow-y-auto scrollbar-hide">
                   {traceEnabled ? (
                     traceLines.length > 0 ? (
                       <div className="space-y-0.5 text-xs leading-5 text-[#c0cbff]">

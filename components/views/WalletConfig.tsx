@@ -7,7 +7,6 @@ interface WalletConfigProps {
   onShowBackgroundPageChange: (show: boolean) => void;
   defaultPanel: MeritWalletDefaultPanel;
   onDefaultPanelChange: (panel: MeritWalletDefaultPanel) => void;
-  onManageRewardsOpen?: () => void;
 }
 
 export default function WalletConfig({
@@ -15,15 +14,17 @@ export default function WalletConfig({
   onShowBackgroundPageChange,
   defaultPanel,
   onDefaultPanelChange,
-  onManageRewardsOpen,
 }: WalletConfigProps) {
   const defaultPanelOptions: {
     value: MeritWalletDefaultPanel;
     label: string;
   }[] = [
-    { value: 'MENU', label: 'MENU' },
-    { value: 'TRADE_STATION', label: 'TRADE_STATION' },
-    { value: 'MANAGE_REWARDS', label: 'Manage Rewards' },
+    { value: 'MENU', label: 'Menu' },
+    { value: 'ACCOUNT', label: 'Account' },
+    { value: 'REWARDS', label: 'Rewards' },
+    { value: 'SWAP', label: 'Swap' },
+    { value: 'SPONSOR', label: 'Sponsor' },
+    { value: 'OPTIONS', label: 'Options' },
   ];
 
   return (
@@ -64,10 +65,7 @@ export default function WalletConfig({
                 name="merit-wallet-default-panel"
                 value={option.value}
                 checked={defaultPanel === option.value}
-                onChange={() => {
-                  onDefaultPanelChange(option.value);
-                  if (option.value === 'MANAGE_REWARDS') onManageRewardsOpen?.();
-                }}
+                onChange={() => onDefaultPanelChange(option.value)}
                 className="h-5 w-5 cursor-pointer accent-[#5981F3]"
               />
             </label>

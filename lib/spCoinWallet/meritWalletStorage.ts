@@ -2,7 +2,13 @@
 
 export const MERIT_WALLET_LS_KEY = 'meritWalletLS';
 
-export type MeritWalletDefaultPanel = 'MENU' | 'TRADE_STATION' | 'MANAGE_REWARDS';
+export type MeritWalletDefaultPanel =
+  | 'MENU'
+  | 'ACCOUNT'
+  | 'REWARDS'
+  | 'SWAP'
+  | 'SPONSOR'
+  | 'OPTIONS';
 
 export interface MeritWalletConfig {
   showBackgroundPage: boolean;
@@ -43,13 +49,23 @@ export function readMeritWalletLS(): MeritWalletLS {
       config: {
         showBackgroundPage: config.showBackgroundPage === true,
         defaultPanel:
-          config.defaultPanel === 'TRADE_STATION'
+          config.defaultPanel === 'ACCOUNT'
             ? config.defaultPanel
-            : config.defaultPanel === 'MANAGE_ACCOUNT'
-              ? 'MANAGE_REWARDS'
-              : config.defaultPanel === 'MANAGE_REWARDS'
+            : config.defaultPanel === 'REWARDS'
+              ? config.defaultPanel
+              : config.defaultPanel === 'SWAP'
                 ? config.defaultPanel
-                : 'MENU',
+                : config.defaultPanel === 'SPONSOR'
+                  ? config.defaultPanel
+                  : config.defaultPanel === 'OPTIONS'
+                    ? config.defaultPanel
+                    : config.defaultPanel === 'TRADE_STATION'
+                      ? 'SWAP'
+                      : config.defaultPanel === 'MANAGE_ACCOUNT'
+                        ? 'ACCOUNT'
+                        : config.defaultPanel === 'MANAGE_REWARDS'
+                          ? 'REWARDS'
+                          : 'MENU',
       },
     };
   } catch {

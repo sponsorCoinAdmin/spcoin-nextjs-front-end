@@ -28,6 +28,39 @@ import {
 } from '@/lib/utils/network';
 import { useSpCoinWallet } from '@/lib/spCoinWallet';
 
+function ChevronToggleButton({
+  up,
+  labelDown,
+  labelUp,
+  iconClassName,
+  onClick,
+}: {
+  up: boolean;
+  labelDown: string;
+  labelUp: string;
+  iconClassName: string;
+  onClick?: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className="flex h-7 w-7 shrink-0 items-center justify-center rounded border-0 bg-transparent p-0 outline-none hover:bg-white/10"
+      onClick={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        onClick?.();
+      }}
+      aria-label={up ? labelUp : labelDown}
+    >
+      {up ? (
+        <ChevronUp className={iconClassName} />
+      ) : (
+        <ChevronDown className={iconClassName} />
+      )}
+    </button>
+  );
+}
+
 export type WalletConnectComponentProps = {
   showName?: boolean;
   showSymbol?: boolean;
@@ -204,29 +237,13 @@ export default function WalletConnectComponent({
                   )}
                   <span className="font-bold truncate">{label || (showConnect ? connectLabel : '')}</span>
                   {showChevron && (
-                    <span
-                      role="button"
-                      tabIndex={0}
-                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded hover:bg-white/10"
-                      onClick={(event) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        onNetworkChevronClick?.();
-                      }}
-                      onKeyDown={(event) => {
-                        if (event.key !== 'Enter' && event.key !== ' ') return;
-                        event.preventDefault();
-                        event.stopPropagation();
-                        onNetworkChevronClick?.();
-                      }}
-                      aria-label={networkChevronUp ? 'Hide networks' : 'Show networks'}
-                    >
-                      {networkChevronUp ? (
-                        <ChevronUp className="h-5 w-5 opacity-75" />
-                      ) : (
-                        <ChevronDown className="h-5 w-5 opacity-75" />
-                      )}
-                    </span>
+                    <ChevronToggleButton
+                      up={networkChevronUp}
+                      labelDown="Show networks"
+                      labelUp="Hide networks"
+                      iconClassName="h-5 w-5 opacity-75"
+                      onClick={onNetworkChevronClick}
+                    />
                   )}
                 </div>
                 <div className="flex items-center gap-2">
@@ -238,47 +255,13 @@ export default function WalletConnectComponent({
                     />
                   )}
                   <span className="text-sm opacity-80 font-mono truncate">{truncatedAddress ?? address ?? 'Not connected'}</span>
-                  {accountChevronUp ? (
-                    <span
-                      role="button"
-                      tabIndex={0}
-                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded hover:bg-white/10"
-                      onClick={(event) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        onAccountChevronClick?.();
-                      }}
-                      onKeyDown={(event) => {
-                        if (event.key !== 'Enter' && event.key !== ' ') return;
-                        event.preventDefault();
-                        event.stopPropagation();
-                        onAccountChevronClick?.();
-                      }}
-                      aria-label="Hide accounts"
-                    >
-                      <ChevronUp className="h-5 w-5 opacity-60" />
-                    </span>
-                  ) : (
-                    <span
-                      role="button"
-                      tabIndex={0}
-                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded hover:bg-white/10"
-                      onClick={(event) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        onAccountChevronClick?.();
-                      }}
-                      onKeyDown={(event) => {
-                        if (event.key !== 'Enter' && event.key !== ' ') return;
-                        event.preventDefault();
-                        event.stopPropagation();
-                        onAccountChevronClick?.();
-                      }}
-                      aria-label="Show accounts"
-                    >
-                      <ChevronDown className="h-5 w-5 opacity-60" />
-                    </span>
-                  )}
+                  <ChevronToggleButton
+                    up={accountChevronUp}
+                    labelDown="Show accounts"
+                    labelUp="Hide accounts"
+                    iconClassName="h-5 w-5 opacity-60"
+                    onClick={onAccountChevronClick}
+                  />
                 </div>
               </div>
             </div>
