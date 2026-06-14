@@ -720,7 +720,7 @@ export default function SpCoinWalletPopup() {
   }, [setPanelVisible, trace, walletAccountsVisible, walletOptionsOpen]);
 
   const popupShellClassName = [
-    'absolute left-1/2 top-1/2 flex min-h-[300px] max-h-[650px] w-[min(520px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden',
+    'absolute left-1/2 top-1/2 flex h-[min(650px,calc(100vh-230px))] min-h-[300px] w-[min(520px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden',
     'rounded-[15px] border border-[#2e3654] bg-[#0b0e19] text-white shadow-2xl',
   ].join(' ');
 
@@ -731,7 +731,7 @@ export default function SpCoinWalletPopup() {
       <div className="fixed inset-x-0 bottom-0 top-[60px] z-[10000] bg-[#050711]">
         <div
           className={[
-            'absolute left-1/2 top-1/2 flex min-h-[300px] max-h-[650px] w-[min(520px,calc(100vw-2rem))] flex-col -translate-x-1/2 -translate-y-1/2 overflow-hidden',
+            'absolute left-1/2 top-1/2 flex h-[min(650px,calc(100vh-230px))] min-h-[300px] w-[min(520px,calc(100vw-2rem))] flex-col -translate-x-1/2 -translate-y-1/2 overflow-hidden',
             'rounded-[15px] border border-[#2e3654] bg-[#0b0e19] text-white shadow-2xl',
           ].join(' ')}
           role="dialog"
@@ -843,7 +843,7 @@ export default function SpCoinWalletPopup() {
           </div>
         ) : null}
 
-        {!swapTokensOpen && walletOptionsOpen ? (
+        {!swapTokensOpen && !previewAccount && walletOptionsOpen ? (
           <WalletOptions
             onSelectOption={(label) => {
               trace('Wallet option selected', { option: label });
@@ -875,7 +875,32 @@ export default function SpCoinWalletPopup() {
           <Networks />
         ) : null}
 
-        {!swapTokensOpen && !walletConfigOpen && (walletAccountsVisible || previewAccount) ? (
+        {!swapTokensOpen && !walletConfigOpen && previewAccount ? (
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden border-t border-slate-700/70">
+            <Accounts
+              accounts={visibleAccounts}
+              walletSource={walletSource}
+              selectedAddressKey={walletActiveAddressKey}
+              normalizedWorkingAddress={normalizedWorkingAddress}
+              isCollapsed={walletAccountsCollapsed}
+              hardhatAccountsLoading={hardhatAccountsLoading}
+              hardhatAccountsError={hardhatAccountsError}
+              onOpenAccountPanel={openAccountPanel}
+              onSelectAccount={handleSelectAccount}
+              onToggleCollapse={() => {
+                trace('Wallet account row chevron toggled account list collapse', {
+                  before: walletAccountsCollapsed,
+                });
+                setWalletAccountsCollapsed((prev) => !prev);
+              }}
+              onTrace={trace}
+              previewAccount={previewAccount}
+              onClosePreview={() => setPreviewAccount(undefined)}
+            />
+          </div>
+        ) : null}
+
+        {!swapTokensOpen && !walletConfigOpen && walletAccountsVisible ? (
             <Accounts
               accounts={visibleAccounts}
               walletSource={walletSource}

@@ -2,12 +2,14 @@
 'use client';
 
 import React, { useContext, useMemo } from 'react';
+
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
-import { SP_COIN_DISPLAY, type spCoinAccount } from '@/lib/structure';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { appendDebugTrace } from '@/lib/utils/debugTrace';
-import AccountPanelContent from '@/components/views/RadioOverlayPanels/AccountPanel/AccountPanelContent';
+import { SP_COIN_DISPLAY, type spCoinAccount } from '@/lib/structure';
+
+import AccountPanelView from './AccountPanelView';
 
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_ACCOUNT_PANEL === 'true';
 const debugLog = createDebugLogger('AccountPanelEmpty', DEBUG_ENABLED, false);
@@ -22,10 +24,7 @@ type ActiveAccountMember =
   | 'NONE';
 
 export default function AccountPanel(_props: Props) {
-  // Parent panel visibility
   const vAccountPanel = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_PANEL);
-
-  // Read child visibility directly
   const vActiveAccount = usePanelVisible(SP_COIN_DISPLAY.ACTIVE_ACCOUNT);
   const vActiveSponsor = usePanelVisible(SP_COIN_DISPLAY.SPONSOR_ACCOUNT);
   const vActiveRecipient = usePanelVisible(SP_COIN_DISPLAY.RECIPIENT_ACCOUNT);
@@ -34,7 +33,6 @@ export default function AccountPanel(_props: Props) {
   const ctx = useContext(ExchangeContextState);
   const accounts = ctx?.exchangeContext?.accounts;
 
-  // Derive activeMember from the actual visible child flags
   const activeMember: ActiveAccountMember = useMemo(() => {
     if (vActiveAccount) return 'ACTIVE_ACCOUNT';
     if (vActiveSponsor) return 'SPONSOR_ACCOUNT';
@@ -52,7 +50,6 @@ export default function AccountPanel(_props: Props) {
     return accounts.activeAccount;
   }, [accounts, activeMember]);
 
-  const isActiveAccount = !!selectedAccount;
   const contentMode =
     activeMember === 'SPONSOR_ACCOUNT'
       ? SP_COIN_DISPLAY.SPONSOR_ACCOUNT
@@ -62,10 +59,9 @@ export default function AccountPanel(_props: Props) {
           ? SP_COIN_DISPLAY.AGENT_ACCOUNT
           : SP_COIN_DISPLAY.ACTIVE_ACCOUNT;
 
-  // ✅ early return AFTER hooks
   if (!vAccountPanel) return null;
 
-  if (!isActiveAccount) {
+  if (!selectedAccount) {
     debugLog.log?.('[empty]', {
       vAccountPanel,
       vActiveAccount,
@@ -86,7 +82,7 @@ export default function AccountPanel(_props: Props) {
   });
 
   return (
-    <div id="ACCOUNT_PANEL" className="flex h-full min-h-0 flex-col">
+    <>
       {activeMember === 'ACTIVE_ACCOUNT' && (
         <div id="ACTIVE_ACCOUNT" className="hidden" aria-hidden="true" />
       )}
@@ -99,16 +95,7 @@ export default function AccountPanel(_props: Props) {
       {activeMember === 'AGENT_ACCOUNT' && (
         <div id="AGENT_ACCOUNT" className="hidden" aria-hidden="true" />
       )}
-      {isActiveAccount ? (
-        <AccountPanelContent account={selectedAccount} showHeader={false} mode={contentMode} />
-      ) : (
-        <div className="p-4 text-sm text-slate-200">
-          <p className="mb-2 font-semibold">No active account selected.</p>
-          <p className="m-0">
-            Select a <strong>Sponsor</strong>, <strong>Recipient</strong>, or <strong>Agent</strong> to manage.
-          </p>
-        </div>
-      )}
-    </div>
+      <AccountPanelView account={selectedAccount} mode={contentMode} />
+    </>
   );
 }

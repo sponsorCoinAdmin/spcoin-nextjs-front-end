@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 
-import AccountPanelContent from '@/components/views/RadioOverlayPanels/AccountPanel/AccountPanelContent';
+import AccountPanelView from '@/components/views/RadioOverlayPanels/AccountPanel/AccountPanelView';
 import { SP_COIN_DISPLAY, type spCoinAccount } from '@/lib/structure';
 import { normalizeAddress } from '@/lib/utils/address';
 import type { SpCoinWalletAccount } from './types';
@@ -155,11 +155,7 @@ export default function Accounts({
 
       {displayState === 'ACCOUNT_META' && previewAccount ? (
         <div className="min-h-0 flex-1 border-t border-slate-700/70">
-          <AccountPanelContent
-            account={previewAccount}
-            onClose={onClosePreview}
-            mode={SP_COIN_DISPLAY.ACTIVE_ACCOUNT}
-          />
+          <AccountPanelView account={previewAccount} onClose={onClosePreview} mode={SP_COIN_DISPLAY.ACTIVE_ACCOUNT} />
         </div>
       ) : null}
     </div>
