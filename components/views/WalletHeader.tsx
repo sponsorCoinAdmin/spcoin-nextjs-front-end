@@ -11,6 +11,8 @@ interface WalletHeaderProps {
   title?: string;
   networkTitle?: string;
   appChainId?: number;
+  accountLogoURL?: string;
+  accountLogoAlt?: string;
   selectionSummary?: string;
   walletSource?: string;
   hardhatAccountsLoading?: boolean;
@@ -27,6 +29,8 @@ export default function WalletHeader({
   title,
   networkTitle,
   appChainId,
+  accountLogoURL,
+  accountLogoAlt,
   selectionSummary,
   walletSource,
   hardhatAccountsLoading,
@@ -94,14 +98,24 @@ export default function WalletHeader({
       ) : (
         <>
           <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-700 bg-[#20294a]">
-              <Image
-                src="/assets/miscellaneous/spCoin.png"
-                alt="SponsorCoin"
-                width={44}
-                height={44}
-                className="h-full w-full object-cover"
-              />
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden bg-transparent">
+              {accountLogoURL ? (
+                <Image
+                  src={accountLogoURL}
+                  alt={accountLogoAlt ?? 'Active account logo'}
+                  width={44}
+                  height={44}
+                  className="h-full w-full object-contain"
+                />
+              ) : (
+                <Image
+                  src="/assets/miscellaneous/spCoin.png"
+                  alt="SponsorCoin"
+                  width={44}
+                  height={44}
+                  className="h-full w-full object-contain"
+                />
+              )}
             </span>
           </div>
           <h2 className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 text-center text-xl font-bold leading-tight">

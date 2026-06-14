@@ -109,9 +109,15 @@ export default function SpCoinWalletPopup() {
   const isSelectionMode = Boolean(selectionRequest);
   const selectionSummary = walletSource === 'hardhat'
     ? `${hardhatAccounts.length} Hardhat account${hardhatAccounts.length === 1 ? '' : 's'}`
-    : session.metamaskAuthorized
+      : session.metamaskAuthorized
       ? 'MetaMask authorized account'
       : 'MetaMask not authorized';
+  const headerAccountLogoURL = (
+    previewAccount?.logoURL ??
+    exchangeContext?.accounts?.activeAccount?.logoURL ??
+    ''
+  ).trim();
+  const headerAccountLogoAlt = previewAccount?.name ?? exchangeContext?.accounts?.activeAccount?.name ?? 'Active account logo';
 
   const connectMetaMask = async () => {
     const injected = connectors.find((connector) => connector.id === 'injected') ?? connectors[0];
@@ -812,6 +818,8 @@ export default function SpCoinWalletPopup() {
                   : openWalletOptions
           }
           menuButtonKind={headerActionIsBack ? 'back' : 'menu'}
+          accountLogoURL={headerAccountLogoURL || undefined}
+          accountLogoAlt={headerAccountLogoAlt}
           onClose={handlePrimaryClose}
         />
 
