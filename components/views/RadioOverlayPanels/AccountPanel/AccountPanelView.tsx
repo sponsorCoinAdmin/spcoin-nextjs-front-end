@@ -42,12 +42,14 @@ type AccountPanelViewProps = {
     | SP_COIN_DISPLAY.RECIPIENT_ACCOUNT
     | SP_COIN_DISPLAY.AGENT_ACCOUNT;
   onClose?: () => void;
+  subHeader?: React.ReactNode;
 };
 
 export default function AccountPanelView({
   account,
   mode = SP_COIN_DISPLAY.ACTIVE_ACCOUNT,
   onClose,
+  subHeader,
 }: AccountPanelViewProps) {
   const { setPanelVisible } = usePanelTree();
   const sponsorVisible = usePanelVisible(SP_COIN_DISPLAY.SPONSOR_ACCOUNT);
@@ -265,6 +267,8 @@ export default function AccountPanelView({
               })}
             </div>
           </div>
+
+          {subHeader}
 
           <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden">
             {activeTabConfig.key === 'ACCOUNT' ? (

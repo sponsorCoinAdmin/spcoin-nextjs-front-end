@@ -3,8 +3,10 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useConnect } from 'wagmi';
 
-import WalletConnectComponent from '@/components/views/Buttons/Connect/WalletConnectComponent';
+import NetworkAccountConnection from '@/components/views/Buttons/Connect/NetworkAccountConnection';
+import ConnectNetworkButton from '@/components/views/Buttons/Connect/ConnectNetworkButton';
 import AgentWalletPanel from '@/components/views/AgentWalletPanel';
+import WalletOptions from '@/lib/spCoinWallet/walletOptions';
 import WalletConfig from '@/components/views/WalletConfig';
 import WalletHeader from '@/components/views/WalletHeader';
 import { useExchangeContext } from '@/lib/context/hooks';
@@ -29,6 +31,7 @@ import {
 } from '@/lib/utils/debugTrace';
 import Accounts from '@/lib/spCoinWallet/accounts';
 import Networks from '@/lib/spCoinWallet/networks';
+import AccountPanelView from '@/components/views/RadioOverlayPanels/AccountPanel/AccountPanelView';
 
 export default function SpCoinWalletPopup() {
   const {
@@ -366,7 +369,7 @@ export default function SpCoinWalletPopup() {
       );
       setPanelVisible(
         SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT,
-        !walletOptionsOpen,
+        true,
         'SpCoinWalletPopup:showWalletAccountsOnOpen',
       );
     }
@@ -453,6 +456,7 @@ export default function SpCoinWalletPopup() {
     }
 
     setWalletNavigationVisible(false, 'SpCoinWalletPopup:hideForOptions');
+    setPanelVisible(SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT, true, 'SpCoinWalletPopup:showAccountsForOptions');
     setWalletOptionsOpen(true);
   };
 
@@ -616,6 +620,14 @@ export default function SpCoinWalletPopup() {
     setWalletConfigOpen(true);
   }, [resetWalletPopupState]);
 
+  const handleWalletOption = (label: string) => {
+    if (label === 'Manage Account')    { openManageAccountPanel(); return; }
+    if (label === 'Manage Rewards')    { openManageRewardsPanel(); return; }
+    if (label === 'Swap Tokens')       { openTradeStationDefaultPanel(); return; }
+    if (label === 'Sponsor Recipient') { openSponsorPanel(); return; }
+    if (label === 'Config')            { openOptionsPanel(); return; }
+  };
+
   const returnFromWalletOptions = () => {
     trace('Returning from wallet options', {
       walletOptionsReturnMode,
@@ -671,8 +683,6 @@ export default function SpCoinWalletPopup() {
   };
 
   const headerActionIsBack = walletConfigOpen || walletOptionsOpen;
-  const accountListPreviewAccount = walletAccountsVisible ? undefined : previewAccount;
-
   useEffect(() => {
     if (!isOpen || isSelectionMode) return;
     if (walletOptionsOpen || walletConfigOpen || swapTokensOpen) return;
@@ -724,41 +734,32 @@ export default function SpCoinWalletPopup() {
   ]);
 
   const handleWalletNetworkChevronClick = useCallback(() => {
+    const nextVisible = !walletNetworksVisible;
     trace('Wallet network chevron clicked', {
       wasVisible: walletNetworksVisible,
+      nextVisible,
       walletOptionsOpen,
     });
     setPanelVisible(
       SP_COIN_DISPLAY.WALLET_NETWORKS_COMPONENT,
-      !walletNetworksVisible,
+      nextVisible,
       'SpCoinWalletPopup:toggleWalletNetworksViaChevron',
     );
-    if (!walletNetworksVisible) {
-      setPanelVisible(
-        SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT,
-        false,
-        'SpCoinWalletPopup:hideWalletAccountsWhenOpeningNetworks',
-      );
-    }
   }, [setPanelVisible, trace, walletNetworksVisible, walletOptionsOpen]);
 
   const handleWalletAccountChevronClick = useCallback(() => {
+    const nextVisible = !walletAccountsVisible;
     trace('Wallet account chevron clicked', {
       wasVisible: walletAccountsVisible,
+      nextVisible,
       walletOptionsOpen,
     });
+    setPreviewAccount(undefined);
     setPanelVisible(
       SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT,
-      !walletAccountsVisible,
+      nextVisible,
       'SpCoinWalletPopup:toggleWalletAccountsViaChevron',
     );
-    if (!walletAccountsVisible) {
-      setPanelVisible(
-        SP_COIN_DISPLAY.WALLET_NETWORKS_COMPONENT,
-        false,
-        'SpCoinWalletPopup:hideWalletNetworksWhenOpeningAccounts',
-      );
-    }
   }, [setPanelVisible, trace, walletAccountsVisible, walletOptionsOpen]);
 
   const popupShellClassName = [
@@ -872,41 +873,35 @@ export default function SpCoinWalletPopup() {
           ) : null}
 
           {!swapTokensOpen && !walletConfigOpen ? (
-            <div className="shrink-0 border-b border-slate-700/50 px-4 py-3">
-              <WalletConnectComponent
-                showHoverBg={false}
-                trimHorizontalPaddingPx={0}
-                allowWalletModal={false}
-                onNetworkChevronClick={handleWalletNetworkChevronClick}
-                networkChevronUp={walletNetworksVisible}
-                onAccountChevronClick={handleWalletAccountChevronClick}
-                accountChevronUp={walletAccountsVisible}
-              />
-            </div>
-          ) : null}
-
-          {!swapTokensOpen && !walletConfigOpen && walletNetworksVisible ? <Networks /> : null}
-
-          {!swapTokensOpen && !walletConfigOpen ? (
-            <Accounts
-              accounts={visibleAccounts}
-              walletSource={walletSource}
-              selectedAddressKey={walletActiveAddressKey}
-              normalizedWorkingAddress={normalizedWorkingAddress}
-              isCollapsed={walletAccountsCollapsed}
-              hardhatAccountsLoading={hardhatAccountsLoading}
-              hardhatAccountsError={hardhatAccountsError}
-              onOpenAccountPanel={openAccountPanel}
-              onSelectAccount={handleSelectAccount}
-              onToggleCollapse={() => {
-                trace('Wallet account row chevron toggled account list collapse', {
-                  before: walletAccountsCollapsed,
-                });
-                setWalletAccountsCollapsed((prev) => !prev);
-              }}
-              onTrace={trace}
-              previewAccount={accountListPreviewAccount}
-              onClosePreview={() => setPreviewAccount(undefined)}
+            <AccountPanelView
+              account={exchangeContext?.accounts?.activeAccount}
+              subHeader={
+                <>
+                  <div className="shrink-0 border-b border-slate-700/50 px-4 py-3 flex items-center gap-3">
+                    <div className="flex-1 min-w-0">
+                      <NetworkAccountConnection
+                        showNetworkRow={false}
+                        showHoverBg={false}
+                        trimHorizontalPaddingPx={0}
+                        allowWalletModal={false}
+                        onAccountChevronClick={handleWalletAccountChevronClick}
+                        accountChevronUp={walletAccountsVisible}
+                      />
+                    </div>
+                    <ConnectNetworkButton
+                      showName={false}
+                      showSymbol={true}
+                      showChevron={true}
+                      showConnect={true}
+                      showDisconnect={false}
+                      showHoverBg={true}
+                      onChevronClick={handleWalletNetworkChevronClick}
+                      chevronUp={walletNetworksVisible}
+                    />
+                  </div>
+                  {walletNetworksVisible ? <Networks /> : null}
+                </>
+              }
             />
           ) : null}
         </div>

@@ -1,7 +1,8 @@
-// File: components/views/Buttons/Connect/ConnectNetworkButton.tsx
+// File: components/views/Buttons/Connect/NetworkAccountConnection.tsx
 'use client';
 
 import React from 'react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { ConnectKitButton } from 'connectkit';
 import {
   useChainId as useWalletChainId,
@@ -11,8 +12,9 @@ import {
   useSwitchChain,
 } from 'wagmi';
 import { useAppChainId, useExchangeContext } from '@/lib/context/hooks';
+import { getAccountLogo } from '@/lib/context/helpers/assetHelpers';
+import { useActiveAccount } from '@/lib/context/hooks/ExchangeContext/nested/accounts/useActiveAccount';
 
-import ConnectMainButton from './ConnectMainButton';
 import ConnectDropDown from './ConnectDropDown';
 
 import DropDownPortal from './DropDownPortal';
@@ -26,7 +28,40 @@ import {
 } from '@/lib/utils/network';
 import { useSpCoinWallet } from '@/lib/spCoinWallet';
 
-export type ConnectNetworkButtonProps = {
+function ChevronToggleButton({
+  up,
+  labelDown,
+  labelUp,
+  iconClassName,
+  onClick,
+}: {
+  up: boolean;
+  labelDown: string;
+  labelUp: string;
+  iconClassName: string;
+  onClick?: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className="flex h-7 w-7 shrink-0 items-center justify-center rounded border-0 bg-transparent p-0 outline-none hover:bg-white/10"
+      onClick={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        onClick?.();
+      }}
+      aria-label={up ? labelUp : labelDown}
+    >
+      {up ? (
+        <ChevronUp className={iconClassName} />
+      ) : (
+        <ChevronDown className={iconClassName} />
+      )}
+    </button>
+  );
+}
+
+export type NetworkAccountConnectionProps = {
   showName?: boolean;
   showSymbol?: boolean;
   showNetworkIcon?: boolean;
@@ -34,15 +69,17 @@ export type ConnectNetworkButtonProps = {
   showConnect?: boolean;
   showDisconnect?: boolean;
   showHoverBg?: boolean;
-  titleDisplay?: boolean;
   trimHorizontalPaddingPx?: number;
   allowWalletModal?: boolean;
   connectLabel?: string;
-  onChevronClick?: () => void;
-  chevronUp?: boolean;
+  onNetworkChevronClick?: () => void;
+  networkChevronUp?: boolean;
+  onAccountChevronClick?: () => void;
+  accountChevronUp?: boolean;
+  showNetworkRow?: boolean;
 };
 
-export default function ConnectNetworkButton({
+export default function NetworkAccountConnection({
   showName = true,
   showSymbol = true,
   showNetworkIcon = true,
@@ -50,15 +87,17 @@ export default function ConnectNetworkButton({
   showConnect = true,
   showDisconnect = false,
   showHoverBg = true,
-  titleDisplay = false,
   trimHorizontalPaddingPx,
   allowWalletModal = true,
   connectLabel = 'Connect',
-  onChevronClick: onChevronClickProp,
-  chevronUp = false,
-}: ConnectNetworkButtonProps) {
+  onNetworkChevronClick,
+  networkChevronUp = false,
+  onAccountChevronClick,
+  accountChevronUp = false,
+  showNetworkRow = true,
+}: NetworkAccountConnectionProps) {
   // portal/open/position
-  const { open, toggle, close, anchorRef, portalRef, pos } = useDropDownPortal();
+  const { open, close, anchorRef, portalRef, pos } = useDropDownPortal();
 
   // network sets
   const { allOptions, mainnetOptions, testnetOptions, findById } = useNetworkOptions();
@@ -76,6 +115,7 @@ export default function ConnectNetworkButton({
   const [appChainId, setAppChainId] = useAppChainId();
   const { exchangeContext, setExchangeContext } = useExchangeContext();
   const { openWallet } = useSpCoinWallet();
+  const [activeAccount] = useActiveAccount();
 
   // wallet actions (with cancel/pending guards)
   const { connectMetaMask } = useWalletActions({
@@ -144,19 +184,6 @@ export default function ConnectNetworkButton({
           close();
           openWallet();
         };
-        const onImageClick = onButtonClick;
-        const onChevronClick = onChevronClickProp ?? toggle;
-
-        const onConnectTextClick =
-          !isConnected && showConnect ? () => connectMetaMask(show) : undefined;
-
-        const onDisconnectTextClick =
-          isConnected && showDisconnect
-            ? () => {
-                disconnect();
-                close();
-              }
-            : undefined;
 
         // dropdown content switches
         const showConnectRowInDropdown = !isConnected && !showConnect;
@@ -182,28 +209,67 @@ export default function ConnectNetworkButton({
             : '-ml-2 -mr-2'; // fallback
 
         return (
-          <div ref={anchorRef} className="relative m-0 p-0 inline-flex items-center">
-            <div className={trimClass}>
-              <ConnectMainButton
-                currentId={numericCurrentId}
-                label={
-                  !isConnected && showConnect
-                    ? connectLabel
-                    : isConnected && showDisconnect
-                    ? 'Disconnect'
-                    : label
-                }
-                showNetworkIcon={showNetworkIcon}
-                showChevron={showChevron}
-                showHoverBg={showHoverBg}
-                titleDisplay={titleDisplay}
-                chevronUp={onChevronClickProp ? chevronUp : open}
-                onButtonClick={onButtonClick}
-                onImageClick={onImageClick}
-                onChevronClick={onChevronClick}
-                onConnectTextClick={onConnectTextClick}
-                onDisconnectTextClick={onDisconnectTextClick}
-              />
+          <div ref={anchorRef} className="relative m-0 p-0 w-full">
+            <div className={`${trimClass} w-full`}>
+              <div
+                role="button"
+                tabIndex={0}
+                aria-haspopup="menu"
+                onClick={onButtonClick}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    onButtonClick();
+                  }
+                }}
+                className={`
+                  bg-connect-bg text-connect-color font-bold rounded-lg
+                  flex flex-col items-stretch gap-0 text-sm outline-none border-0 focus:ring-0
+                  w-full !rounded-none !px-3 !py-0 overflow-hidden
+                  ${showHoverBg ? 'hover:bg-connect-hover-bg hover:text-connect-hover-color' : 'hover:bg-transparent hover:text-connect-color'}
+                `}
+              >
+                {showNetworkRow && (
+                  <div className="flex items-center gap-2">
+                    {showNetworkIcon && typeof numericCurrentId === 'number' && (
+                      <img
+                        src={`/assets/blockchains/${numericCurrentId}/logo.png`}
+                        alt="Network"
+                        className="h-5 w-5 rounded"
+                      />
+                    )}
+                    <span className="font-bold truncate">{label || (showConnect ? connectLabel : '')}</span>
+                    {showChevron && (
+                      <ChevronToggleButton
+                        up={networkChevronUp}
+                        labelDown="Show networks"
+                        labelUp="Hide networks"
+                        iconClassName="h-5 w-5 opacity-75"
+                        onClick={onNetworkChevronClick}
+                      />
+                    )}
+                  </div>
+                )}
+                <div className="flex items-center gap-2">
+                  {activeAccount?.address && (
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#11162A]">
+                      <img
+                        src={getAccountLogo(activeAccount)}
+                        alt="Account"
+                        className="h-full w-full object-contain"
+                      />
+                    </span>
+                  )}
+                  <span className="text-sm opacity-80 font-mono truncate">{truncatedAddress ?? address ?? 'Not connected'}</span>
+                  <ChevronToggleButton
+                    up={accountChevronUp}
+                    labelDown="Show accounts"
+                    labelUp="Hide accounts"
+                    iconClassName="h-5 w-5 opacity-60"
+                    onClick={onAccountChevronClick}
+                  />
+                </div>
+              </div>
             </div>
 
             {open && (
@@ -236,7 +302,7 @@ export default function ConnectNetworkButton({
                   onToggleShowTestNets={() =>
                     setExchangeContext(
                       toggleShowTestNetsUpdater,
-                      'ConnectNetworkButton:onToggleShowTestNets',
+                      'NetworkAccountConnection:onToggleShowTestNets',
                     )
                   }
                 />

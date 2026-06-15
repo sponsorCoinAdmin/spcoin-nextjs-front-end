@@ -16,6 +16,7 @@ type Props = {
   // Targeted click areas (stopPropagation inside)
   onImageClick?: () => void;
   onChevronClick?: () => void;
+  chevronUp?: boolean;
 
   // Optional label-only actions
   onConnectTextClick?: () => void;     // when label is "Connect"
@@ -37,6 +38,7 @@ export default function ConnectMainButton({
   onChevronClick,
   onConnectTextClick,
   onDisconnectTextClick,
+  chevronUp = false,
   className,
 }: Props) {
   const mainHoverClass = showHoverBg
@@ -131,7 +133,7 @@ export default function ConnectMainButton({
           onClick={(e) => stopThen(e, onChevronClick)}
           onKeyDown={keyActivate(onChevronClick)}
         >
-          ▼
+          {chevronUp ? '▲' : '▼'}
         </span>
       )}
     </button>
