@@ -5,6 +5,8 @@ import type { MeritWalletDefaultPanel } from '@/lib/spCoinWallet/meritWalletStor
 interface WalletConfigProps {
   showBackgroundPage: boolean;
   onShowBackgroundPageChange: (show: boolean) => void;
+  modalMode: boolean;
+  onModalModeChange: (modal: boolean) => void;
   defaultPanel: MeritWalletDefaultPanel;
   onDefaultPanelChange: (panel: MeritWalletDefaultPanel) => void;
 }
@@ -12,6 +14,8 @@ interface WalletConfigProps {
 export default function WalletConfig({
   showBackgroundPage,
   onShowBackgroundPageChange,
+  modalMode,
+  onModalModeChange,
   defaultPanel,
   onDefaultPanelChange,
 }: WalletConfigProps) {
@@ -43,6 +47,24 @@ export default function WalletConfig({
           type="checkbox"
           checked={showBackgroundPage}
           onChange={(event) => onShowBackgroundPageChange(event.target.checked)}
+          className="h-5 w-5 shrink-0 cursor-pointer accent-[#5981F3]"
+        />
+      </label>
+
+      <label className="flex cursor-pointer items-center justify-between gap-6 rounded-[15px] border border-slate-800 bg-[#161922] px-5 py-4 hover:border-slate-700 hover:bg-[#1b2130]">
+        <span>
+          <span className="block text-base font-semibold text-white">
+            Modal Mode
+          </span>
+          <span className="mt-1 block text-sm text-slate-400">
+            Block interactions with the page behind the wallet popup.
+          </span>
+        </span>
+
+        <input
+          type="checkbox"
+          checked={modalMode}
+          onChange={(event) => onModalModeChange(event.target.checked)}
           className="h-5 w-5 shrink-0 cursor-pointer accent-[#5981F3]"
         />
       </label>

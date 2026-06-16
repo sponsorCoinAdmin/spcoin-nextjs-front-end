@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 type Props = {
   currentId?: number;
@@ -126,14 +127,14 @@ export default function ConnectMainButton({
       {showChevron && (
         <span
           title={networkMenuTitle}
-          className="text-xs opacity-75 font-bold cursor-pointer select-none"
+          className="flex items-center opacity-75 cursor-pointer select-none"
           role="button"
           tabIndex={0}
           aria-label="Toggle network menu"
           onClick={(e) => stopThen(e, onChevronClick)}
           onKeyDown={keyActivate(onChevronClick)}
         >
-          {chevronUp ? '▲' : '▼'}
+          {chevronUp ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
         </span>
       )}
     </button>

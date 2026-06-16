@@ -210,6 +210,7 @@ export function usePanelTree() {
       SP_COIN_DISPLAY.WALLET_CONNECT_COMPONENT,
       SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT,
       SP_COIN_DISPLAY.WALLET_NETWORKS_COMPONENT,
+      SP_COIN_DISPLAY.WALLET_CONFIG_PANEL,
     ];
 
     const hasAll = REQUIRED.every((p) => list.some((e) => Number(e.panel) === Number(p)));
@@ -301,6 +302,49 @@ export function usePanelTree() {
   useEffect(() => {
     publishVisibility(visibilityMap);
   }, [visibilityMap, publishVisibility]);
+
+  // ✅ Reactive radio enforcer: when any radio member becomes visible, close all others.
+  // Acts as a safety net regardless of HOW visibility was set (openPanel, setPanelVisible,
+  // or any direct state mutation). The most recently activated member wins.
+  const prevRadioVisRef = useRef<Set<number>>(new Set());
+
+  useEffect(() => {
+    const visibleOverlays = overlays.filter((id) => !!visibilityMap[Number(id)]);
+
+    if (visibleOverlays.length <= 1) {
+      prevRadioVisRef.current = new Set(visibleOverlays.map(Number));
+      return;
+    }
+
+    // Detect which member was just activated (not visible in previous render).
+    const prev = prevRadioVisRef.current;
+    const newlyVisible = visibleOverlays.filter((id) => !prev.has(Number(id)));
+    prevRadioVisRef.current = new Set(visibleOverlays.map(Number));
+
+    // Winner: most recently activated; fall back to first in overlay-list order.
+    const winner =
+      newlyVisible.length > 0
+        ? newlyVisible[newlyVisible.length - 1]!
+        : visibleOverlays[0]!;
+
+    for (const loser of visibleOverlays) {
+      if (Number(loser) === Number(winner)) continue;
+
+      setExchangeContext(
+        (prev: any) => {
+          const flat0 = flattenPanelTree(prev?.settings?.spCoinPanelTree, KNOWN);
+          const n = Number(loser);
+          const next = flat0.map((e) =>
+            Number(e.panel) === n && e.visible ? { ...e, visible: false } : e,
+          );
+          if (next.every((e, i) => e === flat0[i])) return prev;
+          return writeFlatTree(prev, next);
+        },
+        `usePanelTree:radioEnforcer:close:${panelName(Number(loser) as SP_COIN_DISPLAY)}`,
+      );
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [overlays, visibilityMap]);
 
   const isVisible = useCallback((panel: SP_COIN_DISPLAY) => panelStore.isVisible(panel), []);
 

@@ -284,7 +284,9 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
         }
 
         if (openingGlobal) {
-          let next = setVisible(flat, panel, true, withName);
+          // ✅ Apply radio selection: show target, hide ALL other global overlay members.
+          // Same semantics as the openingManageRadioChild branch above.
+          let next = applyGlobalRadio(flat, overlays, panel, withName);
 
           // ✅ When switching away from Manage, closeManageBranch must NOT touch Pending Rewards.
           if (Number(panel) !== Number(manageCfg.manageContainer)) {

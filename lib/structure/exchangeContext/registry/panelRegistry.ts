@@ -141,6 +141,13 @@ const TRADE_HEADER_CHILDREN: readonly SP[] = [
 
   // Token contract overlay
   SP.TOKEN_PANEL,
+
+  // ✅ Wallet popup list panels — radio overlays, mutually exclusive with all above
+  SP.WALLET_ACCOUNTS_COMPONENT,
+  SP.WALLET_NETWORKS_COMPONENT,
+
+  // Wallet config / options panel
+  SP.WALLET_CONFIG_PANEL,
 ] as const;
 
 const MAIN_TRADING_CHILDREN: readonly SP[] = [SP.TRADE_CONTAINER_HEADER] as const;
@@ -308,8 +315,9 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   def({ id: SP.SWAP_ARROW_BUTTON, kind: 'control', defaultVisible: true }),
   def({ id: SP.CONNECT_TRADE_BUTTON, kind: 'control', defaultVisible: true }),
   def({ id: SP.WALLET_CONNECT_COMPONENT, kind: 'control', defaultVisible: true }),
-  def({ id: SP.WALLET_ACCOUNTS_COMPONENT, kind: 'control', defaultVisible: true }),
+  def({ id: SP.WALLET_ACCOUNTS_COMPONENT, kind: 'control', defaultVisible: false }),
   def({ id: SP.WALLET_NETWORKS_COMPONENT, kind: 'control', defaultVisible: false }),
+  def({ id: SP.WALLET_CONFIG_PANEL, kind: 'control', defaultVisible: false }),
 
   // NOTE: you used 'panel' kind here previously; keep it if consumers expect that.
   def({ id: SP.FEE_DISCLOSURE, kind: 'panel', defaultVisible: true }),

@@ -35,6 +35,13 @@ export const MAIN_RADIO_OVERLAY_PANELS = [
 
   // Token contract overlay (if you want it stackable/radio, keep it here; otherwise remove)
   SP.TOKEN_PANEL,
+
+  // Wallet popup list panels — mutually exclusive with each other and with trading overlays
+  SP.WALLET_ACCOUNTS_COMPONENT,
+  SP.WALLET_NETWORKS_COMPONENT,
+
+  // Wallet config / options panel
+  SP.WALLET_CONFIG_PANEL,
 ] as const satisfies readonly SP[];
 
 /**

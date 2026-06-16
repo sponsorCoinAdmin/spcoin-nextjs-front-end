@@ -64,6 +64,9 @@ export default function SpCoinWalletPopup() {
   const [defaultPanel, setDefaultPanel] = useState<MeritWalletDefaultPanel>(
     () => readMeritWalletLS().config.defaultPanel,
   );
+  const [modalMode, setModalMode] = useState<boolean>(
+    () => readMeritWalletLS().config.modalMode,
+  );
   const wasWalletOpenRef = useRef(false);
   const wasNormalModeRef = useRef(false);
   const suppressDefaultPanelAutoOpenRef = useRef(false);
@@ -72,7 +75,7 @@ export default function SpCoinWalletPopup() {
     tradingStationPanel: boolean;
     exchangeTradingPair: boolean;
   } | null>(null);
-  const { openPanel, setPanelVisible } = usePanelTree();
+  const { openPanel, closePanel, setPanelVisible } = usePanelTree();
   const openAccountComponent = useOpenAccountComponent();
   const { exchangeContext } = useExchangeContext();
   const walletAccountsVisible = usePanelVisible(SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT);
@@ -431,10 +434,11 @@ export default function SpCoinWalletPopup() {
       config: {
         ...previous.config,
         showBackgroundPage,
+        modalMode,
         defaultPanel,
       },
     }));
-  }, [defaultPanel, showBackgroundPage]);
+  }, [defaultPanel, modalMode, showBackgroundPage]);
 
   const openWalletOptions = () => {
     trace('Wallet menu opened', {
@@ -455,8 +459,7 @@ export default function SpCoinWalletPopup() {
       setWalletOptionsReturnMode('config');
     }
 
-    setWalletNavigationVisible(false, 'SpCoinWalletPopup:hideForOptions');
-    setPanelVisible(SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT, true, 'SpCoinWalletPopup:showAccountsForOptions');
+    openPanel(SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT, 'SpCoinWalletPopup:openAccountsForOptions');
     setWalletOptionsOpen(true);
   };
 
@@ -734,37 +737,25 @@ export default function SpCoinWalletPopup() {
   ]);
 
   const handleWalletNetworkChevronClick = useCallback(() => {
-    const nextVisible = !walletNetworksVisible;
-    trace('Wallet network chevron clicked', {
-      wasVisible: walletNetworksVisible,
-      nextVisible,
-      walletOptionsOpen,
-    });
-    setPanelVisible(
-      SP_COIN_DISPLAY.WALLET_NETWORKS_COMPONENT,
-      nextVisible,
-      'SpCoinWalletPopup:toggleWalletNetworksViaChevron',
-    );
-  }, [setPanelVisible, trace, walletNetworksVisible, walletOptionsOpen]);
+    if (walletNetworksVisible) {
+      closePanel(SP_COIN_DISPLAY.WALLET_NETWORKS_COMPONENT, 'SpCoinWalletPopup:networkChevronClose');
+    } else {
+      openPanel(SP_COIN_DISPLAY.WALLET_NETWORKS_COMPONENT, 'SpCoinWalletPopup:networkChevronOpen');
+    }
+  }, [closePanel, openPanel, walletNetworksVisible]);
 
   const handleWalletAccountChevronClick = useCallback(() => {
-    const nextVisible = !walletAccountsVisible;
-    trace('Wallet account chevron clicked', {
-      wasVisible: walletAccountsVisible,
-      nextVisible,
-      walletOptionsOpen,
-    });
     setPreviewAccount(undefined);
-    setPanelVisible(
-      SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT,
-      nextVisible,
-      'SpCoinWalletPopup:toggleWalletAccountsViaChevron',
-    );
-  }, [setPanelVisible, trace, walletAccountsVisible, walletOptionsOpen]);
+    if (walletAccountsVisible) {
+      closePanel(SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT, 'SpCoinWalletPopup:accountChevronClose');
+    } else {
+      openPanel(SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT, 'SpCoinWalletPopup:accountChevronOpen');
+    }
+  }, [closePanel, openPanel, walletAccountsVisible]);
 
   const popupShellClassName = [
     'absolute left-1/2 top-1/2 flex h-[min(650px,calc(100vh-230px))] min-h-[300px] w-[min(520px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden',
-    'rounded-[15px] border border-[#2e3654] bg-[#0b0e19] text-white shadow-2xl',
+    'rounded-[15px] border border-[#2e3654] bg-[#0b0e19] text-white shadow-2xl pointer-events-auto',
   ].join(' ');
 
   if (!isOpen) return null;
@@ -827,6 +818,7 @@ export default function SpCoinWalletPopup() {
     <div
       className={[
         'fixed inset-x-0 bottom-0 top-[60px] z-[10000]',
+        modalMode ? '' : 'pointer-events-none',
         showBackgroundPage ? 'bg-black/35' : 'bg-[#050711]',
       ].join(' ')}
     >
@@ -867,6 +859,8 @@ export default function SpCoinWalletPopup() {
             <WalletConfig
               showBackgroundPage={showBackgroundPage}
               onShowBackgroundPageChange={setShowBackgroundPage}
+              modalMode={modalMode}
+              onModalModeChange={setModalMode}
               defaultPanel={defaultPanel}
               onDefaultPanelChange={setDefaultPanel}
             />
@@ -875,6 +869,7 @@ export default function SpCoinWalletPopup() {
           {!swapTokensOpen && !walletConfigOpen ? (
             <AccountPanelView
               account={exchangeContext?.accounts?.activeAccount}
+              onModalModeChange={setModalMode}
               subHeader={
                 <>
                   <div className="shrink-0 border-b border-slate-700/50 px-4 py-3 flex items-center gap-3">

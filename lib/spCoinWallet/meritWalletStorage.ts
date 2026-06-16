@@ -12,6 +12,7 @@ export type MeritWalletDefaultPanel =
 
 export interface MeritWalletConfig {
   showBackgroundPage: boolean;
+  modalMode: boolean;
   defaultPanel: MeritWalletDefaultPanel;
 }
 
@@ -24,6 +25,7 @@ const DEFAULT_MERIT_WALLET_LS: MeritWalletLS = {
   active: false,
   config: {
     showBackgroundPage: false,
+    modalMode: true,
     defaultPanel: 'MENU',
   },
 };
@@ -48,6 +50,7 @@ export function readMeritWalletLS(): MeritWalletLS {
       active: parsed.active === true,
       config: {
         showBackgroundPage: config.showBackgroundPage === true,
+        modalMode: config.modalMode !== false,
         defaultPanel:
           config.defaultPanel === 'ACCOUNT'
             ? config.defaultPanel

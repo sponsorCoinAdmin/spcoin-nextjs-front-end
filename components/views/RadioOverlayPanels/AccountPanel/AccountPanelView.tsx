@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { ArrowLeftRight, FolderCog, HandHeart, Settings2, UserRoundPlus } from 'lucide-react';
+import { ArrowLeftRight, FolderCog, Settings2, UserRoundPlus } from 'lucide-react';
 
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
@@ -15,24 +15,23 @@ import AccountPanelContent from '@/components/views/RadioOverlayPanels/AccountPa
 import ManageSponsorshipsPanel from '@/components/views/RadioOverlayPanels/ManageSponsorshipsPanel';
 import TradingStationPanel from '@/components/views/TradingStationPanel';
 import WalletConfig from '@/components/views/WalletConfig';
-import {
-  clearDebugTraceBuffer,
-  getDebugTraceBuffer,
-  isDebugTraceEnabled,
-  setDebugTraceEnabled,
-} from '@/lib/utils/debugTrace';
-
-const DEBUG_TRACE_EVENT = 'spcoin-debug-trace-update';
 
 const ACCOUNT_PANEL_TABS = [
   { key: 'ACCOUNT', label: 'Account', icon: UserRoundPlus },
   { key: 'REWARDS', label: 'Rewards', icon: FolderCog },
   { key: 'SWAP', label: 'Swap', icon: ArrowLeftRight },
-  { key: 'SPONSOR', label: 'Sponsor', icon: HandHeart },
   { key: 'OPTIONS', label: 'Options', icon: Settings2 },
 ] as const;
 
 type AccountPanelTab = (typeof ACCOUNT_PANEL_TABS)[number]['key'];
+
+// Maps each tab to the radio-group panel it owns.
+const TAB_PANEL: Record<AccountPanelTab, SP_COIN_DISPLAY> = {
+  ACCOUNT: SP_COIN_DISPLAY.ACCOUNT_PANEL,
+  REWARDS: SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
+  SWAP:    SP_COIN_DISPLAY.TRADING_STATION_PANEL,
+  OPTIONS: SP_COIN_DISPLAY.WALLET_CONFIG_PANEL,
+};
 
 type AccountPanelViewProps = {
   account?: spCoinAccount;
@@ -43,6 +42,7 @@ type AccountPanelViewProps = {
     | SP_COIN_DISPLAY.AGENT_ACCOUNT;
   onClose?: () => void;
   subHeader?: React.ReactNode;
+  onModalModeChange?: (modal: boolean) => void;
 };
 
 export default function AccountPanelView({
@@ -50,13 +50,13 @@ export default function AccountPanelView({
   mode = SP_COIN_DISPLAY.ACTIVE_ACCOUNT,
   onClose,
   subHeader,
+  onModalModeChange,
 }: AccountPanelViewProps) {
-  const { setPanelVisible } = usePanelTree();
-  const sponsorVisible = usePanelVisible(SP_COIN_DISPLAY.SPONSOR_ACCOUNT);
-  const recipientVisible = usePanelVisible(SP_COIN_DISPLAY.RECIPIENT_ACCOUNT);
-  const agentVisible = usePanelVisible(SP_COIN_DISPLAY.AGENT_ACCOUNT);
+  const { openPanel } = usePanelTree();
+  const swapVisible    = usePanelVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
   const rewardsVisible = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
-  const swapVisible = usePanelVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
+  const optionsVisible = usePanelVisible(SP_COIN_DISPLAY.WALLET_CONFIG_PANEL);
+
   const [activeTab, setActiveTab] = useState<AccountPanelTab>('ACCOUNT');
   const [showBackgroundPage, setShowBackgroundPage] = useState(
     () => readMeritWalletLS().config.showBackgroundPage,
@@ -64,177 +64,43 @@ export default function AccountPanelView({
   const [defaultPanel, setDefaultPanel] = useState<MeritWalletDefaultPanel>(
     () => readMeritWalletLS().config.defaultPanel,
   );
-  const [traceExpanded, setTraceExpanded] = useState(false);
-  const [traceEnabled, setTraceEnabledState] = useState<boolean>(() => isDebugTraceEnabled());
-  const [traceLines, setTraceLines] = useState<string[]>([]);
+  const [modalMode, setModalMode] = useState<boolean>(
+    () => readMeritWalletLS().config.modalMode,
+  );
 
+  // Keep activeTab in sync with the radio-group panel that is currently visible.
   useEffect(() => {
-    if (swapVisible) {
-      setActiveTab('SWAP');
-      return;
-    }
-
-    if (rewardsVisible) {
-      setActiveTab('REWARDS');
-      return;
-    }
-
-    if (sponsorVisible || recipientVisible || agentVisible) {
-      setActiveTab('SPONSOR');
-      return;
-    }
-
+    if (swapVisible)    { setActiveTab('SWAP');    return; }
+    if (rewardsVisible) { setActiveTab('REWARDS'); return; }
+    if (optionsVisible) { setActiveTab('OPTIONS'); return; }
     setActiveTab('ACCOUNT');
-  }, [agentVisible, recipientVisible, rewardsVisible, sponsorVisible, swapVisible]);
+  }, [swapVisible, rewardsVisible, optionsVisible]);
 
-  useEffect(() => {
-    setTraceLines(traceEnabled ? getDebugTraceBuffer() : []);
+  const activeTabConfig = useMemo(
+    () => ACCOUNT_PANEL_TABS.find((t) => t.key === activeTab) ?? ACCOUNT_PANEL_TABS[0],
+    [activeTab],
+  );
 
-    const handleUpdate = (event: Event) => {
-      const detail = (event as CustomEvent<{ buffer?: string[]; enabled?: boolean }>).detail;
-
-      if (typeof detail?.enabled === 'boolean') {
-        setTraceEnabledState(detail.enabled);
-        if (!detail.enabled) {
-          setTraceLines([]);
-        } else {
-          setTraceLines(getDebugTraceBuffer());
-        }
-        return;
-      }
-
-      if (Array.isArray(detail?.buffer)) {
-        setTraceLines(traceEnabled ? detail.buffer : []);
-      } else {
-        setTraceLines(traceEnabled ? getDebugTraceBuffer() : []);
-      }
-    };
-
-    window.addEventListener(DEBUG_TRACE_EVENT, handleUpdate);
-    window.addEventListener('storage', handleUpdate);
-
-    return () => {
-      window.removeEventListener(DEBUG_TRACE_EVENT, handleUpdate);
-      window.removeEventListener('storage', handleUpdate);
-    };
-  }, [traceEnabled]);
-
-  const activeTabConfig = useMemo(() => {
-    return ACCOUNT_PANEL_TABS.find((tab) => tab.key === activeTab) ?? ACCOUNT_PANEL_TABS[0];
-  }, [activeTab]);
+  const activateTab = (tab: AccountPanelTab) => {
+    setActiveTab(tab);
+    // openPanel atomically shows the target and closes all other radio members.
+    openPanel(TAB_PANEL[tab], `AccountPanelView:${tab}`);
+  };
 
   const handleShowBackgroundPageChange = (show: boolean) => {
     setShowBackgroundPage(show);
-    updateMeritWalletLS((previous) => ({
-      ...previous,
-      config: {
-        ...previous.config,
-        showBackgroundPage: show,
-      },
-    }));
+    updateMeritWalletLS((prev) => ({ ...prev, config: { ...prev.config, showBackgroundPage: show } }));
   };
 
   const handleDefaultPanelChange = (panel: MeritWalletDefaultPanel) => {
     setDefaultPanel(panel);
-    updateMeritWalletLS((previous) => ({
-      ...previous,
-      config: {
-        ...previous.config,
-        defaultPanel: panel,
-      },
-    }));
+    updateMeritWalletLS((prev) => ({ ...prev, config: { ...prev.config, defaultPanel: panel } }));
   };
 
-  const handleToggleTraceEnabled = () => {
-    const next = !traceEnabled;
-    setTraceEnabledState(next);
-    setDebugTraceEnabled(next);
-
-    if (!next) {
-      clearDebugTraceBuffer();
-      setTraceLines([]);
-    } else {
-      setTraceLines(getDebugTraceBuffer());
-    }
-  };
-
-  const activateTab = (tab: AccountPanelTab) => {
-    setActiveTab(tab);
-
-    if (tab === 'ACCOUNT') {
-      setPanelVisible(SP_COIN_DISPLAY.ACCOUNT_PANEL, true, 'AccountPanelView:setAccountTab');
-      setPanelVisible(
-        SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
-        false,
-        'AccountPanelView:hideRewardsForAccountTab',
-      );
-      setPanelVisible(
-        SP_COIN_DISPLAY.TRADING_STATION_PANEL,
-        false,
-        'AccountPanelView:hideSwapForAccountTab',
-      );
-      return;
-    }
-
-    if (tab === 'REWARDS') {
-      setPanelVisible(
-        SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
-        true,
-        'AccountPanelView:setRewardsTab',
-      );
-      setPanelVisible(
-        SP_COIN_DISPLAY.TRADING_STATION_PANEL,
-        false,
-        'AccountPanelView:hideSwapForRewardsTab',
-      );
-      return;
-    }
-
-    if (tab === 'SWAP') {
-      setPanelVisible(
-        SP_COIN_DISPLAY.TRADING_STATION_PANEL,
-        true,
-        'AccountPanelView:setSwapTab',
-      );
-      setPanelVisible(
-        SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
-        false,
-        'AccountPanelView:hideRewardsForSwapTab',
-      );
-      return;
-    }
-
-    if (tab === 'SPONSOR') {
-      setPanelVisible(
-        SP_COIN_DISPLAY.SPONSOR_ACCOUNT,
-        true,
-        'AccountPanelView:setSponsorTab',
-      );
-      setPanelVisible(
-        SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
-        false,
-        'AccountPanelView:hideRewardsForSponsorTab',
-      );
-      setPanelVisible(
-        SP_COIN_DISPLAY.TRADING_STATION_PANEL,
-        false,
-        'AccountPanelView:hideSwapForSponsorTab',
-      );
-      return;
-    }
-
-    if (tab === 'OPTIONS') {
-      setPanelVisible(
-        SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
-        false,
-        'AccountPanelView:hideRewardsForOptionsTab',
-      );
-      setPanelVisible(
-        SP_COIN_DISPLAY.TRADING_STATION_PANEL,
-        false,
-        'AccountPanelView:hideSwapForOptionsTab',
-      );
-    }
+  const handleModalModeChange = (modal: boolean) => {
+    setModalMode(modal);
+    onModalModeChange?.(modal);
+    updateMeritWalletLS((prev) => ({ ...prev, config: { ...prev.config, modalMode: modal } }));
   };
 
   return (
@@ -270,7 +136,7 @@ export default function AccountPanelView({
 
           {subHeader}
 
-          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
             {activeTabConfig.key === 'ACCOUNT' ? (
               <AccountPanelContent
                 account={account}
@@ -278,16 +144,6 @@ export default function AccountPanelView({
                 showSummaryRow={true}
                 onClose={onClose}
                 mode={mode}
-              />
-            ) : null}
-
-            {activeTabConfig.key === 'SPONSOR' ? (
-              <AccountPanelContent
-                account={account}
-                showHeader={false}
-                showSummaryRow={true}
-                onClose={onClose}
-                mode={SP_COIN_DISPLAY.SPONSOR_ACCOUNT}
               />
             ) : null}
 
@@ -307,58 +163,12 @@ export default function AccountPanelView({
               <WalletConfig
                 showBackgroundPage={showBackgroundPage}
                 onShowBackgroundPageChange={handleShowBackgroundPageChange}
+                modalMode={modalMode}
+                onModalModeChange={handleModalModeChange}
                 defaultPanel={defaultPanel}
                 onDefaultPanelChange={handleDefaultPanelChange}
               />
             ) : null}
-
-            <div className="px-4 pb-3 pt-1 font-mono text-[#91a5ff]">
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 leading-tight">
-                <button
-                  type="button"
-                  onClick={() => setTraceExpanded((current) => !current)}
-                  className="inline-flex items-center gap-1 text-sm font-semibold text-[#91a5ff] hover:text-white"
-                  aria-expanded={traceExpanded}
-                  aria-label={traceExpanded ? 'Collapse trace log' : 'Expand trace log'}
-                  title={traceExpanded ? 'Collapse trace log' : 'Expand trace log'}
-                >
-                  <span className="text-[#22c55e] text-base leading-none">
-                    {traceExpanded ? '[-]' : '[+]'}
-                  </span>
-                  <span>Trace Log</span>
-                </button>
-                <label className="inline-flex items-center gap-2 cursor-pointer select-none text-sm font-semibold text-[#91a5ff]">
-                  <input
-                    type="checkbox"
-                    checked={traceEnabled}
-                    onChange={handleToggleTraceEnabled}
-                    className="h-4 w-4 cursor-pointer accent-[#6f86f7]"
-                    aria-label="Enable trace log"
-                  />
-                  <span>Trace</span>
-                </label>
-              </div>
-
-              {traceExpanded ? (
-                <div className="ml-6 mt-1 max-h-52 overflow-y-auto scrollbar-hide">
-                  {traceEnabled ? (
-                    traceLines.length > 0 ? (
-                      <div className="space-y-0.5 text-xs leading-5 text-[#c0cbff]">
-                        {traceLines.map((line, index) => (
-                          <div key={`${index}:${line}`} className="whitespace-pre-wrap break-words">
-                            {line}
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-xs text-slate-400">No trace entries yet.</div>
-                    )
-                  ) : (
-                    <div className="text-xs text-slate-400">Trace logging is off.</div>
-                  )}
-                </div>
-              ) : null}
-            </div>
           </div>
         </>
       ) : (
