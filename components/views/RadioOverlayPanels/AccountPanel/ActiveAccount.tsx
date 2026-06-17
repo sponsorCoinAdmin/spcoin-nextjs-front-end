@@ -42,8 +42,8 @@ export default function ActiveAccount({ account, accountType = 'Account', showTi
       {account?.logoURL ? (
         <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#11162A]">
           <img
-            src={account.logoURL}
-            alt={account.name || 'Account logo'}
+            src={account?.logoURL}
+            alt={account?.name || 'Account logo'}
             className="h-full w-full object-contain"
           />
         </span>
@@ -51,7 +51,7 @@ export default function ActiveAccount({ account, accountType = 'Account', showTi
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         {showTitle && (
           <span className="text-center text-[15px] font-semibold text-[#5981F3]">
-            {accountType}{account.name ? ` ${account.name}` : ''}
+            {accountType}{account?.name ? ` ${account.name}` : ''}
           </span>
         )}
         <div className="flex w-full items-center gap-3">
