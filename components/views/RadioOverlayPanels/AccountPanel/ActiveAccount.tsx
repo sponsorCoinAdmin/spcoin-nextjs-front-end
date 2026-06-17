@@ -8,7 +8,7 @@ import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 
 interface ActiveAccountProps {
-  account: spCoinAccount;
+  account?: spCoinAccount;
   accountType?: string;
   showTitle?: boolean;
 }
