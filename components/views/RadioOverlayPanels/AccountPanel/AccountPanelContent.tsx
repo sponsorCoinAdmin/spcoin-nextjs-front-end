@@ -17,10 +17,6 @@ import { useCreateAccountForm } from '@/app/(menu)/(dynamic)/(accounts)/CreateAc
 import CreateAccountAvatarPanel from '@/app/(menu)/(dynamic)/(accounts)/CreateAccount/components/CreateAccountAvatarPanel';
 import CreateAccountFormPanel from '@/app/(menu)/(dynamic)/(accounts)/CreateAccount/components/CreateAccountFormPanel';
 
-const fallback = (v: unknown) => {
-  const s = (v ?? '').toString().trim();
-  return s || 'N/A';
-};
 
 interface AccountPanelContentProps {
   account: spCoinAccount;
