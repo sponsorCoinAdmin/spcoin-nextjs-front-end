@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Wallet, X } from 'lucide-react';
 import { useAccount } from 'wagmi';
@@ -21,13 +21,6 @@ const fallback = (v: unknown) => {
   const s = (v ?? '').toString().trim();
   return s || 'N/A';
 };
-
-function formatShortAddress(addr: string) {
-  const a = (addr ?? '').toString().trim();
-  if (!a) return '';
-  if (a.length <= 36) return ` ${a} `;
-  return ` ${a.slice(0, 15)} ... ${a.slice(-15)} `;
-}
 
 interface AccountPanelContentProps {
   account: spCoinAccount;
@@ -100,22 +93,6 @@ function AccountHeader({ title, logoURL, editAccountHref, onClose }: AccountHead
   );
 }
 
-interface AccountAddressPillProps {
-  label: string;
-  address: string;
-}
-
-function AccountAddressPill({ label, address }: AccountAddressPillProps) {
-  return (
-    <div className="mb-[2px] flex items-center gap-2 text-sm text-slate-300/80">
-      <span className="whitespace-nowrap">{label}</span>
-      <div className="mb-0 flex w-full min-w-0 flex-1 items-center justify-center gap-2 rounded-[22px] bg-[#243056] px-1 py-1 text-sm text-[#5981F3]">
-        <span className="w-full truncate whitespace-nowrap text-center font-mono">{address}</span>
-      </div>
-    </div>
-  );
-}
-
 export default function AccountPanelContent({
   account,
   onClose,
@@ -163,17 +140,8 @@ export default function AccountPanelContent({
     runWithWalletAction,
   });
 
-  const depositLabel = useMemo(() => {
-    if (mode === SP_COIN_DISPLAY.ACTIVE_ACCOUNT) return 'Active Account:';
-    if (mode === SP_COIN_DISPLAY.SPONSOR_ACCOUNT) return 'Sponsor Account:';
-    if (mode === SP_COIN_DISPLAY.RECIPIENT_ACCOUNT) return 'Recipient Account:';
-    if (mode === SP_COIN_DISPLAY.AGENT_ACCOUNT) return 'Agent Account:';
-    return 'Account:';
-  }, [mode]);
-
   if (!account) return null;
 
-  const depositAddr = formatShortAddress(String(account.address ?? '').trim());
   const title = account.name ? `Account ${account.name}` : 'Account Details';
   const editAccountHref = isSpCoinWalletAccount(account.address)
     ? `/EditAccount?account=${encodeURIComponent(String(account.address ?? '').trim())}`
@@ -204,7 +172,6 @@ export default function AccountPanelContent({
       <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
         {showSummaryRow ? (
           <div className="shrink-0 px-5 pb-0 pt-[5px]">
-            {depositAddr ? <AccountAddressPill label={depositLabel} address={depositAddr} /> : null}
             <h2 className="mb-[3px] w-full max-w-[56rem] text-center text-lg font-semibold text-[#5981F3]">
               {fallback(account?.name)}
             </h2>

@@ -30,12 +30,6 @@ import {
 } from '@/lib/context/exchangeContext/panelTree/panelTreePersistence';
 
 import {
-  computeManageDescendantsSet,
-  makeManagePredicates,
-  type ManageScopeConfig,
-} from '@/lib/context/exchangeContext/panelTree/panelTreeManageScope';
-
-import {
   createPanelTreeCallbacks,
   type PanelTreeCallbacksDeps,
 } from '@/lib/context/exchangeContext/panelTree/panelTreeCallbacks';
@@ -54,9 +48,6 @@ const DEBUG_CLOSE_INVARIANTS =
 
 const DEBUG_CLOSE_INVARIANTS_RENDER =
   process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_CLOSE_INVARIANTS_RENDER === 'true';
-
-const DEBUG_OPEN_INFER_PARENT =
-  process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_OPEN_INFER_PARENT === 'true';
 
 // ✅ New: action-level trace logging (push/pop/open/close)
 const DEBUG_ACTIONS = process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_ACTIONS === 'true';
@@ -247,49 +238,8 @@ export function usePanelTree() {
     overlays,
   ]);
 
-  // Manage container is still used for legacy compat / branch-close logic
-  const manageContainer = SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL;
-
-  // NEW model: no manage-scoped nested radio
-  const manageScoped = useMemo<SP_COIN_DISPLAY[]>(() => {
-    return [];
-  }, []);
-
-  const manageScopedSet = useMemo(() => new Set<number>(manageScoped as any), [
-    manageScoped,
-  ]);
-
-  const manageCfg: ManageScopeConfig = useMemo(
-    () => ({
-      known: KNOWN,
-      children: CHILDREN as any,
-      manageContainer,
-      manageScoped,
-      defaultManageChild: SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
-    }),
-    [manageContainer, manageScoped],
-  );
-
-  const manageDescendantsSet = useMemo(
-    () => computeManageDescendantsSet(manageCfg),
-    [manageCfg],
-  );
-
-  const { isManageRadioChild, isManageAnyChild } = useMemo(
-    () => makeManagePredicates(manageCfg, manageScopedSet, manageDescendantsSet),
-    [manageCfg, manageScopedSet, manageDescendantsSet],
-  );
-
   const withName = useCallback(
     (e: PanelEntry) => ({ ...e, name: e.name ?? panelName(e.panel) }),
-    [],
-  );
-
-  const manageScopedHistoryRef = useRef<SP_COIN_DISPLAY[]>([]);
-
-  const getActiveManageScoped = useCallback((_flat: PanelEntry[]) => null, []);
-  const pushManageScopedHistory = useCallback(
-    (_prevScoped: SP_COIN_DISPLAY | null, _nextScoped: SP_COIN_DISPLAY) => {},
     [],
   );
 
@@ -524,16 +474,8 @@ export function usePanelTree() {
     () => ({
       known: KNOWN,
       overlays,
-      manageCfg,
-      manageScoped,
-      manageScopedSet,
       isGlobalOverlay,
-      isManageRadioChild,
-      isManageAnyChild,
       withName,
-      manageScopedHistoryRef,
-      getActiveManageScoped,
-      pushManageScopedHistory,
       diffAndPublish: (prev, next) => {
         if (DEBUG_ACTIONS) {
           const before = !!(prev ?? lastVisRef.current ?? {})[Number(TRACE_TARGET)];
@@ -567,15 +509,8 @@ export function usePanelTree() {
     }),
     [
       overlays,
-      manageCfg,
-      manageScoped,
-      manageScopedSet,
       isGlobalOverlay,
-      isManageRadioChild,
-      isManageAnyChild,
       withName,
-      getActiveManageScoped,
-      pushManageScopedHistory,
       publishVisibility,
       setExchangeContext,
       debugLog,
@@ -609,33 +544,17 @@ export function usePanelTree() {
     (panel: SP_COIN_DISPLAY, invoker?: string, parent?: SP_COIN_DISPLAY) => {
       const traceId = nextTraceId();
 
-      const inferredParent =
-        parent == null && manageScopedSet.has(Number(panel)) ? manageContainer : parent;
-
       logAction(traceId, 'showDisplay called', {
         panel: { id: Number(panel), name: nameOf(panel) },
         invoker,
         parent: parent == null ? null : { id: Number(parent), name: nameOf(parent) },
-        inferredParent:
-          inferredParent == null
-            ? null
-            : { id: Number(inferredParent), name: nameOf(inferredParent) },
         visibleBefore_store: panelStore.isVisible(panel),
       });
 
-      if (DEBUG_OPEN_INFER_PARENT && parent == null && inferredParent != null) {
-        // eslint-disable-next-line no-console
-        console.log('[PanelTree][open-infer-parent]', {
-          panel: { id: Number(panel), name: nameOf(panel) },
-          inferredParent: { id: Number(inferredParent), name: nameOf(inferredParent) },
-          invoker,
-        });
-      }
-
-      baseShow(panel, invoker, inferredParent);
-      return inferredParent ?? null;
+      baseShow(panel, invoker, parent);
+      return parent ?? null;
     },
-    [baseShow, manageContainer, manageScopedSet, nextTraceId, logAction],
+    [baseShow, nextTraceId, logAction],
   );
 
   // ✅ renamed from hideInternal
@@ -671,8 +590,18 @@ export function usePanelTree() {
       if (!IS_STACK_COMPONENT.has(Number(panel))) return stackBefore;
       if (NON_INDEXED.has(Number(panel))) return stackBefore;
 
-      const nextStack = toPersistedStackIds([...stackBefore, panel]);
-      persistDisplayStack(nextStack, traceId, reason);
+      // If the panel already exists in the stack, navigate to it (trim to that position)
+      // rather than pushing a duplicate.  This prevents [WAC → ACCOUNT_PANEL → WAC] growth.
+      const numPanel = Number(panel);
+      let existingIdx = -1;
+      for (let i = stackBefore.length - 1; i >= 0; i--) {
+        if (Number(stackBefore[i]) === numPanel) { existingIdx = i; break; }
+      }
+
+      const nextStack = existingIdx >= 0
+        ? toPersistedStackIds(stackBefore.slice(0, existingIdx + 1))
+        : toPersistedStackIds([...stackBefore, panel]);
+      persistDisplayStack(nextStack, traceId, existingIdx >= 0 ? `${reason}:navigate-to-existing` : reason);
 
       if (DEBUG_NAV) {
         // eslint-disable-next-line no-console
@@ -991,6 +920,15 @@ export function usePanelTree() {
         : navInvoker;
 
     hideDisplay(popped, hideInvoker, arg);
+
+    // Restore the panel now on top of the stack.
+    const newTop = nextStack.length > 0 ? (nextStack[nextStack.length - 1] as SP_COIN_DISPLAY) : null;
+    if (newTop != null) {
+      logAction(traceId, 'closePanel pop-top restoring new top', {
+        newTop: { id: Number(newTop), name: nameOf(newTop) },
+      });
+      showDisplay(newTop, `${navInvoker}:pop-restore`);
+    }
   }
 
   /* ------------------------------ derived -------------------------------- */
