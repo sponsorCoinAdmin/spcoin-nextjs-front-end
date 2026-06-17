@@ -1079,6 +1079,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
               useActiveAddr
               shortAddr
               preText="Deposit Account:"
+              showAccount={false}
             />
           </AssetSelectProvider>
         </AssetSelectDisplayProvider>

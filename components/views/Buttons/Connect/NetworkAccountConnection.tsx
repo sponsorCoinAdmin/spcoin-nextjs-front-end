@@ -77,6 +77,7 @@ export type NetworkAccountConnectionProps = {
   onAccountChevronClick?: () => void;
   accountChevronUp?: boolean;
   showNetworkRow?: boolean;
+  showAccountLogo?: boolean;
 };
 
 export default function NetworkAccountConnection({
@@ -95,6 +96,7 @@ export default function NetworkAccountConnection({
   onAccountChevronClick,
   accountChevronUp = false,
   showNetworkRow = true,
+  showAccountLogo = true,
 }: NetworkAccountConnectionProps) {
   // portal/open/position
   const { open, close, anchorRef, portalRef, pos } = useDropDownPortal();
@@ -251,7 +253,7 @@ export default function NetworkAccountConnection({
                   </div>
                 )}
                 <div className="flex items-center gap-2">
-                  {activeAccount?.address && (
+                  {showAccountLogo && activeAccount?.address && (
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#11162A]">
                       <img
                         src={getAccountLogo(activeAccount)}

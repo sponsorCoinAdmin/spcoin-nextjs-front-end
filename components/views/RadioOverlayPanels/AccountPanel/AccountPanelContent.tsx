@@ -170,13 +170,6 @@ export default function AccountPanelContent({
       ) : null}
 
       <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
-        {showSummaryRow ? (
-          <div className="shrink-0 px-5 pb-0 pt-[5px]">
-            <h2 className="mb-[3px] w-full max-w-[56rem] text-center text-lg font-semibold text-[#5981F3]">
-              {fallback(account?.name)}
-            </h2>
-          </div>
-        ) : null}
 
         <div
           id={mode === SP_COIN_DISPLAY.ACTIVE_ACCOUNT ? 'ACTIVE_ACCOUNT_BODY' : undefined}

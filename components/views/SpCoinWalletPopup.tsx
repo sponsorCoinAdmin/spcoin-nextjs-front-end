@@ -4,7 +4,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowLeft } from 'lucide-react';
 import { useConnect } from 'wagmi';
 
-import NetworkAccountConnection from '@/components/views/Buttons/Connect/NetworkAccountConnection';
 import ConnectNetworkButton from '@/components/views/Buttons/Connect/ConnectNetworkButton';
 import AgentWalletPanel from '@/components/views/AgentWalletPanel';
 import WalletConfig from '@/components/views/WalletConfig';
@@ -85,6 +84,7 @@ export default function SpCoinWalletPopup() {
   const tradingStationTabVisible = usePanelVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
   const walletConfigTabVisible = usePanelVisible(SP_COIN_DISPLAY.WALLET_CONFIG_PANEL);
   const showAccountPanelView = accountPanelVisible || rewardsTabVisible || tradingStationTabVisible || walletConfigTabVisible;
+  const activeAccountType = rewardsTabVisible ? 'Deposit Account' : tradingStationTabVisible ? 'Trading Account' : 'Active Account';
   const selectedAddressKey = normalizeAddress(
     selectionRequest?.currentAddress || session.signerAddress || session.activeAccountAddress || '',
   );
@@ -664,22 +664,11 @@ export default function SpCoinWalletPopup() {
 
   const handleWalletNetworkChevronClick = useCallback(() => {
     if (walletNetworksVisible) {
-      // Radio-open ACCOUNT_PANEL — this atomically closes WNC too
-      openPanel(SP_COIN_DISPLAY.ACCOUNT_PANEL, 'SpCoinWalletPopup:networkChevronClose');
+      closePanel(SP_COIN_DISPLAY.WALLET_NETWORKS_COMPONENT, 'SpCoinWalletPopup:networkChevronClose');
     } else {
       openPanel(SP_COIN_DISPLAY.WALLET_NETWORKS_COMPONENT, 'SpCoinWalletPopup:networkChevronOpen');
     }
-  }, [openPanel, walletNetworksVisible]);
-
-  const handleWalletAccountChevronClick = useCallback(() => {
-    setPreviewAccount(undefined);
-    if (walletAccountsVisible) {
-      // Radio-open ACCOUNT_PANEL — this atomically closes WAC too
-      openPanel(SP_COIN_DISPLAY.ACCOUNT_PANEL, 'SpCoinWalletPopup:accountChevronClose');
-    } else {
-      openPanel(SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT, 'SpCoinWalletPopup:accountChevronOpen');
-    }
-  }, [openPanel, walletAccountsVisible]);
+  }, [openPanel, closePanel, walletNetworksVisible]);
 
   const popupShellClassName = [
     'absolute left-1/2 top-1/2 flex h-[min(650px,calc(100vh-230px))] min-h-[300px] w-[min(520px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden',
@@ -799,17 +788,7 @@ export default function SpCoinWalletPopup() {
               <AccountPanelTabBar open={tabsOpen} />
 
               {/* Nav row — top-level chrome, outside the radio group */}
-              <div className="shrink-0 border-b border-slate-700/50 px-4 py-3 flex items-center gap-3">
-                <div className="flex-1 min-w-0">
-                  <NetworkAccountConnection
-                    showNetworkRow={false}
-                    showHoverBg={false}
-                    trimHorizontalPaddingPx={0}
-                    allowWalletModal={false}
-                    onAccountChevronClick={handleWalletAccountChevronClick}
-                    accountChevronUp={walletAccountsVisible}
-                  />
-                </div>
+              <div className="relative shrink-0 border-b border-slate-700/50 px-4 py-3 flex items-center gap-3">
                 <ConnectNetworkButton
                   showName={false}
                   showSymbol={true}
@@ -820,10 +799,16 @@ export default function SpCoinWalletPopup() {
                   onChevronClick={handleWalletNetworkChevronClick}
                   chevronUp={walletNetworksVisible}
                 />
+                <div className="pointer-events-none absolute inset-x-0 top-[2px] flex flex-col items-center text-[19px] font-semibold text-[#5981F3]">
+                  <span>{activeAccountType}</span>
+                  {exchangeContext?.accounts?.activeAccount?.name && (
+                    <span>{exchangeContext.accounts.activeAccount.name}</span>
+                  )}
+                </div>
                 <button
                   type="button"
                   onClick={() => closePanel('SpCoinWalletPopup:back')}
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#303b68] hover:bg-[#3c487a]"
+                  className="ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#303b68] hover:bg-[#3c487a]"
                   aria-label="Go back"
                 >
                   <ArrowLeft className="h-5 w-5 text-[#91a5ff]" />
@@ -831,12 +816,11 @@ export default function SpCoinWalletPopup() {
               </div>
 
               {/* Active account row — top-level chrome, outside the radio group */}
-              <div className="shrink-0 border-b border-slate-700/50 px-4 py-2">
-                <ActiveAccount
-                  account={exchangeContext?.accounts?.activeAccount}
-                  mode={SP_COIN_DISPLAY.ACTIVE_ACCOUNT}
-                />
-              </div>
+              <ActiveAccount
+                account={exchangeContext?.accounts?.activeAccount}
+                accountType={activeAccountType}
+                showTitle={false}
+              />
 
               {/* Account panel — mounted when ACCOUNT_PANEL or any of its tab sub-panels is the active radio member */}
               {showAccountPanelView ? (

@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import { ArrowLeftRight, FolderCog, Settings2, UserRoundPlus } from 'lucide-react';
 
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
@@ -13,15 +14,46 @@ const TABS = [
   { key: 'OPTIONS' as const, label: 'Options', icon: Settings2,       panel: SP_COIN_DISPLAY.WALLET_CONFIG_PANEL },
 ] as const;
 
+type TabKey = typeof TABS[number]['key'];
 type Props = { open?: boolean };
 
 export default function AccountPanelTabBar({ open = true }: Props) {
   const { openPanel } = usePanelTree();
-  const swapVisible    = usePanelVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
-  const rewardsVisible = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
-  const optionsVisible = usePanelVisible(SP_COIN_DISPLAY.WALLET_CONFIG_PANEL);
+  const swapVisible         = usePanelVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
+  const rewardsVisible      = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
+  const optionsVisible      = usePanelVisible(SP_COIN_DISPLAY.WALLET_CONFIG_PANEL);
+  const accountPanelVisible = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_PANEL);
+  const wacVisible          = usePanelVisible(SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT);
+  const wncVisible          = usePanelVisible(SP_COIN_DISPLAY.WALLET_NETWORKS_COMPONENT);
 
-  const activeKey = swapVisible ? 'SWAP' : rewardsVisible ? 'REWARDS' : optionsVisible ? 'OPTIONS' : 'ACCOUNT';
+  const isOverlayOpen = wacVisible || wncVisible;
+  const derivedKey: TabKey = swapVisible ? 'SWAP' : rewardsVisible ? 'REWARDS' : optionsVisible ? 'OPTIONS' : 'ACCOUNT';
+
+  // Remembers the active tab before an overlay opened so we can freeze the indicator and restore on close.
+  const lastTabKey      = useRef<TabKey>(derivedKey);
+  const prevOverlayOpen = useRef(false);
+
+  useEffect(() => {
+    const wasOpen = prevOverlayOpen.current;
+    prevOverlayOpen.current = isOverlayOpen;
+
+    if (wasOpen && !isOverlayOpen) {
+      // Overlay just closed — restore the previous tab if no tab became active via an explicit click.
+      const anyTabActive = swapVisible || rewardsVisible || optionsVisible || accountPanelVisible;
+      if (!anyTabActive) {
+        const tab = TABS.find(t => t.key === lastTabKey.current);
+        if (tab) openPanel(tab.panel, 'AccountPanelTabBar:restore-after-overlay');
+      }
+      // lastTabKey.current is intentionally NOT updated here; it will sync on the next render
+      // once the restored tab panel becomes visible (handled by the else-if branch below).
+    } else if (!isOverlayOpen) {
+      // Steady state — keep the remembered key in sync with the actually active tab.
+      lastTabKey.current = derivedKey;
+    }
+  }, [isOverlayOpen, derivedKey, swapVisible, rewardsVisible, optionsVisible, accountPanelVisible, openPanel]);
+
+  // While an overlay is open, freeze the visual indicator on the last remembered tab.
+  const activeKey: TabKey = isOverlayOpen ? lastTabKey.current : derivedKey;
 
   return (
     <div

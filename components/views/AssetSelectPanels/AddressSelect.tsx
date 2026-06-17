@@ -42,6 +42,9 @@ type Props = {
 
   /** When true, input width tracks text size instead of filling available width. */
   fitToText?: boolean;
+
+  /** When false, the entire component is hidden. Defaults to true. */
+  showAccount?: boolean;
 };
 
 export default function AddressSelect({
@@ -54,6 +57,7 @@ export default function AddressSelect({
   shortAddr = false,
   preText,
   fitToText = false,
+  showAccount = true,
 }: Props) {
   const {
     instanceId,
@@ -248,6 +252,8 @@ export default function AddressSelect({
   const showShortLabel = shortAddr && hasLabel;
   const showHexInput = !shortAddr;
   const fitWidthCh = Math.max((baseDisplayAddress || '').length, 8);
+
+  if (!showAccount) return null;
 
   return (
     <div id="AddressSelectDiv" className="flex flex-col gap-[4px] p-0">
