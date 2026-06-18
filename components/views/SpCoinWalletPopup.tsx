@@ -123,12 +123,6 @@ export default function SpCoinWalletPopup() {
       : session.metamaskAuthorized
       ? 'MetaMask authorized account'
       : 'MetaMask not authorized';
-  const headerAccountLogoURL = (
-    previewAccount?.logoURL ?? 
-    activeAccountLogo ?? 
-    ''
-  ).trim();
-  const headerAccountLogoAlt = previewAccount?.name ?? exchangeContext?.accounts?.activeAccount?.name ?? 'Active account logo';
 
   const connectMetaMask = async () => {
     const injected = connectors.find((connector) => connector.id === 'injected') ?? connectors[0];
