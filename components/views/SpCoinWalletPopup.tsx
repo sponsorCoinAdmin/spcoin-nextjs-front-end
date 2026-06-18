@@ -12,7 +12,6 @@ import { useExchangeContext } from '@/lib/context/hooks';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import useOpenAccountComponent from '@/lib/context/hooks/useOpenAccountComponent';
-import { getAccountLogo } from '@/lib/context/helpers/assetHelpers';
 import { useSpCoinWallet } from '@/lib/spCoinWallet';
 import {
   readMeritWalletLS,
@@ -117,7 +116,6 @@ export default function SpCoinWalletPopup() {
     ? `${currentNetworkName} (Chain ID: ${session.appChainId})`
     : currentNetworkName;
   const isSelectionMode = Boolean(selectionRequest);
-  const activeAccountLogo = getAccountLogo(exchangeContext?.accounts?.activeAccount);
   const selectionSummary = walletSource === 'hardhat'
     ? `${hardhatAccounts.length} Hardhat account${hardhatAccounts.length === 1 ? '' : 's'}`
       : session.metamaskAuthorized
