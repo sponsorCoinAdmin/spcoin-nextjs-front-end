@@ -76,30 +76,34 @@ export default function AccountPanelView({
     <div id="ACCOUNT_PANEL" className="flex h-full min-h-0 flex-col">
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {rewardsVisible ? (
-          <div className="min-h-0 flex-1 overflow-hidden">
+          <div className="min-h-0 flex-1 overflow-hidden flex flex-col px-4">
             <ManageSponsorshipsPanel onClose={onClose} />
           </div>
         ) : swapVisible ? (
-          <div className="min-h-0 flex-1 overflow-hidden">
+          <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto flex flex-col px-4">
             <TradingStationPanel />
           </div>
         ) : optionsVisible ? (
-          <WalletConfig
-            showBackgroundPage={showBackgroundPage}
-            onShowBackgroundPageChange={handleShowBackgroundPageChange}
-            modalMode={modalMode}
-            onModalModeChange={handleModalModeChange}
-            defaultPanel={defaultPanel}
-            onDefaultPanelChange={handleDefaultPanelChange}
-          />
+          <div className="min-h-0 flex-1 overflow-hidden flex flex-col px-4">
+            <WalletConfig
+              showBackgroundPage={showBackgroundPage}
+              onShowBackgroundPageChange={handleShowBackgroundPageChange}
+              modalMode={modalMode}
+              onModalModeChange={handleModalModeChange}
+              defaultPanel={defaultPanel}
+              onDefaultPanelChange={handleDefaultPanelChange}
+            />
+          </div>
         ) : (
-          <AccountPanelContent
-            account={account}
-            showHeader={false}
-            showSummaryRow={true}
-            onClose={onClose}
-            mode={mode}
-          />
+          <div className="min-h-0 flex-1 overflow-hidden flex flex-col px-4">
+            <AccountPanelContent
+              account={account}
+              showHeader={false}
+              showSummaryRow={true}
+              onClose={onClose}
+              mode={mode}
+            />
+          </div>
         )}
       </div>
     </div>

@@ -13,6 +13,7 @@ interface WalletHeaderProps {
   appChainId?: number;
   accountLogoURL?: string;
   accountLogoAlt?: string;
+  leftSlot?: React.ReactNode;
   selectionSummary?: string;
   walletSource?: string;
   hardhatAccountsLoading?: boolean;
@@ -31,6 +32,7 @@ export default function WalletHeader({
   appChainId,
   accountLogoURL,
   accountLogoAlt,
+  leftSlot,
   selectionSummary,
   walletSource,
   hardhatAccountsLoading,
@@ -44,7 +46,7 @@ export default function WalletHeader({
   const isSelection = mode === 'selection';
 
   return (
-    <div className={`relative border-b border-[#21273a] bg-[#77808e] ${isSelection ? 'px-5 pt-[11px] pb-[10px]' : 'px-5 py-[14px]'}`}>
+    <div className={`relative border-b border-[#21273a] bg-[#77808e] ${isSelection ? 'px-5 pt-[11px] pb-[10px]' : 'pl-[10px] pr-5 py-[14px]'}`}>
       {isSelection ? (
         <>
           <span
@@ -98,25 +100,27 @@ export default function WalletHeader({
       ) : (
         <>
           <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden bg-transparent">
-              {accountLogoURL ? (
-                <Image
-                  src={accountLogoURL}
-                  alt={accountLogoAlt ?? 'Active account logo'}
-                  width={44}
-                  height={44}
-                  className="h-full w-full object-contain"
-                />
-              ) : (
-                <Image
-                  src="/assets/miscellaneous/spCoin.png"
-                  alt="SponsorCoin"
-                  width={44}
-                  height={44}
-                  className="h-full w-full object-contain"
-                />
-              )}
-            </span>
+            {leftSlot ?? (
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden bg-transparent">
+                {accountLogoURL ? (
+                  <Image
+                    src={accountLogoURL}
+                    alt={accountLogoAlt ?? 'Active account logo'}
+                    width={44}
+                    height={44}
+                    className="h-full w-full object-contain"
+                  />
+                ) : (
+                  <Image
+                    src="/assets/miscellaneous/spCoin.png"
+                    alt="SponsorCoin"
+                    width={44}
+                    height={44}
+                    className="h-full w-full object-contain"
+                  />
+                )}
+              </span>
+            )}
           </div>
           <h2 className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 text-center text-xl font-bold leading-tight">
             {title ?? 'SponsorCoin Wallet'}
@@ -125,7 +129,7 @@ export default function WalletHeader({
             <button
               type="button"
               onClick={onMenuClick}
-              className="absolute right-[4.4rem] top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-[#303b68] hover:bg-[#3c487a]"
+              className="absolute right-[64px] top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-[#303b68] hover:bg-[#3c487a]"
               aria-label={menuButtonKind === 'back' ? 'Return to wallet options' : 'Open wallet menu'}
             >
               {menuButtonKind === 'back' ? (
@@ -138,7 +142,7 @@ export default function WalletHeader({
           <button
             type="button"
             onClick={onClose}
-            className="absolute right-5 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-[#303b68] hover:bg-[#3c487a]"
+            className="absolute right-[12px] top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-[#303b68] hover:bg-[#3c487a]"
             aria-label="Close SponsorCoin wallet"
           >
             <X className="h-6 w-6 text-[#91a5ff]" />

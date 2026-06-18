@@ -40,13 +40,19 @@ export default function ActiveAccount({ account, accountType = 'Account', showTi
   return (
     <div className="shrink-0 border-b border-slate-700/50 px-5 py-2 flex items-center gap-2 text-sm text-slate-300/80">
       {account?.logoURL ? (
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#11162A]">
+        <button
+          type="button"
+          onClick={() => openPanel(SP_COIN_DISPLAY.ACCOUNT_PANEL, 'ActiveAccount:logo:openAccountPanel')}
+          className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#11162A] hover:opacity-80 transition-opacity"
+          title="View account details"
+          aria-label="View account details"
+        >
           <img
             src={account?.logoURL}
             alt={account?.name || 'Account logo'}
             className="h-full w-full object-contain"
           />
-        </span>
+        </button>
       ) : null}
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         {showTitle && (

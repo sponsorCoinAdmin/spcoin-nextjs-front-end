@@ -44,7 +44,8 @@ export default function AccountRow({
   return (
     <div
       className={[
-        'grid w-full grid-cols-[36px_1fr] items-center gap-3 py-2 text-left border-b border-slate-700/70 transition-colors hover:bg-slate-700/50',
+        'grid w-full grid-cols-[36px_1fr_auto] items-center gap-3 py-2 text-left border-b border-slate-700/70 transition-colors hover:bg-slate-700/50',
+        isActiveMarker ? 'bg-green-900/20' : '',
         fullBleed ? 'px-0' : 'px-5',
       ].join(' ')}
     >
@@ -53,15 +54,10 @@ export default function AccountRow({
         onClick={(event) => {
           event.preventDefault();
           event.stopPropagation();
-          console.debug('Account icon clicked', {
-            address: account.address,
-            label: account.label,
-            source: account.source,
-          });
-          onOpenAccountPanel();
+          onSelect();
         }}
         className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-[#11162A]"
-        title="Open account panel"
+        title="Select account"
       >
         {!imageFailed ? (
           <img
@@ -85,17 +81,15 @@ export default function AccountRow({
           <button
             type="button"
             onClick={onSelect}
-            className="min-w-0 flex-1 rounded-none border-none bg-transparent px-0 py-0 text-left text-inherit focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7893ff]"
+            className="min-w-0 shrink rounded-none border-none bg-transparent px-0 py-0 text-left text-inherit focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7893ff]"
           >
             <span className="block truncate text-sm font-semibold text-white">
               {meta || sourceLabel(account.source)}
             </span>
           </button>
           {isActiveMarker ? (
-            <>
-              <span className="inline-flex shrink-0 items-center rounded bg-green-500/25 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-green-200">
-                Active
-              </span>
+            <span className="inline-flex shrink-0 items-center gap-1 rounded bg-slate-400/25 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-200">
+              Active
               <button
                 type="button"
                 onClick={(event) => {
@@ -109,17 +103,30 @@ export default function AccountRow({
                   });
                   onToggleCollapse();
                 }}
-                className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded text-green-200 transition-colors hover:bg-[#1d2542] hover:text-white"
+                className="flex items-center justify-center rounded text-slate-200 transition-colors hover:text-white"
                 aria-label={isCollapsed ? 'Show all accounts' : 'Hide other accounts'}
                 title={isCollapsed ? 'Show all accounts' : 'Hide other accounts'}
               >
                 {isCollapsed ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />}
               </button>
-            </>
+            </span>
           ) : null}
         </div>
         <span className="block truncate font-mono text-[13px] text-slate-300">{account.address}</span>
       </div>
+      <button
+        type="button"
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          onOpenAccountPanel();
+        }}
+        className="flex items-center justify-center self-center opacity-60 hover:opacity-100 transition-opacity"
+        title="Open account details"
+        aria-label="Open account details"
+      >
+        <img src="/assets/miscellaneous/info.png" alt="info" className="h-5 w-5" />
+      </button>
     </div>
   );
 }

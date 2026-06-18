@@ -48,6 +48,7 @@ const EXCHANGE_TRADING_PAIR_CHILDREN: readonly SP[] = [
 ] as const;
 
 const TRADING_CHILDREN: readonly SP[] = [
+  SP.TRADING_STATION_HEADER,
   SP.CONFIG_SLIPPAGE_PANEL,
   SP.EXCHANGE_TRADING_PAIR,
   SP.ADD_SPONSORSHIP_PANEL,
@@ -186,6 +187,9 @@ export const PANEL_DEFS: readonly PanelDef[] = [
     defaultVisible: true,
     children: TRADING_CHILDREN,
   }),
+
+  // Trading station header row (logo + title + cog)
+  def({ id: SP.TRADING_STATION_HEADER, kind: 'panel', defaultVisible: true }),
 
   // Token selector overlays
   def({ id: SP.TOKEN_LIST_SELECT_PANEL, kind: 'list', children: TOKEN_LIST_SELECT_PANEL_CHILDREN }),

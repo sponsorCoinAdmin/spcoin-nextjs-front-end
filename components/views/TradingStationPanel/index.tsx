@@ -14,6 +14,7 @@ import PanelGate from '@/components/utility/PanelGate';
 import SellSelectPanel from './SellSelectPanel';
 import BuySelectPanel from './BuySelectPanel';
 import ConfigSlippagePanel from '@/components/views/TradingStationPanel/ConfigSlippagePanel';
+import TradingStationHeader from '@/components/views/TradingStationPanel/TradingStationHeader';
 import { TSP_TW } from '@/components/views/TradingStationPanel/lib/twSettingConfig';
 
 export default function TradingStationPanel() {
@@ -23,6 +24,7 @@ export default function TradingStationPanel() {
   return (
     <PanelGate panel={SP_COIN_DISPLAY.TRADING_STATION_PANEL}>
       <div id="TRADING_STATION_PANEL" className={`flex flex-col ${TSP_TW.gap}`}>
+        <TradingStationHeader />
         <ConfigSlippagePanel />
 
         {/* ✅ NEW: gate the trading-pair container by EXCHANGE_TRADING_PAIR */}

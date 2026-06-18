@@ -9,6 +9,7 @@ import {
   isDebugTraceEnabled,
   setDebugTraceEnabled,
 } from '@/lib/utils/debugTrace';
+import ConfirmModal from '@/components/modals/ConfirmModal';
 
 const DEBUG_TRACE_EVENT = 'spcoin-debug-trace-update';
 
@@ -22,6 +23,7 @@ export default function DebugTracePanel() {
   const [lines, setLines] = useState<string[]>([]);
   const [expanded, setExpanded] = useState(false);
   const [enabled, setEnabledState] = useState<boolean>(() => isDebugTraceEnabled());
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   useEffect(() => {
     setLines(enabled ? getDebugTraceBuffer() : []);
@@ -67,6 +69,12 @@ export default function DebugTracePanel() {
     }
   };
 
+  const handleConfirmClear = () => {
+    clearDebugTraceBuffer();
+    setLines([]);
+    setConfirmOpen(false);
+  };
+
   return (
     <div className="m-0 p-0 font-mono text-[#91a5ff]">
       <div className="flex items-center gap-2 leading-tight">
@@ -95,6 +103,14 @@ export default function DebugTracePanel() {
           />
           <span className="text-sm font-semibold">Trace Log</span>
         </label>
+        <button
+          type="button"
+          onClick={() => setConfirmOpen(true)}
+          className="rounded px-2 py-0.5 text-sm font-semibold text-[#5981F3] bg-[#243056] hover:bg-[#5981F3] hover:text-[#243056] transition-colors"
+          aria-label="Clear trace log"
+        >
+          Clear log
+        </button>
       </div>
 
       {expanded ? (
@@ -116,6 +132,16 @@ export default function DebugTracePanel() {
           )}
         </div>
       ) : null}
+
+      <ConfirmModal
+        isOpen={confirmOpen}
+        title="Clear Trace Log"
+        message="Are you sure you want to clear the trace log? This cannot be undone."
+        cancelLabel="Cancel"
+        confirmLabel="Clear"
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={handleConfirmClear}
+      />
     </div>
   );
 }

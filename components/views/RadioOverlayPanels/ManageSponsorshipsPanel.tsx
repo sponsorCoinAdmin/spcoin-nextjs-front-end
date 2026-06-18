@@ -2,6 +2,7 @@
 'use client';
 
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { appendDebugTrace } from '@/lib/utils/debugTrace';
 // import { ChevronDown, ChevronUp } from 'lucide-react';
 
 import { AccountType, SP_COIN_DISPLAY } from '@/lib/structure';
@@ -338,7 +339,6 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
   const [accountRecordTrace, setAccountRecordTrace] = useState<ManageSponsorshipsTrace | null>(null);
   const [accountRecordRefreshNonce, setAccountRecordRefreshNonce] = useState(0);
   const [totalReward, setTotalReward] = useState<RoleRewardState>({});
-  const [traceEnabled, setTraceEnabled] = useState(true);
   const [roleRewards, setRoleRewards] = useState<Record<RewardRoleName, RoleRewardState>>({
     Sponsor: {},
     Recipient: {},
@@ -438,6 +438,23 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
       const trace = buildTrace(phase, overrides);
       setAccountRecordTrace(trace);
       exposeManageSponsorshipsTrace(trace);
+      appendDebugTrace([
+        `TRACE phase=${trace.phase}`,
+        `mode=${trace.readMode}`,
+        `source=${trace.accessSource}`,
+        `appChainId=${String(trace.appChainId ?? '')}`,
+        `chainId=${String(trace.chainId ?? '')}`,
+        `decimals=${String(trace.decimals ?? '')}`,
+        `decimalsSource=${trace.decimalsSource ?? 'none'}`,
+        `contract=${trace.activeContractAddr || 'none'}`,
+        `sellToken=${trace.sellTokenAddr || 'none'}`,
+        `symbol=${trace.networkSymbol || 'none'}`,
+        `status=${String(trace.httpStatus ?? '')}`,
+        `success=${String(trace.firstSuccess ?? '')}`,
+        `balanceOf=${trace.rawBalanceOf ?? 'none'}`,
+        `stakedBalance=${trace.rawStakedBalance ?? 'none'}`,
+        `error=${trace.errorMessage ?? 'none'}`,
+      ].join('; '));
     },
     [buildTrace],
   );
@@ -475,7 +492,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
             spCoinAccessSource: accessSource,
             cacheMode: 'default',
             useCache: true,
-            traceCache: traceEnabled,
+            traceCache: true,
             script: {
               id: `manage-sponsorships-getAccountRecord-${Date.now()}`,
               name: 'getAccountRecord',
@@ -598,7 +615,6 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
     readMode,
     recordTrace,
     rpcUrl,
-    traceEnabled,
   ]);
 
   const tradingAmountDisplay = useMemo(() => {
@@ -677,7 +693,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
 
       return firstResult.payload?.result;
     },
-    [accessSource, activeAccountAddr, activeContractAddr, readMode, rpcUrl, traceEnabled],
+    [accessSource, activeAccountAddr, activeContractAddr, readMode, rpcUrl],
   );
 
   const runTotalRewardAction = useCallback(
@@ -692,22 +708,24 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
       try {
         const result = await runRewardScript(method, action);
         const rawAmount = getTotalRewardResultAmount(result);
+        const rewardTrace = [
+          `action=${action}`,
+          `method=${method}`,
+          `resultKeys=${getTraceObjectKeys(result)}`,
+          `pendingTotalRewardsKeys=${getTraceObjectKeys(readRecordValue(result, ['pendingTotalRewards']))}`,
+          `pendingSponsorRewards=${normalizeDecimalString(readRecordValue(result, ['pendingSponsorRewards']))}`,
+          `pendingRecipientRewards=${normalizeDecimalString(readRecordValue(result, ['pendingRecipientRewards']))}`,
+          `pendingAgentRewards=${normalizeDecimalString(readRecordValue(result, ['pendingAgentRewards']))}`,
+          `rawAmount=${normalizeDecimalString(rawAmount)}`,
+        ].join('; ');
         setTotalReward({
           amount: formatAccountRecordAmount(rawAmount, activeContractDecimals),
           loading: false,
           action: undefined,
           error: undefined,
-          trace: [
-            `action=${action}`,
-            `method=${method}`,
-            `resultKeys=${getTraceObjectKeys(result)}`,
-            `pendingTotalRewardsKeys=${getTraceObjectKeys(readRecordValue(result, ['pendingTotalRewards']))}`,
-            `pendingSponsorRewards=${normalizeDecimalString(readRecordValue(result, ['pendingSponsorRewards']))}`,
-            `pendingRecipientRewards=${normalizeDecimalString(readRecordValue(result, ['pendingRecipientRewards']))}`,
-            `pendingAgentRewards=${normalizeDecimalString(readRecordValue(result, ['pendingAgentRewards']))}`,
-            `rawAmount=${normalizeDecimalString(rawAmount)}`,
-          ].join('; '),
+          trace: rewardTrace,
         });
+        appendDebugTrace(`TRACE totalRewards; ${rewardTrace}; error=none`);
         if (action === 'estimate') {
           setRoleRewards((current) => {
             const next = { ...current };
@@ -1319,39 +1337,6 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
               })()}
             </tbody>
           </table>
-          <div className="flex justify-end border-t border-[#2d3654] bg-[#111827] px-2 py-1">
-            <label className="inline-flex cursor-pointer items-center gap-1 text-[10px] leading-tight text-[#94a3b8]">
-              <input
-                type="checkbox"
-                checked={traceEnabled}
-                onChange={(event) => setTraceEnabled(event.target.checked)}
-                className="h-3 w-3 accent-[#6f86f7]"
-              />
-              Trace
-            </label>
-          </div>
-          {traceEnabled && accountRecordTrace && (
-            <div
-              className="px-2 py-1 text-[10px] leading-tight text-[#94a3b8] bg-[#111827] border-t border-[#2d3654] break-all"
-              title="Manage Sponsorships getAccountRecord trace. Full object is also available at window.__manageSponsorshipsTrace."
-            >
-              TRACE phase={accountRecordTrace.phase}; mode={accountRecordTrace.readMode}; source={accountRecordTrace.accessSource};
-              appChainId={String(accountRecordTrace.appChainId ?? '')}; chainId={String(accountRecordTrace.chainId ?? '')};
-              decimals={String(accountRecordTrace.decimals ?? '')}; decimalsSource={accountRecordTrace.decimalsSource ?? 'none'};
-              contract={accountRecordTrace.activeContractAddr || 'none'}; sellToken={accountRecordTrace.sellTokenAddr || 'none'};
-              symbol={accountRecordTrace.networkSymbol || 'none'}; status={String(accountRecordTrace.httpStatus ?? '')};
-              success={String(accountRecordTrace.firstSuccess ?? '')}; balanceOf={accountRecordTrace.rawBalanceOf ?? 'none'};
-              stakedBalance={accountRecordTrace.rawStakedBalance ?? 'none'}; error={accountRecordTrace.errorMessage ?? 'none'}
-            </div>
-          )}
-          {traceEnabled && totalReward.trace && (
-            <div
-              className="px-2 py-1 text-[10px] leading-tight text-[#94a3b8] bg-[#111827] border-t border-[#2d3654] break-all"
-              title="Manage Sponsorships total rewards trace."
-            >
-              TRACE totalRewards; {totalReward.trace}; error={totalReward.error ?? 'none'}
-            </div>
-          )}
         </div>
       )}
 

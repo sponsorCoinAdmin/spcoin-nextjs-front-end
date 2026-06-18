@@ -32,7 +32,7 @@ export default function WalletConfig({
   ];
 
   return (
-    <div className="min-h-0 flex-1 space-y-5 border-t border-slate-700/70 px-8 py-7">
+    <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto space-y-3 border-t border-slate-700/70 py-4">
       <label className="flex cursor-pointer items-center justify-between gap-6 rounded-[15px] border border-slate-800 bg-[#161922] px-5 py-4 hover:border-slate-700 hover:bg-[#1b2130]">
         <span>
           <span className="block text-base font-semibold text-white">
@@ -69,10 +69,10 @@ export default function WalletConfig({
         />
       </label>
 
-      <fieldset className="rounded-[15px] border border-slate-800 bg-[#161922] px-5 py-4">
-        <legend className="px-1 text-base font-semibold text-white">
+      <div className="rounded-[15px] border border-slate-800 bg-[#161922] px-5 py-4">
+        <span className="block text-base font-semibold text-white">
           Default Popup Panel
-        </legend>
+        </span>
         <div className="mt-3 space-y-3">
           {defaultPanelOptions.map((option) => (
             <label
@@ -93,7 +93,7 @@ export default function WalletConfig({
             </label>
           ))}
         </div>
-      </fieldset>
+      </div>
     </div>
   );
 }

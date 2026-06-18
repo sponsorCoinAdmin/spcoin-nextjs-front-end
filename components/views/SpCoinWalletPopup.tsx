@@ -30,6 +30,7 @@ import {
 } from '@/lib/utils/debugTrace';
 import Accounts from '@/lib/spCoinWallet/accounts';
 import Networks from '@/lib/spCoinWallet/networks';
+import TokenListSelectPanel from '@/components/views/RadioOverlayPanels/ListSelectPanels/TokenListSelectPanel';
 import AccountPanelView from '@/components/views/RadioOverlayPanels/AccountPanel/AccountPanelView';
 import AccountPanelTabBar from '@/components/views/RadioOverlayPanels/AccountPanel/AccountPanelTabBar';
 import ActiveAccount from '@/components/views/RadioOverlayPanels/AccountPanel/ActiveAccount';
@@ -51,6 +52,7 @@ export default function SpCoinWalletPopup() {
   const { connectAsync, connectors, status: connectStatus } = useConnect();
   const [previewAccount, setPreviewAccount] = useState<spCoinAccount | undefined>(undefined);
   const [selectionAccountsCollapsed, setSelectionAccountsCollapsed] = useState(false);
+  const [walletAccountsCollapsed, setWalletAccountsCollapsed] = useState(false);
   const [walletOptionsOpen, setWalletOptionsOpen] = useState(false);
   const [swapTokensOpen, setSwapTokensOpen] = useState(false);
   const [walletConfigOpen, setWalletConfigOpen] = useState(false);
@@ -78,6 +80,7 @@ export default function SpCoinWalletPopup() {
   const { exchangeContext } = useExchangeContext();
   const walletAccountsVisible = usePanelVisible(SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT);
   const walletNetworksVisible = usePanelVisible(SP_COIN_DISPLAY.WALLET_NETWORKS_COMPONENT);
+  const tokenListVisible = usePanelVisible(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL);
   const accountPanelVisible = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_PANEL);
   // Tab sub-panels: keep AccountPanelView mounted when any of its tabs are active
   const rewardsTabVisible = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
@@ -750,21 +753,30 @@ export default function SpCoinWalletPopup() {
           title={
             walletConfigOpen
               ? 'Wallet Config'
-              : walletOptionsOpen
-                ? 'Merit Wallet Options'
-                : 'SponsorCoin Wallet'
+              : tradingStationTabVisible
+                ? 'Trading Station'
+                : rewardsTabVisible
+                  ? 'Account Rewards'
+                  : walletOptionsOpen
+                    ? 'Merit Wallet'
+                    : 'SponsorCoin Wallet'
           }
           onMenuClick={() => {
-            if (!showAccountPanelView) {
-              openPanel(SP_COIN_DISPLAY.ACCOUNT_PANEL, 'SpCoinWalletPopup:menu');
-              setTabsOpen(true);
-            } else {
-              setTabsOpen((p) => !p);
-            }
+            setTabsOpen((p) => !p);
           }}
           menuButtonKind="menu"
-          accountLogoURL={headerAccountLogoURL || undefined}
-          accountLogoAlt={headerAccountLogoAlt}
+          leftSlot={
+            <ConnectNetworkButton
+              showName={false}
+              showSymbol={true}
+              showChevron={true}
+              showConnect={true}
+              showDisconnect={false}
+              showHoverBg={true}
+              onChevronClick={handleWalletNetworkChevronClick}
+              chevronUp={walletNetworksVisible}
+            />
+          }
           onClose={handlePrimaryClose}
         />
 
@@ -772,14 +784,16 @@ export default function SpCoinWalletPopup() {
           {swapTokensOpen ? <AgentWalletPanel /> : null}
 
           {walletConfigOpen ? (
-            <WalletConfig
-              showBackgroundPage={showBackgroundPage}
-              onShowBackgroundPageChange={setShowBackgroundPage}
-              modalMode={modalMode}
-              onModalModeChange={setModalMode}
-              defaultPanel={defaultPanel}
-              onDefaultPanelChange={setDefaultPanel}
-            />
+            <div className="min-h-0 flex-1 overflow-hidden flex flex-col px-4">
+              <WalletConfig
+                showBackgroundPage={showBackgroundPage}
+                onShowBackgroundPageChange={setShowBackgroundPage}
+                modalMode={modalMode}
+                onModalModeChange={setModalMode}
+                defaultPanel={defaultPanel}
+                onDefaultPanelChange={setDefaultPanel}
+              />
+            </div>
           ) : null}
 
           {!swapTokensOpen && !walletConfigOpen ? (
@@ -789,16 +803,6 @@ export default function SpCoinWalletPopup() {
 
               {/* Nav row — top-level chrome, outside the radio group */}
               <div className="relative shrink-0 border-b border-slate-700/50 px-4 py-3 flex items-center gap-3">
-                <ConnectNetworkButton
-                  showName={false}
-                  showSymbol={true}
-                  showChevron={true}
-                  showConnect={true}
-                  showDisconnect={false}
-                  showHoverBg={true}
-                  onChevronClick={handleWalletNetworkChevronClick}
-                  chevronUp={walletNetworksVisible}
-                />
                 <div className="pointer-events-none absolute inset-x-0 top-[2px] flex flex-col items-center text-[19px] font-semibold text-[#5981F3]">
                   <span>{activeAccountType}</span>
                   {exchangeContext?.accounts?.activeAccount?.name && (
@@ -838,12 +842,15 @@ export default function SpCoinWalletPopup() {
                     walletSource={walletSource}
                     selectedAddressKey={selectedAddressKey}
                     normalizedWorkingAddress={normalizedWorkingAddress}
-                    isCollapsed={false}
+                    isCollapsed={walletAccountsCollapsed}
                     hardhatAccountsLoading={hardhatAccountsLoading}
                     hardhatAccountsError={hardhatAccountsError}
                     onOpenAccountPanel={openAccountPanel}
-                    onSelectAccount={handleSelectAccount}
-                    onToggleCollapse={() => {}}
+                    onSelectAccount={(account) => {
+                      handleSelectAccount(account);
+                      closePanel(SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT, 'SpCoinWalletPopup:selectAndClose');
+                    }}
+                    onToggleCollapse={() => setWalletAccountsCollapsed((prev) => !prev)}
                     onTrace={trace}
                     previewAccount={previewAccount}
                     onClosePreview={() => setPreviewAccount(undefined)}
@@ -853,6 +860,13 @@ export default function SpCoinWalletPopup() {
 
               {/* Networks list — radio-exclusive with ACCOUNT_PANEL */}
               {walletNetworksVisible ? <Networks /> : null}
+
+              {/* Token list — opens from Swap tab chevron */}
+              {tokenListVisible ? (
+                <div className="scrollbar-hide min-h-0 flex-1 overflow-hidden px-4">
+                  <TokenListSelectPanel />
+                </div>
+              ) : null}
             </>
           ) : null}
         </div>

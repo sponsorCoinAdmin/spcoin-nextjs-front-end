@@ -14,6 +14,8 @@ export default function Networks() {
 
   const renderOption = (opt: { id: number; name: string; symbol: string; logo?: string }) => {
     const active = appChainId === opt.id;
+    const isHardhat = /hardhat/i.test(opt.name) || /^HH/i.test(opt.symbol);
+    const displayName = isHardhat ? 'Hardhat - (Direct)' : `${opt.name} (Metamask)`;
 
     return (
       <button
@@ -36,7 +38,7 @@ export default function Networks() {
         )}
         <span className="min-w-0">
           <span className="block truncate text-sm font-semibold text-white">{opt.symbol}</span>
-          <span className="block truncate font-mono text-[13px] text-slate-300">{opt.name}</span>
+          <span className="block truncate font-mono text-[13px] text-slate-300">{displayName}</span>
         </span>
       </button>
     );
