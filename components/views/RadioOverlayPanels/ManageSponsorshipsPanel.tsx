@@ -650,7 +650,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
           spCoinAccessSource: accessSource,
           cacheMode: action === 'estimate' ? 'default' : 'forceRefresh',
           useCache: action === 'estimate',
-          traceCache: traceEnabled,
+          traceCache: false,
           script: {
             id: `manage-sponsorships-${method}-${Date.now()}`,
             name: method,
