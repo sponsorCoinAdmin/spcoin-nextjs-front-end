@@ -336,7 +336,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
   const [sellTokenContract] = useSellTokenContract();
   const [accountRecord, setAccountRecord] = useState<unknown>(undefined);
   const [accountRecordLoading, setAccountRecordLoading] = useState(false);
-  const [accountRecordTrace, setAccountRecordTrace] = useState<ManageSponsorshipsTrace | null>(null);
+  const [, setAccountRecordTrace] = useState<ManageSponsorshipsTrace | null>(null);
   const [accountRecordRefreshNonce, setAccountRecordRefreshNonce] = useState(0);
   const [totalReward, setTotalReward] = useState<RoleRewardState>({});
   const [roleRewards, setRoleRewards] = useState<Record<RewardRoleName, RoleRewardState>>({
