@@ -118,6 +118,11 @@ const UNSPONSOR_CHILDREN: readonly SP[] = [] as const;
 
  */
 const TRADE_HEADER_CHILDREN: readonly SP[] = [
+  // Header bars (above trading station content)
+  SP.MENU_TAB_HEADER_BAR,
+  SP.ACTIVE_ACCOUNT_HEADER_BAR,
+  SP.ADDRESS_HEADER_BAR,
+
   // Core overlay
   SP.TRADING_STATION_PANEL,
 
@@ -190,6 +195,11 @@ export const PANEL_DEFS: readonly PanelDef[] = [
 
   // Trading station header row (logo + title + cog)
   def({ id: SP.TRADING_STATION_HEADER, kind: 'panel', defaultVisible: true }),
+
+  // Popup header bars
+  def({ id: SP.MENU_TAB_HEADER_BAR, kind: 'panel', defaultVisible: true }),
+  def({ id: SP.ACTIVE_ACCOUNT_HEADER_BAR, kind: 'panel', defaultVisible: true }),
+  def({ id: SP.ADDRESS_HEADER_BAR, kind: 'panel', defaultVisible: true }),
 
   // Token selector overlays
   def({ id: SP.TOKEN_LIST_SELECT_PANEL, kind: 'list', children: TOKEN_LIST_SELECT_PANEL_CHILDREN }),
@@ -344,6 +354,10 @@ export const NON_INDEXED_PANELS = new Set<SP>([
   SP.MAIN_TRADING_PANEL,
   SP.TRADE_CONTAINER_HEADER,
   SP.CONFIG_SLIPPAGE_PANEL,
+  SP.TRADING_STATION_HEADER,
+  SP.MENU_TAB_HEADER_BAR,
+  SP.ACTIVE_ACCOUNT_HEADER_BAR,
+  SP.ADDRESS_HEADER_BAR,
 ]);
 
 export const ROOTS: readonly SP[] = [SP.MAIN_TRADING_PANEL] as const;

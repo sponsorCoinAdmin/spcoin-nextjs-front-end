@@ -31,6 +31,9 @@ export const NON_PERSISTED_PANELS = new Set<SP>([]);
 export const MUST_INCLUDE_ON_BOOT: readonly (readonly [SP, boolean])[] = [
   [SP.MAIN_TRADING_PANEL, true],
   [SP.TRADE_CONTAINER_HEADER, true],
+  [SP.MENU_TAB_HEADER_BAR, true],
+  [SP.ACTIVE_ACCOUNT_HEADER_BAR, true],
+  [SP.ADDRESS_HEADER_BAR, true],
   [SP.TRADING_STATION_PANEL, true],
   [SP.SELL_SELECT_PANEL, true],
   [SP.BUY_SELECT_PANEL, true],
@@ -82,6 +85,11 @@ export const MUST_INCLUDE_ON_BOOT: readonly (readonly [SP, boolean])[] = [
 export const defaultSpCoinPanelTree: SpCoinPanelTree = [
   node(SP.MAIN_TRADING_PANEL, true, [
     node(SP.TRADE_CONTAINER_HEADER, true, [
+      // Header bars (above trading station content)
+      node(SP.MENU_TAB_HEADER_BAR, true),
+      node(SP.ACTIVE_ACCOUNT_HEADER_BAR, true),
+      node(SP.ADDRESS_HEADER_BAR, true),
+
       // Core trading station subtree
       node(SP.TRADING_STATION_PANEL, true, [
         node(SP.SELL_SELECT_PANEL, true, [node(SP.MANAGE_SPONSORSHIPS_BUTTON, false)]),

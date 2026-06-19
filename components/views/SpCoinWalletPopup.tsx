@@ -22,6 +22,7 @@ import { getBlockChainName } from '@/lib/context/helpers/NetworkHelpers';
 import { useActiveAccount } from '@/lib/context/hooks/ExchangeContext/nested/accounts/useActiveAccount';
 import type { SpCoinWalletAccount } from '@/lib/spCoinWallet';
 import { SP_COIN_DISPLAY, STATUS, type spCoinAccount } from '@/lib/structure';
+import PanelGate from '@/components/utility/PanelGate';
 import { normalizeAddress } from '@/lib/utils/address';
 import {
   appendDebugTrace,
@@ -55,7 +56,7 @@ export default function SpCoinWalletPopup() {
   const [walletOptionsOpen, setWalletOptionsOpen] = useState(false);
   const [swapTokensOpen, setSwapTokensOpen] = useState(false);
   const [walletConfigOpen, setWalletConfigOpen] = useState(false);
-  const [tabsOpen, setTabsOpen] = useState(true);
+  const tabsOpen = usePanelVisible(SP_COIN_DISPLAY.MENU_TAB_HEADER_BAR);
 
   const [showBackgroundPage, setShowBackgroundPage] = useState(
     () => readMeritWalletLS().config.showBackgroundPage,
@@ -754,7 +755,8 @@ export default function SpCoinWalletPopup() {
                     : 'SponsorCoin Wallet'
           }
           onMenuClick={() => {
-            setTabsOpen((p) => !p);
+            if (tabsOpen) closePanel(SP_COIN_DISPLAY.MENU_TAB_HEADER_BAR, 'SpCoinWalletPopup:hamburger');
+            else openPanel(SP_COIN_DISPLAY.MENU_TAB_HEADER_BAR, 'SpCoinWalletPopup:hamburger');
           }}
           menuButtonKind="menu"
           leftSlot={
@@ -790,33 +792,37 @@ export default function SpCoinWalletPopup() {
 
           {!swapTokensOpen && !walletConfigOpen ? (
             <>
-              {/* Tab bar — top-level chrome, outside the radio group */}
+              {/* Tab bar — slide driven by panel tree; PanelGate omitted so CSS transition can play */}
               <AccountPanelTabBar open={tabsOpen} />
 
               {/* Nav row — top-level chrome, outside the radio group */}
-              <div className="relative shrink-0 border-b border-slate-700/50 px-4 py-3 flex items-center gap-3">
-                <div className="pointer-events-none absolute inset-x-0 top-[2px] flex flex-col items-center text-[19px] font-semibold text-[#5981F3]">
-                  <span>{activeAccountType}</span>
-                  {exchangeContext?.accounts?.activeAccount?.name && (
-                    <span>{exchangeContext.accounts.activeAccount.name}</span>
-                  )}
+              <PanelGate panel={SP_COIN_DISPLAY.ACTIVE_ACCOUNT_HEADER_BAR}>
+                <div className="relative shrink-0 border-b border-slate-700/50 px-4 py-3 flex items-center gap-3">
+                  <div className="pointer-events-none absolute inset-x-0 top-[2px] flex flex-col items-center text-[19px] font-semibold text-[#5981F3]">
+                    <span>{activeAccountType}</span>
+                    {exchangeContext?.accounts?.activeAccount?.name && (
+                      <span>{exchangeContext.accounts.activeAccount.name}</span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => closePanel('SpCoinWalletPopup:back')}
+                    className="ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#303b68] hover:bg-[#3c487a]"
+                    aria-label="Go back"
+                  >
+                    <ArrowLeft className="h-5 w-5 text-[#91a5ff]" />
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => closePanel('SpCoinWalletPopup:back')}
-                  className="ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#303b68] hover:bg-[#3c487a]"
-                  aria-label="Go back"
-                >
-                  <ArrowLeft className="h-5 w-5 text-[#91a5ff]" />
-                </button>
-              </div>
+              </PanelGate>
 
               {/* Active account row — top-level chrome, outside the radio group */}
-              <ActiveAccount
-                account={exchangeContext?.accounts?.activeAccount}
-                accountType={activeAccountType}
-                showTitle={false}
-              />
+              <PanelGate panel={SP_COIN_DISPLAY.ADDRESS_HEADER_BAR}>
+                <ActiveAccount
+                  account={exchangeContext?.accounts?.activeAccount}
+                  accountType={activeAccountType}
+                  showTitle={false}
+                />
+              </PanelGate>
 
               {/* Account panel — mounted when ACCOUNT_PANEL or any of its tab sub-panels is the active radio member */}
               {showAccountPanelView ? (

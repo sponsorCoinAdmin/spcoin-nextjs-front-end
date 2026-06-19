@@ -5,12 +5,13 @@ import Image from 'next/image';
 import cog_png from '@/public/assets/miscellaneous/cog.png';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
+import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
-import PanelGate from '@/components/utility/PanelGate';
 
 export default function TradingStationHeader() {
   const { exchangeContext } = useExchangeContext();
   const { openPanel, closePanel, isVisible } = usePanelTree();
+  const open = usePanelVisible(SP_COIN_DISPLAY.TRADING_STATION_HEADER);
 
   const logoURL = (exchangeContext as any)?.accounts?.activeAccount?.logoURL as string | undefined;
 
@@ -23,7 +24,10 @@ export default function TradingStationHeader() {
   };
 
   return (
-    <PanelGate panel={SP_COIN_DISPLAY.TRADING_STATION_HEADER}>
+    <div
+      className="shrink-0 overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out"
+      style={{ maxHeight: open ? '60px' : '0px', opacity: open ? 1 : 0 }}
+    >
       <div
         id="TRADING_STATION_HEADER"
         className="grid grid-cols-[auto_1fr_auto] items-center w-full h-[50px] min-h-[50px] shrink-0"
@@ -53,6 +57,6 @@ export default function TradingStationHeader() {
           priority
         />
       </div>
-    </PanelGate>
+    </div>
   );
 }
