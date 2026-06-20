@@ -1,8 +1,7 @@
 // File: app/(menu)/Exchange/Price/index.tsx
 'use client';
 
-import styles from '@/styles/Exchange.module.css';
-import { MainTradingPanel } from '@/components/views';
+import MeritWalletComponent from '@/components/views/MeritWalletComponent';
 
 import { usePriceErrorEffect } from '@/lib/hooks/usePriceErrorEffect';
 import { useResetAmountsOnTokenChange } from '@/lib/hooks/useResetAmountsOnTokenChange';
@@ -13,8 +12,8 @@ export default function PriceView() {
   useResetAmountsOnTokenChange();
 
   return (
-    <div className={styles.pageWrap}>
-      <MainTradingPanel />
+    <div className="flex items-center justify-center p-4">
+      <MeritWalletComponent />
     </div>
   );
 }

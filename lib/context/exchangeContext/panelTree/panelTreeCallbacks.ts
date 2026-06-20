@@ -12,6 +12,7 @@ import {
 } from './panelTreePersistence';
 
 import { schedule, logAction } from './panelTreeDebug';
+import { appendDebugTrace } from '@/lib/utils/debugTrace';
 import {
   applyGlobalRadio,
   ensureOneGlobalOverlayVisible,
@@ -141,6 +142,7 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
     _parent?: SP_COIN_DISPLAY,
   ) => {
     logAction('openPanel', panel, invoker);
+    appendDebugTrace(`[callbacks:openPanel] ${(SP_COIN_DISPLAY as any)[panel]}`, { panel: Number(panel), invoker, isGlobal: overlays.some((o) => Number(o) === Number(panel)), inKnown: known.has(Number(panel)) });
     if (!known.has(Number(panel))) return;
 
     // Pending Rewards: pure visibility toggle (no radio, no stack).
@@ -198,6 +200,7 @@ export function createPanelTreeCallbacks(deps: PanelTreeCallbacksDeps) {
     _unused?: unknown,
   ) => {
     logAction('closePanel', panel, invoker);
+    appendDebugTrace(`[callbacks:closePanel] ${(SP_COIN_DISPLAY as any)[panel]}`, { panel: Number(panel), invoker, isGlobal: overlays.some((o) => Number(o) === Number(panel)), inKnown: known.has(Number(panel)) });
     if (!known.has(Number(panel))) return;
 
     // Pending Rewards: pure visibility toggle OFF (no pop/restore).

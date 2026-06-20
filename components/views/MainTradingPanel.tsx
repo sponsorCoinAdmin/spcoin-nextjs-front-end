@@ -4,6 +4,9 @@
 import styles from '@/styles/Exchange.module.css';
 
 import TradeContainerHeader from '@/components/views/Headers/TradeContainerHeader';
+import MenuTabHeaderBar from '@/components/views/Headers/MenuTabHeaderBar';
+import ActiveAccountHeaderBar from '@/components/views/Headers/ActiveAccountHeaderBar';
+import AddressHeaderBar from '@/components/views/Headers/AddressHeaderBar';
 import RadioOverlayPanelHost from '@/components/views/RadioOverlayPanelHost';
 
 import { SP_COIN_DISPLAY } from '@/lib/structure';
@@ -25,6 +28,7 @@ type MainTradingPanelProps = {
 
 export default function MainTradingPanel({ embeddedInPopup = false }: MainTradingPanelProps) {
   const accountPanelVisible = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_PANEL);
+  const tradingStationHeaderOpen = usePanelVisible(SP_COIN_DISPLAY.TRADING_STATION_HEADER);
 
   return (
     <PanelGate panel={SP_COIN_DISPLAY.MAIN_TRADING_PANEL}>
@@ -102,9 +106,21 @@ export default function MainTradingPanel({ embeddedInPopup = false }: MainTradin
                 : undefined
           }
         >
+          <MenuTabHeaderBar />
+          <ActiveAccountHeaderBar />
+          <AddressHeaderBar />
+
           <PanelGate panel={SP_COIN_DISPLAY.TRADE_CONTAINER_HEADER}>
             <div id="TRADE_CONTAINER_HEADER">
-              <TradeContainerHeader />
+              <div
+                className="overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out"
+                style={{
+                  maxHeight: tradingStationHeaderOpen ? '80px' : '0px',
+                  opacity: tradingStationHeaderOpen ? 1 : 0,
+                }}
+              >
+                <TradeContainerHeader />
+              </div>
             </div>
           </PanelGate>
 

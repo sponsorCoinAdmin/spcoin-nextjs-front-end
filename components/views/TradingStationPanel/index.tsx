@@ -14,7 +14,6 @@ import PanelGate from '@/components/utility/PanelGate';
 import SellSelectPanel from './SellSelectPanel';
 import BuySelectPanel from './BuySelectPanel';
 import ConfigSlippagePanel from '@/components/views/TradingStationPanel/ConfigSlippagePanel';
-import TradingStationHeader from '@/components/views/TradingStationPanel/TradingStationHeader';
 import { TSP_TW } from '@/components/views/TradingStationPanel/lib/twSettingConfig';
 
 export default function TradingStationPanel() {
@@ -24,10 +23,10 @@ export default function TradingStationPanel() {
   return (
     <PanelGate panel={SP_COIN_DISPLAY.TRADING_STATION_PANEL}>
       <div id="TRADING_STATION_PANEL" className={`flex flex-col ${TSP_TW.gap}`}>
-        <TradingStationHeader />
-        <ConfigSlippagePanel />
+        <PanelGate panel={SP_COIN_DISPLAY.CONFIG_SLIPPAGE_PANEL}>
+          <ConfigSlippagePanel />
+        </PanelGate>
 
-        {/* ✅ NEW: gate the trading-pair container by EXCHANGE_TRADING_PAIR */}
         <PanelGate panel={SP_COIN_DISPLAY.EXCHANGE_TRADING_PAIR}>
           <div
             id="EXCHANGE_TRADING_PAIR"
@@ -48,9 +47,15 @@ export default function TradingStationPanel() {
         </PanelGate>
 
         <AddSponsorShipPanel />
-        <ConnectTradeButton isLoadingPrice={isLoading} />
-        <AffiliateFee priceResponse={priceResponse} />
-        <FeeDisclosure />
+        <PanelGate panel={SP_COIN_DISPLAY.CONNECT_TRADE_BUTTON}>
+          <ConnectTradeButton isLoadingPrice={isLoading} />
+        </PanelGate>
+        <PanelGate panel={SP_COIN_DISPLAY.AFFILIATE_FEE}>
+          <AffiliateFee priceResponse={priceResponse} />
+        </PanelGate>
+        <PanelGate panel={SP_COIN_DISPLAY.FEE_DISCLOSURE}>
+          <FeeDisclosure />
+        </PanelGate>
       </div>
     </PanelGate>
   );

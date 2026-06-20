@@ -29,12 +29,16 @@ const node = (panel: SP, visible: boolean, children?: PanelNode[]): PanelNode =>
 export const NON_PERSISTED_PANELS = new Set<SP>([]);
 
 export const MUST_INCLUDE_ON_BOOT: readonly (readonly [SP, boolean])[] = [
+  [SP.MERIT_WALLET_COMPONENT, true],
   [SP.MAIN_TRADING_PANEL, true],
   [SP.TRADE_CONTAINER_HEADER, true],
+  [SP.TRADING_STATION_HEADER, true],
   [SP.MENU_TAB_HEADER_BAR, true],
   [SP.ACTIVE_ACCOUNT_HEADER_BAR, true],
   [SP.ADDRESS_HEADER_BAR, true],
   [SP.TRADING_STATION_PANEL, true],
+  [SP.CONFIG_SLIPPAGE_PANEL, false],
+  [SP.EXCHANGE_TRADING_PAIR, true],
   [SP.SELL_SELECT_PANEL, true],
   [SP.BUY_SELECT_PANEL, true],
   [SP.SWAP_ARROW_BUTTON, true],
@@ -83,17 +87,26 @@ export const MUST_INCLUDE_ON_BOOT: readonly (readonly [SP, boolean])[] = [
  * Canonical authored tree for the SponsorCoin UI.
  */
 export const defaultSpCoinPanelTree: SpCoinPanelTree = [
+  node(SP.MERIT_WALLET_COMPONENT, true, [
   node(SP.MAIN_TRADING_PANEL, true, [
-    node(SP.TRADE_CONTAINER_HEADER, true, [
-      // Header bars (above trading station content)
-      node(SP.MENU_TAB_HEADER_BAR, true),
-      node(SP.ACTIVE_ACCOUNT_HEADER_BAR, true),
-      node(SP.ADDRESS_HEADER_BAR, true),
+    // Header bars sit above TRADE_CONTAINER_HEADER
+    node(SP.MENU_TAB_HEADER_BAR, true),
+    node(SP.ACTIVE_ACCOUNT_HEADER_BAR, true),
+    node(SP.ADDRESS_HEADER_BAR, true),
 
+    node(SP.TRADE_CONTAINER_HEADER, true, [
       // Core trading station subtree
       node(SP.TRADING_STATION_PANEL, true, [
-        node(SP.SELL_SELECT_PANEL, true, [node(SP.MANAGE_SPONSORSHIPS_BUTTON, false)]),
-        node(SP.BUY_SELECT_PANEL, true, [node(SP.ADD_SPONSORSHIP_BUTTON, false)]),
+        node(SP.TRADING_STATION_HEADER, true),
+        node(SP.CONFIG_SLIPPAGE_PANEL, false),
+        node(SP.EXCHANGE_TRADING_PAIR, true, [
+          node(SP.SELL_SELECT_PANEL, true, [node(SP.MANAGE_SPONSORSHIPS_BUTTON, false)]),
+          node(SP.SWAP_ARROW_BUTTON, true),
+          node(SP.BUY_SELECT_PANEL, true, [node(SP.ADD_SPONSORSHIP_BUTTON, false)]),
+        ]),
+        node(SP.CONNECT_TRADE_BUTTON, true),
+        node(SP.FEE_DISCLOSURE, true),
+        node(SP.AFFILIATE_FEE, false),
       ]),
 
       // ─────────────── Radio overlays (siblings) ───────────────
@@ -151,14 +164,10 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
       // Aux panels
       node(SP.ADD_SPONSORSHIP_PANEL, false, [node(SP.CONFIG_SPONSORSHIP_PANEL, false)]),
 
-      // Default-on widgets
-      node(SP.SWAP_ARROW_BUTTON, true),
+      // Global always-on widget (not inside TradingStationPanel, lives at overlay level)
       node(SP.WALLET_CONNECT_COMPONENT, true),
-      node(SP.FEE_DISCLOSURE, true),
-
-      // Default-off widget
-      node(SP.AFFILIATE_FEE, false),
     ]),
+  ]),
   ]),
 ];
 

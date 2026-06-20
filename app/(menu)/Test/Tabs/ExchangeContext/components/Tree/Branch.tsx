@@ -9,6 +9,7 @@ import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { MAIN_RADIO_OVERLAY_PANELS, NON_INDEXED_PANELS } from '@/lib/structure/exchangeContext/registry/panelRegistry';
 import nodeModulesSpCoinAccessPackage from '@sponsorcoin/spcoin-access-modules/package.json';
+import { appendDebugTrace } from '@/lib/utils/debugTrace';
 
 // ✅ Env flags (default to true so current UI is unchanged unless you set them to 'false')
 const SHOW_IDS = process.env.NEXT_PUBLIC_TREE_SHOW_IDS !== 'false';
@@ -146,7 +147,7 @@ const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, toggleP
    * NOTE: "radio group" logic for ACCOUNT_PANEL and ACCOUNT_LIST_REWARDS_PANEL
    * has been removed from this UI component and is now enforced in usePanelTree().
    */
-  const { openPanel, closePanel } = usePanelTree();
+  const { openPanel, setPanelVisible } = usePanelTree();
   const { exchangeContext, setExchangeContext } = useExchangeContext();
   const [localSpCoinAccessVersion, setLocalSpCoinAccessVersion] = React.useState('');
   const [localSpCoinAccessPathExists, setLocalSpCoinAccessPathExists] = React.useState<boolean | null>(null);
@@ -280,18 +281,22 @@ const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, toggleP
     const onRowClick = () => {
       if (isPanelArrayItem) {
         const panelId = getVirtualId(guiValue);
+        const currentlyVisible = !!(guiValue as any).visible;
+        appendDebugTrace(`[Branch:onClick] ${SP_COIN_DISPLAY[panelId as any] ?? panelId}`, { path, panelId, visible: currentlyVisible });
         if (panelId == null) return;
 
-        const currentlyVisible = !!(guiValue as any).visible;
         const invoker = 'Branch:onRowClick(tree)';
 
-        // If currently visible, clicking acts as a toggle OFF (allows "none" selected)
+        // Tree toggle: use setPanelVisible(false) for hide — avoids stack pop/restore
+        // that would trigger side effects (e.g. SpCoinWalletPopup re-opening the panel).
         if (currentlyVisible) {
-          closePanel(panelId as any, invoker);
+          appendDebugTrace(`[Branch:hide] ${SP_COIN_DISPLAY[panelId as any]}`, { panelId });
+          setPanelVisible(panelId as any, false, 'Branch:tree:hide');
           return;
         }
 
-        // ✅ default behavior ONLY (radio behavior enforced in usePanelTree)
+        appendDebugTrace(`[Branch:openPanel] ${SP_COIN_DISPLAY[panelId as any]}`, { panelId });
+        // openPanel for show: radio enforcement (closing other overlays) is desirable here.
         openPanel(panelId as any, invoker);
         ensureOpen(path);
         ensureOpen(`${path}.children`);

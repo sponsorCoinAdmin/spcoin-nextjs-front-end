@@ -512,10 +512,8 @@ export default function TestPage() {
     setShowRightPanel(true);
   }, []);
   const onToggleRightControl = useCallback(() => {
-    // Keep one panel visible to avoid dead-end UI state.
-    if (!showLeftPanel) return;
     setShowRightPanel(false);
-  }, [showLeftPanel]);
+  }, []);
 
   const clearFSMHeader = useCallback(() => {
     clearFSMHeaderFromMemory();
@@ -540,14 +538,15 @@ export default function TestPage() {
   }, []);
 
   useEffect(() => {
+    // When both panels are closed don't persist — that would map to 'Both Open'
+    // and the sync effect would immediately re-open both panels.
+    if (!showLeftPanel && !showRightPanel) return;
     const panelLayout: TestPanelLayout =
       showLeftPanel && showRightPanel
         ? 'Both Open'
         : showLeftPanel
           ? 'Left Only'
-          : showRightPanel
-            ? 'Right Only'
-            : 'Both Open';
+          : 'Right Only';
 
     setExchangeContext(
       (prev) => {
@@ -620,7 +619,7 @@ export default function TestPage() {
       }}
     >
       <div className="flex h-full gap-4 overflow-hidden">
-        {!showLeftPanel && showRightPanel && (
+        {!showLeftPanel && (
           <div className="w-10 shrink-0">
             <div className="sticky top-0 z-10 mb-4 flex items-center justify-center bg-[#192134] pb-2">
               <button
@@ -660,18 +659,16 @@ export default function TestPage() {
               }}
             >
               <div className="w-10 shrink-0 flex items-center justify-center">
-                {showRightPanel && (
-                  <button
-                    onClick={onToggleLeftControl}
-                    aria-label="Close Left Panel"
-                    title="Close Left Panel"
-                    className={panelIconButtonBlue}
-                    style={{ WebkitTapHighlightColor: 'transparent' }}
-                    type="button"
-                  >
-                    {'\u00D7'}
-                  </button>
-                )}
+                <button
+                  onClick={onToggleLeftControl}
+                  aria-label="Close Left Panel"
+                  title="Close Left Panel"
+                  className={panelIconButtonBlue}
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
+                  type="button"
+                >
+                  {'\u00D7'}
+                </button>
               </div>
               <label htmlFor="quickSwitchSelect" className="sr-only">
                 Run Test
@@ -840,30 +837,30 @@ export default function TestPage() {
         </div>
         )}
 
+        {!showLeftPanel && !showRightPanel && <div className="flex-1" />}
+
         {showRightPanel && (
         <div className={`scrollbar-hide min-w-0 overflow-y-auto overflow-x-hidden ${showLeftPanel ? 'flex-1 border-l border-slate-700 pl-2' : 'w-full'}`}>
           <div className="sticky top-0 z-10 mb-4 flex items-center justify-end bg-[#192134] pb-2">
-            {showLeftPanel && (
-              <div className="w-10 shrink-0 flex items-center justify-center">
-                <button
-                  onClick={onToggleRightControl}
-                  aria-label="Close Right Panel"
-                  title="Close Right Panel"
-                  className={panelIconButtonBlue}
-                  style={{ WebkitTapHighlightColor: 'transparent' }}
-                  type="button"
-                >
-                  {'\u00D7'}
-                </button>
-              </div>
-            )}
+            <div className="w-10 shrink-0 flex items-center justify-center">
+              <button
+                onClick={onToggleRightControl}
+                aria-label="Close Right Panel"
+                title="Close Right Panel"
+                className={panelIconButtonBlue}
+                style={{ WebkitTapHighlightColor: 'transparent' }}
+                type="button"
+              >
+                {'\u00D7'}
+              </button>
+            </div>
           </div>
           <div className="flex h-full min-h-0 flex-col items-center justify-between pt-12 px-6 pb-4">
             <PriceView />
           </div>
         </div>
         )}
-        {!showRightPanel && showLeftPanel && (
+        {!showRightPanel && (
           <div className="w-10 shrink-0">
             <div className="sticky top-0 z-10 mb-4 flex items-center justify-center bg-[#192134] pb-2">
               <button

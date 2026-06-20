@@ -118,11 +118,6 @@ const UNSPONSOR_CHILDREN: readonly SP[] = [] as const;
 
  */
 const TRADE_HEADER_CHILDREN: readonly SP[] = [
-  // Header bars (above trading station content)
-  SP.MENU_TAB_HEADER_BAR,
-  SP.ACTIVE_ACCOUNT_HEADER_BAR,
-  SP.ADDRESS_HEADER_BAR,
-
   // Core overlay
   SP.TRADING_STATION_PANEL,
 
@@ -156,7 +151,15 @@ const TRADE_HEADER_CHILDREN: readonly SP[] = [
   SP.WALLET_CONFIG_PANEL,
 ] as const;
 
-const MAIN_TRADING_CHILDREN: readonly SP[] = [SP.TRADE_CONTAINER_HEADER] as const;
+const MERIT_WALLET_CHILDREN: readonly SP[] = [SP.MAIN_TRADING_PANEL] as const;
+
+const MAIN_TRADING_CHILDREN: readonly SP[] = [
+  // Header bars sit above TRADE_CONTAINER_HEADER
+  SP.MENU_TAB_HEADER_BAR,
+  SP.ACTIVE_ACCOUNT_HEADER_BAR,
+  SP.ADDRESS_HEADER_BAR,
+  SP.TRADE_CONTAINER_HEADER,
+] as const;
 
 /* ─────────────────────────────── Panel Definitions ─────────────────────────────── */
 
@@ -169,7 +172,15 @@ const def = (d: Omit<PanelDef, 'overlay'>): PanelDef => ({
 });
 
 export const PANEL_DEFS: readonly PanelDef[] = [
-  // Root
+  // Top-level root: the Merit Wallet widget shell
+  def({
+    id: SP.MERIT_WALLET_COMPONENT,
+    kind: 'root',
+    defaultVisible: true,
+    children: MERIT_WALLET_CHILDREN,
+  }),
+
+  // Trading panel root
   def({
     id: SP.MAIN_TRADING_PANEL,
     kind: 'root',
@@ -351,6 +362,7 @@ export const STACK_COMPONENTS: readonly SP[] = STACK_COMPONENTS_MODEL;
 export { IS_MAIN_RADIO_OVERLAY_PANEL, IS_MANAGE_SCOPED, IS_STACK_COMPONENT };
 
 export const NON_INDEXED_PANELS = new Set<SP>([
+  SP.MERIT_WALLET_COMPONENT,
   SP.MAIN_TRADING_PANEL,
   SP.TRADE_CONTAINER_HEADER,
   SP.CONFIG_SLIPPAGE_PANEL,
@@ -360,7 +372,7 @@ export const NON_INDEXED_PANELS = new Set<SP>([
   SP.ADDRESS_HEADER_BAR,
 ]);
 
-export const ROOTS: readonly SP[] = [SP.MAIN_TRADING_PANEL] as const;
+export const ROOTS: readonly SP[] = [SP.MERIT_WALLET_COMPONENT] as const;
 
 /** Fast id → definition lookup */
 export const PANEL_BY_ID: ReadonlyMap<SP, PanelDef> = (() => {

@@ -25,6 +25,8 @@ import TradingStationPanel from '@/components/views/TradingStationPanel';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { useEnforceRadioPanelGroups } from '@/lib/context/exchangeContext/hooks/useEnforceRadioPanelGroups';
 import { RADIO_PANEL_GROUPS } from '@/lib/structure/exchangeContext/constants/spCoinDisplay';
+import WalletAccountsPanel from '@/components/views/RadioOverlayPanels/WalletAccountsPanel';
+import WalletNetworksPanel from '@/components/views/RadioOverlayPanels/WalletNetworksPanel';
 
 export default function RadioOverlayPanelHost() {
   useEnforceRadioPanelGroups(RADIO_PANEL_GROUPS);
@@ -52,6 +54,10 @@ export default function RadioOverlayPanelHost() {
       <AgentListSelectPanel />
       <RecipientListSelectPanel />
       <TokenListSelectPanel />
+
+      {/* ───────────────────────── Wallet overlays ───────────────────────── */}
+      <WalletAccountsPanel />
+      <WalletNetworksPanel />
 
       <ErrorMessagePanel />
     </>
