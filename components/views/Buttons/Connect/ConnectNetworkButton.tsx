@@ -25,6 +25,7 @@ import {
   getEffectiveChainId,
 } from '@/lib/utils/network';
 import { useSpCoinWallet } from '@/lib/spCoinWallet';
+import { appendDebugTrace } from '@/lib/utils/debugTrace';
 
 export type ConnectNetworkButtonProps = {
   showName?: boolean;
@@ -142,13 +143,23 @@ export default function ConnectNetworkButton({
         // click handlers
         const onButtonClick = () => {
           close();
+          appendDebugTrace('ConnectNetworkButton:openMeritWallet', {
+            isConnected: Boolean(isConnected),
+            label:
+              !isConnected && showConnect
+                ? connectLabel
+                : isConnected && showDisconnect
+                ? 'Disconnect'
+                : label,
+            currentId: numericCurrentId,
+          });
           openWallet();
         };
         const onImageClick = onButtonClick;
         const onChevronClick = onChevronClickProp ?? toggle;
 
         const onConnectTextClick =
-          !isConnected && showConnect ? () => connectMetaMask(show) : undefined;
+          !isConnected && showConnect ? onButtonClick : undefined;
 
         const onDisconnectTextClick =
           isConnected && showDisconnect

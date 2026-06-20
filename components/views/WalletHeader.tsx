@@ -46,7 +46,7 @@ export default function WalletHeader({
   const isSelection = mode === 'selection';
 
   return (
-    <div className={`relative border-b border-[#21273a] bg-[#77808e] ${isSelection ? 'px-5 pt-[11px] pb-[10px]' : 'pl-[10px] pr-5 py-[14px]'}`}>
+    <div className={`relative border-b border-[#21273a] bg-[#77808e] ${isSelection ? 'px-5 pt-[11px] pb-[10px]' : 'pl-4 pr-5 py-[14px]'}`}>
       {isSelection ? (
         <>
           <span
@@ -129,7 +129,7 @@ export default function WalletHeader({
             <button
               type="button"
               onClick={onMenuClick}
-              className="absolute right-[64px] top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-[#303b68] hover:bg-[#3c487a]"
+              className="absolute right-[68px] top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-[#303b68] hover:bg-[#3c487a]"
               aria-label={menuButtonKind === 'back' ? 'Return to wallet options' : 'Open wallet menu'}
             >
               {menuButtonKind === 'back' ? (
@@ -142,7 +142,7 @@ export default function WalletHeader({
           <button
             type="button"
             onClick={onClose}
-            className="absolute right-[12px] top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-[#303b68] hover:bg-[#3c487a]"
+            className="absolute right-[16px] top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-[#303b68] hover:bg-[#3c487a]"
             aria-label="Close SponsorCoin wallet"
           >
             <X className="h-6 w-6 text-[#91a5ff]" />

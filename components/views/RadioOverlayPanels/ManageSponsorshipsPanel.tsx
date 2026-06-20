@@ -5,7 +5,7 @@ import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } 
 import { appendDebugTrace } from '@/lib/utils/debugTrace';
 // import { ChevronDown, ChevronUp } from 'lucide-react';
 
-import { AccountType, SP_COIN_DISPLAY } from '@/lib/structure';
+import { AccountType, NATIVE_TOKEN_ADDRESS, SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { useSellTokenContract } from '@/lib/context/hooks';
@@ -17,6 +17,7 @@ import ToDo from '@/lib/utils/components/ToDo';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { resolveSpCoinAccountRoles } from '@/lib/spCoinLab/accountRoles';
+import { getPreferredSpCoinContractAddress } from '@/lib/spCoin/coreUtils';
 
 import { msTableTw } from './msTableTw';
 
@@ -42,6 +43,7 @@ type RewardAction = 'estimate' | 'claim';
 
 type RoleRewardState = {
   amount?: string;
+  available?: boolean;
   loading?: boolean;
   action?: RewardAction;
   error?: string;
@@ -97,7 +99,13 @@ type ManageSponsorshipsTrace = {
   accessSource: 'local' | 'node_modules';
   rpcUrl: string;
   sellTokenAddr: string;
+  selectedTokenContractAddr: string;
+  persistedLabContractAddr: string;
+  persistedAccessContractAddr: string;
+  preferredTradeSpCoinAddr: string;
   activeContractAddr: string;
+  activeContractSource: string;
+  rejectedSelectedTokenReason?: string;
   activeAccountAddr: string;
   httpStatus?: number;
   ok?: boolean;
@@ -208,14 +216,66 @@ function isTruthyRecordFlag(value: unknown): boolean {
   return text === 'true' || text === '1' || text === 'yes';
 }
 
+function hasOwnRecordValue(record: Record<string, unknown>, key: string): boolean {
+  return Object.prototype.hasOwnProperty.call(record, key);
+}
+
+function roleNamesFromUnknown(value: unknown): RewardRoleName[] {
+  if (Array.isArray(value)) {
+    return value.flatMap((item) => roleNamesFromUnknown(item));
+  }
+
+  if (typeof value === 'number' || typeof value === 'bigint') {
+    const mask = Number(value);
+    if (!Number.isInteger(mask)) return [];
+    return REWARD_ROLES.filter((role) => {
+      if (role === 'Sponsor') return (mask & 1) === 1;
+      if (role === 'Recipient') return (mask & 2) === 2;
+      return (mask & 4) === 4;
+    });
+  }
+
+  const text = String(value ?? '').trim();
+  if (!text) return [];
+  if (/^[0-7]$/.test(text)) return roleNamesFromUnknown(Number(text));
+
+  return REWARD_ROLES.filter((role) => new RegExp(`\\b${role}\\b`, 'i').test(text));
+}
+
+function getRoleCandidateRecords(record: Record<string, unknown>): Record<string, unknown>[] {
+  return [
+    record,
+    readRecordValue(record, ['totalSpCoins']),
+    readRecordValue(record, ['pendingRewards']),
+    readRecordValue(record, ['totalSpCoins', 'pendingRewards']),
+    readRecordValue(record, ['meta', 'rewardCalculation']),
+  ].filter((value): value is Record<string, unknown> => (
+    Boolean(value) && typeof value === 'object' && !Array.isArray(value)
+  ));
+}
+
 function getAccountRoleAvailable(record: unknown, role: RewardRoleName): boolean {
   if (!record || typeof record !== 'object' || Array.isArray(record)) return false;
   const account = record as Record<string, unknown>;
-  if (resolveSpCoinAccountRoles(account).includes(role)) return true;
   const roleConfig = REWARD_ROLE_CONFIG[role];
-  if (isTruthyRecordFlag(account[roleConfig.roleFlag])) return true;
-  const roleText = String(account.role ?? account.roles ?? '').trim();
-  return new RegExp(`\\b${role}\\b`, 'i').test(roleText);
+
+  for (const candidate of getRoleCandidateRecords(account)) {
+    if (resolveSpCoinAccountRoles(candidate).includes(role)) return true;
+    if (isTruthyRecordFlag(candidate[roleConfig.roleFlag])) return true;
+    if (role === 'Recipient' && isTruthyRecordFlag(candidate.isRecipiet)) return true;
+
+    const roleValues = [
+      candidate.role,
+      candidate.roles,
+      candidate.accountRoleSummary,
+      candidate.Role,
+      candidate.rewardRole,
+    ];
+    if (roleValues.some((value) => roleNamesFromUnknown(value).includes(role))) return true;
+  }
+
+  const pendingReward = getAccountRecordPendingReward(account, role);
+  return toRawRewardBigInt(pendingReward) > 0n || hasOwnRecordValue(account, roleConfig.pendingKey);
 }
 
 function getRewardResultAmount(result: unknown, role: RewardRoleName): unknown {
@@ -324,6 +384,25 @@ function normalizeContractAddressCandidate(value: unknown): string {
   return /^0x[a-fA-F0-9]{40}$/.test(nextAddress) ? nextAddress : '';
 }
 
+function isNativeTokenContractAddress(value: unknown): boolean {
+  return String(value ?? '').trim().toLowerCase() === String(NATIVE_TOKEN_ADDRESS).toLowerCase();
+}
+
+function firstContractCandidate(
+  candidates: Array<{ address: string; source: string }>,
+): { address: string; source: string } {
+  const seen = new Set<string>();
+  for (const candidate of candidates) {
+    const address = normalizeContractAddressCandidate(candidate.address);
+    if (!address || isNativeTokenContractAddress(address)) continue;
+    const key = address.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    return { address, source: candidate.source };
+  }
+  return { address: '', source: 'none' };
+}
+
 function getTraceObjectKeys(value: unknown): string {
   return value && typeof value === 'object' && !Array.isArray(value)
     ? Object.keys(value as Record<string, unknown>).join(',')
@@ -359,9 +438,26 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
   const persistedLabContractAddr = getPersistedSponsorCoinLabAddress();
   const persistedAccessContractAddr = getPersistedSpCoinAccessAddress();
   const selectedTokenContractAddr = normalizeContractAddressCandidate(sellTokenAddr);
-  const activeContractAddr = selectedTokenContractAddr || persistedLabContractAddr || persistedAccessContractAddr;
   const appChainId = Number(ctx?.exchangeContext?.network?.appChainId ?? 0);
   const chainId = Number(ctx?.exchangeContext?.network?.chainId ?? 0);
+  const preferredTradeSpCoinAddr = normalizeContractAddressCandidate(
+    getPreferredSpCoinContractAddress(
+      appChainId || chainId,
+      ctx?.exchangeContext?.tradeData as Parameters<typeof getPreferredSpCoinContractAddress>[1],
+    ),
+  );
+  const activeContractCandidate = firstContractCandidate([
+    { address: persistedLabContractAddr, source: 'localStorage.spCoinLabKey.contractAddress' },
+    { address: persistedAccessContractAddr, source: 'localStorage.spCoinAccess.deployedContractAddress' },
+    { address: preferredTradeSpCoinAddr, source: 'exchangeContext.tradeData.preferredSpCoin' },
+    { address: selectedTokenContractAddr, source: 'sellTokenContract.address' },
+  ]);
+  const activeContractAddr = activeContractCandidate.address;
+  const activeContractSource = activeContractCandidate.source;
+  const rejectedSelectedTokenReason =
+    selectedTokenContractAddr && isNativeTokenContractAddress(selectedTokenContractAddr)
+      ? 'native-token-sentinel'
+      : undefined;
   const networkName = String(ctx?.exchangeContext?.network?.name ?? '').trim();
   const networkSymbol = String(ctx?.exchangeContext?.network?.symbol ?? '').trim();
   const rpcUrl = String(ctx?.exchangeContext?.network?.rpcUrl ?? '').trim();
@@ -378,7 +474,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
   const sellTokenDecimals = sellTokenContract?.decimals;
   const settingsDecimals = ctx?.exchangeContext?.settings?.spCoinContract?.decimals;
   const selectedTokenDecimals =
-    selectedTokenContractAddr && Number.isInteger(sellTokenDecimals) && Number(sellTokenDecimals) >= 0
+    activeContractSource === 'sellTokenContract.address' && Number.isInteger(sellTokenDecimals) && Number(sellTokenDecimals) >= 0
       ? Number(sellTokenDecimals)
       : undefined;
   const activeContractDecimals = selectedTokenDecimals != null
@@ -410,7 +506,13 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
       accessSource,
       rpcUrl,
       sellTokenAddr,
+      selectedTokenContractAddr,
+      persistedLabContractAddr,
+      persistedAccessContractAddr,
+      preferredTradeSpCoinAddr,
       activeContractAddr,
+      activeContractSource,
+      rejectedSelectedTokenReason,
       activeAccountAddr,
       decimals: activeContractDecimals,
       decimalsSource: activeContractDecimalsSource,
@@ -427,7 +529,13 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
       readMode,
       rpcUrl,
       sellTokenAddr,
+      selectedTokenContractAddr,
+      persistedLabContractAddr,
+      persistedAccessContractAddr,
+      preferredTradeSpCoinAddr,
       activeContractAddr,
+      activeContractSource,
+      rejectedSelectedTokenReason,
       activeContractDecimals,
       activeContractDecimalsSource,
     ],
@@ -447,7 +555,13 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
         `decimals=${String(trace.decimals ?? '')}`,
         `decimalsSource=${trace.decimalsSource ?? 'none'}`,
         `contract=${trace.activeContractAddr || 'none'}`,
+        `contractSource=${trace.activeContractSource || 'none'}`,
+        `selectedToken=${trace.selectedTokenContractAddr || 'none'}`,
         `sellToken=${trace.sellTokenAddr || 'none'}`,
+        `persistedLab=${trace.persistedLabContractAddr || 'none'}`,
+        `persistedAccess=${trace.persistedAccessContractAddr || 'none'}`,
+        `preferredTradeSpCoin=${trace.preferredTradeSpCoinAddr || 'none'}`,
+        `rejectedSelectedToken=${trace.rejectedSelectedTokenReason ?? 'none'}`,
         `symbol=${trace.networkSymbol || 'none'}`,
         `status=${String(trace.httpStatus ?? '')}`,
         `success=${String(trace.firstSuccess ?? '')}`,
@@ -490,8 +604,8 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
             contractAddress: activeContractAddr,
             rpcUrl,
             spCoinAccessSource: accessSource,
-            cacheMode: 'default',
-            useCache: true,
+            cacheMode: 'forceRefresh',
+            useCache: false,
             traceCache: true,
             script: {
               id: `manage-sponsorships-getAccountRecord-${Date.now()}`,
@@ -575,12 +689,15 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
           });
           setRoleRewards({
             Sponsor: {
+              available: getAccountRoleAvailable(result, 'Sponsor'),
               amount: formatAccountRecordAmount(getAccountRecordPendingReward(result, 'Sponsor'), activeContractDecimals),
             },
             Recipient: {
+              available: getAccountRoleAvailable(result, 'Recipient'),
               amount: formatAccountRecordAmount(getAccountRecordPendingReward(result, 'Recipient'), activeContractDecimals),
             },
             Agent: {
+              available: getAccountRoleAvailable(result, 'Agent'),
               amount: formatAccountRecordAmount(getAccountRecordPendingReward(result, 'Agent'), activeContractDecimals),
             },
           });
@@ -730,10 +847,12 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
           setRoleRewards((current) => {
             const next = { ...current };
             for (const role of REWARD_ROLES) {
-              if (!getAccountRoleAvailable(accountRecord, role)) continue;
+              const rawRoleAmount = getTotalRewardResultRoleAmount(result, role);
+              if (rawRoleAmount == null && !getAccountRoleAvailable(accountRecord, role)) continue;
               next[role] = {
                 ...next[role],
-                amount: formatAccountRecordAmount(getTotalRewardResultRoleAmount(result, role), activeContractDecimals),
+                available: true,
+                amount: formatAccountRecordAmount(rawRoleAmount, activeContractDecimals),
                 loading: false,
                 error: undefined,
               };
@@ -768,7 +887,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
   const runRewardAction = useCallback(
     async (role: RewardRoleName, action: RewardAction) => {
       if (!activeContractAddr || !activeAccountAddr) return;
-      if (!getAccountRoleAvailable(accountRecord, role)) return;
+      if (!getAccountRoleAvailable(accountRecord, role) && roleRewards[role]?.available !== true) return;
 
       const roleConfig = REWARD_ROLE_CONFIG[role];
       const method = action === 'estimate' ? roleConfig.estimateMethod : roleConfig.claimMethod;
@@ -810,16 +929,17 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
       activeContractAddr,
       activeContractDecimals,
       accountRecord,
+      roleRewards,
       runRewardScript,
     ],
   );
 
   const runAvailableRoleRewardEstimates = useCallback(async () => {
     for (const role of REWARD_ROLES) {
-      if (!getAccountRoleAvailable(accountRecord, role)) continue;
+      if (!getAccountRoleAvailable(accountRecord, role) && roleRewards[role]?.available !== true) continue;
       await runRewardAction(role, 'estimate');
     }
-  }, [accountRecord, runRewardAction]);
+  }, [accountRecord, roleRewards, runRewardAction]);
 
   useEffect(() => {
     if (isActive) return;
@@ -876,8 +996,8 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
 
   const rewardRows = useMemo(() => (
     REWARD_ROLES.map((role) => {
-      const available = getAccountRoleAvailable(accountRecord, role);
       const state = roleRewards[role] ?? {};
+      const available = getAccountRoleAvailable(accountRecord, role) || state.available === true;
       const seededAmount = formatAccountRecordAmount(getAccountRecordPendingReward(accountRecord, role), activeContractDecimals);
       return {
         role,

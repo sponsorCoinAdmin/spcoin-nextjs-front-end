@@ -19,7 +19,7 @@ import { useActiveAccount } from '@/lib/context/hooks/ExchangeContext/nested/acc
 import type { SpCoinWalletAccount } from '@/lib/spCoinWallet';
 import { SP_COIN_DISPLAY, STATUS, type spCoinAccount } from '@/lib/structure';
 import { normalizeAddress } from '@/lib/utils/address';
-import { clearDebugTraceBuffer } from '@/lib/utils/debugTrace';
+import { appendDebugTrace, clearDebugTraceBuffer } from '@/lib/utils/debugTrace';
 import Accounts from '@/lib/spCoinWallet/accounts';
 
 export default function SpCoinWalletPopup() {
@@ -59,6 +59,7 @@ export default function SpCoinWalletPopup() {
   const walletAccountsVisible    = usePanelVisible(SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT);
   const tradingStationTabVisible = usePanelVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
   const walletConfigTabVisible   = usePanelVisible(SP_COIN_DISPLAY.WALLET_CONFIG_PANEL);
+  const meritWalletVisible       = usePanelVisible(SP_COIN_DISPLAY.MERIT_WALLET_COMPONENT);
 
   const selectedAddressKey = normalizeAddress(
     selectionRequest?.currentAddress || session.signerAddress || session.activeAccountAddress || '',
@@ -81,6 +82,7 @@ export default function SpCoinWalletPopup() {
     ? `${currentNetworkName} (Chain ID: ${session.appChainId})`
     : currentNetworkName;
   const isSelectionMode = Boolean(selectionRequest);
+  const shouldMountWalletShell = isOpen && (isSelectionMode || meritWalletVisible);
   const selectionSummary = walletSource === 'hardhat'
     ? `${hardhatAccounts.length} Hardhat account${hardhatAccounts.length === 1 ? '' : 's'}`
     : session.metamaskAuthorized ? 'MetaMask authorized account' : 'MetaMask not authorized';
@@ -118,8 +120,26 @@ export default function SpCoinWalletPopup() {
       return;
     }
     clearDebugTraceBuffer();
+    appendDebugTrace('SpCoinWalletPopup:opened', {
+      isSelectionMode,
+      meritWalletVisible,
+      defaultPanel,
+      walletSource,
+      appChainId: session.appChainId,
+      signerAddress: session.signerAddress,
+    });
     wasWalletOpenRef.current = true;
-  }, [isOpen]);
+  }, [defaultPanel, isOpen, isSelectionMode, meritWalletVisible, session.appChainId, session.signerAddress, walletSource]);
+
+  useEffect(() => {
+    if (!isOpen || isSelectionMode || meritWalletVisible) return;
+    appendDebugTrace('SpCoinWalletPopup:restoreMeritWalletPanel', {
+      reason: 'wallet-open-but-panel-hidden',
+      defaultPanel,
+      walletSource,
+    });
+    openPanel(SP_COIN_DISPLAY.MERIT_WALLET_COMPONENT, 'SpCoinWalletPopup:restoreMeritWalletPanel');
+  }, [defaultPanel, isOpen, isSelectionMode, meritWalletVisible, openPanel, walletSource]);
 
   useEffect(() => {
     setSelectionAccountsCollapsed(false);
@@ -153,12 +173,16 @@ export default function SpCoinWalletPopup() {
   }, [isOpen, isSelectionMode, setPanelVisible]);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!shouldMountWalletShell) return;
     const prevBodyOverflow   = document.body.style.overflow;
     const prevHtmlOverflow   = document.documentElement.style.overflow;
     const prevBodyOverscroll = document.body.style.overscrollBehavior;
     const prevHtmlOverscroll = document.documentElement.style.overscrollBehavior;
 
+    appendDebugTrace('SpCoinWalletPopup:bodyScrollLock', {
+      isSelectionMode,
+      meritWalletVisible,
+    });
     document.body.classList.add('spcoin-wallet-open');
     document.documentElement.classList.add('spcoin-wallet-open');
     document.body.style.overflow = 'hidden';
@@ -174,7 +198,7 @@ export default function SpCoinWalletPopup() {
       document.body.style.overscrollBehavior = prevBodyOverscroll;
       document.documentElement.style.overscrollBehavior = prevHtmlOverscroll;
     };
-  }, [isOpen]);
+  }, [isSelectionMode, meritWalletVisible, shouldMountWalletShell]);
 
   /* ─── Account helpers (selection mode + auto-open handlers) ─── */
 
@@ -280,7 +304,7 @@ export default function SpCoinWalletPopup() {
     if (defaultPanel === 'OPTIONS') { h.openOptionsPanel(); }
   }, [defaultPanel, isOpen, isSelectionMode]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !shouldMountWalletShell) return null;
 
   /* ─── Selection mode: account picker (self-contained) ─── */
   if (isSelectionMode) {

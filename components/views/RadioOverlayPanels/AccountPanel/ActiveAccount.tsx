@@ -38,7 +38,7 @@ export default function ActiveAccount({ account, accountType = 'Account', showTi
   };
 
   return (
-    <div className="shrink-0 border-b border-slate-700/50 px-5 py-2 flex items-center gap-2 text-sm text-slate-300/80">
+    <div className="shrink-0 border-b border-slate-700/50 -mx-[30px] px-4 py-2 flex items-center gap-2 text-sm text-slate-300/80">
       {account?.logoURL ? (
         <button
           type="button"
@@ -80,7 +80,7 @@ export default function ActiveAccount({ account, accountType = 'Account', showTi
           <button
             type="button"
             onClick={handleCopy}
-            className="shrink-0 flex items-center justify-center rounded hover:bg-white/10 p-0.5"
+            className="shrink-0 flex items-center justify-center rounded hover:bg-white/10 pl-0.5 pr-0"
             aria-label="Copy address"
             title="Copy address"
           >
