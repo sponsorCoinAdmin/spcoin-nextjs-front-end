@@ -1,6 +1,7 @@
 */artifacts/
 node_modules
 test.out
+search_sponsor_results.txt
 /ignition/deployments/
 /.deps
 /.next/
