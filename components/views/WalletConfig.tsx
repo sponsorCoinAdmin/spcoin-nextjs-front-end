@@ -26,11 +26,13 @@ export default function WalletConfig() {
   const handleShowBackgroundPageChange = (show: boolean) => {
     setShowBackgroundPage(show);
     updateMeritWalletLS((prev) => ({ ...prev, config: { ...prev.config, showBackgroundPage: show } }));
+    window.dispatchEvent(new CustomEvent('meritWalletConfigChange', { detail: { showBackgroundPage: show } }));
   };
 
   const handleModalModeChange = (modal: boolean) => {
     setModalMode(modal);
     updateMeritWalletLS((prev) => ({ ...prev, config: { ...prev.config, modalMode: modal } }));
+    window.dispatchEvent(new CustomEvent('meritWalletConfigChange', { detail: { modalMode: modal } }));
   };
 
   const handleLocationChange = (loc: MeritWalletLocation) => {

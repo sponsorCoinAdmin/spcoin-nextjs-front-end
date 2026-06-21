@@ -46,9 +46,8 @@ export default function SpCoinWalletPopup() {
   const [defaultPanel] = useState<MeritWalletDefaultPanel>(
     () => readMeritWalletLS().config.defaultPanel,
   );
-  // Read once from localStorage — WalletConfig owns live updates; these drive the popup shell styling
-  const [showBackgroundPage] = useState(() => readMeritWalletLS().config.showBackgroundPage);
-  const [modalMode] = useState(() => readMeritWalletLS().config.modalMode);
+  const [showBackgroundPage, setShowBackgroundPage] = useState(() => readMeritWalletLS().config.showBackgroundPage);
+  const [modalMode, setModalMode] = useState(() => readMeritWalletLS().config.modalMode);
   const [location, setLocationState] = useState<MeritWalletLocation>(
     () => readMeritWalletLS().config.location,
   );
@@ -74,10 +73,13 @@ export default function SpCoinWalletPopup() {
     if (!isFloating) { setFloatPos({ x: 0, y: 0 }); floatPosRef.current = { x: 0, y: 0 }; }
   }, [isFloating]);
 
-  // Listen for live location changes dispatched by WalletConfig
+  // Listen for live config changes dispatched by WalletConfig
   useEffect(() => {
     const handler = (e: Event) => {
-      const loc = (e as CustomEvent<{ location?: string }>).detail?.location;
+      const detail = (e as CustomEvent<Record<string, unknown>>).detail ?? {};
+      if (typeof detail.showBackgroundPage === 'boolean') setShowBackgroundPage(detail.showBackgroundPage);
+      if (typeof detail.modalMode === 'boolean') setModalMode(detail.modalMode);
+      const loc = detail.location;
       if (loc === 'FIXED' || loc === 'FLOATING') setLocationState(loc);
     };
     window.addEventListener('meritWalletConfigChange', handler);
