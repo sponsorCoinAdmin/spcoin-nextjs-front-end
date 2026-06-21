@@ -47,7 +47,7 @@ export default function AccountPanelView({
             <TradingStationPanel />
           </div>
         ) : (
-          <div className="min-h-0 flex-1 overflow-hidden flex flex-col">
+          <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto flex flex-col">
             <AccountPanelContent
               account={account}
               showHeader={false}

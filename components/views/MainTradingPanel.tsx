@@ -36,14 +36,7 @@ export default function MainTradingPanel({ embeddedInPopup = false }: MainTradin
         id="MAIN_TRADING_PANEL"
         style={
           embeddedInPopup
-            ? {
-                position: 'relative',
-                transform: 'none',
-                width: '100%',
-                minHeight: 0,
-                maxHeight: 'none',
-                margin: 0,
-              }
+            ? { position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column' }
             : { position: 'relative' }
         }
       >
@@ -95,12 +88,7 @@ export default function MainTradingPanel({ embeddedInPopup = false }: MainTradin
           className={styles.mainTradingPanel}
           style={
             embeddedInPopup
-              ? {
-                  transform: 'none',
-                  width: '100%',
-                  maxHeight: 'none',
-                  margin: 0,
-                }
+              ? { transform: 'none', width: '100%', flex: 1, minHeight: 0, maxHeight: '100%', margin: 0 }
               : accountPanelVisible
                 ? { height: 'min(650px, calc(100vh - 230px))' }
                 : undefined
@@ -125,7 +113,9 @@ export default function MainTradingPanel({ embeddedInPopup = false }: MainTradin
           </PanelGate>
 
           {/* All radio/overlay panels are mounted here */}
-          <RadioOverlayPanelHost />
+          <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto flex flex-col">
+            <RadioOverlayPanelHost />
+          </div>
         </div>
       </div>
     </PanelGate>

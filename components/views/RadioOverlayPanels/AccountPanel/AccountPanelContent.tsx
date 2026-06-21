@@ -167,7 +167,7 @@ export default function AccountPanelContent({
   ].join(':');
 
   return (
-    <div id="ACCOUNT_INFO" className="flex h-full min-h-0 flex-col bg-[#0b0e19]">
+    <div id="ACCOUNT_INFO" className="flex min-h-full flex-col bg-[#0b0e19]">
       {showHeader ? (
         <AccountHeader
           title={title}
@@ -177,14 +177,14 @@ export default function AccountPanelContent({
         />
       ) : null}
 
-      <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <form onSubmit={handleSubmit} className="flex flex-col">
 
         <div
           id={mode === SP_COIN_DISPLAY.ACTIVE_ACCOUNT ? 'ACTIVE_ACCOUNT_BODY' : undefined}
           className={
             mode === SP_COIN_DISPLAY.ACTIVE_ACCOUNT
-              ? 'scrollbar-hide -mx-4 -mb-[10px] flex h-0 min-h-0 flex-1 flex-col gap-2 overflow-y-auto overflow-x-hidden overscroll-contain rounded-b-[13px] px-4 pt-[2px] pb-0'
-              : 'scrollbar-hide flex h-0 min-h-0 flex-1 flex-col gap-2 overflow-y-auto overflow-x-hidden overscroll-contain'
+              ? '-mx-4 -mb-[10px] flex flex-col gap-2 overflow-x-hidden rounded-b-[13px] px-4 pt-[2px] pb-0'
+              : 'flex flex-col gap-2 overflow-x-hidden'
           }
         >
           <div className="shrink-0 overflow-visible">

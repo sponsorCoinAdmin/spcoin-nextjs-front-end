@@ -71,7 +71,9 @@ export default function MeritWalletComponent() {
             </h2>
             <p className="m-0 mt-0.5 text-xs text-white/70">{AGENT_SUBTITLE}</p>
           </div>
-          <MainTradingPanel embeddedInPopup />
+          <div className="relative min-h-0 flex-1 overflow-hidden">
+            <MainTradingPanel embeddedInPopup />
+          </div>
         </div>
       </div>
     </PanelGate>
