@@ -79,21 +79,5 @@ export default function AccountPanel(_props: Props) {
     });
   }
 
-  return (
-    <>
-      {effectiveMember === 'ACTIVE_ACCOUNT' && (
-        <div id="ACTIVE_ACCOUNT" className="hidden" aria-hidden="true" />
-      )}
-      {effectiveMember === 'SPONSOR_ACCOUNT' && (
-        <div id="SPONSOR_ACCOUNT" className="hidden" aria-hidden="true" />
-      )}
-      {effectiveMember === 'RECIPIENT_ACCOUNT' && (
-        <div id="RECIPIENT_ACCOUNT" className="hidden" aria-hidden="true" />
-      )}
-      {effectiveMember === 'AGENT_ACCOUNT' && (
-        <div id="AGENT_ACCOUNT" className="hidden" aria-hidden="true" />
-      )}
-      <AccountPanelView account={selectedAccount} mode={contentMode} />
-    </>
-  );
+  return <AccountPanelView account={selectedAccount} mode={contentMode} />;
 }

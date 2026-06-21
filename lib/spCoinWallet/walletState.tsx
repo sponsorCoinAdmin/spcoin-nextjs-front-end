@@ -188,15 +188,8 @@ export function SpCoinWalletProvider({ children }: { children: React.ReactNode }
 
   const selectAccount = useCallback(
     (account: SpCoinWalletAccount) => {
-      console.log('selectAccount called in provider', {
-        accountAddress: account.address,
-        hasSelectionRequest: !!selectionRequest,
-        isOpen: isOpen,
-      });
-
       if (selectionRequest) {
         // Selection mode: return the selected account to the requester and close
-        console.log('In selection mode - closing wallet');
         const result: SpCoinWalletSelectionResult = {
           address: account.address,
           source: account.source,
@@ -210,9 +203,7 @@ export function SpCoinWalletProvider({ children }: { children: React.ReactNode }
 
       // Normal mode: update wallet source for hardhat accounts
       // Keep the wallet open so user can select another account if needed
-      console.log('In normal mode - keeping wallet open');
       if (account.source === 'hardhat') {
-        console.log('Updating hardhat wallet source');
         setWalletSource('hardhat');
         setSelectedHardhatSignerAddressState(account.address);
       }
