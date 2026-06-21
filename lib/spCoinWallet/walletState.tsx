@@ -86,7 +86,7 @@ export function SpCoinWalletProvider({ children }: { children: React.ReactNode }
     } finally {
       setHardhatAccountsLoading(false);
     }
-  }, [initializeWalletAccounts]);
+  }, []);
 
   useEffect(() => {
     void refreshHardhatAccounts();

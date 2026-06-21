@@ -37,25 +37,19 @@ export default function AccountPanelView({
 
   return (
     <div id="ACCOUNT_PANEL" className="flex h-full min-h-0 flex-col">
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div className={`min-h-0 flex-1 flex flex-col ${rewardsVisible ? 'overflow-hidden' : 'scrollbar-hide overflow-y-auto'}`}>
         {rewardsVisible ? (
-          <div className="min-h-0 flex-1 overflow-hidden flex flex-col">
-            <ManageSponsorshipsPanel onClose={onClose} />
-          </div>
+          <ManageSponsorshipsPanel onClose={onClose} />
         ) : swapVisible ? (
-          <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto flex flex-col">
-            <TradingStationPanel />
-          </div>
+          <TradingStationPanel />
         ) : (
-          <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto flex flex-col">
-            <AccountPanelContent
-              account={account}
-              showHeader={false}
-              showSummaryRow={true}
-              onClose={onClose}
-              mode={mode}
-            />
-          </div>
+          <AccountPanelContent
+            account={account}
+            showHeader={false}
+            showSummaryRow={true}
+            onClose={onClose}
+            mode={mode}
+          />
         )}
       </div>
     </div>

@@ -38,6 +38,22 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
+const VALID_DEFAULT_PANELS = new Set<MeritWalletDefaultPanel>(
+  ['MENU', 'ACCOUNT', 'REWARDS', 'SWAP', 'SPONSOR', 'OPTIONS'],
+);
+const MIGRATED_DEFAULT_PANELS: Record<string, MeritWalletDefaultPanel> = {
+  TRADE_STATION: 'SWAP',
+  MANAGE_ACCOUNT: 'ACCOUNT',
+  MANAGE_REWARDS: 'REWARDS',
+};
+function normalizeDefaultPanel(value: unknown): MeritWalletDefaultPanel {
+  if (typeof value === 'string') {
+    if (VALID_DEFAULT_PANELS.has(value as MeritWalletDefaultPanel)) return value as MeritWalletDefaultPanel;
+    if (value in MIGRATED_DEFAULT_PANELS) return MIGRATED_DEFAULT_PANELS[value];
+  }
+  return 'MENU';
+}
+
 export function readMeritWalletLS(): MeritWalletLS {
   if (typeof window === 'undefined') return DEFAULT_MERIT_WALLET_LS;
 
@@ -55,24 +71,7 @@ export function readMeritWalletLS(): MeritWalletLS {
       config: {
         showBackgroundPage: config.showBackgroundPage === true,
         modalMode: config.modalMode !== false,
-        defaultPanel:
-          config.defaultPanel === 'ACCOUNT'
-            ? config.defaultPanel
-            : config.defaultPanel === 'REWARDS'
-              ? config.defaultPanel
-              : config.defaultPanel === 'SWAP'
-                ? config.defaultPanel
-                : config.defaultPanel === 'SPONSOR'
-                  ? config.defaultPanel
-                  : config.defaultPanel === 'OPTIONS'
-                    ? config.defaultPanel
-                    : config.defaultPanel === 'TRADE_STATION'
-                      ? 'SWAP'
-                      : config.defaultPanel === 'MANAGE_ACCOUNT'
-                        ? 'ACCOUNT'
-                        : config.defaultPanel === 'MANAGE_REWARDS'
-                          ? 'REWARDS'
-                          : 'MENU',
+        defaultPanel: normalizeDefaultPanel(config.defaultPanel),
         location: config.location === 'FLOATING' ? 'FLOATING' : 'FIXED',
       },
     };
