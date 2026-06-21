@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import type { MeritWalletLocation } from '@/lib/spCoinWallet/meritWalletStorage';
 import { useConnect } from 'wagmi';
 
@@ -18,10 +18,12 @@ import {
 import { getBlockChainName } from '@/lib/context/helpers/NetworkHelpers';
 import { useActiveAccount } from '@/lib/context/hooks/ExchangeContext/nested/accounts/useActiveAccount';
 import type { SpCoinWalletAccount } from '@/lib/spCoinWallet';
-import { SP_COIN_DISPLAY, STATUS, type spCoinAccount } from '@/lib/structure';
+import { SP_COIN_DISPLAY, type spCoinAccount } from '@/lib/structure';
 import { normalizeAddress } from '@/lib/utils/address';
 import { appendDebugTrace, clearDebugTraceBuffer } from '@/lib/utils/debugTrace';
 import Accounts from '@/lib/spCoinWallet/accounts';
+import { buildSpCoinAccount } from '@/lib/spCoinWallet/buildSpCoinAccount';
+import { useWalletAccountsList } from '@/lib/spCoinWallet/useWalletAccountsList';
 
 export default function SpCoinWalletPopup() {
   const {
@@ -130,20 +132,7 @@ export default function SpCoinWalletPopup() {
   const rewardsTabVisible        = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
   const meritWalletVisible       = usePanelVisible(SP_COIN_DISPLAY.MERIT_WALLET_COMPONENT);
 
-  const selectedAddressKey = normalizeAddress(
-    selectionRequest?.currentAddress || session.signerAddress || session.activeAccountAddress || '',
-  );
-  const visibleAccounts = useMemo(() => {
-    if (walletSource === 'hardhat') return hardhatAccounts;
-    if (session.metamaskAuthorized && session.signerAddress) {
-      return [{ address: session.signerAddress, label: 'MetaMask Active Account', source: 'metamask' as const }];
-    }
-    return [];
-  }, [hardhatAccounts, session.metamaskAuthorized, session.signerAddress, walletSource]);
-
-  const normalizedWorkingAddress = normalizeAddress(
-    session.signerAddress || session.activeAccountAddress || '',
-  );
+  const { selectedAddressKey, normalizedWorkingAddress, visibleAccounts } = useWalletAccountsList();
   const currentNetworkName = Number.isFinite(session.appChainId) && session.appChainId > 0
     ? getBlockChainName(session.appChainId) || `Chain ${session.appChainId}`
     : 'Unknown Network';
@@ -280,19 +269,6 @@ export default function SpCoinWalletPopup() {
   }, [isSelectionMode, meritWalletVisible, shouldMountWalletShell]);
 
   /* ─── Account helpers (selection mode + auto-open handlers) ─── */
-
-  const buildSpCoinAccount = (account: SpCoinWalletAccount | spCoinAccount, fallbackName: string): spCoinAccount => ({
-    name: String((account as any).name || (account as any).label || fallbackName).trim(),
-    symbol: String((account as any).symbol || '').trim(),
-    type: 'account',
-    website: String((account as any).website || '').trim(),
-    description: String((account as any).description || '').trim(),
-    status: STATUS.INFO,
-    address: account.address as spCoinAccount['address'],
-    ...((account as any).email ? { email: String((account as any).email).trim() } : {}),
-    ...((account as any).logoURL ? { logoURL: (account as any).logoURL } : {}),
-    balance: 0n,
-  });
 
   const openAccountPanel = (account: SpCoinWalletAccount) => {
     const nextAccount = buildSpCoinAccount(account, 'Unnamed account');

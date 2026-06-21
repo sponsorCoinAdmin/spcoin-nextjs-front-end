@@ -1,23 +1,22 @@
 // File: components/views/RadioOverlayPanels/WalletAccountsPanel.tsx
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 
 import { useSpCoinWallet } from '@/lib/spCoinWallet';
 import { useActiveAccount } from '@/lib/context/hooks/ExchangeContext/nested/accounts/useActiveAccount';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import useOpenAccountComponent from '@/lib/context/hooks/useOpenAccountComponent';
-import { normalizeAddress } from '@/lib/utils/address';
-import { SP_COIN_DISPLAY, STATUS, type spCoinAccount } from '@/lib/structure';
+import { SP_COIN_DISPLAY, type spCoinAccount } from '@/lib/structure';
 import PanelGate from '@/components/utility/PanelGate';
 import Accounts from '@/lib/spCoinWallet/accounts';
 import type { SpCoinWalletAccount } from '@/lib/spCoinWallet';
+import { buildSpCoinAccount } from '@/lib/spCoinWallet/buildSpCoinAccount';
+import { useWalletAccountsList } from '@/lib/spCoinWallet/useWalletAccountsList';
 
 export default function WalletAccountsPanel() {
   const {
-    session,
     walletSource,
-    hardhatAccounts,
     hardhatAccountsLoading,
     hardhatAccountsError,
     selectionRequest,
@@ -30,32 +29,7 @@ export default function WalletAccountsPanel() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [previewAccount, setPreviewAccount] = useState<spCoinAccount | undefined>(undefined);
 
-  const selectedAddressKey = normalizeAddress(
-    selectionRequest?.currentAddress || session.signerAddress || session.activeAccountAddress || '',
-  );
-  const normalizedWorkingAddress = normalizeAddress(
-    session.signerAddress || session.activeAccountAddress || '',
-  );
-  const visibleAccounts = useMemo(() => {
-    if (walletSource === 'hardhat') return hardhatAccounts;
-    if (session.metamaskAuthorized && session.signerAddress) {
-      return [{ address: session.signerAddress, label: 'MetaMask Active Account', source: 'metamask' as const }];
-    }
-    return [];
-  }, [hardhatAccounts, session.metamaskAuthorized, session.signerAddress, walletSource]);
-
-  const buildSpCoinAccount = (account: SpCoinWalletAccount): spCoinAccount => ({
-    name: String(account.name || account.label || 'Unnamed account').trim(),
-    symbol: String(account.symbol || '').trim(),
-    type: 'account',
-    website: String(account.website || '').trim(),
-    description: String(account.description || '').trim(),
-    status: STATUS.INFO,
-    address: account.address as spCoinAccount['address'],
-    ...((account as any).email ? { email: String((account as any).email).trim() } : {}),
-    ...(account.logoURL ? { logoURL: account.logoURL } : {}),
-    balance: 0n,
-  });
+  const { selectedAddressKey, normalizedWorkingAddress, visibleAccounts } = useWalletAccountsList();
 
   const handleSelectAccount = (account: SpCoinWalletAccount) => {
     selectAccount(account);
