@@ -57,7 +57,7 @@ export default function AccountPanelTabBar({ open = true }: Props) {
 
   return (
     <div
-      className="shrink-0 overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out -mx-[30px]"
+      className="shrink-0 overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out -mx-4"
       style={{ maxHeight: open ? '80px' : '0px', opacity: open ? 1 : 0 }}
     >
       <div className="border-b border-slate-700/70 px-4 pt-3">

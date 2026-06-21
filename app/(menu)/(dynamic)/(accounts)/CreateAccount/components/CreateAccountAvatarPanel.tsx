@@ -3,6 +3,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import DisconnectedControl from './DisconnectedControl';
+import {
+  appendDebugTrace,
+  isDebugTraceEnabled,
+} from '@/lib/utils/debugTrace';
 
 type Props = {
   panelMarginClass: string;
@@ -22,6 +26,20 @@ type Props = {
   showButton?: boolean;
   headingContent?: ReactNode;
   selectedRowContent?: ReactNode;
+  minPreviewSize?: number;
+  maxPreviewSize?: number;
+  minControlWidth?: number;
+  uploadControlTextClassName?: string;
+  previewSizeBuffer?: number;
+  previewHeightBuffer?: number;
+  previewControlGapBuffer?: number;
+  sectionBottomBuffer?: number;
+  lockSectionHeight?: boolean;
+  overflowMinPreviewSize?: number;
+  traceSizingLabel?: string;
+  fillParentHeight?: boolean;
+  sizingBoundarySelector?: string;
+  resizeSignal?: unknown;
 };
 
 export default function CreateAccountAvatarPanel({
@@ -42,6 +60,19 @@ export default function CreateAccountAvatarPanel({
   showButton = true,
   headingContent,
   selectedRowContent,
+  minPreviewSize = 180,
+  maxPreviewSize = 560,
+  uploadControlTextClassName,
+  previewSizeBuffer = 50,
+  previewHeightBuffer = 24,
+  previewControlGapBuffer,
+  sectionBottomBuffer = 15,
+  lockSectionHeight = true,
+  overflowMinPreviewSize,
+  traceSizingLabel,
+  fillParentHeight = true,
+  sizingBoundarySelector,
+  resizeSignal,
 }: Props) {
   const [isUploadHovered, setIsUploadHovered] = useState(false);
   const [previewSize, setPreviewSize] = useState(560);
@@ -51,13 +82,16 @@ export default function CreateAccountAvatarPanel({
   const controlsRef = useRef<HTMLDivElement | null>(null);
   const headingRef = useRef<HTMLDivElement | null>(null);
   const selectedRowRef = useRef<HTMLDivElement | null>(null);
+  const lastSizingTraceRef = useRef('');
+  const previewSizeRef = useRef(previewSize);
   const uploadControlClass = 'mx-auto w-full';
-  const uploadControlTextClass = 'px-6 text-center text-[120%] font-bold';
-  const previewSizeBuffer = 50;
-  const previewHeightBuffer = 24;
-  const sectionBottomBuffer = 15;
-  const minPreviewSize = 180;
+  const uploadControlTextClass =
+    uploadControlTextClassName ?? 'px-6 text-center text-[120%] font-bold';
   const hasSelectedRow = Boolean(selectedRowContent);
+
+  useEffect(() => {
+    previewSizeRef.current = previewSize;
+  }, [previewSize]);
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -65,49 +99,250 @@ export default function CreateAccountAvatarPanel({
     const controls = controlsRef.current;
     if (!section || !stage || !controls || typeof ResizeObserver === 'undefined') return;
 
+    let animationFrame = 0;
+    const transitionTimers: number[] = [];
+
+    const getSizingAncestors = () => {
+      const ancestors: Array<{
+        tag: string;
+        id: string;
+        dataPanel: string;
+        className: string;
+        overflowY: string;
+        rect: { top: number; bottom: number; height: number };
+        clientHeight: number;
+        scrollHeight: number;
+        clips: boolean;
+      }> = [];
+      let current = section.parentElement;
+
+      while (current && current !== document.body && ancestors.length < 12) {
+        const styles = window.getComputedStyle(current);
+        const rect = current.getBoundingClientRect();
+        const overflowY = styles.overflowY;
+        const overflow = styles.overflow;
+        const clips = ['auto', 'scroll', 'hidden', 'clip'].includes(overflowY) ||
+          ['auto', 'scroll', 'hidden', 'clip'].includes(overflow);
+
+        ancestors.push({
+          tag: current.tagName.toLowerCase(),
+          id: current.id,
+          dataPanel: current.getAttribute('data-panel') ?? '',
+          className: String(current.getAttribute('class') ?? '').slice(0, 120),
+          overflowY,
+          rect: {
+            top: Math.round(rect.top),
+            bottom: Math.round(rect.bottom),
+            height: Math.round(rect.height),
+          },
+          clientHeight: current.clientHeight,
+          scrollHeight: current.scrollHeight,
+          clips,
+        });
+
+        current = current.parentElement;
+      }
+
+      return ancestors;
+    };
+
     const updatePreviewSize = () => {
       const sectionRect = section.getBoundingClientRect();
       const parentRect = section.parentElement?.getBoundingClientRect();
+      const boundary = sizingBoundarySelector
+        ? section.closest(sizingBoundarySelector)
+        : null;
+      const boundaryRect = boundary?.getBoundingClientRect();
+      const sizingAncestors = getSizingAncestors();
+      const viewportBottom = window.innerHeight;
+      const clipBottom = Math.floor(
+        Math.min(
+          viewportBottom,
+          ...sizingAncestors
+            .filter((ancestor) => ancestor.clips)
+            .map((ancestor) => ancestor.rect.bottom),
+        ),
+      );
       const rect = stage.getBoundingClientRect();
       const controlsRect = controls.getBoundingClientRect();
       const headingHeight = headingRef.current?.getBoundingClientRect().height ?? 0;
       const selectedRowHeight = selectedRowRef.current?.getBoundingClientRect().height ?? 0;
-      const availableSectionHeight = parentRect
-        ? Math.floor(Math.max(0, parentRect.bottom - sectionRect.top - sectionBottomBuffer))
-        : 0;
-      if (availableSectionHeight > 0) {
+      const measuredBoundaryBottom = boundaryRect?.bottom ?? parentRect?.bottom ?? sectionRect.bottom;
+      const sizingBottom = Math.min(measuredBoundaryBottom, clipBottom);
+      const availableSectionHeight = Math.floor(
+        Math.max(0, sizingBottom - sectionRect.top - sectionBottomBuffer),
+      );
+      if (lockSectionHeight && availableSectionHeight > 0) {
         setSectionHeight((current) =>
           current === availableSectionHeight ? current : availableSectionHeight,
         );
       }
-      const availableWidth = Math.min(rect.width, 560) - previewSizeBuffer;
+      const availableWidth = Math.min(rect.width, maxPreviewSize) - previewSizeBuffer;
       const availableHeight =
         (availableSectionHeight > 0 ? availableSectionHeight : sectionRect.height) -
         headingHeight -
         selectedRowHeight -
         controlsRect.height -
+        (previewControlGapBuffer ?? (hasSelectedRow ? 0 : 16)) -
         previewHeightBuffer;
-      const boundedSize = Math.min(availableWidth, availableHeight, 560);
-      const nextSize = Math.floor(Math.max(minPreviewSize, boundedSize));
+      const effectiveMinPreviewSize =
+        typeof overflowMinPreviewSize === 'number' && availableHeight < minPreviewSize
+          ? overflowMinPreviewSize
+          : minPreviewSize;
+      const boundedSize = Math.min(availableWidth, availableHeight, maxPreviewSize);
+      const nextSize = Math.floor(Math.max(effectiveMinPreviewSize, boundedSize));
+      if (traceSizingLabel && isDebugTraceEnabled()) {
+        const tracePayload = {
+          section: {
+            width: Math.round(sectionRect.width),
+            height: Math.round(sectionRect.height),
+            top: Math.round(sectionRect.top),
+            bottom: Math.round(sectionRect.bottom),
+          },
+          parent: parentRect
+            ? {
+                width: Math.round(parentRect.width),
+                height: Math.round(parentRect.height),
+                bottom: Math.round(parentRect.bottom),
+              }
+            : null,
+          boundary: boundaryRect
+            ? {
+                selector: sizingBoundarySelector,
+                width: Math.round(boundaryRect.width),
+                height: Math.round(boundaryRect.height),
+                top: Math.round(boundaryRect.top),
+                bottom: Math.round(boundaryRect.bottom),
+              }
+            : null,
+          viewport: {
+            innerHeight: window.innerHeight,
+            clipBottom,
+            measuredBoundaryBottom: Math.round(measuredBoundaryBottom),
+            sizingBottom,
+            sizingBottomSource: measuredBoundaryBottom <= clipBottom ? 'boundary' : 'clip',
+          },
+          ancestors: sizingAncestors,
+          stage: {
+            width: Math.round(rect.width),
+            height: Math.round(rect.height),
+          },
+          measured: {
+            headingHeight: Math.round(headingHeight),
+            selectedRowHeight: Math.round(selectedRowHeight),
+            controlsHeight: Math.round(controlsRect.height),
+          },
+          buffers: {
+            previewSizeBuffer,
+            previewHeightBuffer,
+            previewControlGapBuffer: previewControlGapBuffer ?? (hasSelectedRow ? 0 : 16),
+            sectionBottomBuffer,
+          },
+          available: {
+            sectionHeight: Math.round(availableSectionHeight),
+            width: Math.round(availableWidth),
+            height: Math.round(availableHeight),
+          },
+          limits: {
+            minPreviewSize,
+            overflowMinPreviewSize,
+            effectiveMinPreviewSize,
+            maxPreviewSize,
+          },
+          result: {
+            boundedSize: Math.round(boundedSize),
+            nextSize,
+            previousSize: previewSizeRef.current,
+            lockSectionHeight,
+          },
+        };
+        const traceKey = JSON.stringify(tracePayload);
+        if (lastSizingTraceRef.current !== traceKey) {
+          lastSizingTraceRef.current = traceKey;
+          appendDebugTrace(`${traceSizingLabel}:avatarSizing`, tracePayload);
+        }
+      }
       setPreviewSize((current) => (current === nextSize ? current : nextSize));
     };
 
-    updatePreviewSize();
-    const observer = new ResizeObserver(updatePreviewSize);
-    observer.observe(section);
-    observer.observe(stage);
-    observer.observe(controls);
-    if (section.parentElement) observer.observe(section.parentElement);
-    if (headingRef.current) observer.observe(headingRef.current);
-    if (selectedRowRef.current) observer.observe(selectedRowRef.current);
-    return () => observer.disconnect();
-  }, []);
+    const scheduleUpdate = () => {
+      window.cancelAnimationFrame(animationFrame);
+      animationFrame = window.requestAnimationFrame(updatePreviewSize);
+    };
+
+    const scheduleTransitionUpdates = () => {
+      scheduleUpdate();
+      transitionTimers.push(window.setTimeout(scheduleUpdate, 60));
+      transitionTimers.push(window.setTimeout(scheduleUpdate, 140));
+      transitionTimers.push(window.setTimeout(scheduleUpdate, 260));
+      transitionTimers.push(window.setTimeout(scheduleUpdate, 420));
+    };
+
+    const getObservedLayoutElements = () => {
+      const elements = new Set<Element>([section, stage, controls]);
+      const boundary = sizingBoundarySelector
+        ? section.closest(sizingBoundarySelector)
+        : null;
+
+      if (boundary) elements.add(boundary);
+      if (section.parentElement) elements.add(section.parentElement);
+      if (headingRef.current) elements.add(headingRef.current);
+      if (selectedRowRef.current) elements.add(selectedRowRef.current);
+
+      let current = section.parentElement;
+      while (current && current !== document.body && elements.size < 24) {
+        elements.add(current);
+        current = current.parentElement;
+      }
+
+      return Array.from(elements);
+    };
+
+    const observedElements = getObservedLayoutElements();
+    const observer = new ResizeObserver(scheduleTransitionUpdates);
+    observedElements.forEach((element) => {
+      observer.observe(element);
+      element.addEventListener('transitionend', scheduleTransitionUpdates);
+    });
+
+    scheduleTransitionUpdates();
+    window.addEventListener('resize', scheduleTransitionUpdates);
+    window.addEventListener('scroll', scheduleUpdate, true);
+    window.visualViewport?.addEventListener('resize', scheduleTransitionUpdates);
+    window.visualViewport?.addEventListener('scroll', scheduleUpdate);
+
+    return () => {
+      observer.disconnect();
+      observedElements.forEach((element) => {
+        element.removeEventListener('transitionend', scheduleTransitionUpdates);
+      });
+      window.removeEventListener('resize', scheduleTransitionUpdates);
+      window.removeEventListener('scroll', scheduleUpdate, true);
+      window.visualViewport?.removeEventListener('resize', scheduleTransitionUpdates);
+      window.visualViewport?.removeEventListener('scroll', scheduleUpdate);
+      window.cancelAnimationFrame(animationFrame);
+      transitionTimers.forEach((timer) => window.clearTimeout(timer));
+    };
+  }, [
+    lockSectionHeight,
+    maxPreviewSize,
+    minPreviewSize,
+    overflowMinPreviewSize,
+    previewHeightBuffer,
+    previewControlGapBuffer,
+    previewSizeBuffer,
+    sectionBottomBuffer,
+    sizingBoundarySelector,
+    traceSizingLabel,
+    hasSelectedRow,
+    resizeSignal,
+  ]);
 
   return (
     <section
       ref={sectionRef}
-      className={`${panelMarginClass} ${avatarPanelBorderClass} order-1 flex h-full w-full flex-col items-center justify-start pr-0 ${hasSelectedRow ? 'pt-0' : 'pt-4'} pb-0 pl-0`}
-      style={sectionHeight ? { height: `${sectionHeight}px`, minHeight: `${sectionHeight}px` } : undefined}
+      className={`${panelMarginClass} ${avatarPanelBorderClass} order-1 flex ${fillParentHeight ? 'h-full' : 'h-auto'} w-full flex-col items-center justify-start pr-0 ${hasSelectedRow ? 'pt-0' : 'pt-4'} pb-0 pl-0`}
+      style={lockSectionHeight && sectionHeight ? { height: `${sectionHeight}px`, minHeight: `${sectionHeight}px` } : undefined}
     >
 {headingContent ? (
         <div ref={headingRef} className="mb-0 w-full max-w-[56rem] px-6 pt-0 md:px-8">{headingContent}</div>
@@ -118,9 +353,9 @@ export default function CreateAccountAvatarPanel({
           </h2>
         ) : null
       )}
-      <div className={`flex h-full w-full max-w-[56rem] flex-col items-center ${hasSelectedRow ? 'gap-0' : 'gap-4'}`}>
+      <div className={`flex ${fillParentHeight ? 'h-full' : 'h-auto'} w-full max-w-[56rem] flex-col items-center gap-0`}>
         {selectedRowContent ? <div ref={selectedRowRef} className="w-full">{selectedRowContent}</div> : null}
-        <div ref={previewStageRef} className="flex min-h-0 flex-1 w-full justify-center overflow-hidden">
+        <div ref={previewStageRef} className="flex min-h-0 w-full shrink-0 justify-center overflow-hidden">
           {showImage ? (
             <div
               className="mx-auto flex shrink-0 items-center justify-center overflow-hidden bg-[#0D1324] p-0"
@@ -143,14 +378,7 @@ export default function CreateAccountAvatarPanel({
             </div>
           ) : null}
         </div>
-        <div
-          ref={controlsRef}
-          className="shrink-0"
-          style={{
-            width: `${previewSize}px`,
-            maxWidth: '100%',
-          }}
-        >
+        <div ref={controlsRef} className="-mt-px w-full shrink-0">
           <input
             ref={logoFileInputRef}
             id="logoFileUpload"
@@ -173,7 +401,7 @@ export default function CreateAccountAvatarPanel({
                   type="button"
                   aria-disabled={!connected}
                   disabled={!connected}
-                  className={`w-full rounded border border-white py-2 text-black transition-colors ${
+                  className={`w-full rounded-b border border-white py-2 text-black transition-colors ${
                     !isEditMode
                       ? isUploadHovered
                         ? 'bg-red-500 text-black'

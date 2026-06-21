@@ -43,7 +43,7 @@ export default function SpCoinWalletPopup() {
   const [defaultPanel] = useState<MeritWalletDefaultPanel>(
     () => readMeritWalletLS().config.defaultPanel,
   );
-  // Read once from localStorage — AccountPanelView owns live updates for these
+  // Read once from localStorage — WalletConfig owns live updates; these drive the popup shell styling
   const [showBackgroundPage] = useState(() => readMeritWalletLS().config.showBackgroundPage);
   const [modalMode] = useState(() => readMeritWalletLS().config.modalMode);
 
@@ -55,10 +55,11 @@ export default function SpCoinWalletPopup() {
   const openAccountComponent = useOpenAccountComponent();
   const { exchangeContext } = useExchangeContext();
 
-  // These three drive the auto-open guard
+  // These drive the auto-open guard and the on-open WAC activation guard
   const walletAccountsVisible    = usePanelVisible(SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT);
   const tradingStationTabVisible = usePanelVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
   const walletConfigTabVisible   = usePanelVisible(SP_COIN_DISPLAY.WALLET_CONFIG_PANEL);
+  const rewardsTabVisible        = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
   const meritWalletVisible       = usePanelVisible(SP_COIN_DISPLAY.MERIT_WALLET_COMPONENT);
 
   const selectedAddressKey = normalizeAddress(
@@ -153,6 +154,12 @@ export default function SpCoinWalletPopup() {
     }
   }, [isOpen, isSelectionMode, previewAccount, setPanelVisible]);
 
+  // Visibility guards are intentionally read as closure values — NOT in deps.
+  // Adding them to deps would re-fire this effect on every panel toggle and risk
+  // a re-open cycle (same pattern as the auto-open effect below).
+  // The values are always current when isOpen/isSelectionMode changes, which is the
+  // only transition that matters here.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const isNormalMode = isOpen && !isSelectionMode;
 
@@ -162,7 +169,11 @@ export default function SpCoinWalletPopup() {
     }
     if (isNormalMode && !wasNormalModeRef.current) {
       setPanelVisible(SP_COIN_DISPLAY.WALLET_CONNECT_COMPONENT, true, 'SpCoinWalletPopup:showWalletConnectComponentOnOpen');
-      setPanelVisible(SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT, true, 'SpCoinWalletPopup:showWalletAccountsOnOpen');
+      // Only show WAC if no persistent content panel is already active; otherwise the popup
+      // should resume at the panel that was showing before it was closed.
+      if (!rewardsTabVisible && !tradingStationTabVisible && !walletConfigTabVisible) {
+        setPanelVisible(SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT, true, 'SpCoinWalletPopup:showWalletAccountsOnOpen');
+      }
     }
     if (!isNormalMode && wasNormalModeRef.current) {
       setPanelVisible(SP_COIN_DISPLAY.WALLET_NETWORKS_COMPONENT, false, 'SpCoinWalletPopup:hideWalletNetworksOnModeChange');
@@ -206,18 +217,25 @@ export default function SpCoinWalletPopup() {
     name: String((account as any).name || (account as any).label || fallbackName).trim(),
     symbol: String((account as any).symbol || '').trim(),
     type: 'account',
-    website: '',
-    description: '',
+    website: String((account as any).website || '').trim(),
+    description: String((account as any).description || '').trim(),
     status: STATUS.INFO,
     address: account.address as spCoinAccount['address'],
+    ...((account as any).email ? { email: String((account as any).email).trim() } : {}),
     ...((account as any).logoURL ? { logoURL: (account as any).logoURL } : {}),
     balance: 0n,
   });
 
   const openAccountPanel = (account: SpCoinWalletAccount) => {
-    setActiveAccount(buildSpCoinAccount(account, 'Unnamed account'));
+    const nextAccount = buildSpCoinAccount(account, 'Unnamed account');
+    setActiveAccount(nextAccount);
+    setPreviewAccount(nextAccount);
     suppressDefaultPanelAutoOpenRef.current = true;
-    openPanel(SP_COIN_DISPLAY.ACCOUNT_PANEL, 'SpCoinWalletPopup:openAccountPanel');
+    openAccountComponent({
+      account: nextAccount,
+      mode: SP_COIN_DISPLAY.ACTIVE_ACCOUNT,
+      source: 'SpCoinWalletPopup',
+    });
   };
 
   const handleSelectAccount = (account: SpCoinWalletAccount) => {
@@ -293,7 +311,7 @@ export default function SpCoinWalletPopup() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!isOpen || isSelectionMode) return;
-    if (walletAccountsVisible || walletConfigTabVisible || tradingStationTabVisible) return;
+    if (walletAccountsVisible || walletConfigTabVisible || tradingStationTabVisible || rewardsTabVisible) return;
     if (suppressDefaultPanelAutoOpenRef.current) { suppressDefaultPanelAutoOpenRef.current = false; return; }
     const h = defaultPanelHandlersRef.current;
     if (defaultPanel === 'MENU')    { h.openWalletOptions();            return; }
@@ -363,7 +381,7 @@ export default function SpCoinWalletPopup() {
       ].join(' ')}
       role="dialog"
       aria-modal="true"
-      aria-label="SponsorCoin Wallet"
+      aria-label="Merit Wallet"
     >
       <MeritWalletComponent />
     </div>

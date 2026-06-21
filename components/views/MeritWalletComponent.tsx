@@ -30,7 +30,7 @@ export default function MeritWalletComponent() {
     : tradingStationTabVisible ? 'Trading Station'
     : rewardsTabVisible        ? 'Account Rewards'
     : walletAccountsVisible    ? 'Merit Wallet'
-    : 'SponsorCoin Wallet';
+    : 'Merit Wallet';
 
   const handleNetworkChevron = useCallback(() => {
     if (walletNetworksVisible)

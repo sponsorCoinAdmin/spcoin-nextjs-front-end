@@ -123,7 +123,7 @@ export default function WalletHeader({
             )}
           </div>
           <h2 className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 text-center text-xl font-bold leading-tight">
-            {title ?? 'SponsorCoin Wallet'}
+            {title ?? 'Merit Wallet'}
           </h2>
           {onMenuClick ? (
             <button
@@ -143,7 +143,7 @@ export default function WalletHeader({
             type="button"
             onClick={onClose}
             className="absolute right-[16px] top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-[#303b68] hover:bg-[#3c487a]"
-            aria-label="Close SponsorCoin wallet"
+            aria-label="Close Merit Wallet"
           >
             <X className="h-6 w-6 text-[#91a5ff]" />
           </button>

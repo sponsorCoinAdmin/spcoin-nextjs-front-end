@@ -6,6 +6,7 @@ import { useState, useMemo } from 'react';
 import { useSpCoinWallet } from '@/lib/spCoinWallet';
 import { useActiveAccount } from '@/lib/context/hooks/ExchangeContext/nested/accounts/useActiveAccount';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
+import useOpenAccountComponent from '@/lib/context/hooks/useOpenAccountComponent';
 import { normalizeAddress } from '@/lib/utils/address';
 import { SP_COIN_DISPLAY, STATUS, type spCoinAccount } from '@/lib/structure';
 import PanelGate from '@/components/utility/PanelGate';
@@ -24,7 +25,8 @@ export default function WalletAccountsPanel() {
   } = useSpCoinWallet();
 
   const [, setActiveAccount] = useActiveAccount();
-  const { openPanel, closePanel } = usePanelTree();
+  const { closePanel } = usePanelTree();
+  const openAccountComponent = useOpenAccountComponent();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [previewAccount, setPreviewAccount] = useState<spCoinAccount | undefined>(undefined);
 
@@ -46,10 +48,11 @@ export default function WalletAccountsPanel() {
     name: String(account.name || account.label || 'Unnamed account').trim(),
     symbol: String(account.symbol || '').trim(),
     type: 'account',
-    website: '',
-    description: '',
+    website: String(account.website || '').trim(),
+    description: String(account.description || '').trim(),
     status: STATUS.INFO,
     address: account.address as spCoinAccount['address'],
+    ...((account as any).email ? { email: String((account as any).email).trim() } : {}),
     ...(account.logoURL ? { logoURL: account.logoURL } : {}),
     balance: 0n,
   });
@@ -63,13 +66,19 @@ export default function WalletAccountsPanel() {
   };
 
   const handleOpenAccountPanel = (account: SpCoinWalletAccount) => {
-    setActiveAccount(buildSpCoinAccount(account));
-    openPanel(SP_COIN_DISPLAY.ACCOUNT_PANEL, 'WalletAccountsPanel:openAccountPanel');
+    const nextAccount = buildSpCoinAccount(account);
+    setActiveAccount(nextAccount);
+    setPreviewAccount(nextAccount);
+    openAccountComponent({
+      account: nextAccount,
+      mode: SP_COIN_DISPLAY.ACTIVE_ACCOUNT,
+      source: 'WalletAccountsPanel',
+    });
   };
 
   return (
     <PanelGate panel={SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT}>
-      <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto overscroll-contain">
+      <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto overscroll-contain -mx-4">
         <Accounts
           accounts={visibleAccounts}
           walletSource={walletSource}

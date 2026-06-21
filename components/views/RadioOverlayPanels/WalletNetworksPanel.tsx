@@ -8,7 +8,9 @@ import Networks from '@/lib/spCoinWallet/networks';
 export default function WalletNetworksPanel() {
   return (
     <PanelGate panel={SP_COIN_DISPLAY.WALLET_NETWORKS_COMPONENT}>
-      <Networks />
+      <div className="-mx-4">
+        <Networks />
+      </div>
     </PanelGate>
   );
 }

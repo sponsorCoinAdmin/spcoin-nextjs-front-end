@@ -18,7 +18,7 @@ export default function ActiveAccountHeaderBar() {
 
   return (
     <PanelGate panel={SP_COIN_DISPLAY.ACTIVE_ACCOUNT_HEADER_BAR}>
-      <div className="relative shrink-0 border-b border-slate-700/50 -mx-[30px] px-4 py-3 flex items-center gap-3">
+      <div className="relative shrink-0 border-b border-slate-700/50 -mx-4 px-4 py-3 flex items-center gap-3">
         <div className="pointer-events-none absolute inset-x-0 top-[2px] flex flex-col items-center text-[19px] font-semibold text-[#5981F3]">
           <span>{activeAccountType}</span>
           {exchangeContext?.accounts?.activeAccount?.name && (

@@ -44,9 +44,9 @@ export default function AccountRow({
   return (
     <div
       className={[
-        'grid w-full grid-cols-[36px_1fr_auto] items-center gap-3 py-2 text-left border-b border-slate-700/70 transition-colors hover:bg-slate-700/50',
+        'grid w-full grid-cols-[40px_1fr_auto] items-center gap-3 py-2 text-left border-b border-slate-700/70 transition-colors hover:bg-slate-700/50',
         isActiveMarker ? 'bg-green-900/20' : '',
-        fullBleed ? 'px-0' : 'px-5',
+        fullBleed ? 'px-0' : 'px-4',
       ].join(' ')}
     >
       <button

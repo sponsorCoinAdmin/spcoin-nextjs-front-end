@@ -494,7 +494,7 @@ export default function SpCoinWriteController(props: Props) {
             type="button"
             data-field-id="spcoin-write-sender"
             aria-label="Sender account"
-            title="Open SponsorCoin wallet account selector"
+            title="Open Merit Wallet account selector"
             onClick={openSenderWalletSelection}
             className={`flex w-full items-center justify-between gap-3 rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-left text-sm text-white transition-colors hover:border-[#7893ff] hover:bg-[#151c32]${invalidClass('spcoin-write-sender')}`}
           >

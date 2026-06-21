@@ -15,6 +15,9 @@ export type SpCoinWalletAccount = {
   label?: string;
   name?: string;
   symbol?: string;
+  email?: string;
+  website?: string;
+  description?: string;
   logoURL?: string;
   source: SpCoinWalletSource;
 };

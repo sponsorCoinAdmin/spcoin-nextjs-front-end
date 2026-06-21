@@ -1,32 +1,44 @@
 'use client';
 
-import type { MeritWalletDefaultPanel } from '@/lib/spCoinWallet/meritWalletStorage';
+import { useState } from 'react';
 
-interface WalletConfigProps {
-  showBackgroundPage: boolean;
-  onShowBackgroundPageChange: (show: boolean) => void;
-  modalMode: boolean;
-  onModalModeChange: (modal: boolean) => void;
-  defaultPanel: MeritWalletDefaultPanel;
-  onDefaultPanelChange: (panel: MeritWalletDefaultPanel) => void;
-}
+import {
+  readMeritWalletLS,
+  updateMeritWalletLS,
+  type MeritWalletDefaultPanel,
+} from '@/lib/spCoinWallet/meritWalletStorage';
 
-export default function WalletConfig({
-  showBackgroundPage,
-  onShowBackgroundPageChange,
-  modalMode,
-  onModalModeChange,
-  defaultPanel,
-  onDefaultPanelChange,
-}: WalletConfigProps) {
-  const defaultPanelOptions: {
-    value: MeritWalletDefaultPanel;
-    label: string;
-  }[] = [
-    { value: 'MENU', label: 'Menu' },
+export default function WalletConfig() {
+  const [showBackgroundPage, setShowBackgroundPage] = useState(
+    () => readMeritWalletLS().config.showBackgroundPage,
+  );
+  const [defaultPanel, setDefaultPanel] = useState<MeritWalletDefaultPanel>(
+    () => readMeritWalletLS().config.defaultPanel,
+  );
+  const [modalMode, setModalMode] = useState<boolean>(
+    () => readMeritWalletLS().config.modalMode,
+  );
+
+  const handleShowBackgroundPageChange = (show: boolean) => {
+    setShowBackgroundPage(show);
+    updateMeritWalletLS((prev) => ({ ...prev, config: { ...prev.config, showBackgroundPage: show } }));
+  };
+
+  const handleModalModeChange = (modal: boolean) => {
+    setModalMode(modal);
+    updateMeritWalletLS((prev) => ({ ...prev, config: { ...prev.config, modalMode: modal } }));
+  };
+
+  const handleDefaultPanelChange = (panel: MeritWalletDefaultPanel) => {
+    setDefaultPanel(panel);
+    updateMeritWalletLS((prev) => ({ ...prev, config: { ...prev.config, defaultPanel: panel } }));
+  };
+
+  const defaultPanelOptions: { value: MeritWalletDefaultPanel; label: string }[] = [
+    { value: 'MENU',    label: 'Menu' },
     { value: 'ACCOUNT', label: 'Account' },
     { value: 'REWARDS', label: 'Rewards' },
-    { value: 'SWAP', label: 'Swap' },
+    { value: 'SWAP',    label: 'Swap' },
     { value: 'SPONSOR', label: 'Sponsor' },
     { value: 'OPTIONS', label: 'Options' },
   ];
@@ -46,7 +58,7 @@ export default function WalletConfig({
         <input
           type="checkbox"
           checked={showBackgroundPage}
-          onChange={(event) => onShowBackgroundPageChange(event.target.checked)}
+          onChange={(event) => handleShowBackgroundPageChange(event.target.checked)}
           className="h-5 w-5 shrink-0 cursor-pointer accent-[#5981F3]"
         />
       </label>
@@ -64,7 +76,7 @@ export default function WalletConfig({
         <input
           type="checkbox"
           checked={modalMode}
-          onChange={(event) => onModalModeChange(event.target.checked)}
+          onChange={(event) => handleModalModeChange(event.target.checked)}
           className="h-5 w-5 shrink-0 cursor-pointer accent-[#5981F3]"
         />
       </label>
@@ -87,7 +99,7 @@ export default function WalletConfig({
                 name="merit-wallet-default-panel"
                 value={option.value}
                 checked={defaultPanel === option.value}
-                onChange={() => onDefaultPanelChange(option.value)}
+                onChange={() => handleDefaultPanelChange(option.value)}
                 className="h-5 w-5 cursor-pointer accent-[#5981F3]"
               />
             </label>

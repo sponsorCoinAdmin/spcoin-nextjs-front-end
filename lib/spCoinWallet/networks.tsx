@@ -23,7 +23,7 @@ export default function Networks() {
         type="button"
         onClick={() => setAppChainId(opt.id)}
         className={[
-          'grid w-full grid-cols-[36px_1fr] items-center gap-3 border-b border-slate-700/70 px-5 py-2 text-left transition-colors',
+          'grid w-full grid-cols-[40px_1fr] items-center gap-3 border-b border-slate-700/70 px-4 py-2 text-left transition-colors',
           active ? 'bg-[#273250]' : 'hover:bg-slate-700/50',
         ].join(' ')}
       >
@@ -50,7 +50,7 @@ export default function Networks() {
         {mainnetOptions.map(renderOption)}
         {showTestNets ? testnetOptions.map(renderOption) : null}
       </div>
-      <label className="flex shrink-0 items-center justify-between border-t border-slate-700/70 px-5 py-3 text-sm text-slate-300">
+      <label className="flex shrink-0 items-center justify-between border-t border-slate-700/70 px-4 py-3 text-sm text-slate-300">
         <span>Show Test Nets</span>
         <input
           type="checkbox"

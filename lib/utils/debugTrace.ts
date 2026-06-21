@@ -34,12 +34,7 @@ export function appendDebugTrace(message: string, data?: DebugTraceData) {
 
   const nextBuffer = [...(win[DEBUG_TRACE_BUFFER_KEY] ?? []), line].slice(-200);
   win[DEBUG_TRACE_BUFFER_KEY] = nextBuffer;
-
-  try {
-    window.localStorage.setItem(DEBUG_TRACE_KEY, JSON.stringify(nextBuffer));
-  } catch {
-    // Best-effort trace persistence only.
-  }
+  removePersistedDebugTrace();
 
   win[DEBUG_TRACE_SINK_KEY]?.(line);
   window.dispatchEvent(
@@ -68,13 +63,15 @@ export function installDebugTraceSink(sink?: (line: string) => void) {
 export function getDebugTraceBuffer(): string[] {
   if (typeof window === 'undefined') return [];
 
-  try {
-    const raw = window.localStorage.getItem(DEBUG_TRACE_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed.filter((line): line is string => typeof line === 'string') : [];
-  } catch {
-    return [];
-  }
+  const win = window as Window & {
+    [DEBUG_TRACE_BUFFER_KEY]?: string[];
+  };
+  const memoryBuffer = (win[DEBUG_TRACE_BUFFER_KEY] ?? []).filter(
+    (line): line is string => typeof line === 'string',
+  );
+
+  removePersistedDebugTrace();
+  return memoryBuffer;
 }
 
 export function isDebugTraceEnabled(): boolean {
@@ -105,6 +102,16 @@ export function setDebugTraceEnabled(enabled: boolean) {
   );
 }
 
+function removePersistedDebugTrace() {
+  if (typeof window === 'undefined') return;
+
+  try {
+    window.localStorage.removeItem(DEBUG_TRACE_KEY);
+  } catch {
+    // Best-effort trace cleanup only.
+  }
+}
+
 export function clearDebugTraceBuffer() {
   if (typeof window === 'undefined') return;
 
@@ -114,11 +121,7 @@ export function clearDebugTraceBuffer() {
 
   win[DEBUG_TRACE_BUFFER_KEY] = [];
 
-  try {
-    window.localStorage.removeItem(DEBUG_TRACE_KEY);
-  } catch {
-    // Best-effort trace persistence only.
-  }
+  removePersistedDebugTrace();
 
   window.dispatchEvent(
     new CustomEvent(DEBUG_TRACE_EVENT, {

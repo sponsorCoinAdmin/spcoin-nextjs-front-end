@@ -85,6 +85,7 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
 
   // ✅ FIX: ACCOUNT_PANEL desired subtree:
   [SPCD.ACCOUNT_PANEL]: [
+    SPCD.ACTIVE_ACCOUNT,
     SPCD.SPONSOR_ACCOUNT,
     SPCD.RECIPIENT_ACCOUNT,
     SPCD.AGENT_ACCOUNT,
@@ -104,6 +105,7 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
   [SPCD.ACTIVE_SPONSORSHIPS]: [],
 
   // ✅ ACCOUNT_PANEL leaf nodes
+  [SPCD.ACTIVE_ACCOUNT]: [],
   [SPCD.SPONSOR_ACCOUNT]: [],
   [SPCD.RECIPIENT_ACCOUNT]: [],
   [SPCD.AGENT_ACCOUNT]: [],

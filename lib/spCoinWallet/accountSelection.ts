@@ -11,6 +11,9 @@ type TestAccountFileEntry =
       privateKey?: unknown;
       name?: unknown;
       symbol?: unknown;
+      email?: unknown;
+      website?: unknown;
+      description?: unknown;
       logoURL?: unknown;
     };
 
@@ -22,12 +25,18 @@ function normalizeAccountAddress(value: unknown): string {
 type AccountJsonMetadata = {
   name?: unknown;
   symbol?: unknown;
+  email?: unknown;
+  website?: unknown;
+  description?: unknown;
   logoURL?: unknown;
 };
 
 async function loadAccountMetadata(address: string): Promise<{
   name?: string;
   symbol?: string;
+  email?: string;
+  website?: string;
+  description?: string;
   logoURL: string;
 }> {
   const fallbackLogoURL = getAccountLogoURL(address);
@@ -47,11 +56,17 @@ async function loadAccountMetadata(address: string): Promise<{
     const accountData = (await response.json()) as AccountJsonMetadata;
     const name = String(accountData?.name ?? '').trim();
     const symbol = String(accountData?.symbol ?? '').trim();
+    const email = String(accountData?.email ?? '').trim();
+    const website = String(accountData?.website ?? '').trim();
+    const description = String(accountData?.description ?? '').trim();
     const logoURL = String(accountData?.logoURL ?? '').trim() || fallbackLogoURL;
 
     return {
       ...(name ? { name } : {}),
       ...(symbol ? { symbol } : {}),
+      ...(email ? { email } : {}),
+      ...(website ? { website } : {}),
+      ...(description ? { description } : {}),
       logoURL,
     };
   } catch {
@@ -84,6 +99,9 @@ export async function loadHardhatWalletAccounts(
         label: metadata.name || metadata.symbol || `Account ${index}`,
         ...(metadata.name ? { name: metadata.name } : {}),
         ...(metadata.symbol ? { symbol: metadata.symbol } : {}),
+        ...(metadata.email ? { email: metadata.email } : {}),
+        ...(metadata.website ? { website: metadata.website } : {}),
+        ...(metadata.description ? { description: metadata.description } : {}),
         logoURL: metadata.logoURL,
         source: 'hardhat',
       });
@@ -95,6 +113,9 @@ export async function loadHardhatWalletAccounts(
     const privateKey = String(entry?.privateKey ?? '').trim();
     const name = String(entry?.name ?? '').trim();
     const symbol = String(entry?.symbol ?? '').trim();
+    const email = String(entry?.email ?? '').trim();
+    const website = String(entry?.website ?? '').trim();
+    const description = String(entry?.description ?? '').trim();
     const logoURL = String(entry?.logoURL ?? '').trim();
     const metadata = await loadAccountMetadata(address);
 
@@ -104,6 +125,9 @@ export async function loadHardhatWalletAccounts(
       label: name || symbol || metadata.name || metadata.symbol || `Account ${index}`,
       ...(name || metadata.name ? { name: name || metadata.name } : {}),
       ...(symbol || metadata.symbol ? { symbol: symbol || metadata.symbol } : {}),
+      ...(email || metadata.email ? { email: email || metadata.email } : {}),
+      ...(website || metadata.website ? { website: website || metadata.website } : {}),
+      ...(description || metadata.description ? { description: description || metadata.description } : {}),
       logoURL: logoURL || metadata.logoURL,
       source: 'hardhat',
     });

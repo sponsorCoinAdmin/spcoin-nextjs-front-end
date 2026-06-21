@@ -8,6 +8,7 @@ import { useAccount } from 'wagmi';
 import { SP_COIN_DISPLAY, type spCoinAccount } from '@/lib/structure';
 import { useWalletActionOverlay } from '@/lib/context/WalletActionOverlayContext';
 import { useExchangeContext } from '@/lib/context/hooks';
+import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { useSpCoinWallet } from '@/lib/spCoinWallet';
 import AccountRow from '@/lib/spCoinWallet/AccountRow';
 import type { SpCoinWalletAccount } from '@/lib/spCoinWallet';
@@ -101,6 +102,10 @@ export default function AccountPanelContent({
   const { exchangeContext } = useExchangeContext();
   const appChainId = Number(exchangeContext?.network?.appChainId ?? 0);
   const walletSource = useSpCoinWallet().walletSource;
+  const menuTabHeaderOpen = usePanelVisible(SP_COIN_DISPLAY.MENU_TAB_HEADER_BAR);
+  const activeAccountHeaderOpen = usePanelVisible(SP_COIN_DISPLAY.ACTIVE_ACCOUNT_HEADER_BAR);
+  const addressHeaderOpen = usePanelVisible(SP_COIN_DISPLAY.ADDRESS_HEADER_BAR);
+  const tradeContainerHeaderOpen = usePanelVisible(SP_COIN_DISPLAY.TRADE_CONTAINER_HEADER);
 
   const {
     publicKey,
@@ -153,6 +158,13 @@ export default function AccountPanelContent({
           source: walletSource,
         }
       : undefined;
+  const avatarResizeSignal = [
+    menuTabHeaderOpen,
+    activeAccountHeaderOpen,
+    addressHeaderOpen,
+    tradeContainerHeaderOpen,
+    mode,
+  ].join(':');
 
   return (
     <div id="ACCOUNT_INFO" className="flex h-full min-h-0 flex-col bg-[#0b0e19]">
@@ -165,71 +177,88 @@ export default function AccountPanelContent({
         />
       ) : null}
 
-      <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+      <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col overflow-hidden">
 
         <div
           id={mode === SP_COIN_DISPLAY.ACTIVE_ACCOUNT ? 'ACTIVE_ACCOUNT_BODY' : undefined}
           className={
             mode === SP_COIN_DISPLAY.ACTIVE_ACCOUNT
-              ? 'scrollbar-hide -mx-[30px] -mb-[10px] flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overflow-x-hidden rounded-b-[13px] px-5 pt-[2px] pb-0'
-              : ''
+              ? 'scrollbar-hide -mx-4 -mb-[10px] flex h-0 min-h-0 flex-1 flex-col gap-2 overflow-y-auto overflow-x-hidden overscroll-contain rounded-b-[13px] px-4 pt-[2px] pb-0'
+              : 'scrollbar-hide flex h-0 min-h-0 flex-1 flex-col gap-2 overflow-y-auto overflow-x-hidden overscroll-contain'
           }
         >
-          <CreateAccountAvatarPanel
-            panelMarginClass="mb-0 !h-auto"
-            avatarPanelBorderClass=""
-            avatarHeading=""
-            logoPreviewSrc={logoPreviewSrc}
-            connected={Boolean(isConnected || walletSource === 'hardhat')}
-            isEditMode={isEditMode}
-            inputLocked={!isEditMode}
-            previewButtonLabel="Select Preview Image"
-            loadingInputMessage="Loading or updating account data. Input is temporarily disabled."
-            isLoading={isLoading}
-            acceptedInput={ACCEPTED_IMAGE_INPUT_ACCEPT}
-            logoFileInputRef={logoFileInputRef}
-            onFileChange={handleLogoFileChange}
-            selectedRowContent={
-              selectedWalletRow ? (
-                <AccountRow
-                  account={selectedWalletRow}
-                  isActiveMarker={mode === SP_COIN_DISPLAY.ACTIVE_ACCOUNT}
-                />
-              ) : undefined
-            }
-            showImage={true}
-            showButton={isEditMode}
-          />
+          <div className="shrink-0 overflow-visible">
+            <CreateAccountAvatarPanel
+              panelMarginClass="mb-0 min-h-0"
+              avatarPanelBorderClass=""
+              avatarHeading=""
+              logoPreviewSrc={logoPreviewSrc}
+              connected={Boolean(isConnected || walletSource === 'hardhat')}
+              isEditMode={isEditMode}
+              inputLocked={!isEditMode}
+              previewButtonLabel="Select Preview Image"
+              loadingInputMessage="Loading or updating account data. Input is temporarily disabled."
+              isLoading={isLoading}
+              acceptedInput={ACCEPTED_IMAGE_INPUT_ACCEPT}
+              logoFileInputRef={logoFileInputRef}
+              onFileChange={handleLogoFileChange}
+              selectedRowContent={
+                selectedWalletRow ? (
+                  <AccountRow
+                    account={selectedWalletRow}
+                    isActiveMarker={mode === SP_COIN_DISPLAY.ACTIVE_ACCOUNT}
+                  />
+                ) : undefined
+              }
+              showImage={true}
+              showButton={true}
+              minPreviewSize={180}
+              overflowMinPreviewSize={96}
+              maxPreviewSize={420}
+              minControlWidth={220}
+              uploadControlTextClassName="px-4 text-center text-sm font-bold"
+              previewSizeBuffer={0}
+              previewHeightBuffer={8}
+              sectionBottomBuffer={0}
+              lockSectionHeight={false}
+              fillParentHeight={false}
+              sizingBoundarySelector="#ACTIVE_ACCOUNT_BODY"
+              traceSizingLabel="AccountPanel"
+              resizeSignal={avatarResizeSignal}
+            />
+          </div>
 
-          <CreateAccountFormPanel
-            panelMarginClass="mb-0 !h-auto"
-            accountPanelBorderClass=""
-            contentWidthClass="max-w-[56rem]"
-            idPrefix="account-component-"
-            formHeading=""
-            connected={Boolean(isConnected || walletSource === 'hardhat')}
-            publicKey={publicKey}
-            publicKeyLocked
-            formData={formData}
-            errors={errors}
-            descriptionTextareaRef={descriptionTextareaRef}
-            inputLocked={!isEditMode}
-            isLoading={isLoading}
-            loadingInputMessage="Loading or updating account data. Input is temporarily disabled."
-            isSaving={isSaving}
-            isEditMode={isEditMode}
-            submitLabel={submitLabel}
-            hasUnsavedChanges={hasUnsavedChanges}
-            canCreateMissingAccount={canCreateMissingAccount}
-            disableSubmit={disableSubmit}
-            disableRevert={disableRevert}
-            isRevertNoop={isRevertNoop}
-            onPublicKeyChange={handlePublicKeyChange}
-            onPublicKeyBlur={handlePublicKeyBlur}
-            onChange={handleChange}
-            onFieldBlur={handleFieldBlur}
-            onRevert={handleRevertChanges}
-          />
+          <div className="shrink-0 overflow-visible">
+            <CreateAccountFormPanel
+              panelMarginClass="mb-0 !h-auto"
+              accountPanelBorderClass=""
+              contentWidthClass="max-w-[56rem]"
+              idPrefix="account-component-"
+              formHeading=""
+              connected={Boolean(isConnected || walletSource === 'hardhat')}
+              publicKey={publicKey}
+              publicKeyLocked
+              formData={formData}
+              errors={errors}
+              descriptionTextareaRef={descriptionTextareaRef}
+              inputLocked={!isEditMode}
+              isLoading={isLoading}
+              loadingInputMessage="Loading or updating account data. Input is temporarily disabled."
+              isSaving={isSaving}
+              isEditMode={isEditMode}
+              submitLabel={submitLabel}
+              hasUnsavedChanges={hasUnsavedChanges}
+              canCreateMissingAccount={canCreateMissingAccount}
+              disableSubmit={disableSubmit}
+              disableRevert={disableRevert}
+              isRevertNoop={isRevertNoop}
+              onPublicKeyChange={handlePublicKeyChange}
+              onPublicKeyBlur={handlePublicKeyBlur}
+              onChange={handleChange}
+              onFieldBlur={handleFieldBlur}
+              onRevert={handleRevertChanges}
+            />
+          </div>
         </div>
       </form>
     </div>

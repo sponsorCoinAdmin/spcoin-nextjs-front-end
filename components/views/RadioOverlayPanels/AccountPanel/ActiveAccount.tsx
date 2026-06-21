@@ -38,7 +38,7 @@ export default function ActiveAccount({ account, accountType = 'Account', showTi
   };
 
   return (
-    <div className="shrink-0 border-b border-slate-700/50 -mx-[30px] px-4 py-2 flex items-center gap-2 text-sm text-slate-300/80">
+    <div className="shrink-0 border-b border-slate-700/50 -mx-4 px-4 py-2 flex items-center gap-2 text-sm text-slate-300/80">
       {account?.logoURL ? (
         <button
           type="button"

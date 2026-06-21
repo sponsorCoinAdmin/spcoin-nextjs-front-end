@@ -4,7 +4,7 @@ Date: 2026-06-05
 
 ## Goal
 
-Create a first-class SponsorCoin wallet module that owns wallet/source selection, signer selection, and account selection.
+Create a first-class Merit Wallet module that owns wallet/source selection, signer selection, and account selection.
 
 Working name:
 
@@ -33,7 +33,7 @@ This causes confusing states, such as:
 
 ## Proposed Simplification
 
-Build an in-app SponsorCoin wallet popup.
+Build an in-app Merit Wallet popup.
 
 Any account selection should open the wallet. The account list should live in the wallet, not inside every screen that needs an account.
 
@@ -88,7 +88,7 @@ This keeps the API simple while avoiding a file that becomes too large to mainta
 
 ## UI Shape
 
-The top-right wallet button should open the SponsorCoin wallet popup.
+The top-right wallet button should open the Merit Wallet popup.
 
 The popup should feel similar to the existing app style:
 
@@ -101,7 +101,7 @@ The popup should feel similar to the existing app style:
 
 Suggested sections:
 
-- Header: `SponsorCoin Wallet`
+- Header: `Merit Wallet`
 - Wallet source: `MetaMask` / `Hardhat Wallet`
 - Network: chain name, chain ID, RPC source
 - Working account

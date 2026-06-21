@@ -6,7 +6,6 @@ import React, { useContext, useMemo } from 'react';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { appendDebugTrace } from '@/lib/utils/debugTrace';
 import { SP_COIN_DISPLAY, type spCoinAccount } from '@/lib/structure';
 
 import AccountPanelView from './AccountPanelView';
@@ -41,7 +40,7 @@ export default function AccountPanel(_props: Props) {
     return 'NONE';
   }, [vActiveAccount, vActiveSponsor, vActiveRecipient, vActiveAgent]);
 
-  const selectedAccount = useMemo<spCoinAccount | undefined>(() => {
+  const selectedRoleAccount = useMemo<spCoinAccount | undefined>(() => {
     if (!accounts) return undefined;
     if (activeMember === 'ACTIVE_ACCOUNT') return accounts.activeAccount;
     if (activeMember === 'SPONSOR_ACCOUNT') return accounts.sponsorAccount;
@@ -50,12 +49,15 @@ export default function AccountPanel(_props: Props) {
     return accounts.activeAccount;
   }, [accounts, activeMember]);
 
+  const selectedAccount = selectedRoleAccount ?? accounts?.activeAccount;
+  const effectiveMember: ActiveAccountMember = selectedRoleAccount ? activeMember : 'ACTIVE_ACCOUNT';
+
   const contentMode =
-    activeMember === 'SPONSOR_ACCOUNT'
+    effectiveMember === 'SPONSOR_ACCOUNT'
       ? SP_COIN_DISPLAY.SPONSOR_ACCOUNT
-      : activeMember === 'RECIPIENT_ACCOUNT'
+      : effectiveMember === 'RECIPIENT_ACCOUNT'
         ? SP_COIN_DISPLAY.RECIPIENT_ACCOUNT
-        : activeMember === 'AGENT_ACCOUNT'
+        : effectiveMember === 'AGENT_ACCOUNT'
           ? SP_COIN_DISPLAY.AGENT_ACCOUNT
           : SP_COIN_DISPLAY.ACTIVE_ACCOUNT;
 
@@ -69,30 +71,26 @@ export default function AccountPanel(_props: Props) {
       vActiveRecipient,
       vActiveAgent,
       activeMember,
+      effectiveMember,
       hasAccounts: !!accounts,
       activeAddr: accounts?.activeAccount?.address,
+      selectedRoleAddr: selectedRoleAccount?.address,
       selectedAddr: (selectedAccount as spCoinAccount | undefined)?.address,
     });
   }
 
-  appendDebugTrace('AccountPanel render', {
-    activeMember,
-    hasSelectedAccount: Boolean(selectedAccount),
-    selectedAddress: selectedAccount?.address ?? '',
-  });
-
   return (
     <>
-      {activeMember === 'ACTIVE_ACCOUNT' && (
+      {effectiveMember === 'ACTIVE_ACCOUNT' && (
         <div id="ACTIVE_ACCOUNT" className="hidden" aria-hidden="true" />
       )}
-      {activeMember === 'SPONSOR_ACCOUNT' && (
+      {effectiveMember === 'SPONSOR_ACCOUNT' && (
         <div id="SPONSOR_ACCOUNT" className="hidden" aria-hidden="true" />
       )}
-      {activeMember === 'RECIPIENT_ACCOUNT' && (
+      {effectiveMember === 'RECIPIENT_ACCOUNT' && (
         <div id="RECIPIENT_ACCOUNT" className="hidden" aria-hidden="true" />
       )}
-      {activeMember === 'AGENT_ACCOUNT' && (
+      {effectiveMember === 'AGENT_ACCOUNT' && (
         <div id="AGENT_ACCOUNT" className="hidden" aria-hidden="true" />
       )}
       <AccountPanelView account={selectedAccount} mode={contentMode} />

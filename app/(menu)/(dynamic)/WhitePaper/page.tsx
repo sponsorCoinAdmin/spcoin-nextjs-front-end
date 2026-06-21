@@ -45,7 +45,7 @@ export default function WhitePaper() {
       <p>The Swap Button executes a sponsorCoin contract which exchanges the payment token with the amount of sponsorCoins purchased.  The sponsored coins are deposited into the sponsor’s account along with the sponsor recipient’s “Registered Name” or “Wallet Address”.  If a recipient’s name or address is not provided, then the coin will be deposited to the account with the recipient deemed as unallocated.</p>
       <p>The sponsorCoin account is managed through a sponsorCoin management app.  This app connects to a remote account such as Metamask through the configuration gear in the top right-hand corner.  Other configurations such as user Id and password settings are also administered here.  The configuration gear on the right of every sponsored recipient is used to reallocate or unallocated sponsorships. *</p>
 
-      <p><b>Sample SponsorCoin Wallet Management Application:</b></p>
+      <p><b>Sample Merit Wallet Management Application:</b></p>
       <div className="text-center mb-10">
         <h1 className="text-[30px] font-bold">Sample Sponsor Coin Management App</h1>
         <img

@@ -75,6 +75,25 @@ export default function DebugTracePanel() {
     setConfirmOpen(false);
   };
 
+  const handleCopyLog = async () => {
+    const text = lines.join('\n');
+    if (!text) return;
+
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.left = '-9999px';
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      document.execCommand('copy');
+      textarea.remove();
+    }
+  };
+
   return (
     <div className="m-0 p-0 font-mono text-[#91a5ff]">
       <div className="flex items-center gap-2 leading-tight">
@@ -109,7 +128,16 @@ export default function DebugTracePanel() {
           className="rounded px-2 py-0.5 text-sm font-semibold text-[#5981F3] bg-[#243056] hover:bg-[#5981F3] hover:text-[#243056] transition-colors"
           aria-label="Clear trace log"
         >
-          Clear log
+          Clear Log
+        </button>
+        <button
+          type="button"
+          onClick={handleCopyLog}
+          className="rounded px-2 py-0.5 text-sm font-semibold text-[#5981F3] bg-[#243056] hover:bg-[#5981F3] hover:text-[#243056] transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+          aria-label="Copy trace log"
+          disabled={lines.length === 0}
+        >
+          Copy Log
         </button>
       </div>
 

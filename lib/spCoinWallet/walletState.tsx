@@ -222,10 +222,15 @@ export function SpCoinWalletProvider({ children }: { children: React.ReactNode }
         name: String(account.name || account.label || currentActiveAccount?.name || 'Unnamed account').trim(),
         symbol: String(account.symbol || currentActiveAccount?.symbol || '').trim(),
         type: currentActiveAccount?.type ?? 'account',
-        website: currentActiveAccount?.website ?? '',
-        description: currentActiveAccount?.description ?? '',
+        website: String(account.website || currentActiveAccount?.website || '').trim(),
+        description: String(account.description || currentActiveAccount?.description || '').trim(),
         status: currentActiveAccount?.status ?? STATUS.INFO,
         address: account.address as spCoinAccount['address'],
+        ...((account as any).email
+          ? { email: String((account as any).email).trim() }
+          : (currentActiveAccount as any)?.email
+            ? { email: String((currentActiveAccount as any).email).trim() }
+            : {}),
         ...(account.logoURL
           ? { logoURL: account.logoURL }
           : currentActiveAccount?.logoURL

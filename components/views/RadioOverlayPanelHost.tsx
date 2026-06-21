@@ -27,6 +27,7 @@ import { useEnforceRadioPanelGroups } from '@/lib/context/exchangeContext/hooks/
 import { RADIO_PANEL_GROUPS } from '@/lib/structure/exchangeContext/constants/spCoinDisplay';
 import WalletAccountsPanel from '@/components/views/RadioOverlayPanels/WalletAccountsPanel';
 import WalletNetworksPanel from '@/components/views/RadioOverlayPanels/WalletNetworksPanel';
+import WalletConfig from '@/components/views/WalletConfig';
 
 export default function RadioOverlayPanelHost() {
   useEnforceRadioPanelGroups(RADIO_PANEL_GROUPS);
@@ -45,6 +46,10 @@ export default function RadioOverlayPanelHost() {
       {/* ───────────────────────── Detail overlays (must be mounted) ───────────────────────── */}
       <PanelGate panel={SP_COIN_DISPLAY.ACCOUNT_PANEL} className="min-h-0 flex-1">
         <AccountPanel />
+      </PanelGate>
+
+      <PanelGate panel={SP_COIN_DISPLAY.WALLET_CONFIG_PANEL} className="min-h-0 flex-1">
+        <WalletConfig />
       </PanelGate>
 
       {/* ✅ Token Contract detail overlay (self-gated; must always be mounted) */}
