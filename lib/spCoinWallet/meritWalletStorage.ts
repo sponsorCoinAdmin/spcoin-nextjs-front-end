@@ -10,10 +10,13 @@ export type MeritWalletDefaultPanel =
   | 'SPONSOR'
   | 'OPTIONS';
 
+export type MeritWalletLocation = 'FIXED' | 'FLOATING';
+
 export interface MeritWalletConfig {
   showBackgroundPage: boolean;
   modalMode: boolean;
   defaultPanel: MeritWalletDefaultPanel;
+  location: MeritWalletLocation;
 }
 
 export interface MeritWalletLS {
@@ -27,6 +30,7 @@ const DEFAULT_MERIT_WALLET_LS: MeritWalletLS = {
     showBackgroundPage: false,
     modalMode: true,
     defaultPanel: 'MENU',
+    location: 'FIXED',
   },
 };
 
@@ -69,6 +73,7 @@ export function readMeritWalletLS(): MeritWalletLS {
                         : config.defaultPanel === 'MANAGE_REWARDS'
                           ? 'REWARDS'
                           : 'MENU',
+        location: config.location === 'FLOATING' ? 'FLOATING' : 'FIXED',
       },
     };
   } catch {

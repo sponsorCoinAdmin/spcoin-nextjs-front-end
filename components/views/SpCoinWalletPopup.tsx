@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { MeritWalletLocation } from '@/lib/spCoinWallet/meritWalletStorage';
 import { useConnect } from 'wagmi';
 
 import MeritWalletComponent from '@/components/views/MeritWalletComponent';
@@ -46,10 +47,77 @@ export default function SpCoinWalletPopup() {
   // Read once from localStorage — WalletConfig owns live updates; these drive the popup shell styling
   const [showBackgroundPage] = useState(() => readMeritWalletLS().config.showBackgroundPage);
   const [modalMode] = useState(() => readMeritWalletLS().config.modalMode);
+  const [location, setLocationState] = useState<MeritWalletLocation>(
+    () => readMeritWalletLS().config.location,
+  );
+  const isFloating = location === 'FLOATING';
+
+  // Floating-mode drag state
+  const floatPosRef = useRef({ x: 0, y: 0 });
+  const [floatPos, setFloatPos] = useState({ x: 0, y: 0 });
+  const dragStateRef = useRef<{
+    startMouseX: number; startMouseY: number; startPosX: number; startPosY: number;
+  } | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const wasWalletOpenRef = useRef(false);
   const wasNormalModeRef = useRef(false);
   const suppressDefaultPanelAutoOpenRef = useRef(false);
+
+  // Keep floatPosRef in sync so drag-start can read it without stale closure
+  useEffect(() => { floatPosRef.current = floatPos; }, [floatPos]);
+
+  // Reset position when switching back to Fixed
+  useEffect(() => {
+    if (!isFloating) { setFloatPos({ x: 0, y: 0 }); floatPosRef.current = { x: 0, y: 0 }; }
+  }, [isFloating]);
+
+  // Listen for live location changes dispatched by WalletConfig
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const loc = (e as CustomEvent<{ location?: string }>).detail?.location;
+      if (loc === 'FIXED' || loc === 'FLOATING') setLocationState(loc);
+    };
+    window.addEventListener('meritWalletConfigChange', handler);
+    return () => window.removeEventListener('meritWalletConfigChange', handler);
+  }, []);
+
+  // Mouse-move / mouse-up listeners for dragging
+  useEffect(() => {
+    if (!isFloating) return;
+    const onMouseMove = (e: MouseEvent) => {
+      if (!dragStateRef.current) return;
+      const next = {
+        x: dragStateRef.current.startPosX + e.clientX - dragStateRef.current.startMouseX,
+        y: dragStateRef.current.startPosY + e.clientY - dragStateRef.current.startMouseY,
+      };
+      floatPosRef.current = next;
+      setFloatPos(next);
+    };
+    const onMouseUp = () => { dragStateRef.current = null; setIsDragging(false); };
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+  }, [isFloating]);
+
+  const handleFloatDragStart = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    // Only drag from the title-bar area (top ~64px), not from interactive elements
+    const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+    if (e.clientY - rect.top > 64) return;
+    const target = e.target as HTMLElement;
+    if (target.closest('button, input, a, select, [role="button"]')) return;
+    e.preventDefault();
+    dragStateRef.current = {
+      startMouseX: e.clientX,
+      startMouseY: e.clientY,
+      startPosX: floatPosRef.current.x,
+      startPosY: floatPosRef.current.y,
+    };
+    setIsDragging(true);
+  }, []);
 
   const { openPanel, setPanelVisible } = usePanelTree();
   const openAccountComponent = useOpenAccountComponent();
@@ -375,15 +443,30 @@ export default function SpCoinWalletPopup() {
     <div
       className={[
         'fixed inset-x-0 bottom-0 top-[60px] z-[10000]',
-        'flex items-center justify-center',
-        modalMode ? '' : 'pointer-events-none',
-        showBackgroundPage ? 'bg-black/35' : 'bg-[#050711]',
+        isFloating ? 'pointer-events-none' : 'flex items-center justify-center',
+        !isFloating && !modalMode ? 'pointer-events-none' : '',
+        isFloating ? '' : showBackgroundPage ? 'bg-black/35' : 'bg-[#050711]',
       ].join(' ')}
       role="dialog"
-      aria-modal="true"
+      aria-modal={isFloating ? 'false' : 'true'}
       aria-label="Merit Wallet"
     >
-      <MeritWalletComponent />
+      {isFloating ? (
+        <div
+          onMouseDown={handleFloatDragStart}
+          style={{
+            position: 'absolute',
+            left: '50%',
+            top: '50%',
+            transform: `translate(calc(-50% + ${floatPos.x}px), calc(-50% + ${floatPos.y}px))`,
+            cursor: isDragging ? 'grabbing' : 'grab',
+          }}
+        >
+          <MeritWalletComponent />
+        </div>
+      ) : (
+        <MeritWalletComponent />
+      )}
     </div>
   );
 }

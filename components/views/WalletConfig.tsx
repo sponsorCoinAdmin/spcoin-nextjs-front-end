@@ -6,6 +6,7 @@ import {
   readMeritWalletLS,
   updateMeritWalletLS,
   type MeritWalletDefaultPanel,
+  type MeritWalletLocation,
 } from '@/lib/spCoinWallet/meritWalletStorage';
 
 export default function WalletConfig() {
@@ -18,6 +19,9 @@ export default function WalletConfig() {
   const [modalMode, setModalMode] = useState<boolean>(
     () => readMeritWalletLS().config.modalMode,
   );
+  const [location, setLocation] = useState<MeritWalletLocation>(
+    () => readMeritWalletLS().config.location,
+  );
 
   const handleShowBackgroundPageChange = (show: boolean) => {
     setShowBackgroundPage(show);
@@ -27,6 +31,12 @@ export default function WalletConfig() {
   const handleModalModeChange = (modal: boolean) => {
     setModalMode(modal);
     updateMeritWalletLS((prev) => ({ ...prev, config: { ...prev.config, modalMode: modal } }));
+  };
+
+  const handleLocationChange = (loc: MeritWalletLocation) => {
+    setLocation(loc);
+    updateMeritWalletLS((prev) => ({ ...prev, config: { ...prev.config, location: loc } }));
+    window.dispatchEvent(new CustomEvent('meritWalletConfigChange', { detail: { location: loc } }));
   };
 
   const handleDefaultPanelChange = (panel: MeritWalletDefaultPanel) => {
@@ -80,6 +90,35 @@ export default function WalletConfig() {
           className="h-5 w-5 shrink-0 cursor-pointer accent-[#5981F3]"
         />
       </label>
+
+      <div className="rounded-[15px] border border-slate-800 bg-[#161922] px-5 py-4">
+        <span className="block text-base font-semibold text-white">
+          Location
+        </span>
+        <div className="mt-3 space-y-3">
+          {([
+            { value: 'FIXED' as const, label: 'Fixed' },
+            { value: 'FLOATING' as const, label: 'Floating' },
+          ]).map((option) => (
+            <label
+              key={option.value}
+              className="flex cursor-pointer items-center justify-between gap-4 rounded-[12px] px-3 py-2 hover:bg-[#1b2130]"
+            >
+              <span className="text-sm font-semibold text-slate-200">
+                {option.label}
+              </span>
+              <input
+                type="radio"
+                name="merit-wallet-location"
+                value={option.value}
+                checked={location === option.value}
+                onChange={() => handleLocationChange(option.value)}
+                className="h-5 w-5 cursor-pointer accent-[#5981F3]"
+              />
+            </label>
+          ))}
+        </div>
+      </div>
 
       <div className="rounded-[15px] border border-slate-800 bg-[#161922] px-5 py-4">
         <span className="block text-base font-semibold text-white">
