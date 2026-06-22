@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { ArrowLeftRight, FolderCog, Settings2, UserRoundPlus } from 'lucide-react';
+import cog_png from '@/public/assets/miscellaneous/cog.png';
 
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
@@ -60,7 +62,14 @@ export default function AccountPanelTabBar({ open = true }: Props) {
       className="shrink-0 overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out -mx-4"
       style={{ maxHeight: open ? '80px' : '0px', opacity: open ? 1 : 0 }}
     >
-      <div className="border-b border-slate-700/70 px-4 pt-3">
+      <div className="relative border-b border-slate-700/70 px-4 pt-3">
+        <Image
+          src={cog_png}
+          alt="Config"
+          onClick={() => openPanel(SP_COIN_DISPLAY.WALLET_CONFIG_PANEL, 'AccountPanelTabBar:cog')}
+          className="absolute right-3 top-2 h-5 w-5 cursor-pointer transition duration-300 hover:rotate-180"
+          priority
+        />
         <div className="scrollbar-hide flex flex-nowrap items-center gap-2 overflow-x-auto pb-1">
             {TABS.map((tab) => {
               const isActive = tab.key === activeKey;
