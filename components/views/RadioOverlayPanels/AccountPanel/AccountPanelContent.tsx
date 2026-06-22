@@ -167,7 +167,7 @@ export default function AccountPanelContent({
   ].join(':');
 
   return (
-    <div id="ACCOUNT_INFO" className="flex min-h-full flex-col bg-[#0b0e19]">
+    <div id="ACCOUNT_INFO" className="flex min-h-full shrink-0 flex-col bg-[#0b0e19]">
       {showHeader ? (
         <AccountHeader
           title={title}
@@ -220,9 +220,9 @@ export default function AccountPanelContent({
               previewSizeBuffer={0}
               previewHeightBuffer={8}
               sectionBottomBuffer={0}
-              lockSectionHeight={false}
+              lockSectionHeight={true}
               fillParentHeight={false}
-              sizingBoundarySelector="#ACTIVE_ACCOUNT_BODY"
+              sizingBoundarySelector="#ACCOUNT_PANEL"
               traceSizingLabel="AccountPanel"
               resizeSignal={avatarResizeSignal}
             />

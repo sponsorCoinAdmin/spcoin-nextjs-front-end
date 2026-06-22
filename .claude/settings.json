@@ -2,7 +2,13 @@
   "permissions": {
     "allow": [
       "Bash(cat)",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "Bash(git -C \"c:/Users/robin/spCoin/SPCOIN-PROJECT-MODULES/spcoin-nextjs-front-end\" add lib/spCoinWallet/walletState.tsx components/views/RadioOverlayPanels/AccountPanel/index.tsx)",
+      "Bash(git -C c:/Users/robin/spCoin/SPCOIN-PROJECT-MODULES/spcoin-nextjs-front-end commit -m ' *)",
+      "Bash(git -C \"c:/Users/robin/spCoin/SPCOIN-PROJECT-MODULES/spcoin-nextjs-front-end\" add lib/spCoinWallet/meritWalletStorage.ts components/views/RadioOverlayPanels/AccountPanel/AccountPanelView.tsx lib/spCoinWallet/walletState.tsx)",
+      "Bash(git -C \"c:/Users/robin/spCoin/SPCOIN-PROJECT-MODULES/spcoin-nextjs-front-end\" add lib/spCoinWallet/buildSpCoinAccount.ts lib/spCoinWallet/useWalletAccountsList.ts components/views/SpCoinWalletPopup.tsx components/views/RadioOverlayPanels/WalletAccountsPanel.tsx)",
+      "Bash(git -C \"c:/Users/robin/spCoin/SPCOIN-PROJECT-MODULES/spcoin-nextjs-front-end\" add components/views/WalletConfig.tsx components/views/SpCoinWalletPopup.tsx)",
+      "Bash(git -C \"c:/Users/robin/spCoin/SPCOIN-PROJECT-MODULES/spcoin-nextjs-front-end\" add components/views/RadioOverlayPanels/AccountPanel/AccountPanelTabBar.tsx)"
     ]
   }
 }

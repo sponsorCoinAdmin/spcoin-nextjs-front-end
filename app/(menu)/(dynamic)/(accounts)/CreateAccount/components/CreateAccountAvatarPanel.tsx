@@ -170,7 +170,12 @@ export default function CreateAccountAvatarPanel({
       const measuredBoundaryBottom = boundaryRect?.bottom ?? parentRect?.bottom ?? sectionRect.bottom;
       const sizingBottom = Math.min(measuredBoundaryBottom, clipBottom);
       const availableSectionHeight = Math.floor(
-        Math.max(0, sizingBottom - sectionRect.top - sectionBottomBuffer),
+        Math.max(
+          0,
+          boundary
+            ? boundary.clientHeight - headingHeight - selectedRowHeight - sectionBottomBuffer
+            : sizingBottom - sectionRect.top - sectionBottomBuffer,
+        ),
       );
       if (lockSectionHeight && availableSectionHeight > 0) {
         setSectionHeight((current) =>

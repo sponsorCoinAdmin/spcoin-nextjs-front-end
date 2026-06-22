@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { ArrowLeftRight, FolderCog, Settings2, UserRoundPlus } from 'lucide-react';
+import { ArrowLeft, ArrowLeftRight, FolderCog, Settings2, UserRoundPlus } from 'lucide-react';
 import cog_png from '@/public/assets/miscellaneous/cog.png';
 
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
@@ -20,7 +20,7 @@ type TabKey = typeof TABS[number]['key'];
 type Props = { open?: boolean };
 
 export default function AccountPanelTabBar({ open = true }: Props) {
-  const { openPanel } = usePanelTree();
+  const { openPanel, closePanel } = usePanelTree();
   const swapVisible         = usePanelVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
   const rewardsVisible      = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
   const optionsVisible      = usePanelVisible(SP_COIN_DISPLAY.WALLET_CONFIG_PANEL);
@@ -70,7 +70,15 @@ export default function AccountPanelTabBar({ open = true }: Props) {
           className="absolute right-3 top-2 h-5 w-5 cursor-pointer transition duration-300 hover:rotate-180"
           priority
         />
-        <div className="scrollbar-hide flex flex-nowrap items-center gap-2 overflow-x-auto pb-1">
+        <div className="scrollbar-hide flex flex-nowrap items-center gap-2 overflow-x-auto pb-1 pr-10">
+            <button
+              type="button"
+              onClick={() => closePanel('AccountPanelTabBar:back')}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#303b68] hover:bg-[#3c487a]"
+              aria-label="Go back"
+            >
+              <ArrowLeft className="h-5 w-5 text-[#91a5ff]" />
+            </button>
             {TABS.map((tab) => {
               const isActive = tab.key === activeKey;
               const Icon = tab.icon;
