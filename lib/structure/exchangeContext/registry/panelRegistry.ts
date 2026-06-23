@@ -149,6 +149,9 @@ const TRADE_HEADER_CHILDREN: readonly SP[] = [
 
   // Wallet config / options panel
   SP.WALLET_CONFIG_PANEL,
+
+  // Manage accounts panel (create / edit / list accounts per network)
+  SP.MANAGE_ACCOUNTS_PANEL,
 ] as const;
 
 const MERIT_WALLET_CHILDREN: readonly SP[] = [SP.MAIN_TRADING_PANEL] as const;
@@ -344,6 +347,7 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   def({ id: SP.WALLET_ACCOUNTS_COMPONENT, kind: 'control', defaultVisible: false }),
   def({ id: SP.WALLET_NETWORKS_COMPONENT, kind: 'control', defaultVisible: false }),
   def({ id: SP.WALLET_CONFIG_PANEL, kind: 'control', defaultVisible: false }),
+  def({ id: SP.MANAGE_ACCOUNTS_PANEL, kind: 'panel', defaultVisible: false }),
 
   // NOTE: you used 'panel' kind here previously; keep it if consumers expect that.
   def({ id: SP.FEE_DISCLOSURE, kind: 'panel', defaultVisible: true }),

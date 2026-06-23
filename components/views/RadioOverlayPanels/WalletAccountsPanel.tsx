@@ -2,6 +2,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Settings } from 'lucide-react';
 
 import { useSpCoinWallet } from '@/lib/spCoinWallet';
 import { useActiveAccount } from '@/lib/context/hooks/ExchangeContext/nested/accounts/useActiveAccount';
@@ -10,6 +11,7 @@ import useOpenAccountComponent from '@/lib/context/hooks/useOpenAccountComponent
 import { SP_COIN_DISPLAY, type spCoinAccount } from '@/lib/structure';
 import PanelGate from '@/components/utility/PanelGate';
 import Accounts from '@/lib/spCoinWallet/accounts';
+import ManageAccountsPanel from '@/components/wallet/panels/ManageAccountsPanel';
 import type { SpCoinWalletAccount } from '@/lib/spCoinWallet';
 import { buildSpCoinAccount } from '@/lib/spCoinWallet/buildSpCoinAccount';
 import { useWalletAccountsList } from '@/lib/spCoinWallet/useWalletAccountsList';
@@ -24,7 +26,7 @@ export default function WalletAccountsPanel() {
   } = useSpCoinWallet();
 
   const [, setActiveAccount] = useActiveAccount();
-  const { closePanel } = usePanelTree();
+  const { closePanel, openPanel } = usePanelTree();
   const openAccountComponent = useOpenAccountComponent();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [previewAccount, setPreviewAccount] = useState<spCoinAccount | undefined>(undefined);
@@ -50,9 +52,24 @@ export default function WalletAccountsPanel() {
     });
   };
 
+  const handleManageClick = () => {
+    openPanel(SP_COIN_DISPLAY.MANAGE_ACCOUNTS_PANEL, 'WalletAccountsPanel:manageAccounts');
+  };
+
   return (
     <PanelGate panel={SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT}>
       <div className="-mx-4">
+        <div className="flex items-center justify-end border-b border-slate-700/30 px-4 py-1">
+          <button
+            type="button"
+            onClick={handleManageClick}
+            className="flex items-center gap-1 rounded px-2 py-1 text-xs text-slate-400 transition-colors hover:bg-slate-700/50 hover:text-white"
+            title="Manage accounts"
+          >
+            <Settings className="h-3.5 w-3.5" />
+            Manage
+          </button>
+        </div>
         <Accounts
           accounts={visibleAccounts}
           walletSource={walletSource}
@@ -68,6 +85,7 @@ export default function WalletAccountsPanel() {
           onClosePreview={() => setPreviewAccount(undefined)}
         />
       </div>
+      <ManageAccountsPanel />
     </PanelGate>
   );
 }

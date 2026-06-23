@@ -82,6 +82,8 @@ export const MUST_INCLUDE_ON_BOOT: readonly (readonly [SP, boolean])[] = [
 
   // ✅ Ensure chevron pending flags exist even for older persisted trees
   [SP.CHEVRON_DOWN_OPEN_PENDING, false],
+
+  [SP.MANAGE_ACCOUNTS_PANEL, false],
 ] as const;
 
 /**
@@ -162,6 +164,7 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
       node(SP.WALLET_ACCOUNTS_COMPONENT, false),
       node(SP.WALLET_NETWORKS_COMPONENT, false),
       node(SP.WALLET_CONFIG_PANEL, false),
+      node(SP.MANAGE_ACCOUNTS_PANEL, false),
 
       // Aux panels
       node(SP.ADD_SPONSORSHIP_PANEL, false, [node(SP.CONFIG_SPONSORSHIP_PANEL, false)]),

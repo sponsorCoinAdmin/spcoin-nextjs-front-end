@@ -76,7 +76,7 @@ export function SpCoinWalletProvider({ children }: { children: React.ReactNode }
     setHardhatAccountsLoading(true);
     setHardhatAccountsError('');
     try {
-      const accounts = await loadHardhatWalletAccounts(31337);
+      const accounts = await loadHardhatWalletAccounts(appChainId || 31337);
       setHardhatAccounts(accounts);
       initializeWalletAccounts(accounts);
     } catch (error) {
@@ -86,7 +86,7 @@ export function SpCoinWalletProvider({ children }: { children: React.ReactNode }
     } finally {
       setHardhatAccountsLoading(false);
     }
-  }, []);
+  }, [appChainId]);
 
   useEffect(() => {
     void refreshHardhatAccounts();

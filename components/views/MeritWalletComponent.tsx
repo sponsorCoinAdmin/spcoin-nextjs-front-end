@@ -12,18 +12,19 @@ import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVis
 import { useSpCoinWallet } from '@/lib/spCoinWallet';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 
-const AGENT   = 1;  // bit 0 → AGENT_HEADER_CONTAINER
-const MENU    = 2;  // bit 1 → MENU_TAB_HEADER_BAR
-const ADDRESS = 4;  // bit 2 → ADDRESS_HEADER_BAR
+const MENU    = 1;  // bit 0 → MENU_TAB_HEADER_BAR
+const ADDRESS = 2;  // bit 1 → ADDRESS_HEADER_BAR
+
+// Gray-code cycle: 0 → 1 → 3 → 2 → 0  (each step flips one bit)
+const NEXT_STATE: Readonly<Record<number, number>> = { 0: 1, 1: 3, 3: 2, 2: 0 };
 
 function selectPanel(
   current: number,
   setPanelVisible: (panel: SP_COIN_DISPLAY, visible: boolean) => void,
 ): number {
-  const next = (current + 1) % 8;
-  setPanelVisible(SP_COIN_DISPLAY.AGENT_HEADER_CONTAINER, (next & AGENT)   !== 0);
-  setPanelVisible(SP_COIN_DISPLAY.MENU_TAB_HEADER_BAR,    (next & MENU)    !== 0);
-  setPanelVisible(SP_COIN_DISPLAY.ADDRESS_HEADER_BAR,     (next & ADDRESS) !== 0);
+  const next = NEXT_STATE[current] ?? 0;
+  setPanelVisible(SP_COIN_DISPLAY.MENU_TAB_HEADER_BAR, (next & MENU)    !== 0);
+  setPanelVisible(SP_COIN_DISPLAY.ADDRESS_HEADER_BAR,  (next & ADDRESS) !== 0);
   return next;
 }
 
@@ -44,12 +45,11 @@ export default function MeritWalletComponent() {
     : walletAccountsVisible    ? 'Merit Wallet'
     : 'Merit Wallet';
 
-  // Sync panels to panelHeaderDisplay = 0 on mount only — intentionally no deps
+  // Start at state 0 (MENU and ADDRESS hidden) on mount — intentionally no deps
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    setPanelVisible(SP_COIN_DISPLAY.AGENT_HEADER_CONTAINER, false);
-    setPanelVisible(SP_COIN_DISPLAY.MENU_TAB_HEADER_BAR,    false);
-    setPanelVisible(SP_COIN_DISPLAY.ADDRESS_HEADER_BAR,     false);
+    setPanelVisible(SP_COIN_DISPLAY.MENU_TAB_HEADER_BAR, false);
+    setPanelVisible(SP_COIN_DISPLAY.ADDRESS_HEADER_BAR,  false);
   }, []);
 
   const handleMenuClick = useCallback(() => {
