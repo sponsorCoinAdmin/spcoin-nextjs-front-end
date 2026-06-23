@@ -30,7 +30,6 @@ export const NON_PERSISTED_PANELS = new Set<SP>([]);
 
 export const MUST_INCLUDE_ON_BOOT: readonly (readonly [SP, boolean])[] = [
   [SP.MERIT_WALLET_COMPONENT, true],
-  [SP.MAIN_TRADING_PANEL, true],
   [SP.TRADE_CONTAINER_HEADER, true],
   [SP.TRADING_STATION_HEADER, true],
   [SP.MENU_TAB_HEADER_BAR, true],
@@ -91,7 +90,6 @@ export const MUST_INCLUDE_ON_BOOT: readonly (readonly [SP, boolean])[] = [
  */
 export const defaultSpCoinPanelTree: SpCoinPanelTree = [
   node(SP.MERIT_WALLET_COMPONENT, true, [
-  node(SP.MAIN_TRADING_PANEL, true, [
     // Header bars sit above TRADE_CONTAINER_HEADER
     node(SP.AGENT_HEADER_CONTAINER, true),
     node(SP.MENU_TAB_HEADER_BAR, true),
@@ -172,7 +170,6 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
       // Global always-on widget (not inside TradingStationPanel, lives at overlay level)
       node(SP.WALLET_CONNECT_COMPONENT, true),
     ]),
-  ]),
   ]),
 ];
 

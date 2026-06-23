@@ -20,13 +20,6 @@ const MAIN_PARENT = SP.TRADE_CONTAINER_HEADER;
 const MAIN_GROUP: GroupId = 'mainOverlay';
 
 // Small builders to reduce repetition
-const root = (id: SP, defaultVisible = true, label?: string): PanelDef => ({
-  id,
-  kind: 'root',
-  defaultVisible,
-  ...(label ? { label } : null),
-});
-
 const child = (
   id: SP,
   kind: Exclude<PanelKind, 'root'>,
@@ -62,11 +55,8 @@ const overlay = (
  * ✅ Pending Rewards is NOT an overlay: local inline child of Manage Sponsorships.
  */
 export const PANELS: readonly PanelDef[] = [
-  // Root app container for trading
-  root(SP.MAIN_TRADING_PANEL, true),
-
-  // Non-radio chrome under main root
-  child(SP.TRADE_CONTAINER_HEADER, 'panel', SP.MAIN_TRADING_PANEL, true),
+  // Non-radio chrome under merit wallet
+  child(SP.TRADE_CONTAINER_HEADER, 'panel', SP.MERIT_WALLET_COMPONENT, true),
 
   /**
    * Main overlays (radio group: mainOverlay)

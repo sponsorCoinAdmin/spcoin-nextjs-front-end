@@ -90,12 +90,12 @@ function formatDisplayStackItem(idxLabel: string, v: any): string {
 /**
  * ✅ GUI-only transformation:
  * Persisted structure is:
- *   MAIN_TRADING_PANEL
+ *   MERIT_WALLET_COMPONENT
  *     TRADE_CONTAINER_HEADER
  *       (overlays...)
  *
- * But the GUI should show overlays as siblings of TRADE_CONTAINER_HEADER under MAIN_TRADING_PANEL:
- *   MAIN_TRADING_PANEL
+ * But the GUI should show overlays as siblings of TRADE_CONTAINER_HEADER under MERIT_WALLET_COMPONENT:
+ *   MERIT_WALLET_COMPONENT
  *     TRADE_CONTAINER_HEADER
  *     (overlays...)
  *
@@ -105,7 +105,7 @@ function hoistTradeHeaderChildrenForGui(mainNode: any): any {
   if (!looksLikeVirtualPanelNode(mainNode)) return mainNode;
 
   const mainId = getVirtualId(mainNode);
-  if (Number(mainId) !== Number(SP_COIN_DISPLAY.MAIN_TRADING_PANEL)) return mainNode;
+  if (Number(mainId) !== Number(SP_COIN_DISPLAY.MERIT_WALLET_COMPONENT)) return mainNode;
 
   const mainChildren: any[] = Array.isArray(mainNode?.children) ? mainNode.children : [];
   if (!mainChildren.length) return mainNode;
@@ -156,7 +156,7 @@ const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, toggleP
 
   /**
    * ✅ GUI-only shaping of spCoinPanelTree (roots array).
-   * If this Branch node is the "spCoinPanelTree" array, transform only the MAIN_TRADING_PANEL root.
+   * If this Branch node is the "spCoinPanelTree" array, transform only the MERIT_WALLET_COMPONENT root.
    */
   const guiValue =
     isArray && label === 'spCoinPanelTree'

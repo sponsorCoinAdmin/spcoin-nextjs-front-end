@@ -94,8 +94,8 @@ export function openOnly<M extends Record<string, unknown> = Record<string, unkn
 export function hoistTradeHeaderChildrenForGui<
   M extends Record<string, unknown> = Record<string, unknown>,
 >(root: PanelNode<M>): PanelNode<M> {
-  // Only meaningful if root is MAIN_TRADING_PANEL (otherwise no-op)
-  if (Number(root.panel) !== Number(SP.MAIN_TRADING_PANEL)) return root;
+  // Only meaningful if root is MERIT_WALLET_COMPONENT (otherwise no-op)
+  if (Number(root.panel) !== Number(SP.MERIT_WALLET_COMPONENT)) return root;
 
   const rootKids = root.children ?? [];
   const headerIdx = rootKids.findIndex((c) => Number(c.panel) === Number(SP.TRADE_CONTAINER_HEADER));

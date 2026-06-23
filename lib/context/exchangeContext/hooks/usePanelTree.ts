@@ -105,7 +105,6 @@ const sameStack = (
 
 // Wrapper nodes to SKIP in persisted stack
 const NON_INDEXED = new Set<number>([
-  Number(SP_COIN_DISPLAY.MAIN_TRADING_PANEL),
   Number(SP_COIN_DISPLAY.TRADE_CONTAINER_HEADER),
   Number(SP_COIN_DISPLAY.CONFIG_SLIPPAGE_PANEL),
 ]);

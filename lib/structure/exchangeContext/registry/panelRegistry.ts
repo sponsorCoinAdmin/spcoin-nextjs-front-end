@@ -154,10 +154,7 @@ const TRADE_HEADER_CHILDREN: readonly SP[] = [
   SP.MANAGE_ACCOUNTS_PANEL,
 ] as const;
 
-const MERIT_WALLET_CHILDREN: readonly SP[] = [SP.MAIN_TRADING_PANEL] as const;
-
-const MAIN_TRADING_CHILDREN: readonly SP[] = [
-  // Header bars sit above TRADE_CONTAINER_HEADER
+const MERIT_WALLET_CHILDREN: readonly SP[] = [
   SP.AGENT_HEADER_CONTAINER,
   SP.MENU_TAB_HEADER_BAR,
   SP.ADDRESS_HEADER_BAR,
@@ -181,14 +178,6 @@ export const PANEL_DEFS: readonly PanelDef[] = [
     kind: 'root',
     defaultVisible: true,
     children: MERIT_WALLET_CHILDREN,
-  }),
-
-  // Trading panel root
-  def({
-    id: SP.MAIN_TRADING_PANEL,
-    kind: 'root',
-    defaultVisible: true,
-    children: MAIN_TRADING_CHILDREN,
   }),
 
   // Trade header (overlay container)
@@ -368,7 +357,6 @@ export { IS_MAIN_RADIO_OVERLAY_PANEL, IS_MANAGE_SCOPED, IS_STACK_COMPONENT };
 
 export const NON_INDEXED_PANELS = new Set<SP>([
   SP.MERIT_WALLET_COMPONENT,
-  SP.MAIN_TRADING_PANEL,
   SP.TRADE_CONTAINER_HEADER,
   SP.CONFIG_SLIPPAGE_PANEL,
   SP.TRADING_STATION_HEADER,

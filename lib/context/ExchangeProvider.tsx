@@ -587,7 +587,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       // --- cold boot derive stack ---
       const derivedIdsRaw = computeVisibleDisplayStackFromPanels(
         flatPanels as any,
-        SP_COIN_DISPLAY.MAIN_TRADING_PANEL,
+        SP_COIN_DISPLAY.MERIT_WALLET_COMPONENT,
       );
 
       const derivedIds = filterToStackComponents(derivedIdsRaw);

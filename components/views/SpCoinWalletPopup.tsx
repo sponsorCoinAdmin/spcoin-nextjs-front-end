@@ -302,7 +302,6 @@ export default function SpCoinWalletPopup() {
   const openTradeStationDefaultPanel = useCallback(() => {
     setWalletNavigationVisible(false, 'SpCoinWalletPopup:hideForTradeStationDefault');
     setManagePanelsVisible(false, false, 'SpCoinWalletPopup:hideForTradeStationDefault');
-    setPanelVisible(SP_COIN_DISPLAY.MAIN_TRADING_PANEL, true, 'SpCoinWalletPopup:showMainTradingPanel');
     openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL, 'SpCoinWalletPopup:openTradingStationPanel');
     setPanelVisible(SP_COIN_DISPLAY.EXCHANGE_TRADING_PAIR, true, 'SpCoinWalletPopup:showExchangeTradingPair');
   }, [openPanel, setManagePanelsVisible, setPanelVisible, setWalletNavigationVisible]);
@@ -310,7 +309,6 @@ export default function SpCoinWalletPopup() {
   const openManageRewardsPanel = useCallback(() => {
     suppressDefaultPanelAutoOpenRef.current = true;
     setWalletNavigationVisible(false, 'SpCoinWalletPopup:hideForManageRewardsDefault');
-    setPanelVisible(SP_COIN_DISPLAY.MAIN_TRADING_PANEL, true, 'SpCoinWalletPopup:showMainTradingPanel');
     setPanelVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL, false, 'SpCoinWalletPopup:hideTradingStation');
     setManagePanelsVisible(true, false, 'SpCoinWalletPopup:showForManageRewards');
     openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL, 'SpCoinWalletPopup:openManageSponsorships');

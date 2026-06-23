@@ -161,38 +161,35 @@ export default function ExchangeContextTab({ onToggleAllReady }: ExchangeContext
       {/* ─────────────────────────────────────────────────────────────── */}
       {/* 🔐 PANEL REGISTRY (kept hidden so panels appear in the tree)   */}
       {/* ─────────────────────────────────────────────────────────────── */}
-      <PanelGate panel={SP.MAIN_TRADING_PANEL}>
-        <div className="hidden">
-          {/* Core header + trading station so they also appear in this page’s tree */}
-          <PanelGate panel={SP.TRADE_CONTAINER_HEADER}>
-            <TradeContainerHeader />
-          </PanelGate>
-          <PanelGate panel={SP.TRADING_STATION_PANEL}>
-            <TradingStationPanel />
-          </PanelGate>
+      <div className="hidden">
+        {/* Core header + trading station so they also appear in this page’s tree */}
+        <PanelGate panel={SP.TRADE_CONTAINER_HEADER}>
+          <TradeContainerHeader />
+        </PanelGate>
+        <PanelGate panel={SP.TRADING_STATION_PANEL}>
+          <TradingStationPanel />
+        </PanelGate>
 
-          {/* Token/address selectors + hub/error */}
-          <PanelGate panel={SP.TOKEN_LIST_SELECT_PANEL}>
-            <TokenListSelectPanel />
-          </PanelGate>
-          <PanelGate panel={SP.ACCOUNT_LIST_SELECT_PANEL}>
-            <RecipientListSelectPanel />
-            <AgentListSelectPanel />
-            <ManageSponsorRecipients />
-          </PanelGate>
+        {/* Token/address selectors + hub/error */}
+        <PanelGate panel={SP.TOKEN_LIST_SELECT_PANEL}>
+          <TokenListSelectPanel />
+        </PanelGate>
+        <PanelGate panel={SP.ACCOUNT_LIST_SELECT_PANEL}>
+          <RecipientListSelectPanel />
+          <AgentListSelectPanel />
+          <ManageSponsorRecipients />
+        </PanelGate>
 
-          {/* Manage LIST views */}
-          <PanelGate panel={SP.MANAGE_SPONSORSHIPS_PANEL}>
-            <ManageSponsorshipsPanel />
-          </PanelGate>
- 
-          {/* Sponsors list rewards panel */}
-          <PanelGate panel={SP.ACCOUNT_LIST_REWARDS_PANEL}>
-            <ManageSponsorRecipients />
-          </PanelGate>
+        {/* Manage LIST views */}
+        <PanelGate panel={SP.MANAGE_SPONSORSHIPS_PANEL}>
+          <ManageSponsorshipsPanel />
+        </PanelGate>
 
-        </div>
-      </PanelGate>
+        {/* Sponsors list rewards panel */}
+        <PanelGate panel={SP.ACCOUNT_LIST_REWARDS_PANEL}>
+          <ManageSponsorRecipients />
+        </PanelGate>
+      </div>
 
       <DebugTracePanel />
     </div>

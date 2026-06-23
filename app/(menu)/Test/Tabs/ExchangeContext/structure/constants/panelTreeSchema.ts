@@ -1,18 +1,18 @@
-// File: app/(menu)/Test/Tabs/ExchangeContext/structure/constants/panelTreeSchema.ts
+﻿// File: app/(menu)/Test/Tabs/ExchangeContext/structure/constants/panelTreeSchema.ts
 import { SP_COIN_DISPLAY as SPCD } from '@/lib/structure';
 
 export type PanelKind = 'panel' | 'button' | 'list' | 'control';
 
 // ✅ bump so the virtual tree rebuilds (structure changes)
-export const schemaVersion = 'v19';
+export const schemaVersion = 'v20';
 
-// ✅ Single root: MAIN_TRADING_PANEL
-export const ROOTS: SPCD[] = [SPCD.MAIN_TRADING_PANEL];
+// ✅ Single root: MERIT_WALLET_COMPONENT
+export const ROOTS: SPCD[] = [SPCD.MERIT_WALLET_COMPONENT];
 
-// Show Trading’s inline panels + controls
+// Show Trading's inline panels + controls
 export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
-  // MAIN_TRADING_PANEL contains the radio overlays, manage hub, lists AND detail panels
-  [SPCD.MAIN_TRADING_PANEL]: [
+  // MERIT_WALLET_COMPONENT contains the radio overlays, manage hub, lists AND detail panels
+  [SPCD.MERIT_WALLET_COMPONENT]: [
     // Core trading panel
     SPCD.TRADING_STATION_PANEL,
 
@@ -125,7 +125,6 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
 };
 
 export const KINDS: Partial<Record<SPCD, PanelKind>> = {
-  [SPCD.MAIN_TRADING_PANEL]: 'panel',
   [SPCD.TRADING_STATION_PANEL]: 'panel',
   [SPCD.STAKING_SPCOINS_PANEL]: 'panel',
   [SPCD.STAKE_TRADING_SPCOINS_PANEL]: 'panel',

@@ -2,9 +2,13 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import styles from '@/styles/Exchange.module.css';
 import ConnectNetworkButton from '@/components/views/Buttons/Connect/ConnectNetworkButton';
 import AgentHeaderContainer from '@/components/views/Headers/AgentHeaderContainer';
-import MainTradingPanel from '@/components/views/MainTradingPanel';
+import MenuTabHeaderBar from '@/components/views/Headers/MenuTabHeaderBar';
+import AddressHeaderBar from '@/components/views/Headers/AddressHeaderBar';
+import TradeContainerHeader from '@/components/views/Headers/TradeContainerHeader';
+import RadioOverlayPanelHost from '@/components/views/RadioOverlayPanelHost';
 import WalletHeader from '@/components/views/WalletHeader';
 import PanelGate from '@/components/utility/PanelGate';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
@@ -33,6 +37,7 @@ export default function MeritWalletComponent() {
   const { openPanel, closePanel, setPanelVisible } = usePanelTree();
   const [panelHeaderDisplay, setPanelHeaderDisplay] = useState(0);
 
+  const tradingStationHeaderOpen = usePanelVisible(SP_COIN_DISPLAY.TRADING_STATION_HEADER);
   const walletAccountsVisible    = usePanelVisible(SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT);
   const walletNetworksVisible    = usePanelVisible(SP_COIN_DISPLAY.WALLET_NETWORKS_COMPONENT);
   const rewardsTabVisible        = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
@@ -89,7 +94,33 @@ export default function MeritWalletComponent() {
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <AgentHeaderContainer />
           <div className="relative min-h-0 flex-1 overflow-hidden">
-            <MainTradingPanel embeddedInPopup />
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column' }}>
+              <div id="UNDEFINED" className="hidden" aria-hidden="true" />
+              <div
+                id="mainTradingPanel"
+                className={styles.mainTradingPanel}
+                style={{ transform: 'none', width: '100%', flex: 1, minHeight: 0, maxHeight: '100%', margin: 0 }}
+              >
+                <MenuTabHeaderBar />
+                <AddressHeaderBar />
+                <PanelGate panel={SP_COIN_DISPLAY.TRADE_CONTAINER_HEADER}>
+                  <div id="TRADE_CONTAINER_HEADER">
+                    <div
+                      className="overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out"
+                      style={{
+                        maxHeight: tradingStationHeaderOpen ? '80px' : '0px',
+                        opacity: tradingStationHeaderOpen ? 1 : 0,
+                      }}
+                    >
+                      <TradeContainerHeader />
+                    </div>
+                  </div>
+                </PanelGate>
+                <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto flex flex-col">
+                  <RadioOverlayPanelHost />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
