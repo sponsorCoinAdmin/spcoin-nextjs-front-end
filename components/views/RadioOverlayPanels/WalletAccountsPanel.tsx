@@ -11,7 +11,6 @@ import useOpenAccountComponent from '@/lib/context/hooks/useOpenAccountComponent
 import { SP_COIN_DISPLAY, type spCoinAccount } from '@/lib/structure';
 import PanelGate from '@/components/utility/PanelGate';
 import Accounts from '@/lib/spCoinWallet/accounts';
-import ManageAccountsPanel from '@/components/wallet/panels/ManageAccountsPanel';
 import type { SpCoinWalletAccount } from '@/lib/spCoinWallet';
 import { buildSpCoinAccount } from '@/lib/spCoinWallet/buildSpCoinAccount';
 import { useWalletAccountsList } from '@/lib/spCoinWallet/useWalletAccountsList';
@@ -85,7 +84,6 @@ export default function WalletAccountsPanel() {
           onClosePreview={() => setPreviewAccount(undefined)}
         />
       </div>
-      <ManageAccountsPanel />
     </PanelGate>
   );
 }

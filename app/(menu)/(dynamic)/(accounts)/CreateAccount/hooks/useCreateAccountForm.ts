@@ -434,7 +434,7 @@ export function useCreateAccountForm({
       let signMessage: ((message: string) => Promise<string>) | null = null;
 
       if (authSignerSource === 'ec2-base' && canUseHardhatSigner) {
-        const response = await fetch('/assets/spCoinLab/networks/31337/testAccounts.json', {
+        const response = await fetch(`/assets/spCoinLab/networks/${appChainId || 31337}/testAccounts.json`, {
           cache: 'no-store',
         });
         if (!response.ok) {

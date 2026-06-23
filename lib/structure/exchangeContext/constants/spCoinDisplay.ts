@@ -42,6 +42,9 @@ export const MAIN_RADIO_OVERLAY_PANELS = [
 
   // Wallet config / options panel
   SP.WALLET_CONFIG_PANEL,
+
+  // Manage accounts panel (create / edit / list accounts per network)
+  SP.MANAGE_ACCOUNTS_PANEL,
 ] as const satisfies readonly SP[];
 
 /**

@@ -110,7 +110,7 @@ export default function EditAccountPageClient() {
 
     const loadHardhatAccounts = async () => {
       try {
-        const response = await fetch('/assets/spCoinLab/networks/31337/testAccounts.json', {
+        const response = await fetch(`/assets/spCoinLab/networks/${appChainId || 31337}/testAccounts.json`, {
           cache: 'no-store',
           signal: abortController.signal,
         });

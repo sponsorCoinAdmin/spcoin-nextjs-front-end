@@ -28,6 +28,7 @@ import { RADIO_PANEL_GROUPS } from '@/lib/structure/exchangeContext/constants/sp
 import WalletAccountsPanel from '@/components/views/RadioOverlayPanels/WalletAccountsPanel';
 import WalletNetworksPanel from '@/components/views/RadioOverlayPanels/WalletNetworksPanel';
 import WalletConfig from '@/components/views/WalletConfig';
+import ManageAccountsPanel from '@/components/wallet/panels/ManageAccountsPanel';
 
 export default function RadioOverlayPanelHost() {
   useEnforceRadioPanelGroups(RADIO_PANEL_GROUPS);
@@ -63,6 +64,7 @@ export default function RadioOverlayPanelHost() {
       {/* ───────────────────────── Wallet overlays ───────────────────────── */}
       <WalletAccountsPanel />
       <WalletNetworksPanel />
+      <ManageAccountsPanel />
 
       <ErrorMessagePanel />
     </>

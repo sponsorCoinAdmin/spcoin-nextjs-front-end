@@ -1,1 +1,1 @@
-export * from './spCoinWallet';
+export * from '@/components/wallet/lib';

@@ -8,8 +8,6 @@ export const TAB_REGISTRY = {
   CREATE_ACCOUNT: { id: 'create-account',  path: '/EditAccount',                  label: 'Edit Account',              closable: true,  order: 24 },
   SPCOIN_ACCESS:  { id: 'spcoin-access',   path: '/SpCoinAccessController',       label: 'SpCoin Access Controller',  closable: true,  order: 26 },
   SPCOIN_LAB:     { id: 'spcoin-lab',      path: '/SponsorCoinLab',               label: 'SponsorCoinLab',            closable: true,  order: 27 },
-  MANAGE_ACCTS:   { id: 'manage-accounts', path: '/ManageAccounts',               label: 'Manage Accounts',  closable: true,  order: 40 },
-  CREATE_AGENT:   { id: 'create-agent',    path: '/CreateAgent',                  label: 'Create Agent',     closable: true,  order: 50 },
   RECIPIENT_SITE: { id: 'recipient-site',  path: '/RecipientSite',                label: 'Recipient Site',   closable: true,  order: 60 },
 } as const;
 
