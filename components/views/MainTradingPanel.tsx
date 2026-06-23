@@ -5,7 +5,6 @@ import styles from '@/styles/Exchange.module.css';
 
 import TradeContainerHeader from '@/components/views/Headers/TradeContainerHeader';
 import MenuTabHeaderBar from '@/components/views/Headers/MenuTabHeaderBar';
-import ActiveAccountHeaderBar from '@/components/views/Headers/ActiveAccountHeaderBar';
 import AddressHeaderBar from '@/components/views/Headers/AddressHeaderBar';
 import RadioOverlayPanelHost from '@/components/views/RadioOverlayPanelHost';
 
@@ -95,7 +94,6 @@ export default function MainTradingPanel({ embeddedInPopup = false }: MainTradin
           }
         >
           <MenuTabHeaderBar />
-          <ActiveAccountHeaderBar />
           <AddressHeaderBar />
 
           <PanelGate panel={SP_COIN_DISPLAY.TRADE_CONTAINER_HEADER}>

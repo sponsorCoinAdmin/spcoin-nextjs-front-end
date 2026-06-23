@@ -14,8 +14,9 @@ interface ActiveAccountProps {
 }
 
 export default function ActiveAccount({ account, accountType = 'Account', showTitle = true }: ActiveAccountProps) {
-  const { openPanel, closePanel } = usePanelTree();
+  const { openPanel, closePanel, setPanelVisible } = usePanelTree();
   const walletAccountsVisible = usePanelVisible(SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT);
+  const activeAccountHeaderVisible = usePanelVisible(SP_COIN_DISPLAY.ACTIVE_ACCOUNT_HEADER_BAR);
   const [copied, setCopied] = useState(false);
   const address = String(account?.address ?? '').trim();
 
@@ -62,7 +63,11 @@ export default function ActiveAccount({ account, accountType = 'Account', showTi
         )}
         <div className="flex w-full items-center gap-3">
           <div className="flex min-w-0 flex-1 items-center gap-2 rounded-[22px] bg-[#243056] px-1 py-1 text-[15px] text-[#5981F3]">
-            <span className="w-full truncate whitespace-nowrap text-center font-mono">{address}</span>
+            <span
+              className="w-full truncate whitespace-nowrap text-center font-mono cursor-pointer"
+              title={activeAccountHeaderVisible ? 'Close Active Account Data' : 'Open Active Account Data'}
+              onClick={() => setPanelVisible(SP_COIN_DISPLAY.ACTIVE_ACCOUNT_HEADER_BAR, !activeAccountHeaderVisible)}
+            >{address}</span>
             <button
               type="button"
               onClick={handleChevronClick}

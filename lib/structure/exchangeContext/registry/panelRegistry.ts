@@ -155,8 +155,8 @@ const MERIT_WALLET_CHILDREN: readonly SP[] = [SP.MAIN_TRADING_PANEL] as const;
 
 const MAIN_TRADING_CHILDREN: readonly SP[] = [
   // Header bars sit above TRADE_CONTAINER_HEADER
+  SP.AGENT_HEADER_CONTAINER,
   SP.MENU_TAB_HEADER_BAR,
-  SP.ACTIVE_ACCOUNT_HEADER_BAR,
   SP.ADDRESS_HEADER_BAR,
   SP.TRADE_CONTAINER_HEADER,
 ] as const;
@@ -209,8 +209,9 @@ export const PANEL_DEFS: readonly PanelDef[] = [
 
   // Popup header bars
   def({ id: SP.MENU_TAB_HEADER_BAR, kind: 'panel', defaultVisible: true }),
+  def({ id: SP.ADDRESS_HEADER_BAR, kind: 'panel', defaultVisible: true, children: [SP.ACTIVE_ACCOUNT_HEADER_BAR] }),
   def({ id: SP.ACTIVE_ACCOUNT_HEADER_BAR, kind: 'panel', defaultVisible: true }),
-  def({ id: SP.ADDRESS_HEADER_BAR, kind: 'panel', defaultVisible: true }),
+  def({ id: SP.AGENT_HEADER_CONTAINER, kind: 'panel', defaultVisible: true }),
 
   // Token selector overlays
   def({ id: SP.TOKEN_LIST_SELECT_PANEL, kind: 'list', children: TOKEN_LIST_SELECT_PANEL_CHILDREN }),
@@ -370,6 +371,7 @@ export const NON_INDEXED_PANELS = new Set<SP>([
   SP.MENU_TAB_HEADER_BAR,
   SP.ACTIVE_ACCOUNT_HEADER_BAR,
   SP.ADDRESS_HEADER_BAR,
+  SP.AGENT_HEADER_CONTAINER,
 ]);
 
 export const ROOTS: readonly SP[] = [SP.MERIT_WALLET_COMPONENT] as const;

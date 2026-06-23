@@ -1,38 +1,29 @@
 // File: components/views/Headers/ActiveAccountHeaderBar.tsx
 'use client';
 
-import { ArrowLeft } from 'lucide-react';
 import { useExchangeContext } from '@/lib/context/hooks';
-import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import PanelGate from '@/components/utility/PanelGate';
+import RoleTableComponent from '@/components/shared/RoleTableComponent';
 
 export default function ActiveAccountHeaderBar() {
   const { exchangeContext } = useExchangeContext();
-  const { closePanel } = usePanelTree();
 
-  const rewardsTabVisible  = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
-  const tradingTabVisible  = usePanelVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
-  const activeAccountType  = rewardsTabVisible ? 'Deposit Account' : tradingTabVisible ? 'Trading Account' : 'Active Account';
+  const rewardsTabVisible = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
+  const tradingTabVisible = usePanelVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
+  const activeAccountType = rewardsTabVisible ? 'Deposit Account' : tradingTabVisible ? 'Trading Account' : 'Active Account';
+
+  const activeAccount = exchangeContext?.accounts?.activeAccount;
 
   return (
     <PanelGate panel={SP_COIN_DISPLAY.ACTIVE_ACCOUNT_HEADER_BAR}>
-      <div className="relative shrink-0 border-b border-slate-700/50 -mx-4 px-4 py-3 flex items-center gap-3">
-        <div className="pointer-events-none absolute inset-x-0 top-[2px] flex flex-col items-center text-[19px] font-semibold text-[#5981F3]">
-          <span>{activeAccountType}</span>
-          {exchangeContext?.accounts?.activeAccount?.name && (
-            <span>{exchangeContext.accounts.activeAccount.name}</span>
-          )}
+      <div className="relative shrink-0 border-b border-slate-700/50 -mx-4 px-4 py-3 flex flex-col items-center text-[19px] font-semibold text-[#5981F3]">
+        <span>{activeAccountType}</span>
+        {activeAccount?.name && <span>{activeAccount.name}</span>}
+        <div className="absolute top-2 right-4">
+          <RoleTableComponent account={activeAccount} />
         </div>
-        <button
-          type="button"
-          onClick={() => closePanel('ActiveAccountHeaderBar:back')}
-          className="ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#303b68] hover:bg-[#3c487a]"
-          aria-label="Go back"
-        >
-          <ArrowLeft className="h-5 w-5 text-[#91a5ff]" />
-        </button>
       </div>
     </PanelGate>
   );

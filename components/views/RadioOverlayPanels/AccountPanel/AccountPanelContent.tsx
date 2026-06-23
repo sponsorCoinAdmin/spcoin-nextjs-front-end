@@ -235,6 +235,7 @@ export default function AccountPanelContent({
               contentWidthClass="max-w-[56rem]"
               idPrefix="account-component-"
               formHeading=""
+              account={account}
               connected={Boolean(isConnected || walletSource === 'hardhat')}
               publicKey={publicKey}
               publicKeyLocked

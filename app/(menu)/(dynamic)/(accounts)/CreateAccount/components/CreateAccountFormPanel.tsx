@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import ConnectNetworkButtonProps from '@/components/views/Buttons/Connect/ConnectNetworkButton';
 import { msTableTw } from '@/components/views/RadioOverlayPanels/msTableTw';
+import RoleTableComponent from '@/components/shared/RoleTableComponent';
+import type { spCoinAccount } from '@/lib/structure';
 import type {
   AccountFormData,
   AccountFormErrors,
@@ -22,6 +24,8 @@ type Props = {
   idPrefix?: string;
   formHeading?: string;
   topRowContent?: React.ReactNode;
+  account?: spCoinAccount;
+  accountAddress?: string;
   connected: boolean;
   publicKey: string;
   publicKeyLocked?: boolean;
@@ -54,6 +58,8 @@ export default function CreateAccountFormPanel({
   idPrefix = '',
   formHeading = 'Account Meta Data',
   topRowContent,
+  account,
+  accountAddress,
   connected,
   publicKey,
   publicKeyLocked = false,
@@ -141,7 +147,10 @@ export default function CreateAccountFormPanel({
         <div className={`w-full min-w-0 ${tableGrid}`}>
           <div className="contents">
             <div className={`${msTableTw.theadRow} ${th} whitespace-nowrap border-b border-black`}>Field Name</div>
-            <div className={`${msTableTw.theadRow} ${th} border-b border-black`}>value</div>
+            <div className={`${msTableTw.theadRow} ${th} border-b border-black flex items-center justify-between`}>
+              <span>Value</span>
+              {(account || accountAddress) && <RoleTableComponent account={account} accountAddress={accountAddress} />}
+            </div>
           </div>
 
           <div className="contents">

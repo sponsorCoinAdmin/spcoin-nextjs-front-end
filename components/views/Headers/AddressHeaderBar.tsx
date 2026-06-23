@@ -6,6 +6,7 @@ import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVis
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import PanelGate from '@/components/utility/PanelGate';
 import ActiveAccount from '@/components/views/RadioOverlayPanels/AccountPanel/ActiveAccount';
+import ActiveAccountHeaderBar from '@/components/views/Headers/ActiveAccountHeaderBar';
 
 export default function AddressHeaderBar() {
   const { exchangeContext } = useExchangeContext();
@@ -15,6 +16,7 @@ export default function AddressHeaderBar() {
 
   return (
     <PanelGate panel={SP_COIN_DISPLAY.ADDRESS_HEADER_BAR}>
+      <ActiveAccountHeaderBar />
       <ActiveAccount
         account={exchangeContext?.accounts?.activeAccount}
         accountType={activeAccountType}

@@ -36,6 +36,7 @@ export const MUST_INCLUDE_ON_BOOT: readonly (readonly [SP, boolean])[] = [
   [SP.MENU_TAB_HEADER_BAR, true],
   [SP.ACTIVE_ACCOUNT_HEADER_BAR, true],
   [SP.ADDRESS_HEADER_BAR, true],
+  [SP.AGENT_HEADER_CONTAINER, true],
   [SP.TRADING_STATION_PANEL, true],
   [SP.CONFIG_SLIPPAGE_PANEL, false],
   [SP.EXCHANGE_TRADING_PAIR, true],
@@ -90,6 +91,7 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
   node(SP.MERIT_WALLET_COMPONENT, true, [
   node(SP.MAIN_TRADING_PANEL, true, [
     // Header bars sit above TRADE_CONTAINER_HEADER
+    node(SP.AGENT_HEADER_CONTAINER, true),
     node(SP.MENU_TAB_HEADER_BAR, true),
     node(SP.ACTIVE_ACCOUNT_HEADER_BAR, true),
     node(SP.ADDRESS_HEADER_BAR, true),

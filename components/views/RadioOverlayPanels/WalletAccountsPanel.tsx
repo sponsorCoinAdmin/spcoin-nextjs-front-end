@@ -52,7 +52,7 @@ export default function WalletAccountsPanel() {
 
   return (
     <PanelGate panel={SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT}>
-      <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto overscroll-contain -mx-4">
+      <div className="-mx-4">
         <Accounts
           accounts={visibleAccounts}
           walletSource={walletSource}

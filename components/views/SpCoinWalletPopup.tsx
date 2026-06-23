@@ -19,7 +19,6 @@ import { getBlockChainName } from '@/lib/context/helpers/NetworkHelpers';
 import { useActiveAccount } from '@/lib/context/hooks/ExchangeContext/nested/accounts/useActiveAccount';
 import type { SpCoinWalletAccount } from '@/lib/spCoinWallet';
 import { SP_COIN_DISPLAY, type spCoinAccount } from '@/lib/structure';
-import { normalizeAddress } from '@/lib/utils/address';
 import { appendDebugTrace, clearDebugTraceBuffer } from '@/lib/utils/debugTrace';
 import Accounts from '@/lib/spCoinWallet/accounts';
 import { buildSpCoinAccount } from '@/lib/spCoinWallet/buildSpCoinAccount';

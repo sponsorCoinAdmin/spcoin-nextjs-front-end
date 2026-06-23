@@ -296,6 +296,7 @@ export default function EditAccountPageClient() {
           contentWidthClass="max-w-none"
           idPrefix="edit-account-top-right-"
           formHeading=""
+          accountAddress={requestedNormalizedAccountAddress}
           connected={displayConnected}
           publicKey={displayPublicKey}
           publicKeyLocked
