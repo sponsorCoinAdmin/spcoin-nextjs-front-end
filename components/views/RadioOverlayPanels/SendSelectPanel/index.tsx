@@ -13,7 +13,6 @@ import { useGetBalance } from '@/lib/hooks/useGetBalance';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { defaultMissingImage, getTokenLogoURL } from '@/lib/context/helpers/assetHelpers';
-import { getBlockChainName } from '@/lib/context/helpers/NetworkHelpers';
 import PanelGate from '@/components/utility/PanelGate';
 
 type SendSelectPanelProps = {
@@ -53,7 +52,6 @@ function SendSelectPanelInner({ amount, onAmountChange }: SendSelectPanelProps) 
   const tokenAddr = token?.address as Address | undefined;
   const tokenDecimals = token?.decimals ?? 18;
   const chainId = typeof token?.chainId === 'number' ? token.chainId : undefined;
-  const blockchainName = chainId != null ? (getBlockChainName(chainId) ?? '') : '';
   const tokenSymbol = token?.symbol ?? 'Token';
 
   // Reset amount when token changes
