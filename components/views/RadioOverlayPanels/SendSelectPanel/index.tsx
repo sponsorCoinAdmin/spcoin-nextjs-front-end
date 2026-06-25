@@ -51,7 +51,6 @@ function SendSelectPanelInner({ amount, onAmountChange }: SendSelectPanelProps) 
   const token = sellTokenContract ?? nativeToken;
   const tokenAddr = token?.address as Address | undefined;
   const tokenDecimals = token?.decimals ?? 18;
-  const chainId = typeof token?.chainId === 'number' ? token.chainId : undefined;
   const tokenSymbol = token?.symbol ?? 'Token';
 
   // Reset amount when token changes
