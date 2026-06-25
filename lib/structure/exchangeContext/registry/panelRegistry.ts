@@ -152,13 +152,17 @@ const TRADE_HEADER_CHILDREN: readonly SP[] = [
 
   // Manage accounts panel (create / edit / list accounts per network)
   SP.MANAGE_ACCOUNTS_PANEL,
+
+  // Tab panels
+  SP.SPONSOR_PANEL,
+  SP.SEND_PANEL,
 ] as const;
 
 const MERIT_WALLET_CHILDREN: readonly SP[] = [
   SP.AGENT_HEADER_CONTAINER,
   SP.MENU_TAB_HEADER_BAR,
   SP.ADDRESS_HEADER_BAR,
-  SP.TRADE_CONTAINER_HEADER,
+  ...TRADE_HEADER_CHILDREN,
 ] as const;
 
 /* ─────────────────────────────── Panel Definitions ─────────────────────────────── */
@@ -178,14 +182,6 @@ export const PANEL_DEFS: readonly PanelDef[] = [
     kind: 'root',
     defaultVisible: true,
     children: MERIT_WALLET_CHILDREN,
-  }),
-
-  // Trade header (overlay container)
-  def({
-    id: SP.TRADE_CONTAINER_HEADER,
-    kind: 'panel',
-    defaultVisible: true,
-    children: TRADE_HEADER_CHILDREN,
   }),
 
   // Trading station (core overlay root)
@@ -337,6 +333,13 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   def({ id: SP.WALLET_NETWORKS_COMPONENT, kind: 'control', defaultVisible: false }),
   def({ id: SP.WALLET_CONFIG_PANEL, kind: 'control', defaultVisible: false }),
   def({ id: SP.MANAGE_ACCOUNTS_PANEL, kind: 'panel', defaultVisible: false }),
+  def({ id: SP.SPONSOR_PANEL, kind: 'panel', defaultVisible: false }),
+  def({ id: SP.SEND_PANEL, kind: 'panel', defaultVisible: false, children: [SP.SEND_TITLE, SP.TOKEN_ADDRESS_COMPONENT, SP.SEND_SELECT_PANEL] }),
+  def({ id: SP.SEND_TITLE, kind: 'panel', defaultVisible: true }),
+  def({ id: SP.SEND_ADDRESS_HEADER_BAR, kind: 'panel', defaultVisible: true }),
+  def({ id: SP.TOKEN_ADDRESS_COMPONENT, kind: 'panel', defaultVisible: true }),
+  def({ id: SP.SEND_TO_ADDRESS, kind: 'panel', defaultVisible: true }),
+  def({ id: SP.SEND_SELECT_PANEL, kind: 'panel', defaultVisible: true, children: [SP.SEND_ADDRESS_HEADER_BAR] }),
 
   // NOTE: you used 'panel' kind here previously; keep it if consumers expect that.
   def({ id: SP.FEE_DISCLOSURE, kind: 'panel', defaultVisible: true }),
@@ -357,13 +360,15 @@ export { IS_MAIN_RADIO_OVERLAY_PANEL, IS_MANAGE_SCOPED, IS_STACK_COMPONENT };
 
 export const NON_INDEXED_PANELS = new Set<SP>([
   SP.MERIT_WALLET_COMPONENT,
-  SP.TRADE_CONTAINER_HEADER,
   SP.CONFIG_SLIPPAGE_PANEL,
   SP.TRADING_STATION_HEADER,
   SP.MENU_TAB_HEADER_BAR,
   SP.ACTIVE_ACCOUNT_HEADER_BAR,
   SP.ADDRESS_HEADER_BAR,
   SP.AGENT_HEADER_CONTAINER,
+  SP.SEND_TITLE,
+  SP.TOKEN_ADDRESS_COMPONENT,
+  SP.SEND_SELECT_PANEL,
 ]);
 
 export const ROOTS: readonly SP[] = [SP.MERIT_WALLET_COMPONENT] as const;

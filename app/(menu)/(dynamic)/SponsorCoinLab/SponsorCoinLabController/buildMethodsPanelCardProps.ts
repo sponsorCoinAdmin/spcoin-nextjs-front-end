@@ -377,6 +377,7 @@ export function buildMethodsPanelCardProps(args: BuildMethodsPanelCardPropsArgs)
       setWriteAmountRaw: args.setWriteAmountRaw,
       writeAmountUnit: args.writeAmountUnit,
       setWriteAmountUnit: args.setWriteAmountUnit,
+      tokenContractAddress: args.contractAddress,
       activeTokenDecimals: args.activeTokenDecimals,
       inputStyle: args.inputStyle,
       writeTraceEnabled: args.writeTraceEnabled,

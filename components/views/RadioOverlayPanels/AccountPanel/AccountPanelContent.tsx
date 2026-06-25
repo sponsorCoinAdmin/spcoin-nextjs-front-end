@@ -105,7 +105,6 @@ export default function AccountPanelContent({
   const menuTabHeaderOpen = usePanelVisible(SP_COIN_DISPLAY.MENU_TAB_HEADER_BAR);
   const activeAccountHeaderOpen = usePanelVisible(SP_COIN_DISPLAY.ACTIVE_ACCOUNT_HEADER_BAR);
   const addressHeaderOpen = usePanelVisible(SP_COIN_DISPLAY.ADDRESS_HEADER_BAR);
-  const tradeContainerHeaderOpen = usePanelVisible(SP_COIN_DISPLAY.TRADE_CONTAINER_HEADER);
 
   const {
     publicKey,
@@ -162,7 +161,6 @@ export default function AccountPanelContent({
     menuTabHeaderOpen,
     activeAccountHeaderOpen,
     addressHeaderOpen,
-    tradeContainerHeaderOpen,
     mode,
   ].join(':');
 

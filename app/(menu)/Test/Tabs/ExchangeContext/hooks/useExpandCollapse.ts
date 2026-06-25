@@ -117,7 +117,6 @@ export function useExpandCollapse(exchangeContext: any, _expandedInit: boolean) 
     const defaults: Record<string, boolean> = {
       'rest.settings': true,
       'rest.settings.spCoinPanelTree': true,
-      // NOTE: we do NOT auto-expand displayStack by default, but it is now expandable.
     };
 
     const stored = loadExCtxMap();

@@ -4,7 +4,7 @@ import { SP_COIN_DISPLAY as SPCD } from '@/lib/structure';
 export type PanelKind = 'panel' | 'button' | 'list' | 'control';
 
 // ✅ bump so the virtual tree rebuilds (structure changes)
-export const schemaVersion = 'v20';
+export const schemaVersion = 'v25';
 
 // ✅ Single root: MERIT_WALLET_COMPONENT
 export const ROOTS: SPCD[] = [SPCD.MERIT_WALLET_COMPONENT];
@@ -13,6 +13,10 @@ export const ROOTS: SPCD[] = [SPCD.MERIT_WALLET_COMPONENT];
 export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
   // MERIT_WALLET_COMPONENT contains the radio overlays, manage hub, lists AND detail panels
   [SPCD.MERIT_WALLET_COMPONENT]: [
+    // Tab panels
+    SPCD.SPONSOR_PANEL,
+    SPCD.SEND_PANEL,
+
     // Core trading panel
     SPCD.TRADING_STATION_PANEL,
 
@@ -122,6 +126,10 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
 
   // ✅ STAKE_TRADING_SPCOINS_PANEL leaf node
   [SPCD.STAKE_TRADING_SPCOINS_PANEL]: [],
+
+  // ✅ SEND_PANEL subtree
+  [SPCD.SEND_PANEL]: [SPCD.SEND_SELECT_PANEL],
+  [SPCD.SEND_SELECT_PANEL]: [],
 };
 
 export const KINDS: Partial<Record<SPCD, PanelKind>> = {
@@ -175,6 +183,9 @@ export const KINDS: Partial<Record<SPCD, PanelKind>> = {
   [SPCD.AFFILIATE_FEE]: 'control',
 
   [SPCD.ERROR_MESSAGE_PANEL]: 'panel',
+  [SPCD.SPONSOR_PANEL]: 'panel',
+  [SPCD.SEND_PANEL]: 'panel',
+  [SPCD.SEND_SELECT_PANEL]: 'panel',
 
   // ✅ show token contract node in this UI
   [SPCD.TOKEN_PANEL]: 'panel',

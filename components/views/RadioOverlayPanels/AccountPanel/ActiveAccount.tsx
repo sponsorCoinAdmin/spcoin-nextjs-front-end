@@ -6,6 +6,7 @@ import { ChevronDown, Copy, Check } from 'lucide-react';
 import { SP_COIN_DISPLAY, type spCoinAccount } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
+import { appendDebugTrace } from '@/lib/utils/debugTrace';
 
 interface ActiveAccountProps {
   account?: spCoinAccount;
@@ -19,6 +20,12 @@ export default function ActiveAccount({ account, accountType = 'Account', showTi
   const activeAccountHeaderVisible = usePanelVisible(SP_COIN_DISPLAY.ACTIVE_ACCOUNT_HEADER_BAR);
   const [copied, setCopied] = useState(false);
   const address = String(account?.address ?? '').trim();
+
+  appendDebugTrace('ActiveAccount:render', {
+    address: address || '(none)',
+    logoURL: account?.logoURL ?? '(unset)',
+    hasLogo: Boolean(account?.logoURL),
+  });
 
   if (!address) return null;
 

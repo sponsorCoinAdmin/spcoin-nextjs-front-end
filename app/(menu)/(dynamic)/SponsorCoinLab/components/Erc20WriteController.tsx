@@ -46,6 +46,7 @@ type Props = {
   setWriteAmountUnit: (value: AmountUnit) => void;
   activeTokenDecimals: number;
   inputStyle: string;
+  tokenContractAddress?: string;
   canRunSelectedWriteMethod: boolean;
   canAddCurrentMethodToScript: boolean;
   hasEditorScriptSelected: boolean;
@@ -96,6 +97,7 @@ export default function Erc20WriteController(props: Props) {
     missingFieldIds,
     runSelectedWriteMethod,
     addCurrentMethodToScript,
+    tokenContractAddress,
     hideMethodSelect = false,
     hideActionButtons = false,
     hideAddToScript = false,
@@ -178,6 +180,17 @@ export default function Erc20WriteController(props: Props) {
       ) : null}
       <div id="JSON_METHOD" className="grid grid-cols-1 gap-3 rounded-lg border border-[#31416F] p-3">
         {!hasVisibleWriteMethods ? <div className="text-sm text-slate-400">(no on-chain ERC20 write methods match the current filter)</div> : null}
+        {hasVisibleWriteMethods && tokenContractAddress ? (
+          <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+            <span className="text-sm font-semibold text-[#8FA8FF]">Token Contract</span>
+            <input
+              className={inputStyle}
+              readOnly
+              value={tokenContractAddress}
+              placeholder="Token contract address"
+            />
+          </label>
+        ) : null}
         {hasVisibleWriteMethods ? <AccountSelection
           label="msg.sender"
           title="Toggle msg.sender Private Key"

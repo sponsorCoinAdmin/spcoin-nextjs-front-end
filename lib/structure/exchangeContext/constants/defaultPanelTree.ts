@@ -30,7 +30,6 @@ export const NON_PERSISTED_PANELS = new Set<SP>([]);
 
 export const MUST_INCLUDE_ON_BOOT: readonly (readonly [SP, boolean])[] = [
   [SP.MERIT_WALLET_COMPONENT, true],
-  [SP.TRADE_CONTAINER_HEADER, true],
   [SP.TRADING_STATION_HEADER, true],
   [SP.MENU_TAB_HEADER_BAR, true],
   [SP.ACTIVE_ACCOUNT_HEADER_BAR, true],
@@ -83,6 +82,12 @@ export const MUST_INCLUDE_ON_BOOT: readonly (readonly [SP, boolean])[] = [
   [SP.CHEVRON_DOWN_OPEN_PENDING, false],
 
   [SP.MANAGE_ACCOUNTS_PANEL, false],
+  [SP.SPONSOR_PANEL, false],
+  [SP.SEND_PANEL, false],
+  [SP.SEND_TITLE, true],
+  [SP.SEND_SELECT_PANEL, true],
+  [SP.TOKEN_ADDRESS_COMPONENT, true],
+  [SP.SEND_ADDRESS_HEADER_BAR, true],
 ] as const;
 
 /**
@@ -90,86 +95,77 @@ export const MUST_INCLUDE_ON_BOOT: readonly (readonly [SP, boolean])[] = [
  */
 export const defaultSpCoinPanelTree: SpCoinPanelTree = [
   node(SP.MERIT_WALLET_COMPONENT, true, [
-    // Header bars sit above TRADE_CONTAINER_HEADER
+    // Header bars
     node(SP.AGENT_HEADER_CONTAINER, true),
     node(SP.MENU_TAB_HEADER_BAR, true),
     node(SP.ACTIVE_ACCOUNT_HEADER_BAR, true),
     node(SP.ADDRESS_HEADER_BAR, true),
 
-    node(SP.TRADE_CONTAINER_HEADER, true, [
-      // Core trading station subtree
-      node(SP.TRADING_STATION_PANEL, true, [
-        node(SP.TRADING_STATION_HEADER, true),
-        node(SP.CONFIG_SLIPPAGE_PANEL, false),
-        node(SP.EXCHANGE_TRADING_PAIR, true, [
-          node(SP.SELL_SELECT_PANEL, true, [node(SP.MANAGE_SPONSORSHIPS_BUTTON, false)]),
-          node(SP.SWAP_ARROW_BUTTON, true),
-          node(SP.BUY_SELECT_PANEL, true, [node(SP.ADD_SPONSORSHIP_BUTTON, false)]),
-        ]),
-        node(SP.CONNECT_TRADE_BUTTON, true),
-        node(SP.FEE_DISCLOSURE, true),
-        node(SP.AFFILIATE_FEE, false),
+    // Core trading station subtree
+    node(SP.TRADING_STATION_PANEL, true, [
+      node(SP.TRADING_STATION_HEADER, true),
+      node(SP.CONFIG_SLIPPAGE_PANEL, false),
+      node(SP.EXCHANGE_TRADING_PAIR, true, [
+        node(SP.SELL_SELECT_PANEL, true, [node(SP.MANAGE_SPONSORSHIPS_BUTTON, false)]),
+        node(SP.SWAP_ARROW_BUTTON, true),
+        node(SP.BUY_SELECT_PANEL, true, [node(SP.ADD_SPONSORSHIP_BUTTON, false)]),
       ]),
-
-      // ─────────────── Radio overlays (siblings) ───────────────
-      node(SP.TOKEN_LIST_SELECT_PANEL, false),
-
-      // ✅ Account list selector overlay (with children)
-      node(SP.ACCOUNT_LIST_SELECT_PANEL, false, [
-        node(SP.SPONSOR_LIST, false),
-        node(SP.RECIPIENT_LIST, false),
-        node(SP.AGENT_LIST, false),
-      ]),
-
-      node(SP.ERROR_MESSAGE_PANEL, false),
-
-      // ✅ Token contract overlay MUST be part of overlay tree now (with children)
-      node(SP.TOKEN_PANEL, false, [
-        node(SP.BUY_CONTRACT, false),
-        node(SP.SELL_CONTRACT, false),
-        node(SP.PREVIEW_CONTRACT, false),
-      ]),
-
-      // ✅ Chevron pending flags (persisted UI state; not a visible overlay)
-      node(SP.CHEVRON_DOWN_OPEN_PENDING, false),
-
-      // ─────────────── Manage overlays (still overlays, but with an inline child) ───────────────
-      node(SP.MANAGE_SPONSORSHIPS_PANEL, false, [node(SP.MANAGE_PENDING_REWARDS, false)]),
-
-      node(SP.STAKING_SPCOINS_PANEL, false, [
-        node(SP.STAKE_TRADING_SPCOINS_PANEL, false),
-        node(SP.ADD_SPONSORSHIP_PANEL, false, [node(SP.CONFIG_SPONSORSHIP_PANEL, false)]),
-        node(SP.CONNECT_TRADE_BUTTON, true),
-      ]),
-
-      // ✅ Account list rewards (parent) + pending/unstake nodes
-      node(SP.ACCOUNT_LIST_REWARDS_PANEL, false, [
-        node(SP.PENDING_SPONSOR_REWARDS, false),
-        node(SP.PENDING_RECIPIENT_REWARDS, false),
-        node(SP.PENDING_AGENT_REWARDS, false),
-        node(SP.ACTIVE_SPONSORSHIPS, false),
-      ]),
-
-      // ✅ ACCOUNT_PANEL should show role children in the tree
-      node(SP.ACCOUNT_PANEL, false, [
-        node(SP.ACTIVE_ACCOUNT, false),
-        node(SP.SPONSOR_ACCOUNT, false),
-        node(SP.RECIPIENT_ACCOUNT, false),
-        node(SP.AGENT_ACCOUNT, false),
-      ]),
-
-      // ✅ Wallet popup list panels — radio overlays, mutually exclusive with all above
-      node(SP.WALLET_ACCOUNTS_COMPONENT, false),
-      node(SP.WALLET_NETWORKS_COMPONENT, false),
-      node(SP.WALLET_CONFIG_PANEL, false),
-      node(SP.MANAGE_ACCOUNTS_PANEL, false),
-
-      // Aux panels
-      node(SP.ADD_SPONSORSHIP_PANEL, false, [node(SP.CONFIG_SPONSORSHIP_PANEL, false)]),
-
-      // Global always-on widget (not inside TradingStationPanel, lives at overlay level)
-      node(SP.WALLET_CONNECT_COMPONENT, true),
+      node(SP.CONNECT_TRADE_BUTTON, true),
+      node(SP.FEE_DISCLOSURE, true),
+      node(SP.AFFILIATE_FEE, false),
     ]),
+
+    // ─────────────── Radio overlays (siblings) ───────────────
+    node(SP.TOKEN_LIST_SELECT_PANEL, false),
+
+    node(SP.ACCOUNT_LIST_SELECT_PANEL, false, [
+      node(SP.SPONSOR_LIST, false),
+      node(SP.RECIPIENT_LIST, false),
+      node(SP.AGENT_LIST, false),
+    ]),
+
+    node(SP.ERROR_MESSAGE_PANEL, false),
+
+    node(SP.TOKEN_PANEL, false, [
+      node(SP.BUY_CONTRACT, false),
+      node(SP.SELL_CONTRACT, false),
+      node(SP.PREVIEW_CONTRACT, false),
+    ]),
+
+    node(SP.CHEVRON_DOWN_OPEN_PENDING, false),
+
+    node(SP.MANAGE_SPONSORSHIPS_PANEL, false, [node(SP.MANAGE_PENDING_REWARDS, false)]),
+
+    node(SP.STAKING_SPCOINS_PANEL, false, [
+      node(SP.STAKE_TRADING_SPCOINS_PANEL, false),
+      node(SP.ADD_SPONSORSHIP_PANEL, false, [node(SP.CONFIG_SPONSORSHIP_PANEL, false)]),
+      node(SP.CONNECT_TRADE_BUTTON, true),
+    ]),
+
+    node(SP.ACCOUNT_LIST_REWARDS_PANEL, false, [
+      node(SP.PENDING_SPONSOR_REWARDS, false),
+      node(SP.PENDING_RECIPIENT_REWARDS, false),
+      node(SP.PENDING_AGENT_REWARDS, false),
+      node(SP.ACTIVE_SPONSORSHIPS, false),
+    ]),
+
+    node(SP.ACCOUNT_PANEL, false, [
+      node(SP.ACTIVE_ACCOUNT, false),
+      node(SP.SPONSOR_ACCOUNT, false),
+      node(SP.RECIPIENT_ACCOUNT, false),
+      node(SP.AGENT_ACCOUNT, false),
+    ]),
+
+    node(SP.WALLET_ACCOUNTS_COMPONENT, false),
+    node(SP.WALLET_NETWORKS_COMPONENT, false),
+    node(SP.WALLET_CONFIG_PANEL, false),
+    node(SP.MANAGE_ACCOUNTS_PANEL, false),
+    node(SP.SPONSOR_PANEL, false),
+    node(SP.SEND_PANEL, false, [node(SP.SEND_TITLE, true), node(SP.TOKEN_ADDRESS_COMPONENT, true), node(SP.SEND_SELECT_PANEL, true, [node(SP.SEND_ADDRESS_HEADER_BAR, true)])]),
+
+    node(SP.ADD_SPONSORSHIP_PANEL, false, [node(SP.CONFIG_SPONSORSHIP_PANEL, false)]),
+
+    node(SP.WALLET_CONNECT_COMPONENT, true),
   ]),
 ];
 

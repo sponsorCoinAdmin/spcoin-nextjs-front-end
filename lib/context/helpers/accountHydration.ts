@@ -15,6 +15,7 @@ import {
   hydrateTokensFromAddressesBatch,
 } from '@/lib/tokens/tokenHydration';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { appendDebugTrace } from '@/lib/utils/debugTrace';
 import { resolveTokenAssetChainId } from '@/lib/utils/network/tokenAssetChainMap';
 
 const LOG_TIME = false as const;
@@ -211,8 +212,11 @@ export async function resolveAccountLogoURL(
   }
 
   const candidate = getAccountLogoURL_SSOT(addr);
+  appendDebugTrace('accountHydration:resolveLogoURL:checking', { addr, candidate });
   const ok = await resourceExists(candidate);
-  return ok ? candidate : ANONYMOUS_ACCOUNT_IMAGE;
+  const result = ok ? candidate : ANONYMOUS_ACCOUNT_IMAGE;
+  appendDebugTrace('accountHydration:resolveLogoURL:result', { addr, ok, result });
+  return result;
 }
 
 /* ----------------------------- SSOT fallbacks ----------------------------- */

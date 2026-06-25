@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
-import { ArrowLeft, Menu, RefreshCw, Wallet, X } from 'lucide-react';
+import { ArrowLeft, Menu, PictureInPicture2, RefreshCw, Wallet, X } from 'lucide-react';
 
 type WalletHeaderMode = 'selection' | 'normal';
 
@@ -22,6 +22,7 @@ interface WalletHeaderProps {
   onConnectMetaMask?: () => void;
   onMenuClick?: () => void;
   menuButtonKind?: 'menu' | 'back';
+  onExpand?: () => void;
   onClose: () => void;
 }
 
@@ -41,6 +42,7 @@ export default function WalletHeader({
   onConnectMetaMask,
   onMenuClick,
   menuButtonKind = 'menu',
+  onExpand,
   onClose,
 }: WalletHeaderProps) {
   const isSelection = mode === 'selection';
@@ -129,7 +131,7 @@ export default function WalletHeader({
             <button
               type="button"
               onClick={onMenuClick}
-              className="absolute right-[68px] top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-[#303b68] hover:bg-[#3c487a]"
+              className="absolute right-[120px] top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-[#303b68] hover:bg-[#3c487a]"
               aria-label={menuButtonKind === 'back' ? 'Return to wallet options' : 'Open wallet menu'}
             >
               {menuButtonKind === 'back' ? (
@@ -139,6 +141,14 @@ export default function WalletHeader({
               )}
             </button>
           ) : null}
+          <button
+            type="button"
+            onClick={onExpand}
+            className="absolute right-[68px] top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-[#303b68] hover:bg-[#3c487a]"
+            aria-label="Expand wallet"
+          >
+            <PictureInPicture2 className="h-5 w-5 text-[#91a5ff]" />
+          </button>
           <button
             type="button"
             onClick={onClose}

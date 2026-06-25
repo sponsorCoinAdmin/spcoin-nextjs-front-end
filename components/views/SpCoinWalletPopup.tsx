@@ -63,6 +63,7 @@ export default function SpCoinWalletPopup() {
   const wasWalletOpenRef = useRef(false);
   const wasNormalModeRef = useRef(false);
   const suppressDefaultPanelAutoOpenRef = useRef(false);
+  const meritWalletRestoreHandledRef = useRef(false);
 
   // Keep floatPosRef in sync so drag-start can read it without stale closure
   useEffect(() => { floatPosRef.current = floatPos; }, [floatPos]);
@@ -190,15 +191,26 @@ export default function SpCoinWalletPopup() {
     wasWalletOpenRef.current = true;
   }, [defaultPanel, isOpen, isSelectionMode, meritWalletVisible, session.appChainId, session.signerAddress, walletSource]);
 
+  // Restore MERIT_WALLET_COMPONENT only once per wallet-open session.
+  // We gate via meritWalletRestoreHandledRef so that subsequent effect re-runs
+  // (caused by openPanel becoming a new reference after any context update) do NOT
+  // call openPanel again — that would fight intentional tree toggles.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    if (!isOpen || isSelectionMode || meritWalletVisible) return;
+    if (!isOpen || isSelectionMode) {
+      meritWalletRestoreHandledRef.current = false;
+      return;
+    }
+    if (meritWalletRestoreHandledRef.current) return;
+    meritWalletRestoreHandledRef.current = true;
+    if (meritWalletVisible) return;
     appendDebugTrace('SpCoinWalletPopup:restoreMeritWalletPanel', {
       reason: 'wallet-open-but-panel-hidden',
       defaultPanel,
       walletSource,
     });
     openPanel(SP_COIN_DISPLAY.MERIT_WALLET_COMPONENT, 'SpCoinWalletPopup:restoreMeritWalletPanel');
-  }, [defaultPanel, isOpen, isSelectionMode, meritWalletVisible, openPanel, walletSource]);
+  }, [defaultPanel, isOpen, isSelectionMode, openPanel, walletSource]);
 
   useEffect(() => {
     setSelectionAccountsCollapsed(false);

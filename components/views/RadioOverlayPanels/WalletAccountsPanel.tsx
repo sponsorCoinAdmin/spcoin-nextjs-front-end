@@ -2,7 +2,6 @@
 'use client';
 
 import { useState } from 'react';
-import { Settings } from 'lucide-react';
 
 import { useSpCoinWallet } from '@/lib/spCoinWallet';
 import { useActiveAccount } from '@/lib/context/hooks/ExchangeContext/nested/accounts/useActiveAccount';
@@ -25,7 +24,7 @@ export default function WalletAccountsPanel() {
   } = useSpCoinWallet();
 
   const [, setActiveAccount] = useActiveAccount();
-  const { closePanel, openPanel } = usePanelTree();
+  const { closePanel } = usePanelTree();
   const openAccountComponent = useOpenAccountComponent();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [previewAccount, setPreviewAccount] = useState<spCoinAccount | undefined>(undefined);
@@ -51,24 +50,9 @@ export default function WalletAccountsPanel() {
     });
   };
 
-  const handleManageClick = () => {
-    openPanel(SP_COIN_DISPLAY.MANAGE_ACCOUNTS_PANEL, 'WalletAccountsPanel:manageAccounts');
-  };
-
   return (
     <PanelGate panel={SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT}>
       <div className="-mx-4">
-        <div className="flex items-center justify-end border-b border-slate-700/30 px-4 py-1">
-          <button
-            type="button"
-            onClick={handleManageClick}
-            className="flex items-center gap-1 rounded px-2 py-1 text-xs text-slate-400 transition-colors hover:bg-slate-700/50 hover:text-white"
-            title="Manage accounts"
-          >
-            <Settings className="h-3.5 w-3.5" />
-            Manage
-          </button>
-        </div>
         <Accounts
           accounts={visibleAccounts}
           walletSource={walletSource}

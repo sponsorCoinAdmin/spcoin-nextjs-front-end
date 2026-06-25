@@ -87,57 +87,6 @@ function formatDisplayStackItem(idxLabel: string, v: any): string {
   return `${idxLabel} { id: ${safeId}, name: "${name}" }`;
 }
 
-/**
- * ✅ GUI-only transformation:
- * Persisted structure is:
- *   MERIT_WALLET_COMPONENT
- *     TRADE_CONTAINER_HEADER
- *       (overlays...)
- *
- * But the GUI should show overlays as siblings of TRADE_CONTAINER_HEADER under MERIT_WALLET_COMPONENT:
- *   MERIT_WALLET_COMPONENT
- *     TRADE_CONTAINER_HEADER
- *     (overlays...)
- *
- * This does NOT change persisted state — only how the tree is rendered.
- */
-function hoistTradeHeaderChildrenForGui(mainNode: any): any {
-  if (!looksLikeVirtualPanelNode(mainNode)) return mainNode;
-
-  const mainId = getVirtualId(mainNode);
-  if (Number(mainId) !== Number(SP_COIN_DISPLAY.MERIT_WALLET_COMPONENT)) return mainNode;
-
-  const mainChildren: any[] = Array.isArray(mainNode?.children) ? mainNode.children : [];
-  if (!mainChildren.length) return mainNode;
-
-  // Find TRADE_CONTAINER_HEADER inside MAIN_TRADING_PANEL.children
-  const idx = mainChildren.findIndex(
-    (c) =>
-      looksLikeVirtualPanelNode(c) &&
-      Number(getVirtualId(c)) === Number(SP_COIN_DISPLAY.TRADE_CONTAINER_HEADER),
-  );
-  if (idx < 0) return mainNode;
-
-  const tradeHeader = mainChildren[idx];
-  const tradeKids: any[] = Array.isArray(tradeHeader?.children) ? tradeHeader.children : [];
-
-  // If it has no kids, nothing to hoist
-  if (!tradeKids.length) return mainNode;
-
-  // Clone TRADE_CONTAINER_HEADER but strip its children
-  const tradeHeaderLeaf = { ...tradeHeader, children: [] };
-
-  // MAIN children become: [ ...before, tradeHeaderLeaf, ...tradeKids, ...after ]
-  const nextChildren = [
-    ...mainChildren.slice(0, idx),
-    tradeHeaderLeaf,
-    ...tradeKids,
-    ...mainChildren.slice(idx + 1),
-  ];
-
-  return { ...mainNode, children: nextChildren };
-}
-
 const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, togglePath, enumRegistry, dense }) => {
   /**
    * ✅ Contract:
@@ -154,14 +103,7 @@ const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, toggleP
 
   const isArray = Array.isArray(value);
 
-  /**
-   * ✅ GUI-only shaping of spCoinPanelTree (roots array).
-   * If this Branch node is the "spCoinPanelTree" array, transform only the MERIT_WALLET_COMPONENT root.
-   */
-  const guiValue =
-    isArray && label === 'spCoinPanelTree'
-      ? (value as any[]).map((n) => hoistTradeHeaderChildrenForGui(n))
-      : value;
+  const guiValue = value;
 
   const isObject = guiValue !== null && typeof guiValue === 'object' && !isArray;
   const isBranch = isArray || isObject;
@@ -356,12 +298,12 @@ const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, toggleP
           text={label}
           path={path}
           depth={depth}
-          open={hasEntries ? (isPanelArrayItem ? (guiValue as any)?.visible === true : expanded) : undefined}
+          open={hasEntries ? expanded : undefined}
           clickable={isPanelArrayItem || hasEntries}
           onClick={onRowClick}
           dense={dense}
         />
-        {(isPanelArrayItem ? (guiValue as any)?.visible === true : expanded) &&
+        {expanded &&
           keys.map((k) => {
             const childPath = `${path}.${k}`;
             const childVal = isArray ? (guiValue as any[])[Number(k)] : (guiValue as any)[k];
@@ -389,22 +331,7 @@ const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, toggleP
               />
             );
           })}
-        {(isPanelArrayItem ? (guiValue as any)?.visible === true : expanded) &&
-          label === 'spCoinPanelTree' &&
-          typeof exchangeContext?.settings?.displayStack !== 'undefined' && (
-            <Branch
-              key="rest.settings.displayStack"
-              label="displayStack"
-              value={exchangeContext.settings.displayStack}
-              depth={depth + 1}
-              path="rest.settings.displayStack"
-              exp={exp}
-              togglePath={togglePath}
-              enumRegistry={enumRegistry}
-              dense={dense}
-            />
-          )}
-        {(isPanelArrayItem ? (guiValue as any)?.visible === true : expanded) &&
+        {expanded &&
           label === 'spCoinPanelTree' &&
           typeof exchangeContext?.settings?.visiblePanelTreeMembers !== 'undefined' && (
             <Branch

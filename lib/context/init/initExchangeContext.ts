@@ -363,7 +363,6 @@ function logPanelSnapshot(label: string, panels?: FlatPanel[]) {
 
   // NOTE: keep this list aligned with MUST_INCLUDE_ON_BOOT in defaultPanelTree.ts
   const mustIncludeOnBoot: Array<[number, boolean]> = [
-    [SP.TRADE_CONTAINER_HEADER, true],
     [SP.TRADING_STATION_PANEL, true],
     [SP.SELL_SELECT_PANEL, true],
     [SP.BUY_SELECT_PANEL, true],

@@ -7,7 +7,6 @@ import ConnectNetworkButton from '@/components/views/Buttons/Connect/ConnectNetw
 import AgentHeaderContainer from '@/components/views/Headers/AgentHeaderContainer';
 import MenuTabHeaderBar from '@/components/views/Headers/MenuTabHeaderBar';
 import AddressHeaderBar from '@/components/views/Headers/AddressHeaderBar';
-import TradeContainerHeader from '@/components/views/Headers/TradeContainerHeader';
 import RadioOverlayPanelHost from '@/components/views/RadioOverlayPanelHost';
 import WalletHeader from '@/components/views/WalletHeader';
 import PanelGate from '@/components/utility/PanelGate';
@@ -32,12 +31,15 @@ function selectPanel(
   return next;
 }
 
-export default function MeritWalletComponent() {
+interface Props {
+  onExpand?: () => void;
+}
+
+export default function MeritWalletComponent({ onExpand }: Props) {
   const { closeWallet } = useSpCoinWallet();
   const { openPanel, closePanel, setPanelVisible } = usePanelTree();
   const [panelHeaderDisplay, setPanelHeaderDisplay] = useState(0);
 
-  const tradingStationHeaderOpen = usePanelVisible(SP_COIN_DISPLAY.TRADING_STATION_HEADER);
   const walletAccountsVisible    = usePanelVisible(SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT);
   const walletNetworksVisible    = usePanelVisible(SP_COIN_DISPLAY.WALLET_NETWORKS_COMPONENT);
   const rewardsTabVisible        = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
@@ -75,8 +77,6 @@ export default function MeritWalletComponent() {
         <WalletHeader
           mode="normal"
           title={title}
-          onMenuClick={handleMenuClick}
-          menuButtonKind="menu"
           leftSlot={
             <ConnectNetworkButton
               showName={false}
@@ -85,14 +85,16 @@ export default function MeritWalletComponent() {
               showConnect={true}
               showDisconnect={false}
               showHoverBg={true}
+              trimHorizontalPaddingPx={12}
               onChevronClick={handleNetworkChevron}
               chevronUp={walletNetworksVisible}
             />
           }
+          onExpand={onExpand}
           onClose={closeWallet}
         />
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <AgentHeaderContainer />
+          <AgentHeaderContainer onMenuClick={handleMenuClick} />
           <div className="relative min-h-0 flex-1 overflow-hidden">
             <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column' }}>
               <div id="UNDEFINED" className="hidden" aria-hidden="true" />
@@ -103,19 +105,6 @@ export default function MeritWalletComponent() {
               >
                 <MenuTabHeaderBar />
                 <AddressHeaderBar />
-                <PanelGate panel={SP_COIN_DISPLAY.TRADE_CONTAINER_HEADER}>
-                  <div id="TRADE_CONTAINER_HEADER">
-                    <div
-                      className="overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out"
-                      style={{
-                        maxHeight: tradingStationHeaderOpen ? '80px' : '0px',
-                        opacity: tradingStationHeaderOpen ? 1 : 0,
-                      }}
-                    >
-                      <TradeContainerHeader />
-                    </div>
-                  </div>
-                </PanelGate>
                 <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto flex flex-col">
                   <RadioOverlayPanelHost />
                 </div>

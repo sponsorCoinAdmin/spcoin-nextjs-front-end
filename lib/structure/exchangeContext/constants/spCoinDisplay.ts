@@ -45,6 +45,10 @@ export const MAIN_RADIO_OVERLAY_PANELS = [
 
   // Manage accounts panel (create / edit / list accounts per network)
   SP.MANAGE_ACCOUNTS_PANEL,
+
+  // New tab panels
+  SP.SPONSOR_PANEL,
+  SP.SEND_PANEL,
 ] as const satisfies readonly SP[];
 
 /**

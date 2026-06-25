@@ -16,7 +16,7 @@ export type PanelDef = Readonly<{
   label?: string;
 }>;
 
-const MAIN_PARENT = SP.TRADE_CONTAINER_HEADER;
+const MAIN_PARENT = SP.MERIT_WALLET_COMPONENT;
 const MAIN_GROUP: GroupId = 'mainOverlay';
 
 // Small builders to reduce repetition
@@ -55,12 +55,9 @@ const overlay = (
  * ✅ Pending Rewards is NOT an overlay: local inline child of Manage Sponsorships.
  */
 export const PANELS: readonly PanelDef[] = [
-  // Non-radio chrome under merit wallet
-  child(SP.TRADE_CONTAINER_HEADER, 'panel', SP.MERIT_WALLET_COMPONENT, true),
-
   /**
    * Main overlays (radio group: mainOverlay)
-   * Children of TRADE_CONTAINER_HEADER
+   * Children of MERIT_WALLET_COMPONENT
    */
   overlay(SP.TRADING_STATION_PANEL, 'panel', true),
   overlay(SP.TOKEN_LIST_SELECT_PANEL, 'list', true),
@@ -74,6 +71,11 @@ export const PANELS: readonly PanelDef[] = [
   // Manage overlays as first-class main overlays
   overlay(SP.MANAGE_SPONSORSHIPS_PANEL, 'panel', false),
   overlay(SP.STAKING_SPCOINS_PANEL, 'panel', false),
+  overlay(SP.SPONSOR_PANEL, 'panel', false),
+  overlay(SP.SEND_PANEL, 'panel', false),
+
+  // Send panel subtree
+  child(SP.SEND_SELECT_PANEL, 'panel', SP.SEND_PANEL, true),
 
   // Detail/manage overlays (full-screen overlays in the same radio set)
 

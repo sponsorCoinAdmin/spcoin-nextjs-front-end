@@ -1,4 +1,4 @@
-// File: app/(menu)/Test/Tabs/ExchangeContext/index.tsx
+﻿// File: app/(menu)/Test/Tabs/ExchangeContext/index.tsx
 'use client';
 
 import React, { useEffect, useCallback, useMemo } from 'react';
@@ -29,8 +29,7 @@ import {
   AgentListSelectPanel,
 } from '@/components/views/AssetSelectPanels';
 
-// Core header/panel components (registered here so they’re visible in the tree)
-import TradeContainerHeader from '@/components/views/Headers/TradeContainerHeader';
+// Core panel components (registered here so they're visible in the tree)
 import TradingStationPanel from '@/components/views/TradingStationPanel';
 
 type NamedVirtualNode = {
@@ -85,6 +84,7 @@ export default function ExchangeContextTab({ onToggleAllReady }: ExchangeContext
     push('showTestNets', realSettings.showTestNets);
     push('spCoinContract', realSettings.spCoinContract);
     push('spCoinPanelTree', treeWithNames);
+    push('displayStack', realSettings.displayStack);
     push('spCoinAccessManager', realSettings.spCoinAccessManager);
 
     const included = new Set(Object.keys(ordered));
@@ -162,10 +162,7 @@ export default function ExchangeContextTab({ onToggleAllReady }: ExchangeContext
       {/* 🔐 PANEL REGISTRY (kept hidden so panels appear in the tree)   */}
       {/* ─────────────────────────────────────────────────────────────── */}
       <div className="hidden">
-        {/* Core header + trading station so they also appear in this page’s tree */}
-        <PanelGate panel={SP.TRADE_CONTAINER_HEADER}>
-          <TradeContainerHeader />
-        </PanelGate>
+        {/* Core panels so they also appear in this page's tree */}
         <PanelGate panel={SP.TRADING_STATION_PANEL}>
           <TradingStationPanel />
         </PanelGate>
