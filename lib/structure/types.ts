@@ -71,6 +71,8 @@ export interface Accounts {
   sponsorAccounts?: spCoinAccount[];
   recipientAccounts?: spCoinAccount[];
   agentAccounts?: spCoinAccount[];
+  sendRecipientAddress?: string;
+  sendRecipientLogoURL?: string;
 }
 
 /**
@@ -197,6 +199,7 @@ export interface TokenExternalLink {
 export interface TradeData {
   buyTokenContract?: TokenContract;
   sellTokenContract?: TokenContract;
+  sendTokenContract?: TokenContract;
   previewTokenContract?: TokenContract;
   previewTokenSource?: 'BUY' | 'SELL' | null;
   rateRatio: number;

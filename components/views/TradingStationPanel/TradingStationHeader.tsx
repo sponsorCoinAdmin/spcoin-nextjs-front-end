@@ -7,13 +7,15 @@ import { useExchangeContext } from '@/lib/context/hooks';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
+import AccountAvatar from '@/components/utility/AccountAvatar';
 
 export default function TradingStationHeader() {
   const { exchangeContext } = useExchangeContext();
   const { openPanel, closePanel, isVisible } = usePanelTree();
   const open = usePanelVisible(SP_COIN_DISPLAY.TRADING_STATION_HEADER);
 
-  const logoURL = (exchangeContext as any)?.accounts?.activeAccount?.logoURL as string | undefined;
+  const activeAccount = (exchangeContext as any)?.accounts?.activeAccount;
+  const logoURL = activeAccount?.logoURL as string | undefined;
 
   const handleCogClick = () => {
     if (isVisible(SP_COIN_DISPLAY.CONFIG_SLIPPAGE_PANEL)) {
@@ -32,16 +34,16 @@ export default function TradingStationHeader() {
         id="TRADING_STATION_HEADER"
         className="grid grid-cols-[auto_1fr_auto] items-center w-full h-[50px] min-h-[50px] shrink-0"
       >
-        <div className="flex items-center">
+        <div className="flex items-center h-[38px] w-[38px] overflow-hidden rounded">
           {logoURL ? (
-            <img
-              src={logoURL}
-              alt="Active account logo"
-              className="h-[38px] w-[38px] object-contain rounded"
+            <AccountAvatar
+              logoURL={logoURL}
+              symbol={activeAccount?.symbol}
+              name={activeAccount?.name}
+              address={activeAccount?.address}
+              className="h-full w-full object-contain"
             />
-          ) : (
-            <div className="h-[38px] w-[38px]" />
-          )}
+          ) : null}
         </div>
 
         <h4 className="justify-self-center m-0 text-base font-semibold text-center select-none leading-none">

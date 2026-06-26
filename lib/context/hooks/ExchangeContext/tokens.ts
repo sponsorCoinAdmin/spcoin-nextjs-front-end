@@ -10,3 +10,4 @@ export const useBuyTokenContract = (): [TokenContract | undefined, (c: TokenCont
   const { exchangeContext, setBuyTokenContract } = useExchangeContext();
   return [exchangeContext?.tradeData?.buyTokenContract, setBuyTokenContract];
 };
+

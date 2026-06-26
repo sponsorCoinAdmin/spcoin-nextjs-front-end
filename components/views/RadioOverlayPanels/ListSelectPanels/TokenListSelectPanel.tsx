@@ -17,12 +17,13 @@ export default function TokenListSelectPanel() {
   const listVisible = usePanelVisible(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL);
   const buyMode = usePanelVisible(SP_COIN_DISPLAY.BUY_CONTRACT);
   const sellMode = usePanelVisible(SP_COIN_DISPLAY.SELL_CONTRACT);
+  const sendMode = usePanelVisible(SP_COIN_DISPLAY.SEND_CONTRACT);
 
   if (!listVisible) return null;
 
-  if (!buyMode && !sellMode) {
-    const title = 'No buy or sell token contract selected.';
-    const body = 'Select a buy or sell token to view its details.';
+  if (!buyMode && !sellMode && !sendMode) {
+    const title = 'No token contract selected.';
+    const body = 'Select a buy, sell, or send token to view its details.';
     return (
       <div
         id="TOKEN_LIST_SELECT_PANEL"
@@ -37,7 +38,7 @@ export default function TokenListSelectPanel() {
   }
 
   // Side is derived from token mode flags
-  const side = sellMode ? 'sell' : buyMode ? 'buy' : 'sell';
+  const side = sendMode ? 'send' : sellMode ? 'sell' : 'buy';
 
   const handleCommit = (asset: spCoinAccount | TokenContract) => {
     if (!hasValidAddress(asset)) return;

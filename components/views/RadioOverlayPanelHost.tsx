@@ -31,6 +31,7 @@ import WalletConfig from '@/components/views/WalletConfig';
 import ManageAccountsPanel from '@/components/wallet/panels/ManageAccountsPanel';
 import SponsorPanel from '@/components/views/RadioOverlayPanels/SponsorPanel';
 import SendPanel from '@/components/views/RadioOverlayPanels/SendPanel';
+import SendRecipientSelectPanel from '@/components/views/RadioOverlayPanels/SendRecipientSelectPanel';
 
 export default function RadioOverlayPanelHost() {
   useEnforceRadioPanelGroups(RADIO_PANEL_GROUPS);
@@ -40,6 +41,7 @@ export default function RadioOverlayPanelHost() {
       {/* ───────────────────────── Main overlays (radio group) ───────────────────────── */}
       <SponsorPanel />
       <SendPanel />
+      <SendRecipientSelectPanel />
       <TradingStationPanel />
       <StakingSpCoinsPanel />
       <ManageSponsorRecipients />

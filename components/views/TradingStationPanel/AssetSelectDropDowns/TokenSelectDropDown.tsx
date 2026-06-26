@@ -12,6 +12,7 @@ import { clearFSMTraceFromMemory } from '@/components/debug/FSMTracePanel';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { defaultMissingImage, getTokenLogoURL } from '@/lib/context/helpers/assetHelpers';
+import TokenLogo from '@/components/utility/TokenLogo';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_DROP_DOWN === 'true';
@@ -27,10 +28,6 @@ export default function TokenSelectDropDown({ containerType }: Props) {
 
   const isSellRoot = containerType === SP_COIN_DISPLAY.SELL_SELECT_PANEL;
   const [tokenContract] = isSellRoot ? sellHook : buyHook;
-  const tokenSymbol = tokenContract?.symbol ?? 'Token';
-  const logoTitle = isSellRoot
-    ? `You are Selling ${tokenSymbol}`
-    : `You are Buying ${tokenSymbol}`;
   const chevronTitle = isSellRoot
     ? 'Select a new Token to Sell'
     : 'Select a new Token to Buy';
@@ -63,20 +60,6 @@ export default function TokenSelectDropDown({ containerType }: Props) {
 
     return defaultMissingImage;
   }, [tokenContract]);
-
-  const handleMissingLogoURL = useCallback(
-    (event: React.SyntheticEvent<HTMLImageElement>) => {
-      const img = event.currentTarget;
-      img.onerror = null;
-      img.src = defaultMissingImage;
-      if (tokenContract?.symbol && tokenContract?.address) {
-        debugLog.log?.(`⚠️ Missing logo for ${tokenContract.symbol} (${tokenContract.address})`);
-      } else {
-        debugLog.log?.('⚠️ Missing logo (no tokenContract info available)');
-      }
-    },
-    [tokenContract],
-  );
 
   const stopMouseDown = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -166,24 +149,6 @@ export default function TokenSelectDropDown({ containerType }: Props) {
     [isSellRoot, openPanel, isVisible, schedulePostChecks],
   );
 
-  const openTokenContractPanel = useCallback(
-    (e?: React.SyntheticEvent) => {
-      if (e) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-      if (!tokenContract) return;
-
-      const methodName = 'TokenSelectDropDown:openTokenContractPanel';
-      openPanel(
-        SP_COIN_DISPLAY.TOKEN_PANEL,
-        `${methodName}:openTokenContractPanel`,
-        isSellRoot ? SP_COIN_DISPLAY.SELL_CONTRACT : SP_COIN_DISPLAY.BUY_CONTRACT,
-      );
-    },
-    [isSellRoot, openPanel, tokenContract],
-  );
-
   function displaySymbol(token: TokenContract) {
     if (DEBUG_ENABLED) {
       const msg = stringifyBigInt(token);
@@ -202,18 +167,13 @@ export default function TokenSelectDropDown({ containerType }: Props) {
     >
       {tokenContract ? (
         <>
-          <img
-            id="TokenSelectDropDownImage.png"
-            className="h-9 w-9 mr-2 rounded-md cursor-pointer"
-            alt={`${tokenContract.name ?? tokenContract.symbol ?? 'token'} logo`}
-            title={logoTitle}
-            src={logoURL}
-            loading="lazy"
-            decoding="async"
-            onMouseDown={stopMouseDown}
-            onClick={openTokenContractPanel}
-            onError={handleMissingLogoURL}
-            data-testid="token-dropdown-avatar"
+          <TokenLogo
+            logoURL={logoURL}
+            symbol={tokenContract.symbol}
+            name={tokenContract.name}
+            address={tokenContract.address}
+            chainId={tokenContract.chainId}
+            className="h-9 w-9 mr-2 rounded-md"
           />
           {displaySymbol(tokenContract)}
         </>

@@ -84,6 +84,7 @@ export const MUST_INCLUDE_ON_BOOT: readonly (readonly [SP, boolean])[] = [
   [SP.MANAGE_ACCOUNTS_PANEL, false],
   [SP.SPONSOR_PANEL, false],
   [SP.SEND_PANEL, false],
+  [SP.SEND_RECIPIENT_SELECT_PANEL, false],
   [SP.SEND_TITLE, true],
   [SP.SEND_SELECT_PANEL, true],
   [SP.TOKEN_ADDRESS_COMPONENT, true],
@@ -162,6 +163,7 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
     node(SP.MANAGE_ACCOUNTS_PANEL, false),
     node(SP.SPONSOR_PANEL, false),
     node(SP.SEND_PANEL, false, [node(SP.SEND_TITLE, true), node(SP.TOKEN_ADDRESS_COMPONENT, true), node(SP.SEND_SELECT_PANEL, true, [node(SP.SEND_ADDRESS_HEADER_BAR, true)])]),
+    node(SP.SEND_RECIPIENT_SELECT_PANEL, false),
 
     node(SP.ADD_SPONSORSHIP_PANEL, false, [node(SP.CONFIG_SPONSORSHIP_PANEL, false)]),
 

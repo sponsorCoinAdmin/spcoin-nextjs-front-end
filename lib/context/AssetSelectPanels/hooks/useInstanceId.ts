@@ -8,10 +8,12 @@ import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVis
 export function useInstanceId(containerType: SP_COIN_DISPLAY): string {
   const buyMode = usePanelVisible(SP_COIN_DISPLAY.BUY_CONTRACT);
   const sellMode = usePanelVisible(SP_COIN_DISPLAY.SELL_CONTRACT);
+  const sendMode = usePanelVisible(SP_COIN_DISPLAY.SEND_CONTRACT);
 
   return useMemo(() => {
     switch (containerType) {
       case SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL:
+        if (sendMode) return 'send';
         if (sellMode) return 'sell';
         if (buyMode) return 'buy';
         return 'sell';
@@ -25,5 +27,5 @@ export function useInstanceId(containerType: SP_COIN_DISPLAY): string {
       default:
         return 'main';
     }
-  }, [containerType, buyMode, sellMode]);
+  }, [containerType, buyMode, sellMode, sendMode]);
 }

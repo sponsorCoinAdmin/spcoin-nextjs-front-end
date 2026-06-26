@@ -49,6 +49,9 @@ export const MAIN_RADIO_OVERLAY_PANELS = [
   // New tab panels
   SP.SPONSOR_PANEL,
   SP.SEND_PANEL,
+
+  // Send recipient picker (opens like TOKEN_LIST_SELECT_PANEL, scoped to Send flow)
+  SP.SEND_RECIPIENT_SELECT_PANEL,
 ] as const satisfies readonly SP[];
 
 /**

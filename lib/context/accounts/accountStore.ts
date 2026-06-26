@@ -4,7 +4,6 @@ import {
   emitAccountRegistryUpdated,
 } from '@/lib/accounts/accountEvents';
 import { getAccountLogoURL } from '@/lib/context/helpers/assetHelpers';
-import { appendDebugTrace } from '@/lib/utils/debugTrace';
 import {
   accountRegistry,
   getAccountRegistryRecord,
@@ -42,12 +41,8 @@ function toRegistryRecord(
 
   if (typeof payload?.logoURL === 'string' && payload.logoURL.trim()) {
     next.logoURL = payload.logoURL;
-    appendDebugTrace('accountStore:logoURL:fromPayload', { address: normalized, logoURL: next.logoURL });
   } else if (!next.logoURL) {
     next.logoURL = getAccountLogoURL(normalized as any);
-    appendDebugTrace('accountStore:logoURL:fromHelper', { address: normalized, logoURL: next.logoURL });
-  } else {
-    appendDebugTrace('accountStore:logoURL:kept', { address: normalized, logoURL: next.logoURL });
   }
 
   return next;

@@ -7,6 +7,7 @@ import { useSellTokenContract } from '@/lib/context/hooks';
 import { useNativeToken } from '@/lib/hooks/useNativeToken';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import PanelGate from '@/components/utility/PanelGate';
+import TokenLogo from '@/components/utility/TokenLogo';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { defaultMissingImage, getTokenLogoURL } from '@/lib/context/helpers/assetHelpers';
@@ -40,11 +41,6 @@ export default function TokenAddressComponent() {
     }
     return defaultMissingImage;
   }, [token]);
-
-  const handleLogoError = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
-    e.currentTarget.onerror = null;
-    e.currentTarget.src = defaultMissingImage;
-  }, []);
 
   const handleCopy = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -86,11 +82,13 @@ export default function TokenAddressComponent() {
       {/* Address row — mirrors ActiveAccount style */}
       <div className="shrink-0 border-b border-slate-700/50 -mx-4 px-4 py-2 flex items-center gap-2 text-sm text-slate-300/80">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#11162A]">
-          <img
-            src={logoURL}
-            alt={symbol || 'Token'}
+          <TokenLogo
+            logoURL={logoURL}
+            symbol={symbol}
+            name={token?.name}
+            address={token?.address}
+            chainId={token?.chainId}
             className="h-full w-full object-contain"
-            onError={handleLogoError}
           />
         </div>
         <div className="flex min-w-0 flex-1 items-center gap-2 rounded-[22px] bg-[#243056] px-3 py-1 text-[15px] text-[#5981F3]">

@@ -1,19 +1,22 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import type { Address } from 'viem';
 import { clsx } from 'clsx';
-import { ChevronDown, Copy, Check } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 
 import styles from '@/styles/Exchange.module.css';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
-import { useSellTokenContract, useExchangeContext } from '@/lib/context/hooks';
+import { useSendTokenContract, useExchangeContext } from '@/lib/context/hooks';
 import { useNativeToken } from '@/lib/hooks/useNativeToken';
 import { useGetBalance } from '@/lib/hooks/useGetBalance';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { defaultMissingImage, getTokenLogoURL } from '@/lib/context/helpers/assetHelpers';
 import PanelGate from '@/components/utility/PanelGate';
+import AccountAvatar from '@/components/utility/AccountAvatar';
+import TokenLogo from '@/components/utility/TokenLogo';
+import { truncateMiddle } from '@/lib/utils/addressUtils';
 
 type SendSelectPanelProps = {
   amount: string;
@@ -30,25 +33,24 @@ export default function SendSelectPanel({ amount, onAmountChange }: SendSelectPa
 
 function SendSelectPanelInner({ amount, onAmountChange }: SendSelectPanelProps) {
   const { exchangeContext } = useExchangeContext();
-  const [sellTokenContract] = useSellTokenContract();
+  const [sendTokenContract] = useSendTokenContract();
   const nativeToken = useNativeToken();
   const { openPanel, closePanel } = usePanelTree();
-  const tokenAddressVisible = usePanelVisible(SP_COIN_DISPLAY.TOKEN_ADDRESS_COMPONENT);
-  const walletAccountsVisible = usePanelVisible(SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT);
-  const [copied, setCopied] = useState(false);
+  const recipientPickerVisible = usePanelVisible(SP_COIN_DISPLAY.SEND_RECIPIENT_SELECT_PANEL);
 
   const handleChevronClick = useCallback(() => {
-    if (walletAccountsVisible) {
-      closePanel(SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT, 'SendSelectPanel:chevron:close');
+    if (recipientPickerVisible) {
+      closePanel(SP_COIN_DISPLAY.SEND_RECIPIENT_SELECT_PANEL, 'SendSelectPanel:chevron:close');
     } else {
-      openPanel(SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT, 'SendSelectPanel:chevron:open');
+      openPanel(SP_COIN_DISPLAY.SEND_RECIPIENT_SELECT_PANEL, 'SendSelectPanel:chevron:open');
     }
-  }, [walletAccountsVisible, openPanel, closePanel]);
+  }, [recipientPickerVisible, openPanel, closePanel]);
 
   const activeAccountAddr = exchangeContext.accounts?.activeAccount?.address as Address | undefined;
+  const toAddress = (exchangeContext.accounts?.sendRecipientAddress ?? '') as string;
+  const recipientLogoURL = (exchangeContext.accounts?.sendRecipientLogoURL as string | undefined) ?? defaultMissingImage;
 
-  // Use sell token as the "send" token, fall back to native
-  const token = sellTokenContract ?? nativeToken;
+  const token = sendTokenContract ?? nativeToken;
   const tokenAddr = token?.address as Address | undefined;
   const tokenDecimals = token?.decimals ?? 18;
   const tokenSymbol = token?.symbol ?? 'Token';
@@ -95,21 +97,7 @@ function SendSelectPanelInner({ amount, onAmountChange }: SendSelectPanelProps) 
     return defaultMissingImage;
   }, [token]);
 
-  const handleLogoError = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
-    e.currentTarget.onerror = null;
-    e.currentTarget.src = defaultMissingImage;
-  }, []);
-
   const stop = useCallback((e: React.MouseEvent) => { e.stopPropagation(); }, []);
-
-  const handleSymbolClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (tokenAddressVisible) {
-      closePanel(SP_COIN_DISPLAY.TOKEN_ADDRESS_COMPONENT, 'SendSelectPanel:symbolClick:close');
-    } else {
-      openPanel(SP_COIN_DISPLAY.TOKEN_ADDRESS_COMPONENT, 'SendSelectPanel:symbolClick:open');
-    }
-  }, [tokenAddressVisible, openPanel, closePanel]);
 
   const openTokenList = useCallback((e?: React.SyntheticEvent) => {
     e?.preventDefault();
@@ -117,7 +105,7 @@ function SendSelectPanelInner({ amount, onAmountChange }: SendSelectPanelProps) 
     openPanel(
       SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL,
       'SendSelectPanel:openTokenList',
-      SP_COIN_DISPLAY.SELL_CONTRACT,
+      SP_COIN_DISPLAY.SEND_CONTRACT,
     );
   }, [openPanel]);
 
@@ -125,9 +113,6 @@ function SendSelectPanelInner({ amount, onAmountChange }: SendSelectPanelProps) 
     () => `no-autofill-send-${Math.random().toString(36).slice(2)}`,
     [],
   );
-
-  const truncateMiddle = (addr: string, start = 10, end = 8) =>
-    addr.length > start + end + 3 ? `${addr.slice(0, start)}...${addr.slice(-end)}` : addr;
 
   const onChangeAmount = (value: string) => {
     if (!/^\d*\.?\d*$/.test(value)) return;
@@ -139,7 +124,7 @@ function SendSelectPanelInner({ amount, onAmountChange }: SendSelectPanelProps) 
     <div className="relative">
       <input
         className={clsx(
-          'w-full h-[106px] indent-[10px] pt-[10px]',
+          'w-full h-[91px] indent-[10px] pt-[10px]',
           'bg-[#1f2639] text-[#94a3b8] text-[25px]',
           'border-0 outline-none focus:outline-none',
           'rounded-b-[12px]',
@@ -161,23 +146,21 @@ function SendSelectPanelInner({ amount, onAmountChange }: SendSelectPanelProps) 
       <div className={styles.assetSelect} onClick={stop} onMouseDown={stop}>
         {token ? (
           <>
-            <img
-              className="h-9 w-9 mr-2 rounded-md cursor-pointer"
-              alt={tokenSymbol}
-              title={`Sending ${tokenSymbol}`}
-              src={logoURL}
-              loading="lazy"
-              decoding="async"
-              onError={handleLogoError}
+            <TokenLogo
+              logoURL={logoURL}
+              symbol={token?.symbol}
+              name={token?.name}
+              address={tokenAddr}
+              chainId={token?.chainId}
+              className="h-9 w-9 mr-2 rounded-md"
             />
             <span
-            className="cursor-pointer hover:text-white transition-colors"
-            title={tokenAddressVisible ? 'Hide token address' : 'Show token address'}
-            onClick={handleSymbolClick}
-          >
-            {tokenSymbol}
-          </span>
-</>
+              className="cursor-default select-none"
+              title={tokenAddr ?? ''}
+            >
+              {tokenSymbol}
+            </span>
+          </>
         ) : (
           <>Select Token:</>
         )}
@@ -192,67 +175,45 @@ function SendSelectPanelInner({ amount, onAmountChange }: SendSelectPanelProps) 
       </div>
 
       {/* Send label */}
-      <div className="absolute top-5 left-[10px] min-w-[50px] h-[10px] text-[#94a3b8] text-[12px] pr-2 flex items-center gap-1">
-        You are Sending:
+      <div title="Tokens You are Sending" className="absolute top-5 left-[10px] min-w-[50px] h-[10px] text-[#94a3b8] text-[12px] pr-2 flex items-center gap-1">
+        Tokens You are Sending:
       </div>
 
       {/* Balance */}
-      <div className="absolute top-[74px] left-[10px] min-w-[50px] h-[10px] text-[#94a3b8] text-[12px] flex items-center gap-1">
+      <div className="absolute top-[74px] right-[10px] h-[10px] text-[#94a3b8] text-[12px] flex items-center gap-1">
         Balance: {balanceText}
       </div>
     </div>
 
     <PanelGate panel={SP_COIN_DISPLAY.SEND_ADDRESS_HEADER_BAR}>
-      <div className="flex items-center gap-2 px-[10px] py-2">
-        <span className="shrink-0 text-[#94a3b8] text-[12px]">To:</span>
-        {exchangeContext.accounts?.activeAccount?.logoURL ? (
-          <button
-            type="button"
-            onClick={() => openPanel(SP_COIN_DISPLAY.ACCOUNT_PANEL, 'SendSelectPanel:logo:openAccountPanel')}
-            className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#11162A] hover:opacity-80 transition-opacity"
-            title="View account details"
-          >
-            <img
-              src={exchangeContext.accounts.activeAccount.logoURL}
-              alt=""
-              className="h-full w-full object-contain"
-            />
-          </button>
-        ) : null}
-        <div className="flex min-w-0 flex-1 items-center gap-1 rounded-[22px] bg-[#243056] px-1 py-1 text-[15px] text-[#5981F3]">
-          <span className="w-full whitespace-nowrap text-center font-mono cursor-default select-all">
-            {activeAccountAddr ? truncateMiddle(activeAccountAddr) : '—'}
+      <div className="flex items-center gap-2 px-[10px] pt-1 pb-2">
+        <span title="To Recipient" className="shrink-0 text-[#94a3b8] text-[12px]">To Recipient:</span>
+        <div className="ml-auto flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg hover:opacity-80 transition-opacity">
+          <AccountAvatar
+            logoURL={toAddress ? recipientLogoURL : undefined}
+            address={toAddress || undefined}
+            className="h-full w-full object-contain"
+          />
+        </div>
+        <div
+          className="flex h-[25px] items-center gap-[5px] rounded-full bg-[#243056] px-3 text-white font-bold"
+          title={toAddress || ''}
+        >
+          <span className="whitespace-nowrap font-mono cursor-default select-all text-[17px]">
+            {toAddress ? truncateMiddle(toAddress, 4, 4) : <span className="text-slate-400 italic font-normal text-[17px]">Select recipient…</span>}
           </span>
           <button
             type="button"
             onClick={handleChevronClick}
             className="shrink-0 flex items-center justify-center rounded hover:bg-white/10 p-0.5"
-            aria-label={walletAccountsVisible ? 'Hide accounts' : 'Show accounts'}
+            aria-label={recipientPickerVisible ? 'Close recipient picker' : 'Open recipient picker'}
           >
             <ChevronDown className={[
               'h-4 w-4 text-slate-400 transition-transform duration-200',
-              walletAccountsVisible ? 'rotate-180' : '',
+              recipientPickerVisible ? 'rotate-180' : '',
             ].join(' ')} />
           </button>
         </div>
-        <button
-          type="button"
-          className="shrink-0 flex items-center justify-center rounded hover:bg-white/10 p-0.5"
-          aria-label="Copy address"
-          title="Copy address"
-          onClick={() => {
-            if (!activeAccountAddr) return;
-            navigator.clipboard.writeText(activeAccountAddr).then(() => {
-              setCopied(true);
-              setTimeout(() => setCopied(false), 1500);
-            });
-          }}
-        >
-          {copied
-            ? <Check className="h-5 w-5 text-green-400" />
-            : <Copy className="h-5 w-5 text-slate-400" />
-          }
-        </button>
       </div>
     </PanelGate>
     </div>

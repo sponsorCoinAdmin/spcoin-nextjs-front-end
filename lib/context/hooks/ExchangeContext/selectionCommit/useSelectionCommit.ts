@@ -6,7 +6,7 @@ import type { TokenContract, spCoinAccount } from '@/lib/structure';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
-import { useSellTokenContract, useBuyTokenContract, useExchangeContext } from '@/lib/context/hooks';
+import { useSellTokenContract, useBuyTokenContract, useSendTokenContract, useExchangeContext } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;
@@ -16,11 +16,14 @@ const log = createDebugLogger('useSelectionCommit', DEBUG_ENABLED, LOG_TIME);
 export type UseSelectionCommit = {
   commitBuyToken: (t: TokenContract) => void;
   commitSellToken: (t: TokenContract) => void;
-  commitToken: (t: TokenContract, side: 'buy' | 'sell') => void;
+  commitSendToken: (t: TokenContract) => void;
+  commitToken: (t: TokenContract, side: 'buy' | 'sell' | 'send') => void;
 
   commitSponsor: (w: spCoinAccount) => void;
   commitRecipient: (w: spCoinAccount) => void;
   commitAgent: (w: spCoinAccount) => void;
+
+  commitSendRecipient: (address: string, logoURL?: string) => void;
 
   finish: () => void; // closes via stack POP (header-close behavior)
 };
@@ -34,6 +37,7 @@ export function useSelectionCommit(): UseSelectionCommit {
   // Token commits use your existing hooks (source of truth)
   const [, setSellTokenContract] = useSellTokenContract();
   const [, setBuyTokenContract] = useBuyTokenContract();
+  const [, setSendTokenContract] = useSendTokenContract();
 
   // Recipient/Agent writes
   const { setExchangeContext } = useExchangeContext();
@@ -91,8 +95,24 @@ export function useSelectionCommit(): UseSelectionCommit {
     [setSellTokenContract, openPanel, finish],
   );
 
+  const commitSendToken = useCallback(
+    (t: TokenContract) => {
+      const addr = (t as any)?.address;
+      const sym = (t as any)?.symbol;
+      if (!t || !addr) {
+        log.warn?.('commitSendToken aborted: missing token or address', { token: t });
+        return;
+      }
+      log.log?.('commitSendToken', { address: addr, symbol: sym });
+      setSendTokenContract(t);
+      openPanel(SP_COIN_DISPLAY.SEND_CONTRACT, 'useSelectionCommit:commitSendToken');
+      finish();
+    },
+    [setSendTokenContract, openPanel, finish],
+  );
+
   const commitToken = useCallback(
-    (t: TokenContract, side: 'buy' | 'sell') => {
+    (t: TokenContract, side: 'buy' | 'sell' | 'send') => {
       log.log?.('commitToken', {
         side,
         address: (t as any)?.address,
@@ -100,9 +120,10 @@ export function useSelectionCommit(): UseSelectionCommit {
       });
 
       if (side === 'buy') commitBuyToken(t);
+      else if (side === 'send') commitSendToken(t);
       else commitSellToken(t);
     },
-    [commitBuyToken, commitSellToken],
+    [commitBuyToken, commitSellToken, commitSendToken],
   );
 
   const commitRecipient = useCallback(
@@ -242,13 +263,42 @@ export function useSelectionCommit(): UseSelectionCommit {
     [setExchangeContext, finish],
   );
 
+  const commitSendRecipient = useCallback(
+    (address: string, logoURL?: string) => {
+      if (!address) return;
+      setExchangeContext(
+        (prev: any) => {
+          const hasNested = Boolean(prev?.exchangeContext);
+          const prevEx = hasNested ? prev.exchangeContext : prev;
+          const prevAccounts = prevEx?.accounts ?? {};
+          const writeAccounts = {
+            ...prevAccounts,
+            sendRecipientAddress: address,
+            ...(logoURL !== undefined ? { sendRecipientLogoURL: logoURL } : {}),
+          };
+
+          if (hasNested) {
+            return { ...prev, exchangeContext: { ...prev.exchangeContext, accounts: writeAccounts } };
+          }
+          return { ...prev, accounts: writeAccounts };
+        },
+        'useSelectionCommit:sendRecipient',
+      );
+
+      finish();
+    },
+    [setExchangeContext, finish],
+  );
+
   return {
     commitBuyToken,
     commitSellToken,
+    commitSendToken,
     commitToken,
     commitSponsor,
     commitRecipient,
     commitAgent,
+    commitSendRecipient,
     finish,
   };
 }

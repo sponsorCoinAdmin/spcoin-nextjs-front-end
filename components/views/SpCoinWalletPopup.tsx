@@ -19,7 +19,7 @@ import { getBlockChainName } from '@/lib/context/helpers/NetworkHelpers';
 import { useActiveAccount } from '@/lib/context/hooks/ExchangeContext/nested/accounts/useActiveAccount';
 import type { SpCoinWalletAccount } from '@/lib/spCoinWallet';
 import { SP_COIN_DISPLAY, type spCoinAccount } from '@/lib/structure';
-import { appendDebugTrace, clearDebugTraceBuffer } from '@/lib/utils/debugTrace';
+import { clearDebugTraceBuffer } from '@/lib/utils/debugTrace';
 import Accounts from '@/lib/spCoinWallet/accounts';
 import { buildSpCoinAccount } from '@/lib/spCoinWallet/buildSpCoinAccount';
 import { useWalletAccountsList } from '@/lib/spCoinWallet/useWalletAccountsList';
@@ -132,6 +132,8 @@ export default function SpCoinWalletPopup() {
   const tradingStationTabVisible = usePanelVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
   const walletConfigTabVisible   = usePanelVisible(SP_COIN_DISPLAY.WALLET_CONFIG_PANEL);
   const rewardsTabVisible        = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
+  const sendPanelVisible         = usePanelVisible(SP_COIN_DISPLAY.SEND_PANEL);
+  const sponsorPanelVisible      = usePanelVisible(SP_COIN_DISPLAY.SPONSOR_PANEL);
   const meritWalletVisible       = usePanelVisible(SP_COIN_DISPLAY.MERIT_WALLET_COMPONENT);
 
   const { selectedAddressKey, normalizedWorkingAddress, visibleAccounts } = useWalletAccountsList();
@@ -180,14 +182,6 @@ export default function SpCoinWalletPopup() {
       return;
     }
     clearDebugTraceBuffer();
-    appendDebugTrace('SpCoinWalletPopup:opened', {
-      isSelectionMode,
-      meritWalletVisible,
-      defaultPanel,
-      walletSource,
-      appChainId: session.appChainId,
-      signerAddress: session.signerAddress,
-    });
     wasWalletOpenRef.current = true;
   }, [defaultPanel, isOpen, isSelectionMode, meritWalletVisible, session.appChainId, session.signerAddress, walletSource]);
 
@@ -204,11 +198,6 @@ export default function SpCoinWalletPopup() {
     if (meritWalletRestoreHandledRef.current) return;
     meritWalletRestoreHandledRef.current = true;
     if (meritWalletVisible) return;
-    appendDebugTrace('SpCoinWalletPopup:restoreMeritWalletPanel', {
-      reason: 'wallet-open-but-panel-hidden',
-      defaultPanel,
-      walletSource,
-    });
     openPanel(SP_COIN_DISPLAY.MERIT_WALLET_COMPONENT, 'SpCoinWalletPopup:restoreMeritWalletPanel');
   }, [defaultPanel, isOpen, isSelectionMode, openPanel, walletSource]);
 
@@ -241,7 +230,7 @@ export default function SpCoinWalletPopup() {
       setPanelVisible(SP_COIN_DISPLAY.WALLET_CONNECT_COMPONENT, true, 'SpCoinWalletPopup:showWalletConnectComponentOnOpen');
       // Only show WAC if no persistent content panel is already active; otherwise the popup
       // should resume at the panel that was showing before it was closed.
-      if (!rewardsTabVisible && !tradingStationTabVisible && !walletConfigTabVisible) {
+      if (!rewardsTabVisible && !tradingStationTabVisible && !walletConfigTabVisible && !sendPanelVisible && !sponsorPanelVisible) {
         setPanelVisible(SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT, true, 'SpCoinWalletPopup:showWalletAccountsOnOpen');
       }
     }
@@ -260,10 +249,6 @@ export default function SpCoinWalletPopup() {
     const prevBodyOverscroll = document.body.style.overscrollBehavior;
     const prevHtmlOverscroll = document.documentElement.style.overscrollBehavior;
 
-    appendDebugTrace('SpCoinWalletPopup:bodyScrollLock', {
-      isSelectionMode,
-      meritWalletVisible,
-    });
     document.body.classList.add('spcoin-wallet-open');
     document.documentElement.classList.add('spcoin-wallet-open');
     document.body.style.overflow = 'hidden';
@@ -366,7 +351,7 @@ export default function SpCoinWalletPopup() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!isOpen || isSelectionMode) return;
-    if (walletAccountsVisible || walletConfigTabVisible || tradingStationTabVisible || rewardsTabVisible) return;
+    if (walletAccountsVisible || walletConfigTabVisible || tradingStationTabVisible || rewardsTabVisible || sendPanelVisible || sponsorPanelVisible) return;
     if (suppressDefaultPanelAutoOpenRef.current) { suppressDefaultPanelAutoOpenRef.current = false; return; }
     const h = defaultPanelHandlersRef.current;
     if (defaultPanel === 'MENU')    { h.openWalletOptions();            return; }

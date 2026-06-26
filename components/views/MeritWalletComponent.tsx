@@ -7,6 +7,7 @@ import ConnectNetworkButton from '@/components/views/Buttons/Connect/ConnectNetw
 import AgentHeaderContainer from '@/components/views/Headers/AgentHeaderContainer';
 import MenuTabHeaderBar from '@/components/views/Headers/MenuTabHeaderBar';
 import AddressHeaderBar from '@/components/views/Headers/AddressHeaderBar';
+import PanelSubTitle from '@/components/views/Headers/PanelSubTitle';
 import RadioOverlayPanelHost from '@/components/views/RadioOverlayPanelHost';
 import WalletHeader from '@/components/views/WalletHeader';
 import PanelGate from '@/components/utility/PanelGate';
@@ -40,17 +41,9 @@ export default function MeritWalletComponent({ onExpand }: Props) {
   const { openPanel, closePanel, setPanelVisible } = usePanelTree();
   const [panelHeaderDisplay, setPanelHeaderDisplay] = useState(0);
 
-  const walletAccountsVisible    = usePanelVisible(SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT);
   const walletNetworksVisible    = usePanelVisible(SP_COIN_DISPLAY.WALLET_NETWORKS_COMPONENT);
-  const rewardsTabVisible        = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
-  const tradingStationTabVisible = usePanelVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
-  const walletConfigTabVisible   = usePanelVisible(SP_COIN_DISPLAY.WALLET_CONFIG_PANEL);
 
-  const title = walletConfigTabVisible     ? 'Wallet Config'
-    : tradingStationTabVisible ? 'Trading Station'
-    : rewardsTabVisible        ? 'Account Rewards'
-    : walletAccountsVisible    ? 'Merit Wallet'
-    : 'Merit Wallet';
+  const title = 'Merit Wallet';
 
   // Start at state 0 (MENU and ADDRESS hidden) on mount — intentionally no deps
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -104,6 +97,7 @@ export default function MeritWalletComponent({ onExpand }: Props) {
                 style={{ transform: 'none', width: '100%', flex: 1, minHeight: 0, maxHeight: '100%', margin: 0 }}
               >
                 <MenuTabHeaderBar />
+                <PanelSubTitle />
                 <AddressHeaderBar />
                 <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto flex flex-col">
                   <RadioOverlayPanelHost />

@@ -265,6 +265,17 @@ export function useProviderSetters(setExchangeContext: SetExchange) {
       return next;
     }, 'setBuyTokenContract');
 
+  const setSendTokenContract = (contract: TokenContract | undefined) =>
+    setExchangeContext((p) => {
+      const curr = p.tradeData.sendTokenContract;
+      if (curr === contract) return p;
+      if (!hasMeaningfulDiff(curr, contract)) return p;
+      const next = structuredClone(p);
+      next.tradeData.sendTokenContract = contract;
+      log.log?.('[setSendTokenContract] wrote', { prev: summarizeToken(curr), next: summarizeToken(contract) });
+      return next;
+    }, 'setSendTokenContract');
+
   const setPreviewTokenContract = (contract: TokenContract | undefined) =>
     setExchangeContext((p) => {
       const curr = p.tradeData.previewTokenContract;
@@ -362,6 +373,7 @@ export function useProviderSetters(setExchangeContext: SetExchange) {
     // Contracts & trade params
     setSellTokenContract,
     setBuyTokenContract,
+    setSendTokenContract,
     setPreviewTokenContract,
     setPreviewTokenSource,
     setTradeDirection,

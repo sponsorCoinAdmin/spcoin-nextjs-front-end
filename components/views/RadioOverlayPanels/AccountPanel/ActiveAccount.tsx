@@ -6,7 +6,7 @@ import { ChevronDown, Copy, Check } from 'lucide-react';
 import { SP_COIN_DISPLAY, type spCoinAccount } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
-import { appendDebugTrace } from '@/lib/utils/debugTrace';
+import AccountAvatar from '@/components/utility/AccountAvatar';
 
 interface ActiveAccountProps {
   account?: spCoinAccount;
@@ -20,12 +20,6 @@ export default function ActiveAccount({ account, accountType = 'Account', showTi
   const activeAccountHeaderVisible = usePanelVisible(SP_COIN_DISPLAY.ACTIVE_ACCOUNT_HEADER_BAR);
   const [copied, setCopied] = useState(false);
   const address = String(account?.address ?? '').trim();
-
-  appendDebugTrace('ActiveAccount:render', {
-    address: address || '(none)',
-    logoURL: account?.logoURL ?? '(unset)',
-    hasLogo: Boolean(account?.logoURL),
-  });
 
   if (!address) return null;
 
@@ -48,19 +42,12 @@ export default function ActiveAccount({ account, accountType = 'Account', showTi
   return (
     <div className="shrink-0 border-b border-slate-700/50 -mx-4 px-4 py-2 flex items-center gap-2 text-sm text-slate-300/80">
       {account?.logoURL ? (
-        <button
-          type="button"
-          onClick={() => openPanel(SP_COIN_DISPLAY.ACCOUNT_PANEL, 'ActiveAccount:logo:openAccountPanel')}
-          className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#11162A] hover:opacity-80 transition-opacity"
-          title="View account details"
-          aria-label="View account details"
-        >
-          <img
-            src={account?.logoURL}
-            alt={account?.name || 'Account logo'}
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#11162A] hover:opacity-80 transition-opacity">
+          <AccountAvatar
+            account={account}
             className="h-full w-full object-contain"
           />
-        </button>
+        </div>
       ) : null}
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         {showTitle && (

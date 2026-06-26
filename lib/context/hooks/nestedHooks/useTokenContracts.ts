@@ -101,6 +101,45 @@ export const useBuyTokenContract = (): [
 };
 
 /**
+ * Hook for managing sendTokenContract from context.
+ */
+export const useSendTokenContract = (): [
+  TokenContract | undefined,
+  (contract: TokenContract | undefined) => void
+] => {
+  const { exchangeContext, setExchangeContext } = useExchangeContextDirect();
+  const token = exchangeContext?.tradeData?.sendTokenContract;
+
+  const setToken = (contract: TokenContract | undefined) => {
+    const prev = exchangeContext?.tradeData?.sendTokenContract;
+    const isEqual = tokenContractsEqual(prev, contract);
+
+    tLog.log?.('[sendTokenContract] setToken', {
+      prevAddress: (prev as any)?.address,
+      nextAddress: (contract as any)?.address,
+      equal: isEqual,
+    });
+
+    if (isEqual) return;
+
+    debugHookChange('sendTokenContract', prev, contract);
+
+    setExchangeContext(
+      (p) => ({
+        ...p,
+        tradeData: {
+          ...p.tradeData,
+          sendTokenContract: contract,
+        },
+      }),
+      'useSendTokenContract:setToken'
+    );
+  };
+
+  return [token, setToken];
+};
+
+/**
  * Hook for managing previewTokenContract from context.
  */
 export const usePreviewTokenContract = (): [

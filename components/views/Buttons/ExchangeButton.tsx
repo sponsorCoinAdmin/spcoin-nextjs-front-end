@@ -11,6 +11,7 @@ import {
 import { BUTTON_TYPE, STATUS, TRADE_DIRECTION } from '@/lib/structure';
 import swap from '@/lib/spCoin/swap';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import ActionButton from './ActionButton';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_BUTTON === 'true';
@@ -188,27 +189,12 @@ const ExchangeButton = ({ isLoadingPrice }: Props) => {
   }, [buttonType, errorMessage?.msg]);
 
   return (
-    <div id="ExchangeButtonContext" className="p-0 m-0">
-      <button
-        id="ExchangeButton"
-        onClick={buttonClick}
-        type="button"
-        className={[
-          // exchangeButton base (same visuals, no spacing utilities)
-          'flex items-center justify-center',
-          'text-[#5981F3]',
-          bgClass,
-          'w-full h-[55px]',
-          'text-[20px] font-bold',
-          'rounded-[12px]',
-          'transition-[color,background-color] duration-300',
-          // no mb, no mt, no gap, no padding/margin on container
-          'hover:cursor-pointer hover:text-green-500',
-        ].join(' ')}
-      >
-        {buttonText}
-      </button>
-    </div>
+    <ActionButton
+      id="ExchangeButton"
+      text={buttonText}
+      bgClass={bgClass as 'bg-[#243056]' | 'bg-[#501505]' | 'bg-[#1f3e1d]'}
+      onClick={buttonClick}
+    />
   );
 };
 

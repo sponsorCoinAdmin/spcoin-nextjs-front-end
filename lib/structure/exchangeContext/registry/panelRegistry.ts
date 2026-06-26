@@ -99,7 +99,7 @@ const TOKEN_CONTRACT_PANEL_CHILDREN: readonly SP[] = [
 /**
  * ✅ TOKEN_LIST_SELECT_PANEL children (order matters)
  */
-const TOKEN_LIST_SELECT_PANEL_CHILDREN: readonly SP[] = [SP.BUY_CONTRACT, SP.SELL_CONTRACT] as const;
+const TOKEN_LIST_SELECT_PANEL_CHILDREN: readonly SP[] = [SP.BUY_CONTRACT, SP.SELL_CONTRACT, SP.SEND_CONTRACT] as const;
 
 /**
  * ✅ Tree Panel fix:
@@ -161,6 +161,7 @@ const TRADE_HEADER_CHILDREN: readonly SP[] = [
 const MERIT_WALLET_CHILDREN: readonly SP[] = [
   SP.AGENT_HEADER_CONTAINER,
   SP.MENU_TAB_HEADER_BAR,
+  SP.PANEL_SUB_TITLE,
   SP.ADDRESS_HEADER_BAR,
   ...TRADE_HEADER_CHILDREN,
 ] as const;
@@ -197,6 +198,7 @@ export const PANEL_DEFS: readonly PanelDef[] = [
 
   // Popup header bars
   def({ id: SP.MENU_TAB_HEADER_BAR, kind: 'panel', defaultVisible: true }),
+  def({ id: SP.PANEL_SUB_TITLE, kind: 'panel', defaultVisible: true }),
   def({ id: SP.ADDRESS_HEADER_BAR, kind: 'panel', defaultVisible: true, children: [SP.ACTIVE_ACCOUNT_HEADER_BAR] }),
   def({ id: SP.ACTIVE_ACCOUNT_HEADER_BAR, kind: 'panel', defaultVisible: true }),
   def({ id: SP.AGENT_HEADER_CONTAINER, kind: 'panel', defaultVisible: true }),
@@ -261,6 +263,7 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   def({ id: SP.BUY_CONTRACT, kind: 'panel', children: [] }),
   def({ id: SP.SELL_CONTRACT, kind: 'panel', children: [] }),
   def({ id: SP.PREVIEW_CONTRACT, kind: 'panel', children: [] }),
+  def({ id: SP.SEND_CONTRACT, kind: 'panel', children: [] }),
 
   // ✅ ACCOUNT_LIST_SELECT_PANEL mode children
   def({ id: SP.SPONSOR_LIST, kind: 'list', children: [] }),
@@ -335,6 +338,7 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   def({ id: SP.MANAGE_ACCOUNTS_PANEL, kind: 'panel', defaultVisible: false }),
   def({ id: SP.SPONSOR_PANEL, kind: 'panel', defaultVisible: false }),
   def({ id: SP.SEND_PANEL, kind: 'panel', defaultVisible: false, children: [SP.SEND_TITLE, SP.TOKEN_ADDRESS_COMPONENT, SP.SEND_SELECT_PANEL] }),
+  def({ id: SP.SEND_RECIPIENT_SELECT_PANEL, kind: 'panel', defaultVisible: false }),
   def({ id: SP.SEND_TITLE, kind: 'panel', defaultVisible: true }),
   def({ id: SP.SEND_ADDRESS_HEADER_BAR, kind: 'panel', defaultVisible: true }),
   def({ id: SP.TOKEN_ADDRESS_COMPONENT, kind: 'panel', defaultVisible: true }),
@@ -363,6 +367,7 @@ export const NON_INDEXED_PANELS = new Set<SP>([
   SP.CONFIG_SLIPPAGE_PANEL,
   SP.TRADING_STATION_HEADER,
   SP.MENU_TAB_HEADER_BAR,
+  SP.PANEL_SUB_TITLE,
   SP.ACTIVE_ACCOUNT_HEADER_BAR,
   SP.ADDRESS_HEADER_BAR,
   SP.AGENT_HEADER_CONTAINER,
