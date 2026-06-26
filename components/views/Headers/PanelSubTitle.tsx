@@ -12,7 +12,7 @@ export default function PanelSubTitle() {
   const text = sendVisible    ? 'Send'
     : rewardsVisible ? 'Manage Rewards'
     : swapVisible    ? 'Trading Station'
-    : sponsorVisible ? 'Add a Sponsorship'
+    : sponsorVisible ? 'Add New Sponsorship'
     : null;
 
   if (!text) return null;

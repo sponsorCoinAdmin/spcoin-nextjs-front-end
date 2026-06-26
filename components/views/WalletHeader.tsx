@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
-import { ArrowLeft, Menu, PictureInPicture2, RefreshCw, Wallet, X } from 'lucide-react';
+import { ArrowLeft, Copy, Menu, RefreshCw, Wallet, X } from 'lucide-react';
 
 type WalletHeaderMode = 'selection' | 'normal';
 
@@ -147,7 +147,7 @@ export default function WalletHeader({
             className="absolute right-[68px] top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-[#303b68] hover:bg-[#3c487a]"
             aria-label="Expand wallet"
           >
-            <PictureInPicture2 className="h-5 w-5 text-[#91a5ff]" />
+            <Copy className="h-5 w-5 text-[#91a5ff]" />
           </button>
           <button
             type="button"

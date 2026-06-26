@@ -7,6 +7,7 @@ import { useNativeToken } from '@/lib/hooks/useNativeToken';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { useGetBalance } from '@/lib/hooks/useGetBalance';
 import SendSelectPanel from './SendSelectPanel';
+import SendRecipientPanel from './SendRecipientPanel';
 import SendButton from '@/components/views/Buttons/SendButton';
 import PanelGate from '@/components/utility/PanelGate';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
@@ -35,7 +36,6 @@ export default function SendComponent() {
   const tokenBalance = parseFloat(formattedBalance ?? '0');
 
   const handleSend = () => {
-    // TODO: wire up transfer call (native or ERC20)
     console.log('SendComponent: transfer', {
       symbol: tokenSymbol,
       amount: amount.trim(),
@@ -46,7 +46,14 @@ export default function SendComponent() {
   return (
     <div className="flex flex-1 flex-col gap-1">
       <PanelGate panel={SP_COIN_DISPLAY.SEND_SELECT_PANEL}>
-        <SendSelectPanel amount={amount} onAmountChange={setAmount} />
+        <div className="rounded-[12px] overflow-hidden bg-[#1f2639]">
+          <SendSelectPanel amount={amount} onAmountChange={setAmount} />
+        </div>
+      </PanelGate>
+<PanelGate panel={SP_COIN_DISPLAY.SEND_ADDRESS_HEADER_BAR}>
+        <div className="rounded-[12px] overflow-hidden bg-[#1f2639]">
+          <SendRecipientPanel />
+        </div>
       </PanelGate>
       <SendButton
         amount={amount}
