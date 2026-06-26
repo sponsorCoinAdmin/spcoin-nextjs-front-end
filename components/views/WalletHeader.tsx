@@ -144,18 +144,18 @@ export default function WalletHeader({
           <button
             type="button"
             onClick={onExpand}
-            className="absolute right-[68px] top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-[#303b68] hover:bg-[#3c487a]"
+            className="absolute right-[64px] top-1/2 flex h-11 w-11 -translate-y-1/2 -mt-[3px] items-center justify-center hover:opacity-70"
             aria-label="Expand wallet"
           >
-            <Copy className="h-5 w-5 text-[#91a5ff]" />
+            <Copy className="h-[34px] w-[34px] text-black" strokeWidth={1.5} />
           </button>
           <button
             type="button"
             onClick={onClose}
-            className="absolute right-[16px] top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-[#303b68] hover:bg-[#3c487a]"
+            className="absolute right-[12px] top-1/2 flex h-11 w-11 -translate-y-1/2 -mt-[3px] items-center justify-center hover:opacity-70"
             aria-label="Close Merit Wallet"
           >
-            <X className="h-6 w-6 text-[#91a5ff]" />
+            <X className="h-[38px] w-[38px] text-black" strokeWidth={1.5} />
           </button>
         </>
       )}
