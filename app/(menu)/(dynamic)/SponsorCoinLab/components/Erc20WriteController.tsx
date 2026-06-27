@@ -3,7 +3,7 @@ import React from 'react';
 import AccountDropdownInput from './AccountDropdownInput';
 import AccountSelection from './AccountSelection';
 import AmountInputRow from './AmountInputRow';
-import { NativeSelectChevron } from './SelectChevron';
+import MethodSelectButton from './MethodSelectButton';
 import TokenContractSelectButton from './TokenContractSelectButton';
 import type { AmountUnit } from '../utils/amountUnits';
 
@@ -165,22 +165,13 @@ export default function Erc20WriteController(props: Props) {
       {!hideMethodSelect ? (
         <div className="grid items-center gap-3 rounded-lg bg-green-100/10 px-3 py-2 md:grid-cols-[auto_minmax(0,1fr)]">
           <span className="text-sm font-semibold text-[#8FA8FF]">JSON Method</span>
-          <div className="relative w-full min-w-0">
-            <select
-              className="peer w-full min-w-0 appearance-none rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 pr-10 text-sm text-white"
-              value={displayedWriteMethod}
-              onChange={(e) => setSelectedWriteMethod(e.target.value)}
-              disabled={!hasVisibleWriteMethods}
-            >
-              {!hasVisibleWriteMethods ? <option value="__no_methods__">No methods available</option> : null}
-              {visibleWriteOptions.map((name) => (
-                <option key={`erc20-write-${name}`} value={name}>
-                  {name}
-                </option>
-              ))}
-            </select>
-            <NativeSelectChevron />
-          </div>
+          <MethodSelectButton
+            className="w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
+            value={hasVisibleWriteMethods ? displayedWriteMethod : ''}
+            options={visibleWriteOptions}
+            onChange={setSelectedWriteMethod}
+            disabled={!hasVisibleWriteMethods}
+          />
         </div>
       ) : null}
       <div id="JSON_METHOD" className="grid grid-cols-1 gap-3 rounded-lg border border-[#31416F] p-3">
