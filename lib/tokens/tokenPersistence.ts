@@ -9,6 +9,7 @@ export function stripPersistedTradeTokens(tradeData: unknown): TradeData | unkno
     sellTokenContract?: unknown;
     buyTokenContract?: unknown;
     previewTokenContract?: unknown;
+    sendTokenContract?: unknown;
   };
   return {
     ...src,
