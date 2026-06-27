@@ -165,7 +165,7 @@ export default function Header() {
   const getBaseHref = (href: string) => href.split('?')[0] ?? href;
 
   return (
-    <header className="text-white border-b border-[#21273a] py-4 bg-[#77808e] px-[15px] lg:px-[33px]">
+    <header className="fixed top-0 left-0 right-0 z-50 text-white border-b border-[#21273a] py-4 bg-[#77808e] px-[15px] lg:px-[33px]">
       <div className="flex flex-row justify-between items-center w-full">
         <div className="flex items-center gap-3 flex-shrink-0">
           <Image

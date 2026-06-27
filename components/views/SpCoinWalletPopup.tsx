@@ -64,6 +64,7 @@ export default function SpCoinWalletPopup() {
   const wasNormalModeRef = useRef(false);
   const suppressDefaultPanelAutoOpenRef = useRef(false);
   const meritWalletRestoreHandledRef = useRef(false);
+  const hasPersistedStackRef = useRef(false);
 
   // Keep floatPosRef in sync so drag-start can read it without stale closure
   useEffect(() => { floatPosRef.current = floatPos; }, [floatPos]);
@@ -214,6 +215,12 @@ export default function SpCoinWalletPopup() {
     }
   }, [isOpen, isSelectionMode, previewAccount, setPanelVisible]);
 
+  // Keep hasPersistedStackRef current on every render so the auto-open guards below
+  // always see a fresh value even though they intentionally omit panel-visibility from deps.
+  useEffect(() => {
+    hasPersistedStackRef.current = ((exchangeContext as any)?.settings?.displayStack?.length ?? 0) > 0;
+  });
+
   // Visibility guards are intentionally read as closure values — NOT in deps.
   // Adding them to deps would re-fire this effect on every panel toggle and risk
   // a re-open cycle (same pattern as the auto-open effect below).
@@ -229,9 +236,9 @@ export default function SpCoinWalletPopup() {
     }
     if (isNormalMode && !wasNormalModeRef.current) {
       setPanelVisible(SP_COIN_DISPLAY.WALLET_CONNECT_COMPONENT, true, 'SpCoinWalletPopup:showWalletConnectComponentOnOpen');
-      // Only show WAC if no persistent content panel is already active; otherwise the popup
-      // should resume at the panel that was showing before it was closed.
-      if (!rewardsTabVisible && !tradingStationTabVisible && !walletConfigTabVisible && !sendPanelVisible && !sponsorPanelVisible) {
+      // Only show WAC if no persisted panel stack exists AND no content panel is already active.
+      // If a stack exists, the persisted panels will restore themselves; don't overwrite with WAC.
+      if (!hasPersistedStackRef.current && !rewardsTabVisible && !tradingStationTabVisible && !walletConfigTabVisible && !sendPanelVisible && !sponsorPanelVisible) {
         setPanelVisible(SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT, true, 'SpCoinWalletPopup:showWalletAccountsOnOpen');
       }
     }
@@ -252,10 +259,13 @@ export default function SpCoinWalletPopup() {
 
     document.body.classList.add('spcoin-wallet-open');
     document.documentElement.classList.add('spcoin-wallet-open');
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
-    document.body.style.overscrollBehavior = 'contain';
-    document.documentElement.style.overscrollBehavior = 'contain';
+    // Only lock page scroll in modal mode; in non-modal mode the background stays scrollable.
+    if (modalMode) {
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overscrollBehavior = 'contain';
+      document.documentElement.style.overscrollBehavior = 'contain';
+    }
 
     return () => {
       document.body.classList.remove('spcoin-wallet-open');
@@ -265,7 +275,7 @@ export default function SpCoinWalletPopup() {
       document.body.style.overscrollBehavior = prevBodyOverscroll;
       document.documentElement.style.overscrollBehavior = prevHtmlOverscroll;
     };
-  }, [isSelectionMode, meritWalletVisible, shouldMountWalletShell]);
+  }, [isSelectionMode, meritWalletVisible, modalMode, shouldMountWalletShell]);
 
   /* ─── Account helpers (selection mode + auto-open handlers) ─── */
 
@@ -354,6 +364,8 @@ export default function SpCoinWalletPopup() {
     if (!isOpen || isSelectionMode) return;
     if (walletAccountsVisible || walletConfigTabVisible || tradingStationTabVisible || rewardsTabVisible || sendPanelVisible || sponsorPanelVisible || tokenListVisible) return;
     if (suppressDefaultPanelAutoOpenRef.current) { suppressDefaultPanelAutoOpenRef.current = false; return; }
+    // If a persisted stack exists, those panels will restore themselves — don't override with default.
+    if (hasPersistedStackRef.current) return;
     const h = defaultPanelHandlersRef.current;
     if (defaultPanel === 'MENU')    { h.openWalletOptions();            return; }
     if (defaultPanel === 'ACCOUNT') { h.openManageAccountPanel();       return; }

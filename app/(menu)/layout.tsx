@@ -20,7 +20,9 @@ export default function RootLayout({
       {/* <ExchangeProvider> previously used, currently replaced by SpCoinProviders */}
       <SpCoinProviders>
         <Header />
-        {children}
+        <div className="pt-[60px]">
+          {children}
+        </div>
         {/* <Footer /> temporarily disabled for redesign */}
       </SpCoinProviders>
     </>
