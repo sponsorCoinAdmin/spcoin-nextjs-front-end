@@ -263,7 +263,6 @@ export function useHeaderController() {
   const accountPanel = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_PANEL);
   const buyTokenPanel = usePanelVisible(SP_COIN_DISPLAY.BUY_CONTRACT);
   const sellTokenPanel = usePanelVisible(SP_COIN_DISPLAY.SELL_CONTRACT);
-  const previewTokenPanel = previewToken != null;
 
   const staking = usePanelVisible(SP_COIN_DISPLAY.STAKING_SPCOINS_PANEL);
   const manageHub = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
@@ -305,6 +304,7 @@ export function useHeaderController() {
   const [buyToken] = useBuyTokenContract();
   const [sellToken] = useSellTokenContract();
   const [previewToken] = usePreviewTokenContract();
+  const previewTokenPanel = previewToken != null;
 
   const tokenState = useMemo(
     () => ({
