@@ -100,7 +100,7 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
 
   // ✅ NEW: TOKEN_PANEL desired subtree:
   // Matches ACCOUNT_PANEL behavior (children visible as modes)
-  [SPCD.TOKEN_PANEL]: [SPCD.BUY_CONTRACT, SPCD.SELL_CONTRACT, SPCD.PREVIEW_CONTRACT],
+  [SPCD.TOKEN_PANEL]: [SPCD.BUY_CONTRACT, SPCD.SELL_CONTRACT, SPCD.TOKEN_META_DATA, SPCD.TOKEN_LOGO],
 
   // ✅ Leaf nodes
   [SPCD.PENDING_SPONSOR_REWARDS]: [],
@@ -117,7 +117,8 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
   // ✅ TOKEN_PANEL leaf nodes
   [SPCD.BUY_CONTRACT]: [],
   [SPCD.SELL_CONTRACT]: [],
-  [SPCD.PREVIEW_CONTRACT]: [],
+  [SPCD.TOKEN_META_DATA]: [],
+  [SPCD.TOKEN_LOGO]: [],
 
   // ✅ ACCOUNT_LIST_SELECT_PANEL leaf nodes
   [SPCD.SPONSOR_LIST]: [],
@@ -198,7 +199,8 @@ export const KINDS: Partial<Record<SPCD, PanelKind>> = {
   // ✅ NEW: TOKEN_PANEL children kinds
   [SPCD.BUY_CONTRACT]: 'panel',
   [SPCD.SELL_CONTRACT]: 'panel',
-  [SPCD.PREVIEW_CONTRACT]: 'panel',
+  [SPCD.TOKEN_META_DATA]: 'panel',
+  [SPCD.TOKEN_LOGO]: 'panel',
 };
 
 // Optional grouping (updated to include manage panels)
@@ -242,7 +244,8 @@ export const GROUPS = {
     SPCD.TOKEN_PANEL,
     SPCD.BUY_CONTRACT,
     SPCD.SELL_CONTRACT,
-    SPCD.PREVIEW_CONTRACT,
+    SPCD.TOKEN_META_DATA,
+    SPCD.TOKEN_LOGO,
 
     SPCD.ERROR_MESSAGE_PANEL,
   ] as SPCD[],

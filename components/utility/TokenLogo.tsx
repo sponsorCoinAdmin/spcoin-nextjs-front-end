@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
+import { usePreviewTokenContract, usePreviewTokenSource } from '@/lib/context/hooks';
 import { defaultMissingImage, getTokenLogoURL } from '@/lib/context/helpers/assetHelpers';
 
 type TokenLogoProps = {
@@ -12,6 +13,7 @@ type TokenLogoProps = {
   address?: string;
   chainId?: number;
   className?: string;
+  onClick?: (e: React.MouseEvent<HTMLImageElement>) => void;
 };
 
 export default function TokenLogo({
@@ -21,8 +23,11 @@ export default function TokenLogo({
   address,
   chainId,
   className = 'h-9 w-9 object-contain',
+  onClick,
 }: TokenLogoProps) {
   const { openPanel } = usePanelTree();
+  const [, setPreviewTokenContract] = usePreviewTokenContract();
+  const [, setPreviewTokenSource] = usePreviewTokenSource();
 
   const resolved = useMemo(() => {
     const raw = logoURL?.trim();
@@ -37,9 +42,19 @@ export default function TokenLogo({
 
   const tooltip = [symbol, name].filter(Boolean).join(': ') || '';
 
-  const handleClick = useCallback(() => {
+  const handleClick = useCallback((e: React.MouseEvent<HTMLImageElement>) => {
+    if (onClick) { onClick(e); return; }
+    if (!address) return;
+    setPreviewTokenSource(null);
+    setPreviewTokenContract({
+      address: address as any,
+      name: name || '',
+      symbol: symbol || '',
+      logoURL: src,
+      balance: 0n,
+    });
     openPanel(SP_COIN_DISPLAY.TOKEN_PANEL, 'TokenLogo:click');
-  }, [openPanel]);
+  }, [onClick, address, name, symbol, src, setPreviewTokenSource, setPreviewTokenContract, openPanel]);
 
   return (
     <img

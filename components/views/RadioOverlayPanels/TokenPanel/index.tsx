@@ -7,9 +7,7 @@ import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVis
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { SP_COIN_DISPLAY, type TokenContract } from '@/lib/structure';
 import { useBuyTokenContract, usePreviewTokenContract, usePreviewTokenSource, useSellTokenContract } from '@/lib/context/hooks';
-
-// ✅ Use the same table theme module used by AccountListRewardsPanel
-import { msTableTw } from '@/components/views/RadioOverlayPanels/msTableTw';
+import ReadOnlyMetaDataTable from '@/components/shared/ReadOnlyMetaDataTable';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_TOKEN_PANEL === 'true';
@@ -18,35 +16,10 @@ const emptyLog = createDebugLogger('TokenPanelEmpty', DEBUG_ENABLED, false);
 
 type Props = { onClose?: () => void };
 
-function addressToText(addr: unknown): string {
-  if (addr == null) return 'N/A';
-  if (typeof addr === 'string') return addr;
-  if (typeof addr === 'object') {
-    const a = addr as Record<string, unknown>;
-    const candidates = [a['address'], a['hex'], a['bech32'], a['value'], a['id']].filter(Boolean) as string[];
-    if (candidates.length > 0) return String(candidates[0]);
-    try {
-      return JSON.stringify(addr);
-    } catch {
-      return String(addr);
-    }
-  }
-  return String(addr);
-}
-
 const fallback = (v: unknown) => {
   const s = (v ?? '').toString().trim();
   return s || 'N/A';
 };
-
-function formatShortAddress(addr: string) {
-  const a = (addr ?? '').toString().trim();
-  if (!a) return '';
-  if (a.length <= 36) return ` ${a} `;
-  const start = a.slice(0, 15);
-  const end = a.slice(-15);
-  return ` ${start} ... ${end} `;
-}
 
 /**
  * TokenPanel
@@ -60,7 +33,8 @@ export default function TokenPanel(_props: Props) {
   // ✅ Read child visibility directly (BUY_CONTRACT / SELL_CONTRACT)
   const vBuyToken = usePanelVisible(SP_COIN_DISPLAY.BUY_CONTRACT);
   const vSellToken = usePanelVisible(SP_COIN_DISPLAY.SELL_CONTRACT);
-  const vPreviewToken = usePanelVisible(SP_COIN_DISPLAY.PREVIEW_CONTRACT);
+  const vTokenMetaData = usePanelVisible(SP_COIN_DISPLAY.TOKEN_META_DATA);
+  const vTokenLogo = usePanelVisible(SP_COIN_DISPLAY.TOKEN_LOGO);
   const vTokenList = usePanelVisible(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL);
 
   const { openPanel, closePanel } = usePanelTree();
@@ -71,16 +45,20 @@ export default function TokenPanel(_props: Props) {
   const [previewToken, setPreviewTokenContract] = usePreviewTokenContract();
   const [previewSource, setPreviewTokenSource] = usePreviewTokenSource();
 
-  // ✅ Resolve active token side from visible child flags
+  // A preview token being set always takes priority over buy/sell mode.
+  const isPreviewMode = previewToken != null;
+
+  // Preview takes priority over buy/sell so the info-icon hover path works
+  // even when BUY_CONTRACT / SELL_CONTRACT flags are still active.
   const activeTokenSide = useMemo(() => {
-    if (vPreviewToken) return 'PREVIEW_CONTRACT';
+    if (isPreviewMode) return 'TOKEN_META_DATA';
     if (vBuyToken) return 'BUY_CONTRACT';
     if (vSellToken) return 'SELL_CONTRACT';
     return 'NONE';
-  }, [vPreviewToken, vBuyToken, vSellToken]);
+  }, [isPreviewMode, vBuyToken, vSellToken]);
 
   const tokenContract: TokenContract | undefined =
-    activeTokenSide === 'PREVIEW_CONTRACT'
+    activeTokenSide === 'TOKEN_META_DATA'
       ? previewToken
       : activeTokenSide === 'BUY_CONTRACT'
         ? buyToken
@@ -94,7 +72,7 @@ export default function TokenPanel(_props: Props) {
       vTokenPanel,
       vBuyToken,
       vSellToken,
-      vPreviewToken,
+      isPreviewMode,
       activeTokenSide,
       buyTokenAddr: buyToken?.address,
       sellTokenAddr: sellToken?.address,
@@ -105,7 +83,7 @@ export default function TokenPanel(_props: Props) {
     vTokenPanel,
     vBuyToken,
     vSellToken,
-    vPreviewToken,
+    isPreviewMode,
     activeTokenSide,
     buyToken?.address,
     sellToken?.address,
@@ -144,14 +122,18 @@ export default function TokenPanel(_props: Props) {
     setPreviewTokenSource,
   ]);
 
+  // Auto-close when TOKEN_PANEL is open but has nothing to display.
+  // This handles the persisted-state case: TOKEN_PANEL was open last session,
+  // but previewToken is never persisted, so after a page refresh it would show
+  // an empty panel forever. Since openPanel + setPreviewTokenContract are batched
+  // (queueMicrotask), when an info-click opens TOKEN_PANEL with a preview token both
+  // arrive in the same render — isPreviewMode is true — so this effect does NOT fire.
   useEffect(() => {
     if (!vTokenPanel) return;
-    if (!vPreviewToken) return;
-    if (previewToken) return;
     if (vTokenList) return;
-    openPanel(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL, 'TokenPanel:missingPreview->openList');
-    closePanel(SP_COIN_DISPLAY.TOKEN_PANEL, 'TokenPanel:missingPreview->closeSelf');
-  }, [vTokenPanel, vPreviewToken, previewToken, vTokenList, openPanel, closePanel]);
+    if (isPreviewMode || vBuyToken || vSellToken) return;
+    closePanel(SP_COIN_DISPLAY.TOKEN_PANEL, 'TokenPanel:noContent->autoClose');
+  }, [vTokenPanel, isPreviewMode, vBuyToken, vSellToken, vTokenList, closePanel]);
 
   const isVisible = vTokenPanel;
 
@@ -159,25 +141,25 @@ export default function TokenPanel(_props: Props) {
   if (!isVisible || vTokenList) return null;
 
   // Empty state (fixed wording)
-  if (!tokenContract || (!vBuyToken && !vSellToken && !vPreviewToken)) {
+  if (!tokenContract || (!vBuyToken && !vSellToken && !isPreviewMode)) {
     emptyLog.log?.('[empty]', {
       vTokenPanel,
       vBuyToken,
       vSellToken,
-      vPreviewToken,
+      isPreviewMode,
       activeTokenSide,
       buyTokenAddr: buyToken?.address,
       sellTokenAddr: sellToken?.address,
       previewTokenAddr: previewToken?.address,
     });
-    const title = vPreviewToken
+    const title = isPreviewMode
       ? 'No preview, buy or sell token selected.'
       : vSellToken
         ? 'No sell token contract selected.'
         : vBuyToken
           ? 'No buy token contract selected.'
           : 'No token contract selected.';
-    const body = vPreviewToken
+    const body = isPreviewMode
       ? 'Select a token to preview its details.'
       : vSellToken
         ? 'Select a sell token to view its details.'
@@ -195,111 +177,50 @@ export default function TokenPanel(_props: Props) {
   }
 
   const fullAddr = String(tokenContract.address ?? '').trim();
-  const address = addressToText(fullAddr || tokenContract.address);
   const name = fallback(tokenContract.name);
   const symbol = fallback(tokenContract.symbol);
   const description = fallback((tokenContract as any)?.description);
   const logoURL = (tokenContract.logoURL ?? '').toString().trim();
   const website = ((tokenContract as any)?.website ?? '').toString().trim();
 
-  const pillAddr = formatShortAddress(fullAddr);
-
-  const th = 'px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-300/80';
-  const cell = 'px-3 py-3 text-sm align-middle';
-  const zebraA = 'bg-[rgba(56,78,126,0.35)]';
-  const zebraB = 'bg-[rgba(156,163,175,0.25)]';
+  const rows = [
+    { label: 'Name', value: name },
+    { label: 'Symbol', value: symbol },
+    { label: 'Address', value: <span className="font-mono text-xs">{fullAddr || 'N/A'}</span> },
+    {
+      label: 'Website',
+      value: website ? (
+        <a href={website} target="_blank" rel="noopener noreferrer"
+          className="underline decoration-slate-400/60 underline-offset-2 hover:decoration-slate-200">
+          {website}
+        </a>
+      ) : 'N/A',
+    },
+    {
+      label: 'Logo URL',
+      value: logoURL ? (
+        <a href={logoURL} target="_blank" rel="noopener noreferrer"
+          className="underline decoration-slate-400/60 underline-offset-2 hover:decoration-slate-200 text-xs text-slate-200">
+          {logoURL}
+        </a>
+      ) : 'N/A',
+    },
+    { label: 'Description', value: description },
+  ];
 
   return (
     <div id="TOKEN_PANEL">
       {vBuyToken && <div id="BUY_CONTRACT" className="hidden" aria-hidden="true" />}
       {vSellToken && <div id="SELL_CONTRACT" className="hidden" aria-hidden="true" />}
-      {vPreviewToken && <div id="PREVIEW_CONTRACT" className="hidden" aria-hidden="true" />}
-      {/* Contract Address header pill */}
-      {pillAddr ? (
-        <div className="flex items-center gap-2 mb-2 text-sm text-slate-300/80">
-          <span className="whitespace-nowrap">Token Contract:</span>
-          <div className="flex-1 min-w-0 flex items-center justify-center px-1 py-1 gap-2 bg-[#243056] text-[#5981F3] text-base w-full mb-0 rounded-[22px]">
-            <span className="w-full text-center font-mono break-all" title={fullAddr}>
-              {pillAddr}
-            </span>
-          </div>
-        </div>
-      ) : null}
-
-      <div className="mb-4 mt-0 overflow-x-auto overflow-y-auto rounded-xl border border-black">
-        <table className="min-w-full border-collapse">
-          <thead>
-            <tr className={`${msTableTw.theadRow} border-b border-black`}>
-              <th scope="col" className={th}>
-                Field Name
-              </th>
-              <th scope="col" className={th}>
-                Value
-              </th>
-            </tr>
-          </thead>
-
-          <tbody>
-            <tr className="border-b border-black">
-              <td className={`${zebraA} ${cell}`}>name</td>
-              <td className={`${zebraA} ${cell}`}>{name}</td>
-            </tr>
-
-            <tr className="border-b border-black">
-              <td className={`${zebraB} ${cell}`}>symbol</td>
-              <td className={`${zebraB} ${cell}`}>{symbol}</td>
-            </tr>
-
-            <tr className="border-b border-black">
-              <td className={`${zebraA} ${cell}`}>address</td>
-              <td className={`${zebraA} ${cell}`}>
-                <span className="font-mono break-all">{fallback(address)}</span>
-              </td>
-            </tr>
-
-            <tr className="border-b border-black">
-              <td className={`${zebraB} ${cell}`}>website</td>
-              <td className={`${zebraB} ${cell}`}>
-                {website ? (
-                  <a
-                    href={website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline decoration-slate-400/60 underline-offset-2 hover:decoration-slate-200 break-all"
-                  >
-                    {website}
-                  </a>
-                ) : (
-                  'N/A'
-                )}
-              </td>
-            </tr>
-
-            <tr className="border-b border-black">
-              <td className={`${zebraA} ${cell}`}>logoURL</td>
-              <td className={`${zebraA} ${cell}`}>
-                {logoURL ? (
-                  <a
-                    href={logoURL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline decoration-slate-400/60 underline-offset-2 hover:decoration-slate-200 break-all text-xs text-slate-200"
-                  >
-                    {logoURL}
-                  </a>
-                ) : (
-                  'N/A'
-                )}
-              </td>
-            </tr>
-
-            <tr>
-              <td className={`${zebraB} ${cell}`}>description</td>
-              <td className={`${zebraB} ${cell}`}>{description}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      {isPreviewMode && <div id="TOKEN_META_DATA_PREVIEW" className="hidden" aria-hidden="true" />}
+      {vTokenMetaData && (
+        <ReadOnlyMetaDataTable
+          rows={rows}
+          logoURL={logoURL}
+          logoAlt={name}
+          logoVisible={vTokenLogo && !!logoURL}
+        />
+      )}
     </div>
   );
 }

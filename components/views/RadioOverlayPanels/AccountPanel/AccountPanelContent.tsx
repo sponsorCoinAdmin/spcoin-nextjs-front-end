@@ -105,6 +105,8 @@ export default function AccountPanelContent({
   const menuTabHeaderOpen = usePanelVisible(SP_COIN_DISPLAY.MENU_TAB_HEADER_BAR);
   const activeAccountHeaderOpen = usePanelVisible(SP_COIN_DISPLAY.ACTIVE_ACCOUNT_HEADER_BAR);
   const addressHeaderOpen = usePanelVisible(SP_COIN_DISPLAY.ADDRESS_HEADER_BAR);
+  const logoVisible = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_LOGO);
+  const metaDataVisible = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_META_DATA);
 
   const {
     publicKey,
@@ -185,7 +187,7 @@ export default function AccountPanelContent({
               : 'flex flex-col gap-2 overflow-x-hidden'
           }
         >
-          <div className="shrink-0 overflow-visible">
+          {logoVisible ? <div className="shrink-0 overflow-visible">
             <CreateAccountAvatarPanel
               panelMarginClass="mb-0 min-h-0"
               avatarPanelBorderClass=""
@@ -224,9 +226,9 @@ export default function AccountPanelContent({
               traceSizingLabel="AccountPanel"
               resizeSignal={avatarResizeSignal}
             />
-          </div>
+          </div> : null}
 
-          <div className="shrink-0 overflow-visible">
+          {metaDataVisible ? <div className="shrink-0 overflow-visible">
             <CreateAccountFormPanel
               panelMarginClass="mb-0 !h-auto"
               accountPanelBorderClass=""
@@ -257,7 +259,7 @@ export default function AccountPanelContent({
               onFieldBlur={handleFieldBlur}
               onRevert={handleRevertChanges}
             />
-          </div>
+          </div> : null}
         </div>
       </form>
     </div>

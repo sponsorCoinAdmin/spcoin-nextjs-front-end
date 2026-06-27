@@ -199,7 +199,7 @@ export default function RenderAssetPreview() {
         'RenderAssetPreview:onInfoClick(openTokenPanel)',
       );
       openPanel(
-        SP_COIN_DISPLAY.PREVIEW_CONTRACT,
+        SP_COIN_DISPLAY.TOKEN_META_DATA,
         'RenderAssetPreview:onInfoClick(openPreviewToken)',
         SP_COIN_DISPLAY.TOKEN_PANEL,
       );

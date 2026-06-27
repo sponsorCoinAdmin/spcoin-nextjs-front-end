@@ -15,6 +15,7 @@ export function stripPersistedTradeTokens(tradeData: unknown): TradeData | unkno
     sellTokenContract: toPersistedTokenRef(src.sellTokenContract),
     buyTokenContract: toPersistedTokenRef(src.buyTokenContract),
     previewTokenContract: toPersistedTokenRef(src.previewTokenContract),
+    sendTokenContract: toPersistedTokenRef(src.sendTokenContract),
   } as TradeData;
 }
 

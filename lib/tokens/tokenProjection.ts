@@ -70,5 +70,6 @@ export function rehydrateTradeTokenRefs(
     sellTokenContract: mapOne(tradeData.sellTokenContract),
     buyTokenContract: mapOne(tradeData.buyTokenContract),
     previewTokenContract: mapOne(tradeData.previewTokenContract),
+    sendTokenContract: mapOne(tradeData.sendTokenContract),
   };
 }
