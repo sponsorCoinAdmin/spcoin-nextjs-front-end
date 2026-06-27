@@ -3,26 +3,27 @@
 
 import { SP_COIN_DISPLAY, type spCoinAccount, type TokenContract } from '@/lib/structure';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
-import { useSelectionCommit } from '@/lib/context/hooks/ExchangeContext/selectionCommit/useSelectionCommit';
 import PanelListSelectWrapper from '../../AssetSelectPanels/PanelListSelectWrapper';
 
+type Props = {
+  onSelect: (account: spCoinAccount) => void;
+};
+
 /** Visibility gate only. */
-export default function AgentListSelectPanel() {
+export default function AgentListSelectPanel({ onSelect }: Props) {
   const vAccountList = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_LIST_SELECT_PANEL);
   const vAgentList = usePanelVisible(SP_COIN_DISPLAY.AGENT_LIST);
   const visible = vAccountList && vAgentList;
   if (!visible) return null;
-  return <AgentListSelectPanelInner />;
+  return <AgentListSelectPanelInner onSelect={onSelect} />;
 }
 
 /** Shim: define feed + commit behavior. */
-function AgentListSelectPanelInner() {
-  const { commitAgent } = useSelectionCommit();
-
+function AgentListSelectPanelInner({ onSelect }: { onSelect: (account: spCoinAccount) => void }) {
   const handleCommit = (asset: spCoinAccount | TokenContract) => {
     const isToken = typeof (asset as any)?.decimals === 'number';
     if (isToken) return;
-    commitAgent(asset as spCoinAccount);
+    onSelect(asset as spCoinAccount);
   };
 
   return (

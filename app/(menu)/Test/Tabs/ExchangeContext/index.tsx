@@ -169,12 +169,12 @@ export default function ExchangeContextTab({ onToggleAllReady }: ExchangeContext
 
         {/* Token/address selectors + hub/error */}
         <PanelGate panel={SP.TOKEN_LIST_SELECT_PANEL}>
-          <TokenListSelectPanel />
+          <TokenListSelectPanel onSelect={() => {}} />
         </PanelGate>
         <PanelGate panel={SP.ACCOUNT_LIST_SELECT_PANEL}>
-          <RecipientListSelectPanel />
-          <AgentListSelectPanel />
-          <ManageSponsorRecipients />
+          <RecipientListSelectPanel onSelect={() => {}} />
+          <AgentListSelectPanel onSelect={() => {}} />
+          <ManageSponsorRecipients onSelect={() => {}} />
         </PanelGate>
 
         {/* Manage LIST views */}
@@ -184,7 +184,7 @@ export default function ExchangeContextTab({ onToggleAllReady }: ExchangeContext
 
         {/* Sponsors list rewards panel */}
         <PanelGate panel={SP.ACCOUNT_LIST_REWARDS_PANEL}>
-          <ManageSponsorRecipients />
+          <ManageSponsorRecipients onSelect={() => {}} />
         </PanelGate>
       </div>
 

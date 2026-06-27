@@ -36,7 +36,11 @@ export function useSponsorCoinLabActiveContract({
     const byAddress = sponsorCoinVersionChoices.find(
       (entry) => normalizeAddress(entry.address) === normalizeAddress(contractAddress),
     );
-    return byAddress ?? sponsorCoinVersionChoices[0];
+    if (byAddress) return byAddress;
+    // Only default to first version when no explicit address is set.
+    // If contractAddress is non-empty and matches no known version, it's a custom contract — leave it alone.
+    if (!contractAddress.trim()) return sponsorCoinVersionChoices[0];
+    return undefined;
   }, [contractAddress, selectedSponsorCoinVersion, sponsorCoinVersionChoices]);
 
   useEffect(() => {

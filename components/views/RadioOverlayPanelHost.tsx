@@ -1,7 +1,6 @@
-// File: components/views/RadioOverlayPanelHost.tsx
 'use client';
 
-import React from 'react';
+import React, { useCallback } from 'react';
 
 import PanelGate from '@/components/utility/PanelGate';
 
@@ -14,7 +13,7 @@ import {
 import { ErrorMessagePanel } from '@/components/views';
 
 import AccountPanel from '@/components/views/RadioOverlayPanels/AccountPanel';
-import TokenPanel from '@/components/views/RadioOverlayPanels/TokenPanel'; // ✅ add this
+import TokenPanel from '@/components/views/RadioOverlayPanels/TokenPanel';
 
 import ManageSponsorRecipients from '@/components/views/RadioOverlayPanels/ListSelectPanels/SponsorListSelectPanel';
 import ManageSponsorshipsPanel from '@/components/views/RadioOverlayPanels/ManageSponsorshipsPanel';
@@ -22,9 +21,11 @@ import StakingSpCoinsPanel from '@/components/views/RadioOverlayPanels/StakingSp
 
 import TradingStationPanel from '@/components/views/TradingStationPanel';
 
-import { SP_COIN_DISPLAY } from '@/lib/structure';
+import { SP_COIN_DISPLAY, type TokenContract } from '@/lib/structure';
 import { useEnforceRadioPanelGroups } from '@/lib/context/exchangeContext/hooks/useEnforceRadioPanelGroups';
 import { RADIO_PANEL_GROUPS } from '@/lib/structure/exchangeContext/constants/spCoinDisplay';
+import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
+import { useSelectionCommit } from '@/lib/context/hooks/ExchangeContext/selectionCommit/useSelectionCommit';
 import WalletAccountsPanel from '@/components/views/RadioOverlayPanels/WalletAccountsPanel';
 import WalletNetworksPanel from '@/components/views/RadioOverlayPanels/WalletNetworksPanel';
 import WalletConfig from '@/components/views/WalletConfig';
@@ -36,15 +37,29 @@ import SendRecipientSelectPanel from '@/components/views/RadioOverlayPanels/Send
 export default function RadioOverlayPanelHost() {
   useEnforceRadioPanelGroups(RADIO_PANEL_GROUPS);
 
+  const { commitToken, commitRecipient, commitAgent, commitSponsor, commitSendRecipient } =
+    useSelectionCommit();
+
+  const sellMode = usePanelVisible(SP_COIN_DISPLAY.SELL_CONTRACT);
+  const sendMode = usePanelVisible(SP_COIN_DISPLAY.SEND_CONTRACT);
+
+  const handleTokenSelect = useCallback(
+    (token: TokenContract) => {
+      const side = sendMode ? 'send' : sellMode ? 'sell' : 'buy';
+      commitToken(token, side);
+    },
+    [commitToken, sellMode, sendMode],
+  );
+
   return (
     <>
       {/* ───────────────────────── Main overlays (radio group) ───────────────────────── */}
       <SponsorPanel />
       <SendPanel />
-      <SendRecipientSelectPanel />
+      <SendRecipientSelectPanel onSelect={commitSendRecipient} />
       <TradingStationPanel />
       <StakingSpCoinsPanel />
-      <ManageSponsorRecipients />
+      <ManageSponsorRecipients onSelect={commitSponsor} />
 
       <PanelGate panel={SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL}>
         <ManageSponsorshipsPanel />
@@ -59,13 +74,13 @@ export default function RadioOverlayPanelHost() {
         <WalletConfig />
       </PanelGate>
 
-      {/* ✅ Token Contract detail overlay (self-gated; must always be mounted) */}
+      {/* Token Contract detail overlay (self-gated; must always be mounted) */}
       <TokenPanel />
 
       {/* ───────────────────────── Select / aux overlays ───────────────────────── */}
-      <AgentListSelectPanel />
-      <RecipientListSelectPanel />
-      <TokenListSelectPanel />
+      <AgentListSelectPanel onSelect={commitAgent} />
+      <RecipientListSelectPanel onSelect={commitRecipient} />
+      <TokenListSelectPanel onSelect={handleTokenSelect} />
 
       {/* ───────────────────────── Wallet overlays ───────────────────────── */}
       <WalletAccountsPanel />

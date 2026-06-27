@@ -8,7 +8,6 @@ import { FEED_TYPE, SP_COIN_DISPLAY, type spCoinAccount, type TokenContract } fr
 
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
-import { useSelectionCommit } from '@/lib/context/hooks/ExchangeContext/selectionCommit/useSelectionCommit';
 
 import { useFeedData } from '@/lib/utils/feeds/assetSelect';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
@@ -24,7 +23,11 @@ const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_MANAGE_SPONSORS === 'tru
 
 const debugLog = createDebugLogger('SponsorListSelectPanel', DEBUG_ENABLED, LOG_TIME);
 
-export default function SponsorListSelectPanel() {
+type Props = {
+  onSelect: (account: spCoinAccount) => void;
+};
+
+export default function SponsorListSelectPanel({ onSelect }: Props) {
   const vRewards = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_LIST_REWARDS_PANEL);
   const vAccountList = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_LIST_SELECT_PANEL);
   const vSponsorListRaw = usePanelVisible(SP_COIN_DISPLAY.SPONSOR_LIST);
@@ -42,7 +45,7 @@ export default function SponsorListSelectPanel() {
     });
   }, [vSponsorList, vRewards]);
 
-  if (vSponsorList) return <SponsorListSelectPanelInner />;
+  if (vSponsorList) return <SponsorListSelectPanelInner onSelect={onSelect} />;
   if (!vRewards) return null;
 
   return <SponsorListRewardsPanelInner />;
@@ -52,12 +55,10 @@ function hasValidAddress(a: any): a is { address: string } {
   return typeof a?.address === 'string' && isAddress(a.address);
 }
 
-function SponsorListSelectPanelInner() {
-  const { commitSponsor } = useSelectionCommit();
-
+function SponsorListSelectPanelInner({ onSelect }: { onSelect: (account: spCoinAccount) => void }) {
   const handleCommit = (asset: spCoinAccount | TokenContract) => {
     if (!hasValidAddress(asset)) return;
-    commitSponsor(asset as spCoinAccount);
+    onSelect(asset as spCoinAccount);
   };
 
   return (

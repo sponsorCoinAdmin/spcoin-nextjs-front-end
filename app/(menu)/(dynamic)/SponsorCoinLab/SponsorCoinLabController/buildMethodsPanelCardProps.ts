@@ -198,6 +198,8 @@ export type BuildMethodsPanelCardPropsArgs = {
   spReadParams: string[];
   setSpReadParams: StateSetter<string[]>;
   contractAddress: string;
+  tokenContractName?: string;
+  tokenContractSymbol?: string;
   canRunSpCoinReadMethod: boolean;
   spCoinReadMissingEntries: MissingFieldEntry[];
   runSelectedSpCoinReadMethod: () => void | Promise<void>;
@@ -378,6 +380,8 @@ export function buildMethodsPanelCardProps(args: BuildMethodsPanelCardPropsArgs)
       writeAmountUnit: args.writeAmountUnit,
       setWriteAmountUnit: args.setWriteAmountUnit,
       tokenContractAddress: args.contractAddress,
+      tokenContractName: args.tokenContractName,
+      tokenContractSymbol: args.tokenContractSymbol,
       activeTokenDecimals: args.activeTokenDecimals,
       inputStyle: args.inputStyle,
       writeTraceEnabled: args.writeTraceEnabled,

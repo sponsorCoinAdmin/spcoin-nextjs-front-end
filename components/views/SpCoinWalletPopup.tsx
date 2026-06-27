@@ -134,6 +134,7 @@ export default function SpCoinWalletPopup() {
   const rewardsTabVisible        = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
   const sendPanelVisible         = usePanelVisible(SP_COIN_DISPLAY.SEND_PANEL);
   const sponsorPanelVisible      = usePanelVisible(SP_COIN_DISPLAY.SPONSOR_PANEL);
+  const tokenListVisible         = usePanelVisible(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL);
   const meritWalletVisible       = usePanelVisible(SP_COIN_DISPLAY.MERIT_WALLET_COMPONENT);
 
   const { selectedAddressKey, normalizedWorkingAddress, visibleAccounts } = useWalletAccountsList();
@@ -351,7 +352,7 @@ export default function SpCoinWalletPopup() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!isOpen || isSelectionMode) return;
-    if (walletAccountsVisible || walletConfigTabVisible || tradingStationTabVisible || rewardsTabVisible || sendPanelVisible || sponsorPanelVisible) return;
+    if (walletAccountsVisible || walletConfigTabVisible || tradingStationTabVisible || rewardsTabVisible || sendPanelVisible || sponsorPanelVisible || tokenListVisible) return;
     if (suppressDefaultPanelAutoOpenRef.current) { suppressDefaultPanelAutoOpenRef.current = false; return; }
     const h = defaultPanelHandlersRef.current;
     if (defaultPanel === 'MENU')    { h.openWalletOptions();            return; }

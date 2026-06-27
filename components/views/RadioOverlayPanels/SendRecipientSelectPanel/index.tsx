@@ -7,13 +7,16 @@ import { Search } from 'lucide-react';
 
 import { SP_COIN_DISPLAY, STATUS } from '@/lib/structure';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
-import { useSelectionCommit } from '@/lib/context/hooks/ExchangeContext/selectionCommit/useSelectionCommit';
 import useOpenAccountComponent from '@/lib/context/hooks/useOpenAccountComponent';
 import { useWalletAccountsList } from '@/lib/spCoinWallet/useWalletAccountsList';
 import { truncateMiddle } from '@/lib/utils/addressUtils';
 import AccountAvatar from '@/components/utility/AccountAvatar';
 
-export default function SendRecipientSelectPanel() {
+type Props = {
+  onSelect: (address: string, logoURL?: string) => void;
+};
+
+export default function SendRecipientSelectPanel({ onSelect }: Props) {
   const visible = usePanelVisible(SP_COIN_DISPLAY.SEND_RECIPIENT_SELECT_PANEL);
   if (!visible) return null;
 
@@ -22,14 +25,13 @@ export default function SendRecipientSelectPanel() {
       id="SEND_RECIPIENT_SELECT_PANEL"
       className="flex h-full min-h-0 w-full flex-col overflow-hidden"
     >
-      <SendRecipientSelectPanelInner />
+      <SendRecipientSelectPanelInner onSelect={onSelect} />
     </div>
   );
 }
 
-function SendRecipientSelectPanelInner() {
+function SendRecipientSelectPanelInner({ onSelect }: { onSelect: (address: string, logoURL?: string) => void }) {
   const [query, setQuery] = useState('');
-  const { commitSendRecipient } = useSelectionCommit();
   const { visibleAccounts } = useWalletAccountsList();
 
   const trimmed = query.trim();
@@ -48,7 +50,7 @@ function SendRecipientSelectPanelInner() {
 
   const handleSelect = (address: string, logoURL?: string) => {
     if (!isAddress(address)) return;
-    commitSendRecipient(address, logoURL);
+    onSelect(address, logoURL);
   };
 
   return (

@@ -36,6 +36,14 @@ const LOG_TIME = false as const;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_DATALIST === 'true';
 const debugLog = createDebugLogger('DataListSelect', DEBUG_ENABLED, LOG_TIME);
 
+function emitTrace(step: string, data?: Record<string, unknown>) {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('spcoin-token-select-trace', {
+      detail: { step, ts: Date.now(), ...data },
+    }));
+  }
+}
+
 function isAccountFeedType(feedType: FEED_TYPE) {
   return (
     feedType === FEED_TYPE.RECIPIENT_ACCOUNTS ||
@@ -190,6 +198,7 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
     setEnforceProgrammatic(false);
 
     debugLog.log?.('[deferred-commit] begin', { addr, programmaticReady });
+    emitTrace('DataListSelect:deferred-commit:begin', { addr: addr?.slice(0, 14), isAccountFeed, tokensCount: tokens.length });
 
     setManualEntry(false);
 
@@ -198,16 +207,24 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
 
     if (isAccountFeed) {
       const picked = accounts.find((w) => w.address.toLowerCase() === addr.toLowerCase());
+      emitTrace('DataListSelect:deferred-commit:accountPick', { found: !!picked });
       if (picked) setTradingTokenCallback(picked);
+    } else {
+      const picked = tokens.find((t) => String(t.address).toLowerCase() === addr.toLowerCase());
+      emitTrace('DataListSelect:deferred-commit:tokenPick', { found: !!picked, addr: addr?.slice(0, 14) });
+      if (picked) setTradingTokenCallback(picked as any);
+      else emitTrace('DataListSelect:deferred-commit:tokenPick-NOT-FOUND', { addr, tokenAddresses: tokens.slice(0, 5).map(t => String(t.address).slice(0, 12)) });
     }
 
     debugLog.log?.('[deferred-commit] end');
+    emitTrace('DataListSelect:deferred-commit:end');
   }, [
     programmaticReady,
     handleHexInputChange,
     setInputState,
     isAccountFeed,
     accounts,
+    tokens,
     setTradingTokenCallback,
     setManualEntry,
   ]);
@@ -222,20 +239,39 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
         feedTypeLabel: FEED_TYPE[feedType],
       });
 
+      emitTrace('DataListSelect:handlePickAddress', {
+        address: address?.slice(0, 14),
+        programmaticReady,
+        manualEntry,
+        feedType: FEED_TYPE[feedType],
+        isAccountFeed,
+        tokensCount: tokens.length,
+        accountsCount: accounts.length,
+      });
+
+      // List clicks are never manual input — set immediately so next render makes
+      // programmaticReady=true and the deferred commit fires.
+      setManualEntry(false);
+
       if (!programmaticReady) {
+        emitTrace('DataListSelect:deferred', { reason: 'programmaticReady=false, storing in pendingPickRef' });
         pendingPickRef.current = address;
         setEnforceProgrammatic(true);
         return;
       }
-
-      setManualEntry(false);
 
       setInputState(InputState.EMPTY_INPUT, 'DataListSelect (Programmatic)');
       handleHexInputChange(address, false);
 
       if (isAccountFeed) {
         const picked = accounts.find((w) => w.address.toLowerCase() === address.toLowerCase());
+        emitTrace('DataListSelect:accountPick', { found: !!picked, address: address?.slice(0, 14) });
         if (picked) setTradingTokenCallback(picked);
+      } else {
+        const picked = tokens.find((t) => String(t.address).toLowerCase() === address.toLowerCase());
+        emitTrace('DataListSelect:tokenPick', { found: !!picked, address: address?.slice(0, 14) });
+        if (picked) setTradingTokenCallback(picked as any);
+        else emitTrace('DataListSelect:tokenPick-NOT-FOUND', { address, tokenAddresses: tokens.slice(0, 5).map(t => String(t.address).slice(0, 12)) });
       }
     },
     [
@@ -244,6 +280,7 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
       handleHexInputChange,
       isAccountFeed,
       accounts,
+      tokens,
       setTradingTokenCallback,
       setManualEntry,
       manualEntry,

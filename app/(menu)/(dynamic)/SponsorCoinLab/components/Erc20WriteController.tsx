@@ -4,6 +4,7 @@ import AccountDropdownInput from './AccountDropdownInput';
 import AccountSelection from './AccountSelection';
 import AmountInputRow from './AmountInputRow';
 import { NativeSelectChevron } from './SelectChevron';
+import TokenContractSelectButton from './TokenContractSelectButton';
 import type { AmountUnit } from '../utils/amountUnits';
 
 type ActiveWriteLabels = {
@@ -47,6 +48,8 @@ type Props = {
   activeTokenDecimals: number;
   inputStyle: string;
   tokenContractAddress?: string;
+  tokenContractName?: string;
+  tokenContractSymbol?: string;
   canRunSelectedWriteMethod: boolean;
   canAddCurrentMethodToScript: boolean;
   hasEditorScriptSelected: boolean;
@@ -98,6 +101,8 @@ export default function Erc20WriteController(props: Props) {
     runSelectedWriteMethod,
     addCurrentMethodToScript,
     tokenContractAddress,
+    tokenContractName,
+    tokenContractSymbol,
     hideMethodSelect = false,
     hideActionButtons = false,
     hideAddToScript = false,
@@ -179,18 +184,16 @@ export default function Erc20WriteController(props: Props) {
         </div>
       ) : null}
       <div id="JSON_METHOD" className="grid grid-cols-1 gap-3 rounded-lg border border-[#31416F] p-3">
+        <div className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+          <span className="text-sm font-semibold text-[#8FA8FF]">Token Contract</span>
+          <TokenContractSelectButton
+            className="w-full rounded-lg border border-[#334155] bg-[#0E111B] px-3 py-2 text-sm text-white"
+            contractAddress={tokenContractAddress}
+            contractName={tokenContractName}
+            contractSymbol={tokenContractSymbol}
+          />
+        </div>
         {!hasVisibleWriteMethods ? <div className="text-sm text-slate-400">(no on-chain ERC20 write methods match the current filter)</div> : null}
-        {hasVisibleWriteMethods && tokenContractAddress ? (
-          <label className="grid items-center gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
-            <span className="text-sm font-semibold text-[#8FA8FF]">Token Contract</span>
-            <input
-              className={inputStyle}
-              readOnly
-              value={tokenContractAddress}
-              placeholder="Token contract address"
-            />
-          </label>
-        ) : null}
         {hasVisibleWriteMethods ? <AccountSelection
           label="msg.sender"
           title="Toggle msg.sender Private Key"

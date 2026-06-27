@@ -157,6 +157,7 @@ export default function SponsorCoinLabPage({
   const [mode, setMode] = useState<ConnectionMode>('metamask');
   const [rpcUrl, setRpcUrl] = useState(defaultHardhatRpcUrl);
   const [contractAddress, setContractAddress] = useState('');
+
   const [status, setStatus] = useState('Ready');
   const [logs, setLogs] = useState<string[]>(['[SponsorCoin SandBox] Ready']);
   const [formattedOutputDisplay, setFormattedOutputDisplay] = useState('(no output yet)');
@@ -381,6 +382,19 @@ export default function SponsorCoinLabPage({
       window.removeEventListener('spcoin-rpc-trace', handleRpcTrace);
     };
   }, [appendLog, writeTraceEnabled]);
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const handleTokenSelectTrace = (event: Event) => {
+      const detail = (event as CustomEvent<Record<string, unknown>>).detail ?? {};
+      const { step, ts: _ts, ...rest } = detail as { step?: string; ts?: number; [k: string]: unknown };
+      const extra = Object.keys(rest).length ? ' ' + JSON.stringify(rest) : '';
+      appendLog(`[TOKEN-SELECT] ${step ?? '?'}${extra}`);
+    };
+    window.addEventListener('spcoin-token-select-trace', handleTokenSelectTrace);
+    return () => {
+      window.removeEventListener('spcoin-token-select-trace', handleTokenSelectTrace);
+    };
+  }, [appendLog]);
   const resetWriteTrace = useCallback(() => {
     recentWriteTraceRef.current = [];
     setLogs((prev) => prev.filter((line) => !TRACE_LOG_PATTERN.test(line)));
@@ -1747,6 +1761,8 @@ export default function SponsorCoinLabPage({
     selectedVersionSymbolWidthCh,
     selectedVersionSymbol,
     contractAddress,
+    tokenContractName: selectedSponsorCoinVersionEntry?.name,
+    tokenContractSymbol: selectedSponsorCoinVersionEntry?.symbol,
     isRemovingContractFromApp,
     requestRemoveContractFromApp,
     setMode,
@@ -1803,5 +1819,25 @@ export default function SponsorCoinLabPage({
     createScriptFromSteps,
     existingScriptNames: allScripts.filter((script) => !script.isSystemScript).map((script) => script.name),
   });
-  return <SponsorCoinLabView {...viewProps} />;
+  const handleSelectContractToken = useCallback(
+    (token: { address?: string }) => {
+      const addr = String(token?.address ?? '').trim().toLowerCase();
+      if (!addr) return;
+      const match = sponsorCoinVersionChoices.find(
+        (v) => String(v?.address ?? '').trim().toLowerCase() === addr,
+      );
+      if (match) {
+        setSelectedSponsorCoinVersion(match.id);
+      } else {
+        // Clear the version selection so the byId lookup doesn't pull the old version back,
+        // then set the custom address. The effect in useSponsorCoinLabActiveContract will leave
+        // it alone because contractAddress is non-empty and matches no known version.
+        setSelectedSponsorCoinVersion('');
+        setContractAddress(String(token.address ?? ''));
+      }
+    },
+    [sponsorCoinVersionChoices, setSelectedSponsorCoinVersion, setContractAddress],
+  );
+
+  return <SponsorCoinLabView {...viewProps} onSelectContractToken={handleSelectContractToken} />;
 }

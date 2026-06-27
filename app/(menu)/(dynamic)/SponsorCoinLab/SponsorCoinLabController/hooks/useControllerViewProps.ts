@@ -171,6 +171,8 @@ export function useControllerViewProps(args: UseControllerViewPropsArgs) {
     spReadParams: args.spReadParams,
     setSpReadParams: args.setSpReadParams,
     contractAddress: args.contractAddress,
+    tokenContractName: args.tokenContractName,
+    tokenContractSymbol: args.tokenContractSymbol,
     canRunSpCoinReadMethod: args.canRunSpCoinReadMethod,
     spCoinReadMissingEntries: args.spCoinReadMissingEntries,
     runSelectedSpCoinReadMethod: args.runSelectedSpCoinReadMethod,

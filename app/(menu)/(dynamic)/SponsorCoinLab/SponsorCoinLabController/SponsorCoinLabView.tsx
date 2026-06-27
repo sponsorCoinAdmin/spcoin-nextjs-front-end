@@ -2,6 +2,8 @@
 
 import React from 'react';
 import OpenCloseBtn from '@/components/views/Buttons/OpenCloseBtn';
+import TokenListOverlay from '../components/TokenListOverlay';
+import type { TokenContract } from '@/lib/structure';
 import ContractNetworkCard from '../components/ContractNetworkCard';
 import DeleteStepPopup from '../components/DeleteStepPopup';
 import DiscardChangesPopup from '../components/DiscardChangesPopup';
@@ -48,6 +50,7 @@ type Props = {
     isCancelling: boolean;
     onCancel: () => void;
   };
+  onSelectContractToken: (token: TokenContract) => void;
 };
 
 export default function SponsorCoinLabView({
@@ -80,6 +83,7 @@ export default function SponsorCoinLabView({
   clearDiscardChangesPopup,
   handleDiscardConfirm,
   runningMethodPopup,
+  onSelectContractToken,
 }: Props) {
   return (
     <main id="sponsorcoin-sandbox-root" className="min-h-screen bg-[#090C16] p-6 text-white">
@@ -171,6 +175,7 @@ export default function SponsorCoinLabView({
       />
 
       <RunningMethodPopup {...runningMethodPopup} />
+      <TokenListOverlay onSelectToken={onSelectContractToken} />
     </main>
   );
 }

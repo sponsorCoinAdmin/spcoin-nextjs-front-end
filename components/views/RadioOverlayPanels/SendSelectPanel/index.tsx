@@ -7,29 +7,22 @@ import { ChevronDown } from 'lucide-react';
 
 import styles from '@/styles/Exchange.module.css';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
-import { useSendTokenContract, useExchangeContext } from '@/lib/context/hooks';
-import { useNativeToken } from '@/lib/hooks/useNativeToken';
-import { useGetBalance } from '@/lib/hooks/useGetBalance';
+import type { TokenContract } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { defaultMissingImage, getTokenLogoURL } from '@/lib/context/helpers/assetHelpers';
 import TokenLogo from '@/components/utility/TokenLogo';
 
 type SendSelectPanelProps = {
+  token: TokenContract | undefined;
+  balanceText: string;
   amount: string;
   onAmountChange: (value: string) => void;
 };
 
-export default function SendSelectPanel({ amount, onAmountChange }: SendSelectPanelProps) {
-  const { exchangeContext } = useExchangeContext();
-  const [sendTokenContract] = useSendTokenContract();
-  const nativeToken = useNativeToken();
+export default function SendSelectPanel({ token, balanceText, amount, onAmountChange }: SendSelectPanelProps) {
   const { openPanel } = usePanelTree();
 
-  const activeAccountAddr = exchangeContext.accounts?.activeAccount?.address as Address | undefined;
-
-  const token = sendTokenContract ?? nativeToken;
   const tokenAddr = token?.address as Address | undefined;
-  const tokenDecimals = token?.decimals ?? 18;
   const tokenSymbol = token?.symbol ?? 'Token';
 
   const prevAddrRef = useRef<string | undefined>(undefined);
@@ -39,19 +32,6 @@ export default function SendSelectPanel({ amount, onAmountChange }: SendSelectPa
       onAmountChange('0');
     }
   }, [tokenAddr, onAmountChange]);
-
-  const { formatted: formattedBalance, isLoading: balanceLoading, error: balanceError } = useGetBalance({
-    tokenAddress: tokenAddr,
-    userAddress: activeAccountAddr,
-    decimalsHint: tokenDecimals,
-    staleTimeMs: 20_000,
-  });
-
-  const balanceText = !tokenAddr ? '—'
-    : !activeAccountAddr ? '—'
-    : balanceError ? '—'
-    : balanceLoading ? '…'
-    : (formattedBalance ?? '0.0');
 
   const logoURL = useMemo(() => {
     if (!token) return defaultMissingImage;
@@ -104,10 +84,10 @@ export default function SendSelectPanel({ amount, onAmountChange }: SendSelectPa
           <>
             <TokenLogo
               logoURL={logoURL}
-              symbol={token?.symbol}
-              name={token?.name}
+              symbol={token.symbol}
+              name={token.name}
               address={tokenAddr}
-              chainId={token?.chainId}
+              chainId={token.chainId}
               className="h-9 w-9 mr-2 rounded-md"
             />
             <span className="cursor-default select-none" title={tokenAddr ?? ''}>
