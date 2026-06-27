@@ -20,18 +20,20 @@ type TabKey = typeof TABS[number]['key'];
 type Props = { open?: boolean };
 
 export default function AccountPanelTabBar({ open = true }: Props) {
-  const { openPanel } = usePanelTree();
+  const { openPanel, closePanel } = usePanelTree();
   const sponsorVisible = usePanelVisible(SP_COIN_DISPLAY.SPONSOR_PANEL);
   const rewardsVisible = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
   const swapVisible    = usePanelVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
   const sendVisible    = usePanelVisible(SP_COIN_DISPLAY.SEND_PANEL);
+  const configVisible  = usePanelVisible(SP_COIN_DISPLAY.WALLET_CONFIG_PANEL);
   const wacVisible     = usePanelVisible(SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT);
   const wncVisible     = usePanelVisible(SP_COIN_DISPLAY.WALLET_NETWORKS_COMPONENT);
 
   const isOverlayOpen = wacVisible || wncVisible;
-  const derivedKey: TabKey = sponsorVisible ? 'SPONSOR' : swapVisible ? 'SWAP' : sendVisible ? 'SEND' : 'REWARDS';
+  // Returns null (no tab active) when nothing is visible — config open or blank slate.
+  const derivedKey: TabKey | null = sponsorVisible ? 'SPONSOR' : swapVisible ? 'SWAP' : sendVisible ? 'SEND' : rewardsVisible ? 'REWARDS' : null;
 
-  const lastTabKey      = useRef<TabKey>(derivedKey);
+  const lastTabKey      = useRef<TabKey>('REWARDS');
   const prevOverlayOpen = useRef(false);
 
   useEffect(() => {
@@ -40,16 +42,32 @@ export default function AccountPanelTabBar({ open = true }: Props) {
 
     if (wasOpen && !isOverlayOpen) {
       const anyTabActive = sponsorVisible || rewardsVisible || swapVisible || sendVisible;
-      if (!anyTabActive) {
+      // Don't restore a tab if config is already showing.
+      if (!anyTabActive && !configVisible) {
         const tab = TABS.find(t => t.key === lastTabKey.current);
         if (tab) openPanel(tab.panel, 'AccountPanelTabBar:restore-after-overlay');
       }
-    } else if (!isOverlayOpen) {
+    } else if (!isOverlayOpen && derivedKey) {
       lastTabKey.current = derivedKey;
     }
-  }, [isOverlayOpen, derivedKey, sponsorVisible, rewardsVisible, swapVisible, sendVisible, openPanel]);
+  }, [isOverlayOpen, derivedKey, sponsorVisible, rewardsVisible, swapVisible, sendVisible, configVisible, openPanel]);
 
-  const activeKey: TabKey = isOverlayOpen ? lastTabKey.current : derivedKey;
+  // No tab is active while config is open or while an overlay (WAC/WNC) is covering the tabs.
+  const activeKey: TabKey | null = configVisible ? null : isOverlayOpen ? lastTabKey.current : derivedKey;
+
+  const handleTabClick = (tab: typeof TABS[number]) => {
+    // Config → tab: close config first so config is no longer highlighted.
+    if (configVisible) closePanel(SP_COIN_DISPLAY.WALLET_CONFIG_PANEL, `AccountPanelTabBar:closeConfigFor${tab.key}`);
+    openPanel(tab.panel, `AccountPanelTabBar:${tab.key}`);
+  };
+
+  const handleConfigClick = () => {
+    // Already open — clicking again is a no-op (same as clicking the active tab).
+    if (configVisible) return;
+    // Tab → config: close every tab panel so none remain highlighted.
+    TABS.forEach(tab => closePanel(tab.panel, 'AccountPanelTabBar:closeTabForConfig'));
+    openPanel(SP_COIN_DISPLAY.WALLET_CONFIG_PANEL, 'AccountPanelTabBar:cog');
+  };
 
   return (
     <div
@@ -60,8 +78,13 @@ export default function AccountPanelTabBar({ open = true }: Props) {
         <Image
           src={cog_png}
           alt="Config"
-          onClick={() => openPanel(SP_COIN_DISPLAY.WALLET_CONFIG_PANEL, 'AccountPanelTabBar:cog')}
-          className="absolute right-[20px] top-[11px] h-[22px] w-[22px] cursor-pointer transition-transform duration-300 hover:rotate-[360deg]"
+          onClick={handleConfigClick}
+          className={[
+            'absolute right-[20px] top-[11px] h-[22px] w-[22px] cursor-pointer transition-transform duration-300 hover:rotate-[360deg]',
+            configVisible
+              ? 'brightness-200 drop-shadow-[0_0_4px_#9db0ff]'
+              : 'opacity-70 hover:opacity-100',
+          ].join(' ')}
           priority
         />
         <div className="scrollbar-hide flex flex-nowrap items-center gap-2 overflow-x-auto pb-1 pr-10">
@@ -71,7 +94,7 @@ export default function AccountPanelTabBar({ open = true }: Props) {
               <button
                 key={tab.key}
                 type="button"
-                onClick={() => openPanel(tab.panel, `AccountPanelTabBar:${tab.key}`)}
+                onClick={() => handleTabClick(tab)}
                 className={[
                   'inline-flex min-w-[92px] shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-t-[12px] border px-4 py-2 text-[0.72rem] font-semibold tracking-[0.14em] transition-colors',
                   isActive
