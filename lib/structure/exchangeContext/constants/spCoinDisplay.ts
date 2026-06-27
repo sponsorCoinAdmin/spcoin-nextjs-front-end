@@ -68,11 +68,10 @@ export const ACCOUNT_PANEL_MODES = [
   SP.AGENT_ACCOUNT,
 ] as const satisfies readonly SP[];
 
-// TOKEN_PANEL children: exactly 0 or 1 visible.
+// TOKEN_PANEL radio modes: exactly 0 or 1 visible.
 export const TOKEN_CONTRACT_PANEL_MODES = [
   SP.BUY_CONTRACT,
   SP.SELL_CONTRACT,
-  SP.PREVIEW_CONTRACT,
 ] as const satisfies readonly SP[];
 
 // ACCOUNT_LIST_SELECT_PANEL children: exactly 0 or 1 visible.

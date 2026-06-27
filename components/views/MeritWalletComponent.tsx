@@ -1,7 +1,7 @@
 // File: components/views/MeritWalletComponent.tsx
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import styles from '@/styles/Exchange.module.css';
 import ConnectNetworkButton from '@/components/views/Buttons/Connect/ConnectNetworkButton';
 import AgentHeaderContainer from '@/components/views/Headers/AgentHeaderContainer';
@@ -39,18 +39,17 @@ interface Props {
 export default function MeritWalletComponent({ onExpand }: Props) {
   const { closeWallet } = useSpCoinWallet();
   const { openPanel, closePanel, setPanelVisible } = usePanelTree();
-  const [panelHeaderDisplay, setPanelHeaderDisplay] = useState(0);
 
-  const walletNetworksVisible    = usePanelVisible(SP_COIN_DISPLAY.WALLET_NETWORKS_COMPONENT);
+  const walletNetworksVisible = usePanelVisible(SP_COIN_DISPLAY.WALLET_NETWORKS_COMPONENT);
+  const menuTabVisible        = usePanelVisible(SP_COIN_DISPLAY.MENU_TAB_HEADER_BAR);
+  const addressBarVisible     = usePanelVisible(SP_COIN_DISPLAY.ADDRESS_HEADER_BAR);
+
+  // Initialize cycling-state from persisted panel visibility so page refresh restores the config.
+  const [panelHeaderDisplay, setPanelHeaderDisplay] = useState(
+    () => (menuTabVisible ? MENU : 0) | (addressBarVisible ? ADDRESS : 0),
+  );
 
   const title = 'Merit Wallet';
-
-  // Start at state 0 (MENU and ADDRESS hidden) on mount — intentionally no deps
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    setPanelVisible(SP_COIN_DISPLAY.MENU_TAB_HEADER_BAR, false);
-    setPanelVisible(SP_COIN_DISPLAY.ADDRESS_HEADER_BAR,  false);
-  }, []);
 
   const handleMenuClick = useCallback(() => {
     const next = selectPanel(panelHeaderDisplay, setPanelVisible);

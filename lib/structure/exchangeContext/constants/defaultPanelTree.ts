@@ -58,6 +58,8 @@ export const MUST_INCLUDE_ON_BOOT: readonly (readonly [SP, boolean])[] = [
   [SP.SPONSOR_ACCOUNT, false],
   [SP.RECIPIENT_ACCOUNT, false],
   [SP.AGENT_ACCOUNT, false],
+  [SP.ACCOUNT_LOGO, true],
+  [SP.ACCOUNT_META_DATA, true],
 
   // ✅ Ensure ACCOUNT_LIST_SELECT_PANEL children exist even for older persisted trees
   [SP.SPONSOR_LIST, false],
@@ -70,7 +72,8 @@ export const MUST_INCLUDE_ON_BOOT: readonly (readonly [SP, boolean])[] = [
   // ✅ Ensure TOKEN_PANEL children exist even for older persisted trees
   [SP.BUY_CONTRACT, false],
   [SP.SELL_CONTRACT, false],
-  [SP.PREVIEW_CONTRACT, false],
+  [SP.TOKEN_META_DATA, true],
+  [SP.TOKEN_LOGO, true],
 
   // ✅ Ensure staking sub-panel exists even for older persisted trees
   [SP.STAKE_TRADING_SPCOINS_PANEL, false],
@@ -130,7 +133,8 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
     node(SP.TOKEN_PANEL, false, [
       node(SP.BUY_CONTRACT, false),
       node(SP.SELL_CONTRACT, false),
-      node(SP.PREVIEW_CONTRACT, false),
+      node(SP.TOKEN_META_DATA, true),
+      node(SP.TOKEN_LOGO, true),
     ]),
 
     node(SP.CHEVRON_DOWN_OPEN_PENDING, false),
@@ -155,6 +159,8 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
       node(SP.SPONSOR_ACCOUNT, false),
       node(SP.RECIPIENT_ACCOUNT, false),
       node(SP.AGENT_ACCOUNT, false),
+      node(SP.ACCOUNT_LOGO, true),
+      node(SP.ACCOUNT_META_DATA, true),
     ]),
 
     node(SP.WALLET_ACCOUNTS_COMPONENT, false),

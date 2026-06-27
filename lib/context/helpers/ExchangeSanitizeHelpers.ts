@@ -374,6 +374,17 @@ export const sanitizeExchangeContext = (
     agentAccounts: Array.isArray((raw as any).accounts?.agentAccounts)
       ? normalizeAccountLogoList((raw as any).accounts.agentAccounts)
       : defaultContext.accounts.agentAccounts,
+
+    sendRecipientAddress:
+      typeof (raw as any).accounts?.sendRecipientAddress === 'string' &&
+      (raw as any).accounts.sendRecipientAddress.trim()
+        ? (raw as any).accounts.sendRecipientAddress.trim()
+        : undefined,
+    sendRecipientLogoURL:
+      typeof (raw as any).accounts?.sendRecipientLogoURL === 'string' &&
+      (raw as any).accounts.sendRecipientLogoURL.trim()
+        ? (raw as any).accounts.sendRecipientLogoURL.trim()
+        : undefined,
   };
 
   // ----- TRADEDATA
@@ -390,6 +401,9 @@ export const sanitizeExchangeContext = (
     previewTokenContract: (raw as any).tradeData?.previewTokenContract
       ? toSanitizedTokenRef((raw as any).tradeData.previewTokenContract)
       : defaultContext.tradeData.previewTokenContract,
+    sendTokenContract: (raw as any).tradeData?.sendTokenContract
+      ? toSanitizedTokenRef((raw as any).tradeData.sendTokenContract)
+      : defaultContext.tradeData.sendTokenContract,
     previewTokenSource:
       (raw as any).tradeData?.previewTokenSource ?? defaultContext.tradeData.previewTokenSource,
     rateRatio:

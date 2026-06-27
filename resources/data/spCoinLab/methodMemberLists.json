@@ -1,6 +1,10 @@
 {
   "version": 1,
+<<<<<<< HEAD
   "updatedAt": "2026-06-27T00:31:33.859Z",
+=======
+  "updatedAt": "2026-06-27T00:53:06.692Z",
+>>>>>>> 2026-06-26.WIP
   "lists": {
     "serialization": {
       "Basic": {

@@ -75,6 +75,8 @@ const ACCOUNT_PANEL_CHILDREN: readonly SP[] = [
   SP.SPONSOR_ACCOUNT,
   SP.RECIPIENT_ACCOUNT,
   SP.AGENT_ACCOUNT,
+  SP.ACCOUNT_LOGO,
+  SP.ACCOUNT_META_DATA,
 ] as const;
 
 /**
@@ -93,7 +95,8 @@ const ACCOUNT_LIST_SELECT_PANEL_CHILDREN: readonly SP[] = [
 const TOKEN_CONTRACT_PANEL_CHILDREN: readonly SP[] = [
   SP.BUY_CONTRACT,
   SP.SELL_CONTRACT,
-  SP.PREVIEW_CONTRACT,
+  SP.TOKEN_META_DATA,
+  SP.TOKEN_LOGO,
 ] as const;
 
 /**
@@ -258,11 +261,15 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   def({ id: SP.SPONSOR_ACCOUNT, kind: 'panel', children: [] }),
   def({ id: SP.RECIPIENT_ACCOUNT, kind: 'panel', children: [] }),
   def({ id: SP.AGENT_ACCOUNT, kind: 'panel', children: [] }),
+  // ✅ ACCOUNT_PANEL section children (independently toggleable)
+  def({ id: SP.ACCOUNT_LOGO, kind: 'panel', defaultVisible: true, children: [] }),
+  def({ id: SP.ACCOUNT_META_DATA, kind: 'panel', defaultVisible: true, children: [] }),
 
   // ✅ TOKEN_PANEL mode children
   def({ id: SP.BUY_CONTRACT, kind: 'panel', children: [] }),
   def({ id: SP.SELL_CONTRACT, kind: 'panel', children: [] }),
-  def({ id: SP.PREVIEW_CONTRACT, kind: 'panel', children: [] }),
+  def({ id: SP.TOKEN_META_DATA, kind: 'panel', defaultVisible: true, children: [] }),
+  def({ id: SP.TOKEN_LOGO, kind: 'panel', defaultVisible: true, children: [] }),
   def({ id: SP.SEND_CONTRACT, kind: 'panel', children: [] }),
 
   // ✅ ACCOUNT_LIST_SELECT_PANEL mode children

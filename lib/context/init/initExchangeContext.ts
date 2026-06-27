@@ -249,6 +249,7 @@ export async function initExchangeContext(
     sanitized.tradeData.sellTokenContract,
     sanitized.tradeData.buyTokenContract,
     sanitized.tradeData.previewTokenContract,
+    sanitized.tradeData.sendTokenContract,
   ];
   const tokenKeysToHydrate = new Map<string, { chainId: number; address: `0x${string}` }>();
 

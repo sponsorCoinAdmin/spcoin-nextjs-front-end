@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
+import { Copy, Check } from 'lucide-react';
 import ConnectNetworkButtonProps from '@/components/views/Buttons/Connect/ConnectNetworkButton';
 import { msTableTw } from '@/components/views/RadioOverlayPanels/msTableTw';
 import RoleTableComponent from '@/components/shared/RoleTableComponent';
@@ -91,6 +92,14 @@ export default function CreateAccountFormPanel({
   const [hoverTarget, setHoverTarget] = useState<'createAccount' | 'revertChanges' | null>(
     null,
   );
+  const [addressCopied, setAddressCopied] = useState(false);
+  const handleCopyAddress = useCallback(() => {
+    if (!publicKey) return;
+    navigator.clipboard.writeText(publicKey).then(() => {
+      setAddressCopied(true);
+      setTimeout(() => setAddressCopied(false), 1500);
+    });
+  }, [publicKey]);
 
   const th = 'px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-300/80';
   const cell = 'px-3 py-3 text-sm align-middle';
@@ -133,7 +142,7 @@ export default function CreateAccountFormPanel({
           {formHeading ? (
             <div className="grid w-full grid-cols-1 md:grid-cols-[minmax(10rem,max-content)_minmax(0,1fr)]">
               <div className="invisible hidden h-0 overflow-hidden px-2 whitespace-nowrap md:block">
-                Account Address
+                Address
               </div>
               <h2 className="w-full text-center text-lg font-semibold text-[#5981F3]">
                 {formHeading}
@@ -154,34 +163,46 @@ export default function CreateAccountFormPanel({
           </div>
 
           <div className="contents">
-            <div className={`${zebraA} ${cell} whitespace-nowrap border-b border-black`}>Account Address</div>
+            <div className={`${zebraA} ${cell} whitespace-nowrap border-b border-black`}>Address</div>
             <div className={`${zebraA} ${cell} min-w-0 border-b border-black`}>
-              <input
-                id={fieldId('publicKey')}
-                type="text"
-                name="publicKey"
-                value={connected ? publicKey : disconnectedMetaMaskMessage}
-                readOnly={!connected || inputLocked || publicKeyLocked}
-                placeholder={
-                  !connected
-                    ? disconnectedMetaMaskMessage
-                    : hoveredInput === 'publicKey'
-                    ? FIELD_PLACEHOLDERS.publicKey
-                    : 'Required'
-                }
-                title={
-                  !connected
-                    ? disconnectedMetaMaskMessage
-                    : errors.publicKey
-                    ? `Required for Code Account Operations | Error: ${errors.publicKey}`
-                    : 'Required for Code Account Operations'
-                }
-                className={`${requiredInputClasses}${!connected ? ' text-center font-bold text-red-500' : ''}${errorValueClasses}${errors.publicKey ? ` ${inputErrorClasses}` : ''}${getLoadingClassesForField('publicKey') ? ` ${getLoadingClassesForField('publicKey')}` : ''}`}
-                onChange={onPublicKeyChange}
-                onBlur={onPublicKeyBlur}
-                onMouseEnter={() => setHoveredInput('publicKey')}
-                onMouseLeave={() => setHoveredInput(null)}
-              />
+              <div className="flex items-center gap-1 min-w-0">
+                <input
+                  id={fieldId('publicKey')}
+                  type="text"
+                  name="publicKey"
+                  value={connected ? publicKey : disconnectedMetaMaskMessage}
+                  readOnly={!connected || inputLocked || publicKeyLocked}
+                  placeholder={
+                    !connected
+                      ? disconnectedMetaMaskMessage
+                      : hoveredInput === 'publicKey'
+                      ? FIELD_PLACEHOLDERS.publicKey
+                      : 'Required'
+                  }
+                  title={
+                    !connected
+                      ? disconnectedMetaMaskMessage
+                      : errors.publicKey
+                      ? `Required for Code Account Operations | Error: ${errors.publicKey}`
+                      : 'Required for Code Account Operations'
+                  }
+                  className={`${requiredInputClasses}${!connected ? ' text-center font-bold text-red-500' : ''}${errorValueClasses}${errors.publicKey ? ` ${inputErrorClasses}` : ''}${getLoadingClassesForField('publicKey') ? ` ${getLoadingClassesForField('publicKey')}` : ''}`}
+                  onChange={onPublicKeyChange}
+                  onBlur={onPublicKeyBlur}
+                  onMouseEnter={() => setHoveredInput('publicKey')}
+                  onMouseLeave={() => setHoveredInput(null)}
+                />
+                {connected && publicKey ? (
+                  <button
+                    type="button"
+                    onClick={handleCopyAddress}
+                    title="Copy address"
+                    className="shrink-0 rounded p-1 text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                  >
+                    {addressCopied ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5" />}
+                  </button>
+                ) : null}
+              </div>
               {errors.publicKey ? (
                 <p className="text-sm text-red-500">{errors.publicKey}</p>
               ) : null}

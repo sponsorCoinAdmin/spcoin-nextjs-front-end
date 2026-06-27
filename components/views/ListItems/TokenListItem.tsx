@@ -51,7 +51,7 @@ const TokenListItem = React.memo(function TokenListItem({
       'TokenListItem:openTokenContractPanel',
     );
     openPanel(
-      SP_COIN_DISPLAY.PREVIEW_CONTRACT,
+      SP_COIN_DISPLAY.TOKEN_META_DATA,
       'TokenListItem:openPreviewToken',
       SP_COIN_DISPLAY.TOKEN_PANEL,
     );

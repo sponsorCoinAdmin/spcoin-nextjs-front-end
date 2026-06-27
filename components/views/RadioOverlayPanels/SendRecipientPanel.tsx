@@ -28,10 +28,12 @@ export default function SendRecipientPanel() {
   }, [recipientPickerVisible, openPanel, closePanel]);
 
   return (
-    <div id="SEND_RECIPIENT_PANEL" className="flex flex-col gap-1 px-[10px] pt-2 pb-2">
-      <span title="To Recipient" className="text-[#94a3b8] text-[12px]">To Recipient:</span>
-      <div className="flex items-center gap-2 justify-end">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg hover:opacity-80 transition-opacity">
+    <div id="SEND_RECIPIENT_PANEL" className="relative h-[60px]">
+      <div title="To Recipient" className="absolute top-5 left-[10px] text-[#94a3b8] text-[12px]">
+        To Recipient:
+      </div>
+      <div className="absolute flex items-center gap-[5px]" style={{ top: '12px', right: '20px' }}>
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-md hover:opacity-80 transition-opacity">
           <AccountAvatar
             logoURL={toAddress ? recipientLogoURL : undefined}
             address={toAddress || undefined}
