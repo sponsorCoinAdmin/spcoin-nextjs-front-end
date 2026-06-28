@@ -8,6 +8,7 @@ import { Search } from 'lucide-react';
 import { SP_COIN_DISPLAY, STATUS } from '@/lib/structure';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import useOpenAccountComponent from '@/lib/context/hooks/useOpenAccountComponent';
+import { appendDebugTrace } from '@/lib/utils/debugTrace';
 import { useWalletAccountsList } from '@/lib/spCoinWallet/useWalletAccountsList';
 import { truncateMiddle } from '@/lib/utils/addressUtils';
 import AccountAvatar from '@/components/utility/AccountAvatar';
@@ -121,6 +122,7 @@ function AccountRow({
 
   const handleInfo = (e: React.MouseEvent) => {
     e.stopPropagation();
+    appendDebugTrace('SendRecipientSelectPanel:info:click', { address, label, hasLogoURL: !!logoURL });
     openAccountComponent({
       account: {
         name: label,

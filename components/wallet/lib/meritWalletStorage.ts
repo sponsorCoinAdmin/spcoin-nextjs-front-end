@@ -2,20 +2,11 @@
 
 export const MERIT_WALLET_LS_KEY = 'meritWalletLS';
 
-export type MeritWalletDefaultPanel =
-  | 'MENU'
-  | 'ACCOUNT'
-  | 'REWARDS'
-  | 'SWAP'
-  | 'SPONSOR'
-  | 'OPTIONS';
-
-export type MeritWalletLocation = 'FIXED' | 'FLOATING';
+export type MeritWalletLocation = 'CENTER' | 'FIXED' | 'FLOATING' | 'SPLIT_PANE' | 'STICK_TO_TOP';
 
 export interface MeritWalletConfig {
   showBackgroundPage: boolean;
   modalMode: boolean;
-  defaultPanel: MeritWalletDefaultPanel;
   location: MeritWalletLocation;
 }
 
@@ -29,30 +20,12 @@ const DEFAULT_MERIT_WALLET_LS: MeritWalletLS = {
   config: {
     showBackgroundPage: true,
     modalMode: false,
-    defaultPanel: 'SWAP',
     location: 'FIXED',
   },
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
-}
-
-const VALID_DEFAULT_PANELS = new Set<MeritWalletDefaultPanel>(
-  ['ACCOUNT', 'REWARDS', 'SWAP', 'SPONSOR', 'OPTIONS'],
-);
-const MIGRATED_DEFAULT_PANELS: Record<string, MeritWalletDefaultPanel> = {
-  TRADE_STATION: 'SWAP',
-  MANAGE_ACCOUNT: 'ACCOUNT',
-  MANAGE_REWARDS: 'REWARDS',
-  MENU: 'SWAP',
-};
-function normalizeDefaultPanel(value: unknown): MeritWalletDefaultPanel {
-  if (typeof value === 'string') {
-    if (VALID_DEFAULT_PANELS.has(value as MeritWalletDefaultPanel)) return value as MeritWalletDefaultPanel;
-    if (value in MIGRATED_DEFAULT_PANELS) return MIGRATED_DEFAULT_PANELS[value];
-  }
-  return 'SWAP';
 }
 
 export function readMeritWalletLS(): MeritWalletLS {
@@ -72,8 +45,9 @@ export function readMeritWalletLS(): MeritWalletLS {
       config: {
         showBackgroundPage: config.showBackgroundPage === true,
         modalMode: config.modalMode !== false,
-        defaultPanel: normalizeDefaultPanel(config.defaultPanel),
-        location: config.location === 'FLOATING' ? 'FLOATING' : 'FIXED',
+        location: (['CENTER', 'FIXED', 'FLOATING', 'SPLIT_PANE', 'STICK_TO_TOP'] as const).includes(config.location as MeritWalletLocation)
+          ? config.location as MeritWalletLocation
+          : 'FIXED',
       },
     };
   } catch {

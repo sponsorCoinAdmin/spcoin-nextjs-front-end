@@ -34,9 +34,10 @@ function selectPanel(
 
 interface Props {
   onExpand?: () => void;
+  docked?: boolean;
 }
 
-export default function MeritWalletComponent({ onExpand }: Props) {
+export default function MeritWalletComponent({ onExpand, docked = false }: Props) {
   const { closeWallet } = useSpCoinWallet();
   const { openPanel, closePanel, setPanelVisible } = usePanelTree();
 
@@ -65,7 +66,12 @@ export default function MeritWalletComponent({ onExpand }: Props) {
 
   return (
     <PanelGate panel={SP_COIN_DISPLAY.MERIT_WALLET_COMPONENT}>
-      <div className="flex h-[min(650px,calc(100vh-230px))] min-h-[300px] w-[min(520px,calc(100vw-2rem))] flex-col overflow-hidden rounded-[15px] border border-[#2e3654] bg-[#0b0e19] text-white shadow-2xl pointer-events-auto">
+      <div className={[
+        'flex min-h-[200px] w-[min(520px,calc(100vw-2rem))] flex-col overflow-hidden border border-[#2e3654] bg-[#0b0e19] text-white shadow-2xl pointer-events-auto',
+        docked
+          ? 'h-full rounded-none border-r-0'
+          : 'max-h-[min(1000px,calc(100vh-100px))] rounded-[15px]',
+      ].join(' ')}>
         <WalletHeader
           mode="normal"
           title={title}
@@ -87,21 +93,17 @@ export default function MeritWalletComponent({ onExpand }: Props) {
         />
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <AgentHeaderContainer onMenuClick={handleMenuClick} />
-          <div className="relative min-h-0 flex-1 overflow-hidden">
-            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column' }}>
-              <div id="UNDEFINED" className="hidden" aria-hidden="true" />
-              <div
-                id="mainTradingPanel"
-                className={styles.mainTradingPanel}
-                style={{ transform: 'none', width: '100%', flex: 1, minHeight: 0, maxHeight: '100%', margin: 0 }}
-              >
-                <MenuTabHeaderBar />
-                <PanelSubTitle />
-                <AddressHeaderBar />
-                <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto flex flex-col">
-                  <RadioOverlayPanelHost />
-                </div>
-              </div>
+          <div id="UNDEFINED" className="hidden" aria-hidden="true" />
+          <div
+            id="mainTradingPanel"
+            className={styles.mainTradingPanel}
+            style={{ transform: 'none', width: '100%', flex: 1, minHeight: 0, maxHeight: '100%', margin: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+          >
+            <MenuTabHeaderBar />
+            <PanelSubTitle />
+            <AddressHeaderBar />
+            <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto overscroll-contain flex flex-col">
+              <RadioOverlayPanelHost />
             </div>
           </div>
         </div>

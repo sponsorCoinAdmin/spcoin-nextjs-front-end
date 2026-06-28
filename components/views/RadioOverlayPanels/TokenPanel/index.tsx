@@ -213,7 +213,7 @@ export default function TokenPanel(_props: Props) {
       {vBuyToken && <div id="BUY_CONTRACT" className="hidden" aria-hidden="true" />}
       {vSellToken && <div id="SELL_CONTRACT" className="hidden" aria-hidden="true" />}
       {isPreviewMode && <div id="TOKEN_META_DATA_PREVIEW" className="hidden" aria-hidden="true" />}
-      {vTokenMetaData && (
+      {(isPreviewMode || vTokenMetaData) && (
         <ReadOnlyMetaDataTable
           rows={rows}
           logoURL={logoURL}

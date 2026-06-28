@@ -223,7 +223,6 @@ export default function AccountPanelContent({
               lockSectionHeight={true}
               fillParentHeight={false}
               sizingBoundarySelector="#ACCOUNT_PANEL"
-              traceSizingLabel="AccountPanel"
               resizeSignal={avatarResizeSignal}
             />
           </div> : null}

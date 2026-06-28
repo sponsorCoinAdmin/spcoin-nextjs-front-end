@@ -11,10 +11,7 @@ import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import useOpenAccountComponent from '@/lib/context/hooks/useOpenAccountComponent';
 import { useSpCoinWallet } from '@/lib/spCoinWallet';
-import {
-  readMeritWalletLS,
-  type MeritWalletDefaultPanel,
-} from '@/lib/spCoinWallet/meritWalletStorage';
+import { readMeritWalletLS } from '@/lib/spCoinWallet/meritWalletStorage';
 import { getBlockChainName } from '@/lib/context/helpers/NetworkHelpers';
 import { useActiveAccount } from '@/lib/context/hooks/ExchangeContext/nested/accounts/useActiveAccount';
 import type { SpCoinWalletAccount } from '@/lib/spCoinWallet';
@@ -42,15 +39,15 @@ export default function SpCoinWalletPopup() {
   const { connectAsync, connectors, status: connectStatus } = useConnect();
   const [previewAccount, setPreviewAccount] = useState<spCoinAccount | undefined>(undefined);
   const [selectionAccountsCollapsed, setSelectionAccountsCollapsed] = useState(false);
-  const [defaultPanel] = useState<MeritWalletDefaultPanel>(
-    () => readMeritWalletLS().config.defaultPanel,
-  );
   const [showBackgroundPage, setShowBackgroundPage] = useState(() => readMeritWalletLS().config.showBackgroundPage);
   const [modalMode, setModalMode] = useState(() => readMeritWalletLS().config.modalMode);
   const [location, setLocationState] = useState<MeritWalletLocation>(
     () => readMeritWalletLS().config.location,
   );
-  const isFloating = location === 'FLOATING';
+  const isCenter      = location === 'CENTER';
+  const isFloating    = location === 'FLOATING';
+  const isStickToTop  = location === 'STICK_TO_TOP';
+  const isSplitPane   = location === 'SPLIT_PANE';
 
   // Floating-mode drag state
   const floatPosRef = useRef({ x: 0, y: 0 });
@@ -62,7 +59,6 @@ export default function SpCoinWalletPopup() {
 
   const wasWalletOpenRef = useRef(false);
   const wasNormalModeRef = useRef(false);
-  const suppressDefaultPanelAutoOpenRef = useRef(false);
   const meritWalletRestoreHandledRef = useRef(false);
   const hasPersistedStackRef = useRef(false);
 
@@ -81,21 +77,37 @@ export default function SpCoinWalletPopup() {
       if (typeof detail.showBackgroundPage === 'boolean') setShowBackgroundPage(detail.showBackgroundPage);
       if (typeof detail.modalMode === 'boolean') setModalMode(detail.modalMode);
       const loc = detail.location;
-      if (loc === 'FIXED' || loc === 'FLOATING') setLocationState(loc);
+      if (loc === 'CENTER' || loc === 'FIXED' || loc === 'FLOATING' || loc === 'SPLIT_PANE' || loc === 'STICK_TO_TOP') setLocationState(loc as MeritWalletLocation);
     };
     window.addEventListener('meritWalletConfigChange', handler);
     return () => window.removeEventListener('meritWalletConfigChange', handler);
   }, []);
 
-  // Mouse-move / mouse-up listeners for dragging
+  // Clamps a floating position so the wallet stays fully within the container bounds.
+  // Container: inset-x-0, top-[60px], bottom-0 → width=100vw, height=100vh-60.
+  // Wallet is centered at (50%, 50%) with translate offset (x, y).
+  const clampFloatPos = (pos: { x: number; y: number }): { x: number; y: number } => {
+    const containerH = window.innerHeight - 60;
+    const containerW = window.innerWidth;
+    const walletH = Math.min(1000, containerH - 40); // mirrors CSS max-h formula
+    const walletW = Math.min(520, containerW - 32);   // mirrors CSS w formula (2rem = 32px)
+    const halfFreeY = Math.max(0, (containerH - walletH) / 2);
+    const halfFreeX = Math.max(0, (containerW - walletW) / 2);
+    return {
+      x: Math.max(-halfFreeX, Math.min(halfFreeX, pos.x)),
+      y: Math.max(-halfFreeY, Math.min(halfFreeY, pos.y)),
+    };
+  };
+
+  // Mouse-move / mouse-up listeners for dragging (floating) and horizontal sliding (stick-to-top).
   useEffect(() => {
-    if (!isFloating) return;
+    if (!isFloating && !isStickToTop) return;
     const onMouseMove = (e: MouseEvent) => {
       if (!dragStateRef.current) return;
-      const next = {
-        x: dragStateRef.current.startPosX + e.clientX - dragStateRef.current.startMouseX,
-        y: dragStateRef.current.startPosY + e.clientY - dragStateRef.current.startMouseY,
-      };
+      const rawX = dragStateRef.current.startPosX + e.clientX - dragStateRef.current.startMouseX;
+      const rawY = dragStateRef.current.startPosY + e.clientY - dragStateRef.current.startMouseY;
+      // STICK_TO_TOP: only horizontal movement — y is always 0.
+      const next = clampFloatPos({ x: rawX, y: isStickToTop ? 0 : rawY });
       floatPosRef.current = next;
       setFloatPos(next);
     };
@@ -106,7 +118,21 @@ export default function SpCoinWalletPopup() {
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
     };
-  }, [isFloating]);
+  }, [isFloating, isStickToTop]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Re-validate position on viewport resize so the wallet snaps back into bounds.
+  useEffect(() => {
+    if (!isFloating && !isStickToTop) return;
+    const onResize = () => {
+      setFloatPos(prev => {
+        const clamped = clampFloatPos({ x: prev.x, y: isStickToTop ? 0 : prev.y });
+        floatPosRef.current = clamped;
+        return clamped;
+      });
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [isFloating, isStickToTop]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleFloatDragStart = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     // Only drag from the title-bar area (top ~64px), not from interactive elements
@@ -185,7 +211,7 @@ export default function SpCoinWalletPopup() {
     }
     clearDebugTraceBuffer();
     wasWalletOpenRef.current = true;
-  }, [defaultPanel, isOpen, isSelectionMode, meritWalletVisible, session.appChainId, session.signerAddress, walletSource]);
+  }, [isOpen, isSelectionMode, meritWalletVisible, session.appChainId, session.signerAddress, walletSource]);
 
   // Restore MERIT_WALLET_COMPONENT only once per wallet-open session.
   // We gate via meritWalletRestoreHandledRef so that subsequent effect re-runs
@@ -201,7 +227,7 @@ export default function SpCoinWalletPopup() {
     meritWalletRestoreHandledRef.current = true;
     if (meritWalletVisible) return;
     openPanel(SP_COIN_DISPLAY.MERIT_WALLET_COMPONENT, 'SpCoinWalletPopup:restoreMeritWalletPanel');
-  }, [defaultPanel, isOpen, isSelectionMode, openPanel, walletSource]);
+  }, [isOpen, isSelectionMode, openPanel, walletSource]);
 
   useEffect(() => {
     setSelectionAccountsCollapsed(false);
@@ -283,7 +309,6 @@ export default function SpCoinWalletPopup() {
     const nextAccount = buildSpCoinAccount(account, 'Unnamed account');
     setActiveAccount(nextAccount);
     setPreviewAccount(nextAccount);
-    suppressDefaultPanelAutoOpenRef.current = true;
     openAccountComponent({
       account: nextAccount,
       mode: SP_COIN_DISPLAY.ACTIVE_ACCOUNT,
@@ -300,80 +325,6 @@ export default function SpCoinWalletPopup() {
     if (previewAccount) { setPreviewAccount(undefined); return; }
     closeWallet();
   };
-
-  /* ─── Default-panel auto-open handlers ─── */
-
-  const openWalletOptions = useCallback(() => {
-    openPanel(SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT, 'SpCoinWalletPopup:openAccountsForOptions');
-  }, [openPanel]);
-
-  const openTradeStationDefaultPanel = useCallback(() => {
-    setWalletNavigationVisible(false, 'SpCoinWalletPopup:hideForTradeStationDefault');
-    setManagePanelsVisible(false, false, 'SpCoinWalletPopup:hideForTradeStationDefault');
-    openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL, 'SpCoinWalletPopup:openTradingStationPanel');
-    setPanelVisible(SP_COIN_DISPLAY.EXCHANGE_TRADING_PAIR, true, 'SpCoinWalletPopup:showExchangeTradingPair');
-  }, [openPanel, setManagePanelsVisible, setPanelVisible, setWalletNavigationVisible]);
-
-  const openManageRewardsPanel = useCallback(() => {
-    suppressDefaultPanelAutoOpenRef.current = true;
-    setWalletNavigationVisible(false, 'SpCoinWalletPopup:hideForManageRewardsDefault');
-    setPanelVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL, false, 'SpCoinWalletPopup:hideTradingStation');
-    setManagePanelsVisible(true, false, 'SpCoinWalletPopup:showForManageRewards');
-    openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL, 'SpCoinWalletPopup:openManageSponsorships');
-  }, [openPanel, setManagePanelsVisible, setPanelVisible, setWalletNavigationVisible]);
-
-  const openManageAccountPanel = useCallback(() => {
-    const activeAccount = exchangeContext?.accounts?.activeAccount;
-    if (!activeAccount) return;
-    suppressDefaultPanelAutoOpenRef.current = true;
-    const nextAccount = buildSpCoinAccount(activeAccount, 'Active Account');
-    openAccountComponent({ account: nextAccount, mode: SP_COIN_DISPLAY.ACTIVE_ACCOUNT, source: 'SpCoinWalletPopup:ManageAccount' });
-    setPreviewAccount(nextAccount);
-  }, [exchangeContext?.accounts?.activeAccount, openAccountComponent]);
-
-  const openSponsorPanel = useCallback(() => {
-    const sourceAccount = exchangeContext?.accounts?.sponsorAccount ?? exchangeContext?.accounts?.activeAccount;
-    if (!sourceAccount) return;
-    suppressDefaultPanelAutoOpenRef.current = true;
-    const nextAccount = buildSpCoinAccount(sourceAccount, 'Sponsor Account');
-    openAccountComponent({ account: nextAccount, mode: SP_COIN_DISPLAY.SPONSOR_ACCOUNT, source: 'SpCoinWalletPopup:Sponsor' });
-    setPreviewAccount(nextAccount);
-  }, [exchangeContext?.accounts?.activeAccount, exchangeContext?.accounts?.sponsorAccount, openAccountComponent]);
-
-  const openOptionsPanel = useCallback(() => {
-    suppressDefaultPanelAutoOpenRef.current = true;
-    openPanel(SP_COIN_DISPLAY.WALLET_CONFIG_PANEL, 'SpCoinWalletPopup:openOptionsPanel');
-  }, [openPanel]);
-
-  const defaultPanelHandlersRef = useRef({
-    openManageAccountPanel, openManageRewardsPanel, openOptionsPanel,
-    openSponsorPanel, openTradeStationDefaultPanel, openWalletOptions,
-  });
-  useEffect(() => {
-    defaultPanelHandlersRef.current = {
-      openManageAccountPanel, openManageRewardsPanel, openOptionsPanel,
-      openSponsorPanel, openTradeStationDefaultPanel, openWalletOptions,
-    };
-  });
-
-  // Panel visibility guards are read as closure values — intentionally NOT in deps.
-  // Including them caused a re-open cycle: hiding WAC triggered this effect, which re-opened WAC.
-  // This effect should only fire on wallet open/close or defaultPanel change, not on panel toggles.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    if (!isOpen || isSelectionMode) return;
-    if (walletAccountsVisible || walletConfigTabVisible || tradingStationTabVisible || rewardsTabVisible || sendPanelVisible || sponsorPanelVisible || tokenListVisible) return;
-    if (suppressDefaultPanelAutoOpenRef.current) { suppressDefaultPanelAutoOpenRef.current = false; return; }
-    // If a persisted stack exists, those panels will restore themselves — don't override with default.
-    if (hasPersistedStackRef.current) return;
-    const h = defaultPanelHandlersRef.current;
-    if (defaultPanel === 'MENU')    { h.openWalletOptions();            return; }
-    if (defaultPanel === 'ACCOUNT') { h.openManageAccountPanel();       return; }
-    if (defaultPanel === 'REWARDS') { h.openManageRewardsPanel();       return; }
-    if (defaultPanel === 'SWAP')    { h.openTradeStationDefaultPanel(); return; }
-    if (defaultPanel === 'SPONSOR') { h.openSponsorPanel();             return; }
-    if (defaultPanel === 'OPTIONS') { h.openOptionsPanel(); }
-  }, [defaultPanel, isOpen, isSelectionMode]);
 
   if (!isOpen || !shouldMountWalletShell) return null;
 
@@ -427,19 +378,31 @@ export default function SpCoinWalletPopup() {
   return (
     <div
       className={[
-        'fixed inset-x-0 bottom-0 top-[60px] z-[10000]',
-        isFloating ? 'pointer-events-none' : 'flex items-center justify-center',
-        !isFloating && !modalMode ? 'pointer-events-none' : '',
-        isFloating ? '' : showBackgroundPage ? 'bg-black/35' : 'bg-[#050711]',
+        'fixed inset-x-0 bottom-0 top-[60px] z-[10000] overflow-hidden',
+        isFloating || isStickToTop
+          ? 'pointer-events-none'
+          : isSplitPane
+            ? 'flex items-stretch justify-end pointer-events-none'
+            : isCenter
+              ? 'flex items-center justify-center'
+              : 'flex items-start justify-center',
+        !isFloating && !isStickToTop && !isSplitPane && !modalMode ? 'pointer-events-none' : '',
+        showBackgroundPage ? (isFloating || isStickToTop || isSplitPane ? '' : 'bg-black/35') : 'bg-black',
       ].join(' ')}
       role="dialog"
-      aria-modal={isFloating ? 'false' : 'true'}
+      aria-modal={isFloating || isStickToTop || isSplitPane ? 'false' : 'true'}
       aria-label="Merit Wallet"
     >
-      {isFloating ? (
+      {isFloating || isStickToTop ? (
         <div
           onMouseDown={handleFloatDragStart}
-          style={{
+          style={isStickToTop ? {
+            position: 'absolute',
+            top: 0,
+            left: '50%',
+            transform: `translateX(calc(-50% + ${floatPos.x}px))`,
+            cursor: isDragging ? 'grabbing' : 'grab',
+          } : {
             position: 'absolute',
             left: '50%',
             top: '50%',
@@ -450,7 +413,7 @@ export default function SpCoinWalletPopup() {
           <MeritWalletComponent />
         </div>
       ) : (
-        <MeritWalletComponent />
+        <MeritWalletComponent docked={isSplitPane} />
       )}
     </div>
   );

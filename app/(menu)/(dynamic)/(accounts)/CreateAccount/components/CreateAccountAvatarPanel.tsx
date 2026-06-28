@@ -169,11 +169,16 @@ export default function CreateAccountAvatarPanel({
       const selectedRowHeight = selectedRowRef.current?.getBoundingClientRect().height ?? 0;
       const measuredBoundaryBottom = boundaryRect?.bottom ?? parentRect?.bottom ?? sectionRect.bottom;
       const sizingBottom = Math.min(measuredBoundaryBottom, clipBottom);
+      // Cap boundary height to the visible clipped region to prevent a resize loop
+      // where lockSectionHeight expands the section → boundary grows → repeat.
+      const visibleBoundaryHeight = boundary && boundaryRect
+        ? Math.min(boundary.clientHeight, sizingBottom - boundaryRect.top)
+        : 0;
       const availableSectionHeight = Math.floor(
         Math.max(
           0,
           boundary
-            ? boundary.clientHeight - headingHeight - selectedRowHeight - sectionBottomBuffer
+            ? visibleBoundaryHeight - headingHeight - selectedRowHeight - sectionBottomBuffer
             : sizingBottom - sectionRect.top - sectionBottomBuffer,
         ),
       );

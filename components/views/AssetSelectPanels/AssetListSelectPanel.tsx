@@ -10,8 +10,9 @@ import AccountListRewardsPanel from '@/components/views/RadioOverlayPanels/Accou
 import { useAssetSelectContext } from '@/lib/context';
 import { useFeedData } from '@/lib/utils/feeds/assetSelect';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 
-import { FEED_TYPE, type FeedData, type spCoinAccount, type SP_COIN_DISPLAY } from '@/lib/structure';
+import { FEED_TYPE, SP_COIN_DISPLAY, type FeedData, type spCoinAccount } from '@/lib/structure';
 import { InputState } from '@/lib/structure/assetSelection';
 
 // ✅ global util
@@ -57,6 +58,9 @@ export default function AssetListSelectPanel() {
     containerType,
   } = assetCtx;
 
+  // Must be before any early returns to satisfy Rules of Hooks
+  const inSendMode = usePanelVisible(SP_COIN_DISPLAY.SEND_CONTRACT);
+
   // ✅ Derive feedType from containerType if not provided by context
   const feedType: FEED_TYPE | undefined = useMemo(() => {
     if (typeof ctxFeedType === 'number') return ctxFeedType as FEED_TYPE;
@@ -75,7 +79,7 @@ export default function AssetListSelectPanel() {
   }
 
   const isManageView = isManageFeedType(feedType);
-  const showAddressBar = !isManageView;
+  const showAddressBar = !isManageView && !inSendMode;
 
   // mount logs without stale captures
   const latestRef = useRef({ instanceId, feedType, isManageView, showAddressBar });

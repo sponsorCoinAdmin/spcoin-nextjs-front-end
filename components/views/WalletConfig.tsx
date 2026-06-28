@@ -5,16 +5,12 @@ import { useState } from 'react';
 import {
   readMeritWalletLS,
   updateMeritWalletLS,
-  type MeritWalletDefaultPanel,
   type MeritWalletLocation,
 } from '@/lib/spCoinWallet/meritWalletStorage';
 
 export default function WalletConfig() {
   const [showBackgroundPage, setShowBackgroundPage] = useState(
     () => readMeritWalletLS().config.showBackgroundPage,
-  );
-  const [defaultPanel, setDefaultPanel] = useState<MeritWalletDefaultPanel>(
-    () => readMeritWalletLS().config.defaultPanel,
   );
   const [modalMode, setModalMode] = useState<boolean>(
     () => readMeritWalletLS().config.modalMode,
@@ -40,20 +36,6 @@ export default function WalletConfig() {
     updateMeritWalletLS((prev) => ({ ...prev, config: { ...prev.config, location: loc } }));
     window.dispatchEvent(new CustomEvent('meritWalletConfigChange', { detail: { location: loc } }));
   };
-
-  const handleDefaultPanelChange = (panel: MeritWalletDefaultPanel) => {
-    setDefaultPanel(panel);
-    updateMeritWalletLS((prev) => ({ ...prev, config: { ...prev.config, defaultPanel: panel } }));
-  };
-
-  const defaultPanelOptions: { value: MeritWalletDefaultPanel; label: string }[] = [
-    { value: 'MENU',    label: 'Menu' },
-    { value: 'ACCOUNT', label: 'Account' },
-    { value: 'REWARDS', label: 'Rewards' },
-    { value: 'SWAP',    label: 'Swap' },
-    { value: 'SPONSOR', label: 'Sponsor' },
-    { value: 'OPTIONS', label: 'Options' },
-  ];
 
   return (
     <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto space-y-3 border-t border-slate-700/70 py-4">
@@ -94,59 +76,34 @@ export default function WalletConfig() {
       </label>
 
       <div className="rounded-[15px] border border-slate-800 bg-[#161922] px-5 py-4">
-        <span className="block text-base font-semibold text-white">
+        <span className="block text-base font-semibold text-white mb-3">
           Location
         </span>
-        <div className="mt-3 space-y-3">
+        <div className="flex flex-wrap items-center gap-4 text-sm text-[#8FA8FF]">
           {([
-            { value: 'FIXED' as const, label: 'Fixed' },
-            { value: 'FLOATING' as const, label: 'Floating' },
+            { value: 'CENTER' as const,       label: 'Center' },
+            { value: 'FIXED' as const,        label: 'Fixed' },
+            { value: 'FLOATING' as const,     label: 'Float' },
+            { value: 'SPLIT_PANE' as const,   label: 'Split Pane' },
+            { value: 'STICK_TO_TOP' as const, label: 'Top' },
           ]).map((option) => (
-            <label
-              key={option.value}
-              className="flex cursor-pointer items-center justify-between gap-4 rounded-[12px] px-3 py-2 hover:bg-[#1b2130]"
-            >
-              <span className="text-sm font-semibold text-slate-200">
-                {option.label}
-              </span>
+            <label key={option.value} className="inline-flex cursor-pointer items-center gap-2">
               <input
                 type="radio"
                 name="merit-wallet-location"
                 value={option.value}
                 checked={location === option.value}
                 onChange={() => handleLocationChange(option.value)}
-                className="h-5 w-5 cursor-pointer accent-[#5981F3]"
+                className="h-3.5 w-3.5 shrink-0 appearance-none rounded-full border border-red-600 bg-red-600 checked:border-green-500 checked:bg-green-500"
               />
+              <span className={location === option.value ? 'text-green-400' : 'text-[#8FA8FF]'}>
+                {option.label}
+              </span>
             </label>
           ))}
         </div>
       </div>
 
-      <div className="rounded-[15px] border border-slate-800 bg-[#161922] px-5 py-4">
-        <span className="block text-base font-semibold text-white">
-          Default Popup Panel
-        </span>
-        <div className="mt-3 space-y-3">
-          {defaultPanelOptions.map((option) => (
-            <label
-              key={option.value}
-              className="flex cursor-pointer items-center justify-between gap-4 rounded-[12px] px-3 py-2 hover:bg-[#1b2130]"
-            >
-              <span className="text-sm font-semibold text-slate-200">
-                {option.label}
-              </span>
-              <input
-                type="radio"
-                name="merit-wallet-default-panel"
-                value={option.value}
-                checked={defaultPanel === option.value}
-                onChange={() => handleDefaultPanelChange(option.value)}
-                className="h-5 w-5 cursor-pointer accent-[#5981F3]"
-              />
-            </label>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }
