@@ -17,11 +17,14 @@ export default function StakingSpCoinsPanel() {
         <PanelGate panel={SP_COIN_DISPLAY.STAKE_TRADING_SPCOINS_PANEL}>
           <StakeTradingSpCoinsPanel />
         </PanelGate>
-        <PanelGate panel={SP_COIN_DISPLAY.ADD_SPONSORSHIP_PANEL}>
-          <AddSponsorShipPanel />
+        <PanelGate panel={SP_COIN_DISPLAY.ADD_SPONSORSHIP_PANEL_STAKING}>
+          <AddSponsorShipPanel
+            panelId={SP_COIN_DISPLAY.ADD_SPONSORSHIP_PANEL_STAKING}
+            configPanelId={SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL_STAKING}
+          />
         </PanelGate>
-        <PanelGate panel={SP_COIN_DISPLAY.CONNECT_TRADE_BUTTON}>
-          <ConnectTradeButton isLoadingPrice={false} />
+        <PanelGate panel={SP_COIN_DISPLAY.CONNECT_TRADE_BUTTON_STAKING}>
+          <ConnectTradeButton isLoadingPrice={false} panelId={SP_COIN_DISPLAY.CONNECT_TRADE_BUTTON_STAKING} />
         </PanelGate>
       </div>
     </PanelGate>

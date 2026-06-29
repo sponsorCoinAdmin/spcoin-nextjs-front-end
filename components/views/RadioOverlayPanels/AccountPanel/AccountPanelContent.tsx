@@ -187,78 +187,82 @@ export default function AccountPanelContent({
               : 'flex flex-col gap-2 overflow-x-hidden'
           }
         >
-          {logoVisible ? <div className="shrink-0 overflow-visible">
-            <CreateAccountAvatarPanel
-              panelMarginClass="mb-0 min-h-0"
-              avatarPanelBorderClass=""
-              avatarHeading=""
-              logoPreviewSrc={logoPreviewSrc}
-              connected={Boolean(isConnected || walletSource === 'hardhat')}
-              isEditMode={isEditMode}
-              inputLocked={!isEditMode}
-              previewButtonLabel="Select Preview Image"
-              loadingInputMessage="Loading or updating account data. Input is temporarily disabled."
-              isLoading={isLoading}
-              acceptedInput={ACCEPTED_IMAGE_INPUT_ACCEPT}
-              logoFileInputRef={logoFileInputRef}
-              onFileChange={handleLogoFileChange}
-              selectedRowContent={
-                selectedWalletRow ? (
-                  <AccountRow
-                    account={selectedWalletRow}
-                    isActiveMarker={mode === SP_COIN_DISPLAY.ACTIVE_ACCOUNT}
-                  />
-                ) : undefined
-              }
-              showImage={true}
-              showButton={true}
-              minPreviewSize={180}
-              overflowMinPreviewSize={96}
-              maxPreviewSize={420}
-              minControlWidth={220}
-              uploadControlTextClassName="px-4 text-center text-sm font-bold"
-              previewSizeBuffer={0}
-              previewHeightBuffer={8}
-              sectionBottomBuffer={0}
-              lockSectionHeight={true}
-              fillParentHeight={false}
-              sizingBoundarySelector="#ACCOUNT_PANEL"
-              resizeSignal={avatarResizeSignal}
-            />
-          </div> : null}
+          {logoVisible ? (
+            <div className="shrink-0 overflow-visible">
+              <CreateAccountAvatarPanel
+                panelMarginClass="mb-0 min-h-0"
+                avatarPanelBorderClass=""
+                avatarHeading=""
+                logoPreviewSrc={logoPreviewSrc}
+                connected={Boolean(isConnected || walletSource === 'hardhat')}
+                isEditMode={isEditMode}
+                inputLocked={!isEditMode}
+                previewButtonLabel="Select Preview Image"
+                loadingInputMessage="Loading or updating account data. Input is temporarily disabled."
+                isLoading={isLoading}
+                acceptedInput={ACCEPTED_IMAGE_INPUT_ACCEPT}
+                logoFileInputRef={logoFileInputRef}
+                onFileChange={handleLogoFileChange}
+                selectedRowContent={
+                  selectedWalletRow ? (
+                    <AccountRow
+                      account={selectedWalletRow}
+                      isActiveMarker={mode === SP_COIN_DISPLAY.ACTIVE_ACCOUNT}
+                    />
+                  ) : undefined
+                }
+                showImage={true}
+                showButton={true}
+                minPreviewSize={180}
+                overflowMinPreviewSize={96}
+                maxPreviewSize={420}
+                minControlWidth={220}
+                uploadControlTextClassName="px-4 text-center text-sm font-bold"
+                previewSizeBuffer={0}
+                previewHeightBuffer={8}
+                sectionBottomBuffer={0}
+                lockSectionHeight={true}
+                fillParentHeight={false}
+                sizingBoundarySelector="#ACCOUNT_PANEL"
+                resizeSignal={avatarResizeSignal}
+              />
+            </div>
+          ) : null}
 
-          {metaDataVisible ? <div className="shrink-0 overflow-visible">
-            <CreateAccountFormPanel
-              panelMarginClass="mb-0 !h-auto"
-              accountPanelBorderClass=""
-              contentWidthClass="max-w-[56rem]"
-              idPrefix="account-component-"
-              formHeading=""
-              account={account}
-              connected={Boolean(isConnected || walletSource === 'hardhat')}
-              publicKey={publicKey}
-              publicKeyLocked
-              formData={formData}
-              errors={errors}
-              descriptionTextareaRef={descriptionTextareaRef}
-              inputLocked={!isEditMode}
-              isLoading={isLoading}
-              loadingInputMessage="Loading or updating account data. Input is temporarily disabled."
-              isSaving={isSaving}
-              isEditMode={isEditMode}
-              submitLabel={submitLabel}
-              hasUnsavedChanges={hasUnsavedChanges}
-              canCreateMissingAccount={canCreateMissingAccount}
-              disableSubmit={disableSubmit}
-              disableRevert={disableRevert}
-              isRevertNoop={isRevertNoop}
-              onPublicKeyChange={handlePublicKeyChange}
-              onPublicKeyBlur={handlePublicKeyBlur}
-              onChange={handleChange}
-              onFieldBlur={handleFieldBlur}
-              onRevert={handleRevertChanges}
-            />
-          </div> : null}
+          {metaDataVisible ? (
+            <div className="shrink-0 overflow-visible">
+              <CreateAccountFormPanel
+                panelMarginClass="mb-0 !h-auto"
+                accountPanelBorderClass=""
+                contentWidthClass="max-w-[56rem]"
+                idPrefix="account-component-"
+                formHeading=""
+                account={account}
+                connected={Boolean(isConnected || walletSource === 'hardhat')}
+                publicKey={publicKey}
+                publicKeyLocked
+                formData={formData}
+                errors={errors}
+                descriptionTextareaRef={descriptionTextareaRef}
+                inputLocked={!isEditMode}
+                isLoading={isLoading}
+                loadingInputMessage="Loading or updating account data. Input is temporarily disabled."
+                isSaving={isSaving}
+                isEditMode={isEditMode}
+                submitLabel={submitLabel}
+                hasUnsavedChanges={hasUnsavedChanges}
+                canCreateMissingAccount={canCreateMissingAccount}
+                disableSubmit={disableSubmit}
+                disableRevert={disableRevert}
+                isRevertNoop={isRevertNoop}
+                onPublicKeyChange={handlePublicKeyChange}
+                onPublicKeyBlur={handlePublicKeyBlur}
+                onChange={handleChange}
+                onFieldBlur={handleFieldBlur}
+                onRevert={handleRevertChanges}
+              />
+            </div>
+          ) : null}
         </div>
       </form>
     </div>

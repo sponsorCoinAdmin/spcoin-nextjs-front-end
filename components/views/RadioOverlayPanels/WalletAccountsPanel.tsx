@@ -7,7 +7,7 @@ import { useSpCoinWallet } from '@/lib/spCoinWallet';
 import { useActiveAccount } from '@/lib/context/hooks/ExchangeContext/nested/accounts/useActiveAccount';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import useOpenAccountComponent from '@/lib/context/hooks/useOpenAccountComponent';
-import { SP_COIN_DISPLAY, type spCoinAccount } from '@/lib/structure';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
 import PanelGate from '@/components/utility/PanelGate';
 import Accounts from '@/lib/spCoinWallet/accounts';
 import type { SpCoinWalletAccount } from '@/lib/spCoinWallet';
@@ -27,7 +27,6 @@ export default function WalletAccountsPanel() {
   const { closePanel } = usePanelTree();
   const openAccountComponent = useOpenAccountComponent();
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [previewAccount, setPreviewAccount] = useState<spCoinAccount | undefined>(undefined);
 
   const { selectedAddressKey, normalizedWorkingAddress, visibleAccounts } = useWalletAccountsList();
 
@@ -42,7 +41,6 @@ export default function WalletAccountsPanel() {
   const handleOpenAccountPanel = (account: SpCoinWalletAccount) => {
     const nextAccount = buildSpCoinAccount(account);
     setActiveAccount(nextAccount);
-    setPreviewAccount(nextAccount);
     openAccountComponent({
       account: nextAccount,
       mode: SP_COIN_DISPLAY.ACTIVE_ACCOUNT,
@@ -64,8 +62,6 @@ export default function WalletAccountsPanel() {
           onOpenAccountPanel={handleOpenAccountPanel}
           onSelectAccount={handleSelectAccount}
           onToggleCollapse={() => setIsCollapsed((prev) => !prev)}
-          previewAccount={previewAccount}
-          onClosePreview={() => setPreviewAccount(undefined)}
         />
       </div>
     </PanelGate>

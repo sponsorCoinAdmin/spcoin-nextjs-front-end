@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ChevronDown, Copy, Check } from 'lucide-react';
+import { ChevronDown, ChevronUp, Copy, Check } from 'lucide-react';
 
 import { SP_COIN_DISPLAY, type spCoinAccount } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import AccountAvatar from '@/components/utility/AccountAvatar';
+import { truncateMiddle } from '@/lib/utils/addressUtils';
 
 interface ActiveAccountProps {
   account?: spCoinAccount;
@@ -40,9 +41,9 @@ export default function ActiveAccount({ account, accountType = 'Account', showTi
   };
 
   return (
-    <div className="shrink-0 border-b border-slate-700/50 -mx-4 px-4 py-2 flex items-center gap-2 text-sm text-slate-300/80">
+    <div className="shrink-0 border-b border-slate-700/50 -mx-4 px-4 pb-2 flex items-center gap-2 text-sm text-slate-300/80">
       {account?.logoURL ? (
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#11162A] hover:opacity-80 transition-opacity">
+        <div className="flex h-8 w-8 shrink-0 -ml-[2px] items-center justify-center overflow-hidden rounded-lg hover:opacity-80 transition-opacity">
           <AccountAvatar
             account={account}
             className="h-full w-full object-contain"
@@ -55,25 +56,23 @@ export default function ActiveAccount({ account, accountType = 'Account', showTi
             {accountType}{account?.name ? ` ${account.name}` : ''}
           </span>
         )}
-        <div className="flex w-full items-center gap-3">
-          <div className="flex min-w-0 flex-1 items-center gap-2 rounded-[22px] bg-[#243056] px-1 py-1 text-[15px] text-[#5981F3]">
+        <div className="flex w-full items-center gap-[2px]">
+          <div className="flex h-[25px] items-center gap-[5px] rounded-full pl-0 pr-3 text-slate-200 font-bold">
             <span
-              className="w-full truncate whitespace-nowrap text-center font-mono cursor-pointer"
-              title={activeAccountHeaderVisible ? 'Close Active Account Data' : 'Open Active Account Data'}
+              className="whitespace-nowrap font-mono cursor-pointer text-[17px]"
+              title={address}
               onClick={() => setPanelVisible(SP_COIN_DISPLAY.ACTIVE_ACCOUNT_HEADER_BAR, !activeAccountHeaderVisible)}
-            >{address}</span>
+            >{truncateMiddle(address, 4, 4)}</span>
             <button
               type="button"
               onClick={handleChevronClick}
               className="shrink-0 flex items-center justify-center rounded hover:bg-white/10 p-0.5"
               aria-label={walletAccountsVisible ? 'Hide accounts' : 'Show accounts'}
             >
-              <ChevronDown
-                className={[
-                  'h-4 w-4 text-slate-400 transition-transform duration-200',
-                  walletAccountsVisible ? 'rotate-180' : '',
-                ].join(' ')}
-              />
+              {walletAccountsVisible
+                ? <ChevronUp className="h-5 w-5 opacity-75" />
+                : <ChevronDown className="h-5 w-5 opacity-75" />
+              }
             </button>
           </div>
           <button
@@ -85,7 +84,7 @@ export default function ActiveAccount({ account, accountType = 'Account', showTi
           >
             {copied
               ? <Check className="h-6 w-6 text-green-400" />
-              : <Copy className="h-6 w-6 text-slate-400" />
+              : <Copy className="h-5 w-5 text-slate-200" />
             }
           </button>
         </div>

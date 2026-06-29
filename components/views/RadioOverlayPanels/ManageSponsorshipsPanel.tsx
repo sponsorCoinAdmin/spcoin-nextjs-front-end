@@ -1200,9 +1200,6 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
 
   return (
     <div id="MANAGE_SPONSORSHIPS_PANEL">
-      {pendingVisible && (
-        <div id="MANAGE_PENDING_REWARDS" className="hidden" aria-hidden="true" />
-      )}
       <div className="mb-0">
         <AssetSelectDisplayProvider>
           <AssetSelectProvider
@@ -1351,8 +1348,30 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                 </tr>
               )}
 
-              {/* Pending Rewards by Account Type row (shown ONLY when group is OPEN) */}
-              {pendingVisible && (
+              {/* Total (2 columns; col2 spans Amount+Options) */}
+              {(() => {
+                const zebra = pendingVisible ? msTableTw.rowA : msTableTw.rowB;
+
+                return (
+                  <tr className={msTableTw.rowBorder}>
+                    <td style={col0Style} className={`${zebra} ${msTableTw.td5} ${vLine}`}>
+                      <div className={`${msTableTw.tdInner5} ${col1NoWrap}`} title="Total Available SpCoins">
+                        Total Coins
+                      </div>
+                    </td>
+
+                    <td colSpan={2} className={`${zebra} ${msTableTw.td}`}>
+                      <div className={amountLeft}>{totalCoinsDisplay}</div>
+                    </td>
+                  </tr>
+                );
+              })()}
+            </tbody>
+
+            {/* Expanded pending rows — real container for MANAGE_PENDING_REWARDS */}
+            {pendingVisible && (
+              <tbody id="MANAGE_PENDING_REWARDS">
+                {/* Pending Rewards by Account Type header row */}
                 <tr className={msTableTw.rowBorder}>
                   <td style={col0Style} className={pendingCellTw}>
                     <button
@@ -1378,84 +1397,61 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                     <div className={msTableTw.tdInnerCenter5} />
                   </td>
                 </tr>
-              )}
 
-              {/* Sponsor/Recipient/Agent group rows (shown ONLY when group is OPEN) */}
-              {pendingVisible && (
-                <>
-                  {rewardRows.map((row, index) => {
-                    const rowBg = index % 2 === 0 ? msTableTw.rowB : msTableTw.rowA;
-                    const claimButtonClass = index % 2 === 0 ? msTableTw.btnOrange : msTableTw.btnGreen;
-                    const labelClass = row.available ? 'text-white' : 'text-red-500';
-                    const title = row.available
-                      ? `Estimate ${row.role} pending rewards`
-                      : `${row.role} rewards are not available for this account.`;
+                {/* Sponsor/Recipient/Agent role rows */}
+                {rewardRows.map((row, index) => {
+                  const rowBg = index % 2 === 0 ? msTableTw.rowB : msTableTw.rowA;
+                  const claimButtonClass = index % 2 === 0 ? msTableTw.btnOrange : msTableTw.btnGreen;
+                  const labelClass = row.available ? 'text-white' : 'text-red-500';
+                  const title = row.available
+                    ? `Estimate ${row.role} pending rewards`
+                    : `${row.role} rewards are not available for this account.`;
 
-                    return (
-                      <tr key={row.role} className={msTableTw.rowBorder}>
-                        <td style={col0Style} className={`${rowBg} ${msTableTw.td5} ${vLine}`}>
+                  return (
+                    <tr key={row.role} className={msTableTw.rowBorder}>
+                      <td style={col0Style} className={`${rowBg} ${msTableTw.td5} ${vLine}`}>
+                        <button
+                          type="button"
+                          className={`${msTableTw.tdInner5} ${row.available ? msTableTw.linkCell5 : 'cursor-default'} ${col1NoWrap} ${labelClass}`}
+                          onClick={() => {
+                            if (row.available) void runRewardAction(row.role, 'estimate');
+                          }}
+                          aria-label={`Estimate ${row.role} rewards`}
+                          disabled={!row.available || row.loading}
+                          title={title}
+                        >
+                          <span className="mr-1">&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;</span>
+                          {row.role}
+                        </button>
+                      </td>
+
+                      <td className={`${rowBg} ${msTableTw.td} ${vLine}`}>
+                        <div className={`${amountLeft} ${row.available ? '' : 'text-red-500'}`} title={row.error || undefined}>
+                          {row.error ? 'Error' : row.amount}
+                        </div>
+                      </td>
+
+                      <td className={`${rowBg} ${msTableTw.td5}`}>
+                        <div className={msTableTw.tdInnerCenter5}>
                           <button
                             type="button"
-                            className={`${msTableTw.tdInner5} ${row.available ? msTableTw.linkCell5 : 'cursor-default'} ${col1NoWrap} ${labelClass}`}
+                            className={`${claimButtonClass} disabled:cursor-not-allowed disabled:opacity-45`}
+                            aria-label={`Claim ${row.role} rewards`}
                             onClick={() => {
-                              if (row.available) void runRewardAction(row.role, 'estimate');
+                              if (row.available) void runRewardAction(row.role, 'claim');
                             }}
-                            aria-label={`Estimate ${row.role} rewards`}
                             disabled={!row.available || row.loading}
-                            title={title}
+                            title={row.available ? `Claim ${row.role} rewards` : `${row.role} rewards are not available for this account.`}
                           >
-                            <span className="mr-1">&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;</span>
-                            {row.role}
+                            Claim
                           </button>
-                        </td>
-
-                        <td className={`${rowBg} ${msTableTw.td} ${vLine}`}>
-                          <div className={`${amountLeft} ${row.available ? '' : 'text-red-500'}`} title={row.error || undefined}>
-                            {row.error ? 'Error' : row.amount}
-                          </div>
-                        </td>
-
-                        <td className={`${rowBg} ${msTableTw.td5}`}>
-                          <div className={msTableTw.tdInnerCenter5}>
-                            <button
-                              type="button"
-                              className={`${claimButtonClass} disabled:cursor-not-allowed disabled:opacity-45`}
-                              aria-label={`Claim ${row.role} rewards`}
-                              onClick={() => {
-                                if (row.available) void runRewardAction(row.role, 'claim');
-                              }}
-                              disabled={!row.available || row.loading}
-                              title={row.available ? `Claim ${row.role} rewards` : `${row.role} rewards are not available for this account.`}
-                            >
-                              Claim
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </>
-              )}
-
-              {/* Total (2 columns; col2 spans Amount+Options) */}
-              {(() => {
-                const zebra = pendingVisible ? msTableTw.rowA : msTableTw.rowB;
-
-                return (
-                  <tr className={msTableTw.rowBorder}>
-                    <td style={col0Style} className={`${zebra} ${msTableTw.td5} ${vLine}`}>
-                      <div className={`${msTableTw.tdInner5} ${col1NoWrap}`} title="Total Available SpCoins">
-                        Total Coins
-                      </div>
-                    </td>
-
-                    <td colSpan={2} className={`${zebra} ${msTableTw.td}`}>
-                      <div className={amountLeft}>{totalCoinsDisplay}</div>
-                    </td>
-                  </tr>
-                );
-              })()}
-            </tbody>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            )}
           </table>
         </div>
       )}

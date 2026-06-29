@@ -1,9 +1,7 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 
-import AccountPanelView from '@/components/views/RadioOverlayPanels/AccountPanel/AccountPanelView';
-import { SP_COIN_DISPLAY, type spCoinAccount } from '@/lib/structure';
 import { normalizeAddress } from '@/lib/utils/address';
 import type { SpCoinWalletAccount } from './types';
 import AccountRow from './AccountRow';
@@ -20,11 +18,7 @@ type AccountsProps = {
   onSelectAccount: (account: SpCoinWalletAccount) => void;
   onToggleCollapse: () => void;
   onTrace?: (message: string, data?: any) => void;
-  previewAccount?: spCoinAccount;
-  onClosePreview?: () => void;
 };
-
-type AccountsDisplayState = 'ACCOUNT_LIST' | 'ACCOUNT_META';
 
 function EmbeddedAccountList({
   accounts,
@@ -104,60 +98,36 @@ export default function Accounts({
   onSelectAccount,
   onToggleCollapse,
   onTrace,
-  previewAccount,
-  onClosePreview,
 }: AccountsProps) {
-  const [displayState, setDisplayState] = useState<AccountsDisplayState>('ACCOUNT_LIST');
   const normalizedSelectedKey = selectedAddressKey || normalizedWorkingAddress;
   const fallbackAddress = accounts[0] ? normalizeAddress(accounts[0].address) : '';
   const activeAddressKey = normalizedSelectedKey || fallbackAddress;
 
-  useEffect(() => {
-    setDisplayState(previewAccount ? 'ACCOUNT_META' : 'ACCOUNT_LIST');
-  }, [previewAccount]);
-
-  const handleOpenAccountPanel = (account: SpCoinWalletAccount) => {
-    onOpenAccountPanel(account);
-    setDisplayState('ACCOUNT_META');
-  };
-
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      {displayState === 'ACCOUNT_LIST' ? (
-        <div
-          className={[
-            'scrollbar-hide min-h-0 flex-1 overflow-y-auto border-t border-slate-700/70',
-          ].join(' ')}
-        >
-          <EmbeddedAccountList
-            accounts={accounts}
-            walletSource={walletSource}
-            activeAddressKey={activeAddressKey}
-            hardhatAccountsLoading={hardhatAccountsLoading}
-            hardhatAccountsError={hardhatAccountsError}
-            isCollapsed={isCollapsed}
-            onOpenAccountPanel={handleOpenAccountPanel}
-            onSelectAccount={onSelectAccount}
-            onTrace={onTrace}
-            onToggleCollapse={(account) => {
-              onTrace?.('Accounts onToggleCollapse received', {
-                clickedAddress: account.address,
-                activeAddressKey,
-                clickedIsActive: normalizeAddress(account.address) === activeAddressKey,
-                isCollapsedBefore: isCollapsed,
-              });
-              if (normalizeAddress(account.address) !== activeAddressKey) return;
-              onToggleCollapse();
-            }}
-          />
-        </div>
-      ) : null}
-
-      {displayState === 'ACCOUNT_META' && previewAccount ? (
-        <div className="min-h-0 flex-1 border-t border-slate-700/70">
-          <AccountPanelView account={previewAccount} onClose={onClosePreview} mode={SP_COIN_DISPLAY.ACTIVE_ACCOUNT} />
-        </div>
-      ) : null}
+      <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto border-t border-slate-700/70">
+        <EmbeddedAccountList
+          accounts={accounts}
+          walletSource={walletSource}
+          activeAddressKey={activeAddressKey}
+          hardhatAccountsLoading={hardhatAccountsLoading}
+          hardhatAccountsError={hardhatAccountsError}
+          isCollapsed={isCollapsed}
+          onOpenAccountPanel={onOpenAccountPanel}
+          onSelectAccount={onSelectAccount}
+          onTrace={onTrace}
+          onToggleCollapse={(account) => {
+            onTrace?.('Accounts onToggleCollapse received', {
+              clickedAddress: account.address,
+              activeAddressKey,
+              clickedIsActive: normalizeAddress(account.address) === activeAddressKey,
+              isCollapsedBefore: isCollapsed,
+            });
+            if (normalizeAddress(account.address) !== activeAddressKey) return;
+            onToggleCollapse();
+          }}
+        />
+      </div>
     </div>
   );
 }

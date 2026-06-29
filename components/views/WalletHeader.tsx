@@ -22,6 +22,7 @@ interface WalletHeaderProps {
   onConnectMetaMask?: () => void;
   onMenuClick?: () => void;
   menuButtonKind?: 'menu' | 'back';
+  bottomSlot?: React.ReactNode;
   onExpand?: () => void;
   onClose: () => void;
 }
@@ -42,13 +43,14 @@ export default function WalletHeader({
   onConnectMetaMask,
   onMenuClick,
   menuButtonKind = 'menu',
+  bottomSlot,
   onExpand,
   onClose,
 }: WalletHeaderProps) {
   const isSelection = mode === 'selection';
 
   return (
-    <div className={`relative border-b border-[#21273a] bg-[#77808e] ${isSelection ? 'px-5 pt-[11px] pb-[10px]' : 'pl-4 pr-5 py-[14px]'}`}>
+    <div className={`relative border-b border-[#21273a] bg-[#77808e] ${isSelection ? 'px-5 pt-[11px] pb-[10px]' : `pl-4 pr-5 pt-[6px] ${bottomSlot ? 'pb-0' : 'pb-[14px]'}`}`}>
       {isSelection ? (
         <>
           <span
@@ -101,7 +103,7 @@ export default function WalletHeader({
         </>
       ) : (
         <>
-          <div className="flex items-center gap-3">
+          <div className="relative flex items-center">
             {leftSlot ?? (
               <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden bg-transparent">
                 {accountLogoURL ? (
@@ -123,42 +125,45 @@ export default function WalletHeader({
                 )}
               </span>
             )}
+            <h2 className="pointer-events-none absolute inset-x-0 text-center text-xl font-bold leading-tight text-slate-200">
+              {title ?? 'Merit Wallet'}
+            </h2>
+            <div className="ml-auto flex shrink-0 items-center">
+              {onMenuClick ? (
+                <button
+                  type="button"
+                  onClick={onMenuClick}
+                  className="flex h-11 w-11 items-center justify-center rounded-full bg-[#303b68] hover:bg-[#3c487a]"
+                  aria-label={menuButtonKind === 'back' ? 'Return to wallet options' : 'Open wallet menu'}
+                >
+                  {menuButtonKind === 'back' ? (
+                    <ArrowLeft className="h-6 w-6 text-[#91a5ff]" />
+                  ) : (
+                    <Menu className="h-6 w-6 text-[#91a5ff]" />
+                  )}
+                </button>
+              ) : null}
+              <button
+                type="button"
+                onClick={onExpand}
+                className="flex h-11 w-11 items-center justify-center hover:opacity-70"
+                aria-label="Expand wallet"
+              >
+                <Copy className="h-[34px] w-[34px] text-gray-800" strokeWidth={1.5} />
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex h-11 w-11 items-center justify-center hover:opacity-70"
+                aria-label="Close Merit Wallet"
+              >
+                <X className="h-[38px] w-[38px] text-gray-800" strokeWidth={1.5} />
+              </button>
+            </div>
           </div>
-          <h2 className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 text-center text-xl font-bold leading-tight">
-            {title ?? 'Merit Wallet'}
-          </h2>
-          {onMenuClick ? (
-            <button
-              type="button"
-              onClick={onMenuClick}
-              className="absolute right-[120px] top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-[#303b68] hover:bg-[#3c487a]"
-              aria-label={menuButtonKind === 'back' ? 'Return to wallet options' : 'Open wallet menu'}
-            >
-              {menuButtonKind === 'back' ? (
-                <ArrowLeft className="h-6 w-6 text-[#91a5ff]" />
-              ) : (
-                <Menu className="h-6 w-6 text-[#91a5ff]" />
-              )}
-            </button>
-          ) : null}
-          <button
-            type="button"
-            onClick={onExpand}
-            className="absolute right-[64px] top-1/2 flex h-11 w-11 -translate-y-1/2 -mt-[3px] items-center justify-center hover:opacity-70"
-            aria-label="Expand wallet"
-          >
-            <Copy className="h-[34px] w-[34px] text-black" strokeWidth={1.5} />
-          </button>
-          <button
-            type="button"
-            onClick={onClose}
-            className="absolute right-[12px] top-1/2 flex h-11 w-11 -translate-y-1/2 -mt-[3px] items-center justify-center hover:opacity-70"
-            aria-label="Close Merit Wallet"
-          >
-            <X className="h-[38px] w-[38px] text-black" strokeWidth={1.5} />
-          </button>
         </>
       )}
+      {bottomSlot && <div>{bottomSlot}</div>}
     </div>
   );
 }

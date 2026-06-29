@@ -26,34 +26,38 @@ export default function AccountPanelTabBar({ open = true }: Props) {
   const swapVisible    = usePanelVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
   const sendVisible    = usePanelVisible(SP_COIN_DISPLAY.SEND_PANEL);
   const configVisible  = usePanelVisible(SP_COIN_DISPLAY.WALLET_CONFIG_PANEL);
-  const wacVisible     = usePanelVisible(SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT);
-  const wncVisible     = usePanelVisible(SP_COIN_DISPLAY.WALLET_NETWORKS_COMPONENT);
+  const wacVisible          = usePanelVisible(SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT);
+  const wncVisible          = usePanelVisible(SP_COIN_DISPLAY.WALLET_NETWORKS_COMPONENT);
+  const accountPanelVisible = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_PANEL);
 
-  const isOverlayOpen = wacVisible || wncVisible;
+  const isOverlayOpen = wacVisible || wncVisible || accountPanelVisible;
   // Returns null (no tab active) when nothing is visible — config open or blank slate.
   const derivedKey: TabKey | null = sponsorVisible ? 'SPONSOR' : swapVisible ? 'SWAP' : sendVisible ? 'SEND' : rewardsVisible ? 'REWARDS' : null;
 
-  const lastTabKey      = useRef<TabKey>('REWARDS');
-  const prevOverlayOpen = useRef(false);
+  const prevOverlayOpen  = useRef(false);
+  const tabAtOverlayOpen = useRef<TabKey | null>(null);
 
   useEffect(() => {
     const wasOpen = prevOverlayOpen.current;
     prevOverlayOpen.current = isOverlayOpen;
 
-    if (wasOpen && !isOverlayOpen) {
-      const anyTabActive = sponsorVisible || rewardsVisible || swapVisible || sendVisible;
-      // Don't restore a tab if config is already showing.
-      if (!anyTabActive && !configVisible) {
-        const tab = TABS.find(t => t.key === lastTabKey.current);
+    if (!wasOpen && isOverlayOpen) {
+      // Overlay just opened — snapshot whichever tab was active at that moment.
+      tabAtOverlayOpen.current = derivedKey;
+    } else if (wasOpen && !isOverlayOpen) {
+      // Overlay just closed — restore only the tab that was active when it opened.
+      const target = tabAtOverlayOpen.current;
+      tabAtOverlayOpen.current = null;
+      if (target && !configVisible) {
+        const tab = TABS.find(t => t.key === target);
         if (tab) openPanel(tab.panel, 'AccountPanelTabBar:restore-after-overlay');
       }
-    } else if (!isOverlayOpen && derivedKey) {
-      lastTabKey.current = derivedKey;
+      // If target is null, no tab was active before the overlay — don't restore anything.
     }
-  }, [isOverlayOpen, derivedKey, sponsorVisible, rewardsVisible, swapVisible, sendVisible, configVisible, openPanel]);
+  }, [isOverlayOpen, derivedKey, configVisible, openPanel]);
 
   // No tab is active while config is open or while an overlay (WAC/WNC) is covering the tabs.
-  const activeKey: TabKey | null = configVisible ? null : isOverlayOpen ? lastTabKey.current : derivedKey;
+  const activeKey: TabKey | null = configVisible ? null : isOverlayOpen ? tabAtOverlayOpen.current : derivedKey;
 
   const handleTabClick = (tab: typeof TABS[number]) => {
     // Config → tab: close config first so config is no longer highlighted.

@@ -16,12 +16,14 @@ export default function AddressHeaderBar() {
 
   return (
     <PanelGate panel={SP_COIN_DISPLAY.ADDRESS_HEADER_BAR}>
-      <ActiveAccountHeaderBar />
-      <ActiveAccount
-        account={exchangeContext?.accounts?.activeAccount}
-        accountType={activeAccountType}
-        showTitle={false}
-      />
+      <div>
+        <ActiveAccountHeaderBar />
+        <ActiveAccount
+          account={exchangeContext?.accounts?.activeAccount}
+          accountType={activeAccountType}
+          showTitle={false}
+        />
+      </div>
     </PanelGate>
   );
 }

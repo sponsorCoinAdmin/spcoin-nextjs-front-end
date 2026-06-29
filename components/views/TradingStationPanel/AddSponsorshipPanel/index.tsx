@@ -59,7 +59,15 @@ function openRecipientSiteTab() {
   }
 }
 
-const AddSponsorShipPanel: React.FC = () => {
+type Props = {
+  panelId?: SP_TREE;
+  configPanelId?: SP_TREE;
+};
+
+const AddSponsorShipPanel: React.FC<Props> = ({
+  panelId = SP_TREE.ADD_SPONSORSHIP_PANEL,
+  configPanelId = SP_TREE.CONFIG_SPONSORSHIP_PANEL,
+}) => {
   // ── Context / visibility ─────────────────────────────────────────────────────
   const { exchangeContext, setExchangeContext } = useExchangeContext();
 
@@ -71,15 +79,15 @@ const AddSponsorShipPanel: React.FC = () => {
   // ✅ usePanelTransitions now exposes openOverlay / closeTop only
   const { openOverlay } = usePanelTransitions();
 
-  // 🔹 Visible if ADD_SPONSORSHIP_PANEL OR STAKING_SPCOINS_PANEL is true
-  const addVisible = usePanelVisible(SP_TREE.ADD_SPONSORSHIP_PANEL);
+  // 🔹 Visible if this panel instance OR STAKING_SPCOINS_PANEL is true
+  const addVisible = usePanelVisible(panelId);
   const manageStakingVisible = usePanelVisible(SP_TREE.STAKING_SPCOINS_PANEL);
   const tradingVisible = usePanelVisible(SP_TREE.TRADING_STATION_PANEL);
 
   // 🔹 The overlay we care about for “return to caller”
   const recipientListVisible = usePanelVisible(SP_TREE.RECIPIENT_LIST);
 
-  const configVisible = usePanelVisible(SP_TREE.CONFIG_SPONSORSHIP_PANEL);
+  const configVisible = usePanelVisible(configPanelId);
 
   const [buyTokenContract] = useBuyTokenContract();
 
@@ -136,11 +144,11 @@ const AddSponsorShipPanel: React.FC = () => {
 
     if (configVisible) {
       closePanel(
-        SP_TREE.CONFIG_SPONSORSHIP_PANEL,
+        configPanelId,
         'AddSponsorshipPanel:toggleSponsorRateConfig(close CONFIG_SPONSORSHIP_PANEL)',
       );
     } else {
-      openOverlay(SP_TREE.CONFIG_SPONSORSHIP_PANEL, {
+      openOverlay(configPanelId, {
         methodName: 'AddSponsorshipPanel:toggleSponsorRateConfig(open)',
       });
     }
@@ -168,7 +176,7 @@ const AddSponsorShipPanel: React.FC = () => {
 
     // ✅ Close specific panels (NOT pop-top)
     closePanel(
-      SP_TREE.ADD_SPONSORSHIP_PANEL,
+      panelId,
       'AddSponsorshipPanel:closeAddSponsorshipPanel(close ADD_SPONSORSHIP_PANEL)',
     );
 
@@ -276,7 +284,7 @@ const AddSponsorShipPanel: React.FC = () => {
   // ── Render ───────────────────────────────────────────────────────────────────
   return (
     <div
-      id="ADD_SPONSORSHIP_PANEL"
+      id={SP_TREE[panelId]}
       className={`
         relative
         ${TSP_TW.container} ${TSP_TW.gap}
@@ -340,7 +348,7 @@ const AddSponsorShipPanel: React.FC = () => {
         </div>
       </div>
 
-      <ConfigSlippagePanel />
+      <ConfigSlippagePanel panelId={configPanelId} />
 
       {showToDo && (
         <ToDo

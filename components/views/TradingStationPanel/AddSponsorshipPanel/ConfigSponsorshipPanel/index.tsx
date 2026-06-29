@@ -12,12 +12,14 @@ import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 const DEFAULT_RECIPIENT_RATE_RANGE: [number, number] = [0, 100];
 const DEFAULT_AGENT_RATE_RANGE: [number, number] = [0, 100];
 
-const ConfigSlippagePanel: React.FC = () => {
+type Props = { panelId?: SP_COIN_DISPLAY };
+
+const ConfigSlippagePanel: React.FC<Props> = ({ panelId = SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL }) => {
   const { exchangeContext } = useExchangeContext();
   const { isVisible, closePanel } = usePanelTree();
 
   // ✅ Always evaluate visibility, but DO NOT early-return until after hooks
-  const selfVisible = isVisible(SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL);
+  const selfVisible = isVisible(panelId);
 
   // Sponsor slider: step from 0..100 where
   //   sponsorPct = 100 - step
@@ -76,17 +78,17 @@ const ConfigSlippagePanel: React.FC = () => {
 
   const onClose = useCallback(() => {
     closePanel(
-      SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL,
+      panelId,
       'ConfigSlippagePanel:close(CONFIG_SPONSORSHIP_PANEL)',
     );
-  }, [closePanel]);
+  }, [closePanel, panelId]);
 
   // ✅ Option A: conditional JSX return AFTER hooks
   if (!selfVisible) return null;
 
   return (
     <div
-      id="CONFIG_SPONSORSHIP_PANEL"
+      id={SP_COIN_DISPLAY[panelId]}
       className="bg-[#1f2639] text-[#94a3b8] border-0 h-[90px] rounded-b-[12px]"
     >
       <div className="relative">

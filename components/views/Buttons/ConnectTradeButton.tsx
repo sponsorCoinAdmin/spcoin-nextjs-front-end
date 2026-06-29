@@ -8,17 +8,17 @@ import { useExchangeContext } from '@/lib/context/hooks';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { SP_COIN_DISPLAY as SP } from '@/lib/structure';
 
-type Props = { isLoadingPrice: boolean };
+type Props = { isLoadingPrice: boolean; panelId?: SP };
 
-const ConnectTradeButton = ({ isLoadingPrice }: Props) => {
-  const show = usePanelVisible(SP.CONNECT_TRADE_BUTTON);
+const ConnectTradeButton = ({ isLoadingPrice, panelId = SP.CONNECT_TRADE_BUTTON }: Props) => {
+  const show = usePanelVisible(panelId);
   const { exchangeContext } = useExchangeContext();
   const walletAddress = exchangeContext?.accounts?.activeAccount?.address;
 
   if (!show) return null;
 
   return (
-    <div id="CONNECT_TRADE_BUTTON">
+    <div id={SP[panelId]}>
       {!walletAddress ? <CustomConnectButton /> : <ExchangeButton isLoadingPrice={isLoadingPrice} />}
     </div>
   );

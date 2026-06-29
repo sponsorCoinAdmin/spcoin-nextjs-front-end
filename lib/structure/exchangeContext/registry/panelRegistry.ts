@@ -20,7 +20,7 @@ import {
   IS_STACK_COMPONENT,
 } from '@/lib/structure/exchangeContext/constants/spCoinDisplay';
 
-export type PanelKind = 'root' | 'panel' | 'button' | 'list' | 'control';
+export type PanelKind = 'root' | 'panel' | 'button' | 'list' | 'control' | 'flag';
 
 export type PanelDef = Readonly<{
   id: SP;
@@ -86,6 +86,7 @@ const ACCOUNT_LIST_SELECT_PANEL_CHILDREN: readonly SP[] = [
   SP.SPONSOR_LIST,
   SP.RECIPIENT_LIST,
   SP.AGENT_LIST,
+  SP.ACCOUNT_LIST_REWARDS_PANEL,
 ] as const;
 
 /**
@@ -127,7 +128,7 @@ const TRADE_HEADER_CHILDREN: readonly SP[] = [
   // Token selectors
   SP.TOKEN_LIST_SELECT_PANEL,
 
-  // ✅ Account list selector (new)
+  // ✅ Account list selector (contains SPONSOR_LIST, RECIPIENT_LIST, AGENT_LIST, ACCOUNT_LIST_REWARDS_PANEL)
   SP.ACCOUNT_LIST_SELECT_PANEL,
 
   // Errors / hub
@@ -136,9 +137,6 @@ const TRADE_HEADER_CHILDREN: readonly SP[] = [
   // ✅ First-class "manage" overlays
   SP.MANAGE_SPONSORSHIPS_PANEL,
   SP.STAKING_SPCOINS_PANEL,
-
-  // Rewards list overlay (parent)
-  SP.ACCOUNT_LIST_REWARDS_PANEL,
 
   // Shared / detail overlays
   SP.ACCOUNT_PANEL,
@@ -159,6 +157,9 @@ const TRADE_HEADER_CHILDREN: readonly SP[] = [
   // Tab panels
   SP.SPONSOR_PANEL,
   SP.SEND_PANEL,
+
+  // Send flow recipient selector (radio overlay)
+  SP.SEND_RECIPIENT_SELECT_PANEL,
 ] as const;
 
 const MERIT_WALLET_CHILDREN: readonly SP[] = [
@@ -210,7 +211,7 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   def({ id: SP.TOKEN_LIST_SELECT_PANEL, kind: 'list', children: TOKEN_LIST_SELECT_PANEL_CHILDREN }),
 
   // ✅ Chevron pending controls (used by AccountListRewardsPanel; persistable visibility flags)
-  def({ id: SP.CHEVRON_DOWN_OPEN_PENDING, kind: 'control' }),
+  def({ id: SP.CHEVRON_DOWN_OPEN_PENDING, kind: 'flag' }),
 
   // ✅ Account list selector overlay (container)
   def({ id: SP.ACCOUNT_LIST_SELECT_PANEL, kind: 'list', children: ACCOUNT_LIST_SELECT_PANEL_CHILDREN }),
@@ -256,11 +257,11 @@ export const PANEL_DEFS: readonly PanelDef[] = [
     children: UNSPONSOR_CHILDREN,
   }),
 
-  // ✅ ACCOUNT_PANEL state children (active nodes)
-  def({ id: SP.ACTIVE_ACCOUNT, kind: 'panel', children: [] }),
-  def({ id: SP.SPONSOR_ACCOUNT, kind: 'panel', children: [] }),
-  def({ id: SP.RECIPIENT_ACCOUNT, kind: 'panel', children: [] }),
-  def({ id: SP.AGENT_ACCOUNT, kind: 'panel', children: [] }),
+  // ✅ ACCOUNT_PANEL mode flags — headless boolean state; no DOM container
+  def({ id: SP.ACTIVE_ACCOUNT, kind: 'flag' }),
+  def({ id: SP.SPONSOR_ACCOUNT, kind: 'flag' }),
+  def({ id: SP.RECIPIENT_ACCOUNT, kind: 'flag' }),
+  def({ id: SP.AGENT_ACCOUNT, kind: 'flag' }),
   // ✅ ACCOUNT_PANEL section children (independently toggleable)
   def({ id: SP.ACCOUNT_LOGO, kind: 'panel', defaultVisible: true, children: [] }),
   def({ id: SP.ACCOUNT_META_DATA, kind: 'panel', defaultVisible: true, children: [] }),
@@ -270,7 +271,7 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   def({ id: SP.SELL_CONTRACT, kind: 'panel', children: [] }),
   def({ id: SP.TOKEN_META_DATA, kind: 'panel', defaultVisible: true, children: [] }),
   def({ id: SP.TOKEN_LOGO, kind: 'panel', defaultVisible: true, children: [] }),
-  def({ id: SP.SEND_CONTRACT, kind: 'panel', children: [] }),
+  def({ id: SP.SEND_CONTRACT, kind: 'flag' }),
 
   // ✅ ACCOUNT_LIST_SELECT_PANEL mode children
   def({ id: SP.SPONSOR_LIST, kind: 'list', children: [] }),
@@ -290,8 +291,8 @@ export const PANEL_DEFS: readonly PanelDef[] = [
     kind: 'panel',
     children: [
       SP.STAKE_TRADING_SPCOINS_PANEL,
-      SP.ADD_SPONSORSHIP_PANEL,
-      SP.CONNECT_TRADE_BUTTON,
+      SP.ADD_SPONSORSHIP_PANEL_STAKING,
+      SP.CONNECT_TRADE_BUTTON_STAKING,
     ],
   }),
   def({ id: SP.STAKE_TRADING_SPCOINS_PANEL, kind: 'panel', children: [] }),
@@ -332,6 +333,15 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   }),
   def({ id: SP.CONFIG_SPONSORSHIP_PANEL, kind: 'panel' }),
 
+  // Staking-context instances (separate enum values per Rule 14)
+  def({
+    id: SP.ADD_SPONSORSHIP_PANEL_STAKING,
+    kind: 'panel',
+    children: [SP.CONFIG_SPONSORSHIP_PANEL_STAKING],
+  }),
+  def({ id: SP.CONFIG_SPONSORSHIP_PANEL_STAKING, kind: 'panel' }),
+  def({ id: SP.CONNECT_TRADE_BUTTON_STAKING, kind: 'control', defaultVisible: true }),
+
   // Config slippage is inline under TRADING_STATION_PANEL
   def({ id: SP.CONFIG_SLIPPAGE_PANEL, kind: 'panel' }),
 
@@ -344,13 +354,13 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   def({ id: SP.WALLET_CONFIG_PANEL, kind: 'control', defaultVisible: false }),
   def({ id: SP.MANAGE_ACCOUNTS_PANEL, kind: 'panel', defaultVisible: false }),
   def({ id: SP.SPONSOR_PANEL, kind: 'panel', defaultVisible: false }),
-  def({ id: SP.SEND_PANEL, kind: 'panel', defaultVisible: false, children: [SP.SEND_TITLE, SP.TOKEN_ADDRESS_COMPONENT, SP.SEND_SELECT_PANEL] }),
+  def({ id: SP.SEND_PANEL, kind: 'panel', defaultVisible: false, children: [SP.SEND_SELECT_PANEL, SP.SEND_ADDRESS_HEADER_BAR] }),
   def({ id: SP.SEND_RECIPIENT_SELECT_PANEL, kind: 'panel', defaultVisible: false }),
   def({ id: SP.SEND_TITLE, kind: 'panel', defaultVisible: true }),
   def({ id: SP.SEND_ADDRESS_HEADER_BAR, kind: 'panel', defaultVisible: true }),
   def({ id: SP.TOKEN_ADDRESS_COMPONENT, kind: 'panel', defaultVisible: true }),
   def({ id: SP.SEND_TO_ADDRESS, kind: 'panel', defaultVisible: true }),
-  def({ id: SP.SEND_SELECT_PANEL, kind: 'panel', defaultVisible: true, children: [SP.SEND_ADDRESS_HEADER_BAR] }),
+  def({ id: SP.SEND_SELECT_PANEL, kind: 'panel', defaultVisible: true }),
 
   // NOTE: you used 'panel' kind here previously; keep it if consumers expect that.
   def({ id: SP.FEE_DISCLOSURE, kind: 'panel', defaultVisible: true }),

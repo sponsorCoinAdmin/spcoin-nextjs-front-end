@@ -32,6 +32,7 @@ export const MUST_INCLUDE_ON_BOOT: readonly (readonly [SP, boolean])[] = [
   [SP.MERIT_WALLET_COMPONENT, true],
   [SP.TRADING_STATION_HEADER, true],
   [SP.MENU_TAB_HEADER_BAR, true],
+  [SP.PANEL_SUB_TITLE, true],
   [SP.ACTIVE_ACCOUNT_HEADER_BAR, true],
   [SP.ADDRESS_HEADER_BAR, true],
   [SP.AGENT_HEADER_CONTAINER, true],
@@ -42,6 +43,10 @@ export const MUST_INCLUDE_ON_BOOT: readonly (readonly [SP, boolean])[] = [
   [SP.BUY_SELECT_PANEL, true],
   [SP.SWAP_ARROW_BUTTON, true],
   [SP.CONNECT_TRADE_BUTTON, true],
+  [SP.SEND_CONTRACT, false],
+  [SP.ADD_SPONSORSHIP_PANEL_STAKING, false],
+  [SP.CONFIG_SPONSORSHIP_PANEL_STAKING, false],
+  [SP.CONNECT_TRADE_BUTTON_STAKING, true],
   [SP.WALLET_CONNECT_COMPONENT, true],
   [SP.WALLET_ACCOUNTS_COMPONENT, false],
   [SP.WALLET_NETWORKS_COMPONENT, false],
@@ -88,9 +93,7 @@ export const MUST_INCLUDE_ON_BOOT: readonly (readonly [SP, boolean])[] = [
   [SP.SPONSOR_PANEL, false],
   [SP.SEND_PANEL, false],
   [SP.SEND_RECIPIENT_SELECT_PANEL, false],
-  [SP.SEND_TITLE, true],
   [SP.SEND_SELECT_PANEL, true],
-  [SP.TOKEN_ADDRESS_COMPONENT, true],
   [SP.SEND_ADDRESS_HEADER_BAR, true],
 ] as const;
 
@@ -101,9 +104,10 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
   node(SP.MERIT_WALLET_COMPONENT, true, [
     // Header bars
     node(SP.AGENT_HEADER_CONTAINER, true),
-    node(SP.MENU_TAB_HEADER_BAR, true),
     node(SP.ACTIVE_ACCOUNT_HEADER_BAR, true),
     node(SP.ADDRESS_HEADER_BAR, true),
+    node(SP.MENU_TAB_HEADER_BAR, true),
+    node(SP.PANEL_SUB_TITLE, true),
 
     // Core trading station subtree
     node(SP.TRADING_STATION_PANEL, true, [
@@ -114,13 +118,14 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
         node(SP.SWAP_ARROW_BUTTON, true),
         node(SP.BUY_SELECT_PANEL, true, [node(SP.ADD_SPONSORSHIP_BUTTON, false)]),
       ]),
+      node(SP.ADD_SPONSORSHIP_PANEL, false),
       node(SP.CONNECT_TRADE_BUTTON, true),
       node(SP.FEE_DISCLOSURE, true),
       node(SP.AFFILIATE_FEE, false),
     ]),
 
     // ─────────────── Radio overlays (siblings) ───────────────
-    node(SP.TOKEN_LIST_SELECT_PANEL, false),
+    node(SP.TOKEN_LIST_SELECT_PANEL, false, [node(SP.SEND_CONTRACT, false)]),
 
     node(SP.ACCOUNT_LIST_SELECT_PANEL, false, [
       node(SP.SPONSOR_LIST, false),
@@ -143,8 +148,8 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
 
     node(SP.STAKING_SPCOINS_PANEL, false, [
       node(SP.STAKE_TRADING_SPCOINS_PANEL, false),
-      node(SP.ADD_SPONSORSHIP_PANEL, false, [node(SP.CONFIG_SPONSORSHIP_PANEL, false)]),
-      node(SP.CONNECT_TRADE_BUTTON, true),
+      node(SP.ADD_SPONSORSHIP_PANEL_STAKING, false, [node(SP.CONFIG_SPONSORSHIP_PANEL_STAKING, false)]),
+      node(SP.CONNECT_TRADE_BUTTON_STAKING, true),
     ]),
 
     node(SP.ACCOUNT_LIST_REWARDS_PANEL, false, [
@@ -168,10 +173,11 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
     node(SP.WALLET_CONFIG_PANEL, false),
     node(SP.MANAGE_ACCOUNTS_PANEL, false),
     node(SP.SPONSOR_PANEL, false),
-    node(SP.SEND_PANEL, false, [node(SP.SEND_TITLE, true), node(SP.TOKEN_ADDRESS_COMPONENT, true), node(SP.SEND_SELECT_PANEL, true, [node(SP.SEND_ADDRESS_HEADER_BAR, true)])]),
+    node(SP.SEND_PANEL, false, [
+      node(SP.SEND_SELECT_PANEL, true),
+      node(SP.SEND_ADDRESS_HEADER_BAR, true),
+    ]),
     node(SP.SEND_RECIPIENT_SELECT_PANEL, false),
-
-    node(SP.ADD_SPONSORSHIP_PANEL, false, [node(SP.CONFIG_SPONSORSHIP_PANEL, false)]),
 
     node(SP.WALLET_CONNECT_COMPONENT, true),
   ]),

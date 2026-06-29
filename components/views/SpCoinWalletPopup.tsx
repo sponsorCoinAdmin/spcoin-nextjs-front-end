@@ -15,7 +15,7 @@ import { readMeritWalletLS } from '@/lib/spCoinWallet/meritWalletStorage';
 import { getBlockChainName } from '@/lib/context/helpers/NetworkHelpers';
 import { useActiveAccount } from '@/lib/context/hooks/ExchangeContext/nested/accounts/useActiveAccount';
 import type { SpCoinWalletAccount } from '@/lib/spCoinWallet';
-import { SP_COIN_DISPLAY, type spCoinAccount } from '@/lib/structure';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { clearDebugTraceBuffer } from '@/lib/utils/debugTrace';
 import Accounts from '@/lib/spCoinWallet/accounts';
 import { buildSpCoinAccount } from '@/lib/spCoinWallet/buildSpCoinAccount';
@@ -37,7 +37,6 @@ export default function SpCoinWalletPopup() {
 
   const [, setActiveAccount] = useActiveAccount();
   const { connectAsync, connectors, status: connectStatus } = useConnect();
-  const [previewAccount, setPreviewAccount] = useState<spCoinAccount | undefined>(undefined);
   const [selectionAccountsCollapsed, setSelectionAccountsCollapsed] = useState(false);
   const [showBackgroundPage, setShowBackgroundPage] = useState(() => readMeritWalletLS().config.showBackgroundPage);
   const [modalMode, setModalMode] = useState(() => readMeritWalletLS().config.modalMode);
@@ -155,13 +154,11 @@ export default function SpCoinWalletPopup() {
   const { exchangeContext } = useExchangeContext();
 
   // These drive the auto-open guard and the on-open WAC activation guard
-  const walletAccountsVisible    = usePanelVisible(SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT);
   const tradingStationTabVisible = usePanelVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
   const walletConfigTabVisible   = usePanelVisible(SP_COIN_DISPLAY.WALLET_CONFIG_PANEL);
   const rewardsTabVisible        = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
   const sendPanelVisible         = usePanelVisible(SP_COIN_DISPLAY.SEND_PANEL);
   const sponsorPanelVisible      = usePanelVisible(SP_COIN_DISPLAY.SPONSOR_PANEL);
-  const tokenListVisible         = usePanelVisible(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL);
   const meritWalletVisible       = usePanelVisible(SP_COIN_DISPLAY.MERIT_WALLET_COMPONENT);
 
   const { selectedAddressKey, normalizedWorkingAddress, visibleAccounts } = useWalletAccountsList();
@@ -182,25 +179,6 @@ export default function SpCoinWalletPopup() {
     if (!injected) return;
     await connectAsync({ connector: injected });
   };
-
-  /* ─── Panel visibility helpers ─── */
-
-  const setWalletNavigationVisible = useCallback(
-    (visible: boolean, reasonPrefix: string) => {
-      setPanelVisible(SP_COIN_DISPLAY.WALLET_CONNECT_COMPONENT, visible, `${reasonPrefix}:walletConnect`);
-      setPanelVisible(SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT, visible, `${reasonPrefix}:walletAccounts`);
-      setPanelVisible(SP_COIN_DISPLAY.WALLET_NETWORKS_COMPONENT, visible, `${reasonPrefix}:walletNetworks`);
-    },
-    [setPanelVisible],
-  );
-
-  const setManagePanelsVisible = useCallback(
-    (manageSponsorshipsVisible: boolean, accountPanelVisible: boolean, reasonPrefix: string) => {
-      setPanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL, manageSponsorshipsVisible, `${reasonPrefix}:manageSponsorships`);
-      setPanelVisible(SP_COIN_DISPLAY.ACCOUNT_PANEL, accountPanelVisible, `${reasonPrefix}:accountPanel`);
-    },
-    [setPanelVisible],
-  );
 
   /* ─── Lifecycle effects ─── */
 
@@ -234,12 +212,12 @@ export default function SpCoinWalletPopup() {
   }, [selectedAddressKey, walletSource]);
 
   useEffect(() => {
-    if (!isOpen || isSelectionMode || previewAccount) {
+    if (!isOpen || isSelectionMode) {
       setPanelVisible(SP_COIN_DISPLAY.WALLET_CONNECT_COMPONENT, false, 'SpCoinWalletPopup:hideWalletConnectComponent');
       setPanelVisible(SP_COIN_DISPLAY.WALLET_NETWORKS_COMPONENT, false, 'SpCoinWalletPopup:hideWalletNetworksComponent');
       setPanelVisible(SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT, false, 'SpCoinWalletPopup:hideWalletAccountsComponentForOptions');
     }
-  }, [isOpen, isSelectionMode, previewAccount, setPanelVisible]);
+  }, [isOpen, isSelectionMode, setPanelVisible]);
 
   // Keep hasPersistedStackRef current on every render so the auto-open guards below
   // always see a fresh value even though they intentionally omit panel-visibility from deps.
@@ -308,7 +286,6 @@ export default function SpCoinWalletPopup() {
   const openAccountPanel = (account: SpCoinWalletAccount) => {
     const nextAccount = buildSpCoinAccount(account, 'Unnamed account');
     setActiveAccount(nextAccount);
-    setPreviewAccount(nextAccount);
     openAccountComponent({
       account: nextAccount,
       mode: SP_COIN_DISPLAY.ACTIVE_ACCOUNT,
@@ -322,7 +299,6 @@ export default function SpCoinWalletPopup() {
   };
 
   const handlePrimaryClose = () => {
-    if (previewAccount) { setPreviewAccount(undefined); return; }
     closeWallet();
   };
 
@@ -365,8 +341,6 @@ export default function SpCoinWalletPopup() {
               onOpenAccountPanel={openAccountPanel}
               onSelectAccount={handleSelectAccount}
               onToggleCollapse={() => setSelectionAccountsCollapsed((prev) => !prev)}
-              previewAccount={previewAccount}
-              onClosePreview={() => setPreviewAccount(undefined)}
             />
           </div>
         </div>

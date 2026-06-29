@@ -37,7 +37,7 @@ export default function AccountPanelView({
 
   return (
     <div id="ACCOUNT_PANEL" className="flex h-full min-h-0 flex-col">
-      <div className={`min-h-0 flex-1 flex flex-col ${rewardsVisible ? 'overflow-hidden' : 'scrollbar-hide overflow-y-auto'}`}>
+      <div className={`min-h-0 flex-1 flex flex-col ${rewardsVisible ? 'overflow-hidden' : 'overflow-y-auto'}`}>
         {rewardsVisible ? (
           <ManageSponsorshipsPanel onClose={onClose} />
         ) : swapVisible ? (

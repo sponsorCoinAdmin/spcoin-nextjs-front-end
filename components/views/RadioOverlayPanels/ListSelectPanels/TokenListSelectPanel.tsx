@@ -54,7 +54,7 @@ export default function TokenListSelectPanel({ onSelect }: Props) {
       id="TOKEN_LIST_SELECT_PANEL"
       className="flex h-full min-h-0 w-full flex-col overflow-hidden"
     >
-      {buyMode && <div id="BUY_LIST_SELECT_PANEL" className="hidden" aria-hidden="true" />}
+      {buyMode && <div id="BUY_CONTRACT" className="hidden" aria-hidden="true" />}
       <PanelListSelectWrapper onCommit={handleCommit} />
     </div>
   );

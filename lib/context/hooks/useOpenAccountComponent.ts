@@ -31,7 +31,7 @@ type OpenAccountComponentOptions = {
 };
 
 export default function useOpenAccountComponent() {
-  const { openPanel } = usePanelTree();
+  const { openPanel, setPanelVisible } = usePanelTree();
   const [, setActiveAccount] = useActiveAccount();
   const [, setSponsorAccount] = useSponsorAccount();
   const [, setRecipientAccount] = useRecipientAccount();
@@ -70,6 +70,8 @@ export default function useOpenAccountComponent() {
         mode,
       });
       openPanel(SP_COIN_DISPLAY.ACCOUNT_PANEL, `${source}:openAccountPanel`);
+      setPanelVisible(SP_COIN_DISPLAY.ACCOUNT_LOGO, true, `${source}:showAccountLogo`);
+      setPanelVisible(SP_COIN_DISPLAY.ACCOUNT_META_DATA, true, `${source}:showAccountMetaData`);
 
       close?.();
       appendDebugTrace(`${source}:openingAccountPanelMode`, {
