@@ -188,7 +188,7 @@ export default function AccountPanelContent({
           }
         >
           {logoVisible ? (
-            <div className="shrink-0 overflow-visible">
+            <div id="ACCOUNT_LOGO" className="shrink-0 overflow-visible">
               <CreateAccountAvatarPanel
                 panelMarginClass="mb-0 min-h-0"
                 avatarPanelBorderClass=""
@@ -221,16 +221,16 @@ export default function AccountPanelContent({
                 previewSizeBuffer={0}
                 previewHeightBuffer={8}
                 sectionBottomBuffer={0}
-                lockSectionHeight={true}
+                lockSectionHeight={false}
                 fillParentHeight={false}
-                sizingBoundarySelector="#ACCOUNT_PANEL"
+                sizingBoundarySelector="#ACTIVE_ACCOUNT_BODY"
                 resizeSignal={avatarResizeSignal}
               />
             </div>
           ) : null}
 
           {metaDataVisible ? (
-            <div className="shrink-0 overflow-visible">
+            <div id="ACCOUNT_META_DATA" className="shrink-0 overflow-visible">
               <CreateAccountFormPanel
                 panelMarginClass="mb-0 !h-auto"
                 accountPanelBorderClass=""

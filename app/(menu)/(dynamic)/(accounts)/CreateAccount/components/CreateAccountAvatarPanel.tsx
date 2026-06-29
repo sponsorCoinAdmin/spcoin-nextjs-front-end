@@ -317,9 +317,7 @@ export default function CreateAccountAvatarPanel({
 
     scheduleTransitionUpdates();
     window.addEventListener('resize', scheduleTransitionUpdates);
-    window.addEventListener('scroll', scheduleUpdate, true);
     window.visualViewport?.addEventListener('resize', scheduleTransitionUpdates);
-    window.visualViewport?.addEventListener('scroll', scheduleUpdate);
 
     return () => {
       observer.disconnect();
@@ -327,9 +325,7 @@ export default function CreateAccountAvatarPanel({
         element.removeEventListener('transitionend', scheduleTransitionUpdates);
       });
       window.removeEventListener('resize', scheduleTransitionUpdates);
-      window.removeEventListener('scroll', scheduleUpdate, true);
       window.visualViewport?.removeEventListener('resize', scheduleTransitionUpdates);
-      window.visualViewport?.removeEventListener('scroll', scheduleUpdate);
       window.cancelAnimationFrame(animationFrame);
       transitionTimers.forEach((timer) => window.clearTimeout(timer));
     };
