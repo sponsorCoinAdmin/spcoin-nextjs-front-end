@@ -5,6 +5,14 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── SP UI text scale ─────────────────────────────────────────────
+   Change --sp-text-sm here to resize all small UI text in one shot.
+   text-sp-sm Tailwind token references this variable.
+──────────────────────────────────────────────────────────────────── */
+:root {
+  --sp-text-sm: 1rem; /* bumped from text-sm (0.875rem) — next size up */
+}
+
 /* Base Styling */
 body {
   margin: 0;

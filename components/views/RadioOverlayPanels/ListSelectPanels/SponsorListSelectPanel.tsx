@@ -142,7 +142,7 @@ function SponsorListRewardsPanelInner() {
   // Minimal render states
   if (loading) {
     return (
-      <div id="SponsorListSelectLoading" className="p-3 text-sm opacity-70">
+      <div id="SponsorListSelectLoading" className="p-3 text-sp-sm opacity-70">
         Loading sponsor accounts…
       </div>
     );
@@ -150,7 +150,7 @@ function SponsorListRewardsPanelInner() {
 
   if (error) {
     return (
-      <div id="SponsorListSelectError" className="p-3 text-sm opacity-70">
+      <div id="SponsorListSelectError" className="p-3 text-sp-sm opacity-70">
         Failed to load sponsor accounts: {error}
       </div>
     );

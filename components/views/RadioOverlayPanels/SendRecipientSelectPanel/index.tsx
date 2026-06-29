@@ -60,7 +60,7 @@ function SendRecipientSelectPanelInner({ onSelect }: { onSelect: (address: strin
       <div className="relative border-b border-slate-700/70 px-4 py-3">
         <Search className="absolute left-7 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
         <input
-          className="w-full rounded-[8px] bg-[#11162A] pl-8 pr-3 py-2 text-sm text-slate-200 placeholder-slate-500 outline-none focus:ring-1 focus:ring-[#5981F3]"
+          className="w-full rounded-[8px] bg-[#11162A] pl-8 pr-3 py-2 text-sp-sm text-slate-200 placeholder-slate-500 outline-none focus:ring-1 focus:ring-[#5981F3]"
           placeholder="Enter or paste recipient address..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -81,8 +81,8 @@ function SendRecipientSelectPanelInner({ onSelect }: { onSelect: (address: strin
             +
           </div>
           <div className="min-w-0">
-            <div className="text-sm font-semibold text-[#5981F3]">Use this address</div>
-            <div className="text-xs font-mono text-slate-400 truncate">{truncateMiddle(trimmed)}</div>
+            <div className="text-sp-sm font-semibold text-[#5981F3]">Use this address</div>
+            <div className="text-sp-sm font-mono text-slate-400 truncate">{truncateMiddle(trimmed)}</div>
           </div>
         </button>
       )}
@@ -90,7 +90,7 @@ function SendRecipientSelectPanelInner({ onSelect }: { onSelect: (address: strin
       {/* Account list */}
       <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto">
         {filtered.length === 0 && !isRawAddress ? (
-          <div className="p-5 text-sm text-slate-400 text-center">No accounts found.</div>
+          <div className="p-5 text-sp-sm text-slate-400 text-center">No accounts found.</div>
         ) : (
           filtered.map((account) => (
             <AccountRow
@@ -156,8 +156,8 @@ function AccountRow({
         className="min-w-0 text-left bg-transparent border-none p-0 focus:outline-none"
         onClick={onSelect}
       >
-        <div className="text-sm font-semibold text-slate-200 truncate">{label}</div>
-        <div className="text-xs font-mono text-slate-400 truncate">{truncateMiddle(address)}</div>
+        <div className="text-sp-sm font-semibold text-slate-200 truncate">{label}</div>
+        <div className="text-sp-sm font-mono text-slate-400 truncate">{truncateMiddle(address)}</div>
       </button>
       <button
         type="button"

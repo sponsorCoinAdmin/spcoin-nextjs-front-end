@@ -26,7 +26,7 @@ export default function AccountPanelView({
 
   if (!account) {
     return (
-      <div className="p-4 text-sm text-slate-200">
+      <div className="p-4 text-sp-sm text-slate-200">
         <p className="mb-2 font-semibold">No active account selected.</p>
         <p className="m-0">
           Select a <strong>Sponsor</strong>, <strong>Recipient</strong>, or <strong>Agent</strong> to manage.

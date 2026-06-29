@@ -168,7 +168,7 @@ export default function TokenPanel(_props: Props) {
           : 'Select a token to view its details.';
     return (
       <div id="TOKEN_PANEL">
-        <div className="p-4 text-sm text-slate-200 text-center">
+        <div className="p-4 text-sp-sm text-slate-200 text-center">
           <p className="mb-2 font-semibold">{title}</p>
           <p className="m-0">{body}</p>
         </div>
@@ -186,7 +186,7 @@ export default function TokenPanel(_props: Props) {
   const rows = [
     { label: 'Name', value: name },
     { label: 'Symbol', value: symbol },
-    { label: 'Address', value: <span className="font-mono text-xs">{fullAddr || 'N/A'}</span> },
+    { label: 'Address', value: <span className="font-mono text-sp-sm">{fullAddr || 'N/A'}</span> },
     {
       label: 'Website',
       value: website ? (
@@ -200,7 +200,7 @@ export default function TokenPanel(_props: Props) {
       label: 'Logo URL',
       value: logoURL ? (
         <a href={logoURL} target="_blank" rel="noopener noreferrer"
-          className="underline decoration-slate-400/60 underline-offset-2 hover:decoration-slate-200 text-xs text-slate-200">
+          className="underline decoration-slate-400/60 underline-offset-2 hover:decoration-slate-200 text-sp-sm text-slate-200">
           {logoURL}
         </a>
       ) : 'N/A',

@@ -100,7 +100,7 @@ export default function AccountPanelTabBar({ open = true }: Props) {
                 type="button"
                 onClick={() => handleTabClick(tab)}
                 className={[
-                  'inline-flex min-w-[92px] shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-t-[12px] border px-4 py-2 text-[0.72rem] font-semibold tracking-[0.14em] transition-colors',
+                  'inline-flex min-w-[92px] shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-t-[12px] border px-4 py-2 text-sp-sm font-semibold tracking-[0.14em] transition-colors',
                   isActive
                     ? 'border-[#596fe8] bg-[#243056] text-[#9db0ff]'
                     : 'border-slate-700/70 bg-[#11162a] text-slate-300 hover:border-slate-600 hover:bg-[#1a2034]',

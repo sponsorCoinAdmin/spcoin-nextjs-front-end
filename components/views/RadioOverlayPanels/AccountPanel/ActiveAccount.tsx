@@ -41,7 +41,7 @@ export default function ActiveAccount({ account, accountType = 'Account', showTi
   };
 
   return (
-    <div className="shrink-0 border-b border-slate-700/50 -mx-4 px-4 pb-2 flex items-center gap-2 text-sm text-slate-300/80">
+    <div className="shrink-0 border-b border-slate-700/50 -mx-4 px-4 pb-2 flex items-center gap-2 text-sp-sm text-slate-300/80">
       {account?.logoURL ? (
         <div className="flex h-8 w-8 shrink-0 -ml-[2px] items-center justify-center overflow-hidden rounded-lg hover:opacity-80 transition-opacity">
           <AccountAvatar
@@ -59,7 +59,7 @@ export default function ActiveAccount({ account, accountType = 'Account', showTi
         <div className="flex w-full items-center gap-[2px]">
           <div className="flex h-[25px] items-center gap-[5px] rounded-full pl-0 pr-3 text-slate-200 font-bold">
             <span
-              className="whitespace-nowrap font-mono cursor-pointer text-[17px]"
+              className="whitespace-nowrap font-mono cursor-pointer text-xl"
               title={address}
               onClick={() => setPanelVisible(SP_COIN_DISPLAY.ACTIVE_ACCOUNT_HEADER_BAR, !activeAccountHeaderVisible)}
             >{truncateMiddle(address, 4, 4)}</span>

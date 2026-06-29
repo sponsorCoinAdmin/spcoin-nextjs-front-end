@@ -36,6 +36,10 @@ module.exports = {
   theme: {
     // ⬇️ Extend, don’t replace, so default colors/utilities remain available
     extend: {
+      fontSize: {
+        // Standard small UI text — change --sp-text-sm in globals.css to resize everywhere
+        'sp-sm': 'var(--sp-text-sm)',
+      },
       colors: {
         white: `#ffffff`,
 

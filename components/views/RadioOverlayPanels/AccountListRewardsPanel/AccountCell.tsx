@@ -49,7 +49,7 @@ export default function AccountCell({
 
       <div className="min-w-0 flex-1 flex flex-col items-start justify-center text-left">
         <div className="w-full font-semibold truncate !text-[#5981F3] text-left">{account?.name ?? 'Unknown'}</div>
-        <div className="w-full text-sm truncate !text-[#5981F3] text-left">{(account as any)?.symbol ?? ''}</div>
+        <div className="w-full text-sp-sm truncate !text-[#5981F3] text-left">{(account as any)?.symbol ?? ''}</div>
       </div>
     </div>
   );
