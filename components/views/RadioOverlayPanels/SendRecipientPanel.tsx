@@ -29,7 +29,7 @@ export default function SendRecipientPanel() {
 
   return (
     <div id="SEND_RECIPIENT_PANEL" className="relative h-[60px]">
-      <div title="To Recipient" className="absolute top-5 left-[10px] text-[#94a3b8] text-[12px]">
+      <div title="To Recipient" className="absolute top-5 left-[10px] text-[#94a3b8] text-[14px]">
         To Recipient:
       </div>
       <div className="absolute flex items-center gap-[5px]" style={{ top: '12px', right: '20px' }}>

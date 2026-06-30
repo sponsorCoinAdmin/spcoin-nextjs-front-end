@@ -41,14 +41,15 @@ export default function RadioOverlayPanelHost() {
     useSelectionCommit();
 
   const sellMode = usePanelVisible(SP_COIN_DISPLAY.SELL_CONTRACT);
+  const buyMode = usePanelVisible(SP_COIN_DISPLAY.BUY_CONTRACT);
   const sendMode = usePanelVisible(SP_COIN_DISPLAY.SEND_CONTRACT);
 
   const handleTokenSelect = useCallback(
     (token: TokenContract) => {
-      const side = sendMode ? 'send' : sellMode ? 'sell' : 'buy';
+      const side = sellMode ? 'sell' : buyMode ? 'buy' : sendMode ? 'send' : 'buy';
       commitToken(token, side);
     },
-    [commitToken, sellMode, sendMode],
+    [commitToken, buyMode, sellMode, sendMode],
   );
 
   return (

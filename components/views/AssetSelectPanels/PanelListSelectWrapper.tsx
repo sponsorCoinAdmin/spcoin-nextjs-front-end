@@ -69,9 +69,8 @@ export default function PanelListSelectWrapper({ peerAddress, onCommit, containe
   const handleCommit = useCallback(
     (asset: spCoinAccount | TokenContract) => {
       onCommit(asset);
-      closeTop('PanelListSelectWrapper:handleCommit(close)');
     },
-    [onCommit, closeTop],
+    [onCommit],
   );
 
   return (

@@ -13,7 +13,7 @@ import { MAIN_RADIO_OVERLAY_PANELS } from '@/lib/structure/exchangeContext/regis
 import { getPreferredSpCoinContractAddress } from '@/lib/spCoin/coreUtils';
 
 // ✅ SSOT account hydration
-import { hydrateAccountFromAddress } from '@/lib/context/helpers/accountHydration';
+import { ANONYMOUS_ACCOUNT_IMAGE, hydrateAccountFromAddress } from '@/lib/context/helpers/accountHydration';
 
 /* ------------------------------- utils -------------------------------- */
 
@@ -39,15 +39,22 @@ const clone = <T,>(o: T): T =>
  * "Hydrated enough" = account.json likely applied.
  * Prevents duplicate hydration on boot (initExchangeContext already hydrated)
  * and avoids re-fetching on wagmi churn when address is unchanged.
+ *
+ * Also requires a resolved (non-placeholder) logoURL — otherwise an account
+ * that was once hydrated before its logo.png existed (or before a disk-existence
+ * probe briefly failed) would get stuck on the Anonymous placeholder forever,
+ * since persisted localStorage state already satisfies the name/symbol checks.
  */
 const isHydratedAccount = (a?: spCoinAccount) => {
   if (!a?.address) return false;
-  return Boolean(
+  const hasMetadata = Boolean(
     (a.name && a.name.trim().length) ||
       (a.symbol && a.symbol.trim().length) ||
       (a.website && a.website.trim().length) ||
       (a.description && a.description.trim().length),
   );
+  const hasResolvedLogo = Boolean(a.logoURL) && a.logoURL !== ANONYMOUS_ACCOUNT_IMAGE;
+  return hasMetadata && hasResolvedLogo;
 };
 
 /* ----------------------- Flat panel visibility helpers ---------------------- */

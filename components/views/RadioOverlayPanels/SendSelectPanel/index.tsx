@@ -102,11 +102,11 @@ export default function SendSelectPanel({ token, balanceText, amount, onAmountCh
         </span>
       </div>
 
-      <div title="Tokens You are Sending" className="absolute top-5 left-[10px] min-w-[50px] h-[10px] text-[#94a3b8] text-[12px] pr-2 flex items-center gap-1">
+      <div title="Tokens You are Sending" className="absolute top-5 left-[10px] min-w-[50px] h-[10px] text-[#94a3b8] text-[14px] pr-2 flex items-center gap-1">
         Tokens You are Sending:
       </div>
 
-      <div className="absolute top-[74px] right-[10px] h-[10px] text-[#94a3b8] text-[12px] flex items-center gap-1">
+      <div className="absolute top-[74px] right-[10px] h-[10px] text-[#94a3b8] text-[14px] flex items-center gap-1">
         Balance: {balanceText}
       </div>
     </div>

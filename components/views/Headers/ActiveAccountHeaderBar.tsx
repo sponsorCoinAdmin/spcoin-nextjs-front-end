@@ -5,7 +5,6 @@ import { useExchangeContext } from '@/lib/context/hooks';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import PanelGate from '@/components/utility/PanelGate';
-import RoleTableComponent from '@/components/shared/RoleTableComponent';
 
 export default function ActiveAccountHeaderBar() {
   const { exchangeContext } = useExchangeContext();
@@ -18,12 +17,8 @@ export default function ActiveAccountHeaderBar() {
 
   return (
     <PanelGate panel={SP_COIN_DISPLAY.ACTIVE_ACCOUNT_HEADER_BAR}>
-      <div className="relative shrink-0 border-b border-slate-700/50 -mx-4 px-4 py-3 flex flex-col items-center text-[19px] font-semibold text-[#5981F3]">
-        <span>{activeAccountType}</span>
-        {activeAccount?.name && <span>{activeAccount.name}</span>}
-        <div className="absolute top-2 right-4">
-          <RoleTableComponent account={activeAccount} />
-        </div>
+      <div className="relative shrink-0 border-b border-slate-700/50 -mx-4 px-4 py-3 flex items-center justify-center text-[19px] font-semibold text-[#5981F3]">
+        <span>{activeAccountType}{activeAccount?.name ? `: ${activeAccount.name}` : ''}</span>
       </div>
     </PanelGate>
   );

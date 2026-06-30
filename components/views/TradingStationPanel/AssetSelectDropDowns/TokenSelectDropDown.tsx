@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useRef } from 'react';
 import styles from '@/styles/Exchange.module.css';
 import { ChevronDown } from 'lucide-react';
 import { SP_COIN_DISPLAY, type TokenContract } from '@/lib/structure';
@@ -11,7 +11,6 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { clearFSMTraceFromMemory } from '@/components/debug/FSMTracePanel';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
-import { defaultMissingImage, getTokenLogoURL } from '@/lib/context/helpers/assetHelpers';
 import TokenLogo from '@/components/utility/TokenLogo';
 
 const LOG_TIME = false;
@@ -32,34 +31,11 @@ export default function TokenSelectDropDown({ containerType }: Props) {
     ? 'Select a new Token to Sell'
     : 'Select a new Token to Buy';
 
-  const { isVisible, openPanel } = usePanelTree();
+  const { isVisible, openPanel, closePanel } = usePanelTree();
 
   // Guard against re-entrancy + help diagnose "flash close"
   const lastOpenAtRef = useRef<number | null>(null);
   const openingRef = useRef(false);
-
-  const logoURL = useMemo(() => {
-    if (!tokenContract) return defaultMissingImage;
-
-    const raw = tokenContract.logoURL?.trim();
-
-    if (raw && (raw.startsWith('http://') || raw.startsWith('https://'))) {
-      return raw;
-    }
-
-    if (tokenContract.address && typeof tokenContract.chainId === 'number') {
-      return getTokenLogoURL({
-        address: tokenContract.address,
-        chainId: tokenContract.chainId,
-      });
-    }
-
-    if (raw && raw.length > 0) {
-      return raw.startsWith('/') ? raw : `/${raw.replace(/^\/+/, '')}`;
-    }
-
-    return defaultMissingImage;
-  }, [tokenContract]);
 
   const stopMouseDown = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -67,6 +43,24 @@ export default function TokenSelectDropDown({ containerType }: Props) {
   const stopClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
   }, []);
+
+  const setSell = useCallback(
+    (sellSelect: boolean, methodName: string) => {
+      const sellPanel = SP_COIN_DISPLAY.SELL_CONTRACT;
+      const buyPanel = SP_COIN_DISPLAY.BUY_CONTRACT;
+
+      if (sellSelect) {
+        closePanel(buyPanel, `${methodName}:setSell:closeBuy`);
+        openPanel(sellPanel, `${methodName}:setSell:openSell`);
+      } else {
+        closePanel(sellPanel, `${methodName}:setSell:closeSell`);
+        openPanel(buyPanel, `${methodName}:setSell:openBuy`);
+      }
+
+      closePanel(SP_COIN_DISPLAY.SEND_CONTRACT, `${methodName}:setSell:closeSend`);
+    },
+    [closePanel, openPanel],
+  );
 
   const schedulePostChecks = useCallback(
     (panel: SP_COIN_DISPLAY) => {
@@ -122,6 +116,8 @@ export default function TokenSelectDropDown({ containerType }: Props) {
         ? SP_COIN_DISPLAY.SELL_CONTRACT
         : SP_COIN_DISPLAY.BUY_CONTRACT;
 
+      setSell(isSellRoot, methodName);
+
       // Open the mode and the list atomically so the popup stays in radio mode.
       if (isSellRoot) {
         openPanel(
@@ -146,7 +142,7 @@ export default function TokenSelectDropDown({ containerType }: Props) {
         `openTokenSelectPanel → visible now { list: ${listNow}, buyMode: ${buyModeNow}, sellMode: ${sellModeNow} } (isSellRoot=${isSellRoot})`,
       );
     },
-    [isSellRoot, openPanel, isVisible, schedulePostChecks],
+    [isSellRoot, openPanel, isVisible, schedulePostChecks, setSell],
   );
 
   function displaySymbol(token: TokenContract) {
@@ -168,11 +164,7 @@ export default function TokenSelectDropDown({ containerType }: Props) {
       {tokenContract ? (
         <>
           <TokenLogo
-            logoURL={logoURL}
-            symbol={tokenContract.symbol}
-            name={tokenContract.name}
-            address={tokenContract.address}
-            chainId={tokenContract.chainId}
+            tokenContract={tokenContract}
             className="h-9 w-9 mr-2 rounded-md"
           />
           {displaySymbol(tokenContract)}

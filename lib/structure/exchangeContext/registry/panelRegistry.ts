@@ -163,10 +163,10 @@ const TRADE_HEADER_CHILDREN: readonly SP[] = [
 ] as const;
 
 const MERIT_WALLET_CHILDREN: readonly SP[] = [
+  SP.WALLET_HEADER,
   SP.AGENT_HEADER_CONTAINER,
   SP.MENU_TAB_HEADER_BAR,
   SP.PANEL_SUB_TITLE,
-  SP.ADDRESS_HEADER_BAR,
   ...TRADE_HEADER_CHILDREN,
 ] as const;
 
@@ -203,8 +203,10 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   // Popup header bars
   def({ id: SP.MENU_TAB_HEADER_BAR, kind: 'panel', defaultVisible: true }),
   def({ id: SP.PANEL_SUB_TITLE, kind: 'panel', defaultVisible: true }),
-  def({ id: SP.ADDRESS_HEADER_BAR, kind: 'panel', defaultVisible: true, children: [SP.ACTIVE_ACCOUNT_HEADER_BAR] }),
+  def({ id: SP.ADDRESS_HEADER_BAR, kind: 'panel', defaultVisible: true, children: [SP.ACTIVE_ACCOUNT_HEADER_BAR, SP.ROLE_TABLE_COMPONENT] }),
   def({ id: SP.ACTIVE_ACCOUNT_HEADER_BAR, kind: 'panel', defaultVisible: true }),
+  def({ id: SP.ROLE_TABLE_COMPONENT, kind: 'panel', defaultVisible: true }),
+  def({ id: SP.WALLET_HEADER, kind: 'panel', defaultVisible: true, children: [SP.ADDRESS_HEADER_BAR] }),
   def({ id: SP.AGENT_HEADER_CONTAINER, kind: 'panel', defaultVisible: true }),
 
   // Token selector overlays
@@ -329,15 +331,16 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   def({
     id: SP.ADD_SPONSORSHIP_PANEL,
     kind: 'panel',
-    children: [SP.CONFIG_SPONSORSHIP_PANEL],
+    children: [SP.ACCOUNT_SELECT_DROP_DOWN, SP.CONFIG_SPONSORSHIP_PANEL],
   }),
   def({ id: SP.CONFIG_SPONSORSHIP_PANEL, kind: 'panel' }),
+  def({ id: SP.ACCOUNT_SELECT_DROP_DOWN, kind: 'panel', defaultVisible: true, children: [] }),
 
   // Staking-context instances (separate enum values per Rule 14)
   def({
     id: SP.ADD_SPONSORSHIP_PANEL_STAKING,
     kind: 'panel',
-    children: [SP.CONFIG_SPONSORSHIP_PANEL_STAKING],
+    children: [SP.ACCOUNT_SELECT_DROP_DOWN, SP.CONFIG_SPONSORSHIP_PANEL_STAKING],
   }),
   def({ id: SP.CONFIG_SPONSORSHIP_PANEL_STAKING, kind: 'panel' }),
   def({ id: SP.CONNECT_TRADE_BUTTON_STAKING, kind: 'control', defaultVisible: true }),
@@ -354,8 +357,9 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   def({ id: SP.WALLET_CONFIG_PANEL, kind: 'control', defaultVisible: false }),
   def({ id: SP.MANAGE_ACCOUNTS_PANEL, kind: 'panel', defaultVisible: false }),
   def({ id: SP.SPONSOR_PANEL, kind: 'panel', defaultVisible: false }),
-  def({ id: SP.SEND_PANEL, kind: 'panel', defaultVisible: false, children: [SP.SEND_SELECT_PANEL, SP.SEND_ADDRESS_HEADER_BAR] }),
+  def({ id: SP.SEND_PANEL, kind: 'panel', defaultVisible: false, children: [SP.PANEL_SUB_TITLE, SP.SEND_SELECT_PANEL, SP.SEND_ADDRESS_HEADER_BAR, SP.SEND_BUTTON] }),
   def({ id: SP.SEND_RECIPIENT_SELECT_PANEL, kind: 'panel', defaultVisible: false }),
+  def({ id: SP.SEND_BUTTON, kind: 'button', defaultVisible: true }),
   def({ id: SP.SEND_TITLE, kind: 'panel', defaultVisible: true }),
   def({ id: SP.SEND_ADDRESS_HEADER_BAR, kind: 'panel', defaultVisible: true }),
   def({ id: SP.TOKEN_ADDRESS_COMPONENT, kind: 'panel', defaultVisible: true }),
@@ -387,6 +391,7 @@ export const NON_INDEXED_PANELS = new Set<SP>([
   SP.PANEL_SUB_TITLE,
   SP.ACTIVE_ACCOUNT_HEADER_BAR,
   SP.ADDRESS_HEADER_BAR,
+  SP.WALLET_HEADER,
   SP.AGENT_HEADER_CONTAINER,
   SP.SEND_TITLE,
   SP.TOKEN_ADDRESS_COMPONENT,

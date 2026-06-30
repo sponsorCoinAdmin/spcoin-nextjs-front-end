@@ -118,7 +118,7 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
         node(SP.SWAP_ARROW_BUTTON, true),
         node(SP.BUY_SELECT_PANEL, true, [node(SP.ADD_SPONSORSHIP_BUTTON, false)]),
       ]),
-      node(SP.ADD_SPONSORSHIP_PANEL, false),
+      node(SP.ADD_SPONSORSHIP_PANEL, false, [node(SP.ACCOUNT_SELECT_DROP_DOWN, true)]),
       node(SP.CONNECT_TRADE_BUTTON, true),
       node(SP.FEE_DISCLOSURE, true),
       node(SP.AFFILIATE_FEE, false),
@@ -148,7 +148,10 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
 
     node(SP.STAKING_SPCOINS_PANEL, false, [
       node(SP.STAKE_TRADING_SPCOINS_PANEL, false),
-      node(SP.ADD_SPONSORSHIP_PANEL_STAKING, false, [node(SP.CONFIG_SPONSORSHIP_PANEL_STAKING, false)]),
+      node(SP.ADD_SPONSORSHIP_PANEL_STAKING, false, [
+        node(SP.ACCOUNT_SELECT_DROP_DOWN, true),
+        node(SP.CONFIG_SPONSORSHIP_PANEL_STAKING, false),
+      ]),
       node(SP.CONNECT_TRADE_BUTTON_STAKING, true),
     ]),
 

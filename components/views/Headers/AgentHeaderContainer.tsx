@@ -32,7 +32,7 @@ export default function AgentHeaderContainer({ onMenuClick }: Props) {
         <h2 className="m-0 text-xl font-extrabold leading-tight tracking-wide text-[#5981F3] md:text-2xl">
           {AGENT_TITLE}
         </h2>
-        <p className="m-0 mt-0.5 text-xs text-white/70">{AGENT_SUBTITLE}</p>
+        <p className="m-0 mt-0.5 text-sm font-semibold text-white/75">{AGENT_SUBTITLE}</p>
         {onMenuClick ? (
           <button
             type="button"

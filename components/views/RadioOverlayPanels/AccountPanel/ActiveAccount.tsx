@@ -7,6 +7,8 @@ import { SP_COIN_DISPLAY, type spCoinAccount } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import AccountAvatar from '@/components/utility/AccountAvatar';
+import PanelGate from '@/components/utility/PanelGate';
+import RoleTableComponent from '@/components/shared/RoleTableComponent';
 import { truncateMiddle } from '@/lib/utils/addressUtils';
 
 interface ActiveAccountProps {
@@ -87,6 +89,9 @@ export default function ActiveAccount({ account, accountType = 'Account', showTi
               : <Copy className="h-5 w-5 text-slate-200" />
             }
           </button>
+          <PanelGate panel={SP_COIN_DISPLAY.ROLE_TABLE_COMPONENT} className="ml-auto mr-[6px]">
+            <RoleTableComponent account={account} />
+          </PanelGate>
         </div>
       </div>
     </div>

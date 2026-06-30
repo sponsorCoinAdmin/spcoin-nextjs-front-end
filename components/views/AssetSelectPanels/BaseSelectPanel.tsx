@@ -363,11 +363,11 @@ function BaseSelectPanelInner() {
         }
       />
 
-      <div className='absolute top-5 left-[10px] min-w-[50px] h-[10px] text-[#94a3b8] text-[12px] pr-2 flex items-center gap-1'>
+      <div className='absolute top-5 left-[10px] min-w-[50px] h-[10px] text-[#94a3b8] text-[14px] pr-2 flex items-center gap-1'>
         {buySellText}
       </div>
 
-      <div className='absolute top-[74px] right-5 min-w-[50px] h-[10px] text-[#94a3b8] text-[12px] pr-2 flex items-center gap-1'>
+      <div className='absolute top-[74px] right-5 min-w-[50px] h-[10px] text-[#94a3b8] text-[14px] pr-2 flex items-center gap-1'>
         Balance: {formattedBalance}
       </div>
 

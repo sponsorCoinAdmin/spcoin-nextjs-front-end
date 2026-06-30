@@ -10,6 +10,7 @@ import { deriveNetworkFromApp } from '@/lib/utils/network';
 
 // ✅ SSOT account hydration
 import {
+  ANONYMOUS_ACCOUNT_IMAGE,
   hydrateAccountFromAddress,
   makeAccountFallback,
   resolveAccountLogoURL,
@@ -133,15 +134,22 @@ const lower = (s?: string) => (s ? s.toLowerCase() : s);
 /**
  * "Hydrated enough" heuristic for spCoinAccount.
  * We only use this to avoid duplicate hydration + avoid leaving activeAccount partial.
+ *
+ * Also requires a resolved (non-placeholder) logoURL — otherwise an account
+ * that was once hydrated before its logo.png existed (or before a disk-existence
+ * probe briefly failed) would get stuck on the Anonymous placeholder forever,
+ * since persisted localStorage state already satisfies the name/symbol checks.
  */
 const isHydratedAccount = (a?: spCoinAccount) => {
   if (!a?.address) return false;
-  return Boolean(
+  const hasMetadata = Boolean(
     (a.name && a.name.trim().length) ||
       (a.symbol && a.symbol.trim().length) ||
       (a.website && a.website.trim().length) ||
       (a.description && a.description.trim().length),
   );
+  const hasResolvedLogo = Boolean(a.logoURL) && a.logoURL !== ANONYMOUS_ACCOUNT_IMAGE;
+  return hasMetadata && hasResolvedLogo;
 };
 
 /* ------------------------------ Trace helpers ------------------------------ */

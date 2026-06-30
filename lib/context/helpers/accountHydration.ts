@@ -57,7 +57,7 @@ type HydrateOpts = {
 };
 
 const ACCOUNT_BATCH_PAGE_SIZE = 25;
-const ANONYMOUS_ACCOUNT_IMAGE = '/assets/miscellaneous/Anonymous.png';
+export const ANONYMOUS_ACCOUNT_IMAGE = '/assets/miscellaneous/Anonymous.png';
 const accountLogoExistenceCache = new Map<string, boolean>();
 
 /* ----------------------------- small utils ----------------------------- */

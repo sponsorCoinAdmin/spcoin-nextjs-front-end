@@ -10,7 +10,7 @@ import type { spCoinAccount } from '@/lib/structure';
 import { SP_COIN_DISPLAY as SP_TREE } from '@/lib/structure';
 
 import ConfigSlippagePanel from '@/components/views/TradingStationPanel/AddSponsorshipPanel/ConfigSponsorshipPanel';
-import { RecipientSelectDropDown } from '@/components/views/TradingStationPanel/AssetSelectDropDowns';
+import { AccountSelectDropDown } from '@/components/views/TradingStationPanel/AssetSelectDropDowns';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
@@ -317,7 +317,7 @@ const AddSponsorShipPanel: React.FC<Props> = ({
         </div>
 
         <div className="absolute left-[160px] min-w-[50px] h-[25px] rounded-full flex items-center justify-start gap-1 font-bold text-[17px] pr-2 text-white bg-[#243056]">
-          <RecipientSelectDropDown recipientAccount={recipientWallet} />
+          <AccountSelectDropDown recipientAccount={recipientWallet} />
         </div>
 
         <div>

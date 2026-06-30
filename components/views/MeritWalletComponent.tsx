@@ -50,26 +50,28 @@ export default function MeritWalletComponent({ onExpand, docked = false }: Props
           ? 'h-full rounded-none border-r-0'
           : 'max-h-[min(1000px,calc(100vh-100px))] rounded-[15px]',
       ].join(' ')}>
-        <WalletHeader
-          mode="normal"
-          title={title}
-          leftSlot={
-            <ConnectNetworkButton
-              showName={false}
-              showSymbol={true}
-              showChevron={true}
-              showConnect={true}
-              showDisconnect={false}
-              showHoverBg={true}
-              trimHorizontalPaddingPx={12}
-              onChevronClick={handleNetworkChevron}
-              chevronUp={walletNetworksVisible}
-            />
-          }
-          bottomSlot={<AddressHeaderBar />}
-          onExpand={onExpand}
-          onClose={closeWallet}
-        />
+        <PanelGate panel={SP_COIN_DISPLAY.WALLET_HEADER} lazyLoad={false}>
+          <WalletHeader
+            mode="normal"
+            title={title}
+            leftSlot={
+              <ConnectNetworkButton
+                showName={false}
+                showSymbol={true}
+                showChevron={true}
+                showConnect={true}
+                showDisconnect={false}
+                showHoverBg={true}
+                trimHorizontalPaddingPx={12}
+                onChevronClick={handleNetworkChevron}
+                chevronUp={walletNetworksVisible}
+              />
+            }
+            bottomSlot={<AddressHeaderBar />}
+            onExpand={onExpand}
+            onClose={closeWallet}
+          />
+        </PanelGate>
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <AgentHeaderContainer onMenuClick={handleMenuClick} />
           <div id="UNDEFINED" className="hidden" aria-hidden="true" />

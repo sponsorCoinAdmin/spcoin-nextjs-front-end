@@ -79,13 +79,15 @@ export default function SendComponent() {
           <SendRecipientPanel />
         </div>
       </PanelGate>
-      <SendButton
-        amount={amount}
-        toAddress={toAddress}
-        tokenBalance={tokenBalance}
-        tokenSymbol={tokenSymbol}
-        onSend={handleSend}
-      />
+      <PanelGate panel={SP_COIN_DISPLAY.SEND_BUTTON}>
+        <SendButton
+          amount={amount}
+          toAddress={toAddress}
+          tokenBalance={tokenBalance}
+          tokenSymbol={tokenSymbol}
+          onSend={handleSend}
+        />
+      </PanelGate>
     </div>
   );
 }

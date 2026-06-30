@@ -162,24 +162,26 @@ export default function RoleTableComponent({ account, accountAddress }: Props) {
 
   return (
     <div className="flex flex-col items-center gap-0.5">
-      <table className="border-collapse text-xs font-bold text-white">
-        <tbody>
-          <tr>
-            <td
-              className={`border border-black px-2 py-0.5 text-center cursor-default ${roles.isSponsor ? 'bg-green-600' : 'bg-red-600'}`}
-              title={roles.isSponsor ? 'Sponsor Account' : 'Not a Sponsor Account'}
-            ><span className="inline-block scale-[1.15]">S</span></td>
-            <td
-              className={`border border-black px-2 py-0.5 text-center cursor-default ${roles.isRecipient ? 'bg-green-600' : 'bg-red-600'}`}
-              title={roles.isRecipient ? 'Recipient Account' : 'Not a Recipient Account'}
-            ><span className="inline-block scale-[1.15]">R</span></td>
-            <td
-              className={`border border-black px-2 py-0.5 text-center cursor-default ${roles.isAgent ? 'bg-green-600' : 'bg-red-600'}`}
-              title={roles.isAgent ? 'Agent Account' : 'Not an Agent Account'}
-            ><span className="inline-block scale-[1.15]">A</span></td>
-          </tr>
-        </tbody>
-      </table>
+      <div className="inline-block border-4 border-gray-800">
+        <table className="border-collapse text-sm font-bold text-white">
+          <tbody>
+            <tr>
+              <td
+                className={`border-r border-gray-800 px-2 py-0.5 text-center cursor-default ${roles.isSponsor ? 'bg-green-600' : 'bg-red-600'}`}
+                title={roles.isSponsor ? 'Sponsor Account' : 'Not a Sponsor Account'}
+              ><span className="inline-block scale-[1.15]">S</span></td>
+              <td
+                className={`border-r border-gray-800 px-2 py-0.5 text-center cursor-default ${roles.isRecipient ? 'bg-green-600' : 'bg-red-600'}`}
+                title={roles.isRecipient ? 'Recipient Account' : 'Not a Recipient Account'}
+              ><span className="inline-block scale-[1.15]">R</span></td>
+              <td
+                className={`px-2 py-0.5 text-center cursor-default ${roles.isAgent ? 'bg-green-600' : 'bg-red-600'}`}
+                title={roles.isAgent ? 'Agent Account' : 'Not an Agent Account'}
+              ><span className="inline-block scale-[1.15]">A</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

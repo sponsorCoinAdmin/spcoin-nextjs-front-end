@@ -32,7 +32,7 @@ export type UseSelectionCommit = {
 export function useSelectionCommit(): UseSelectionCommit {
   // ✅ closeTop = POP top-of-stack (same as header X)
   const { closeTop } = usePanelTransitions();
-  const { openPanel } = usePanelTree();
+  const { openPanel, closePanel } = usePanelTree();
 
   // Token commits use your existing hooks (source of truth)
   const [, setSellTokenContract] = useSellTokenContract();
@@ -51,6 +51,14 @@ export function useSelectionCommit(): UseSelectionCommit {
     closeTop('useSelectionCommit:finish(pop)');
   }, [closeTop]);
 
+  const finishTradingTokenSelection = useCallback(
+    (invoker: string) => {
+      closePanel(SP_COIN_DISPLAY.TOKEN_LIST_SELECT_PANEL, `${invoker}:closeTokenList`);
+      openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL, `${invoker}:restoreTradingStation`);
+    },
+    [closePanel, openPanel],
+  );
+
   const commitBuyToken = useCallback(
     (t: TokenContract) => {
       const addr = (t as any)?.address;
@@ -64,13 +72,9 @@ export function useSelectionCommit(): UseSelectionCommit {
       log.log?.('commitBuyToken', { address: addr, symbol: sym });
       setBuyTokenContract(t);
       openPanel(SP_COIN_DISPLAY.BUY_CONTRACT, 'useSelectionCommit:commitBuyToken');
-      openPanel(
-        SP_COIN_DISPLAY.TOKEN_PANEL,
-        'useSelectionCommit:commitBuyToken',
-      );
-      finish();
+      finishTradingTokenSelection('useSelectionCommit:commitBuyToken');
     },
-    [setBuyTokenContract, openPanel, finish],
+    [setBuyTokenContract, openPanel, finishTradingTokenSelection],
   );
 
   const commitSellToken = useCallback(
@@ -86,13 +90,9 @@ export function useSelectionCommit(): UseSelectionCommit {
       log.log?.('commitSellToken', { address: addr, symbol: sym });
       setSellTokenContract(t);
       openPanel(SP_COIN_DISPLAY.SELL_CONTRACT, 'useSelectionCommit:commitSellToken');
-      openPanel(
-        SP_COIN_DISPLAY.TOKEN_PANEL,
-        'useSelectionCommit:commitSellToken',
-      );
-      finish();
+      finishTradingTokenSelection('useSelectionCommit:commitSellToken');
     },
-    [setSellTokenContract, openPanel, finish],
+    [setSellTokenContract, openPanel, finishTradingTokenSelection],
   );
 
   const commitSendToken = useCallback(
