@@ -19,13 +19,14 @@ function safeStringify(data: DebugTraceData) {
 
 export function appendDebugTrace(message: string, data?: DebugTraceData) {
   const line = `${message}${safeStringify(data)}`;
-  console.log(line);
 
   if (typeof window === 'undefined') return line;
 
   if (!isDebugTraceEnabled()) {
     return line;
   }
+
+  console.log(line);
 
   const win = window as Window & {
     [DEBUG_TRACE_SINK_KEY]?: (line: string) => void;

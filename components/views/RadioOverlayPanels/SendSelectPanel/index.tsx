@@ -59,7 +59,7 @@ export default function SendSelectPanel({ token, balanceText, amount, onAmountCh
   };
 
   return (
-    <div id="SEND_SELECT_PANEL" className="relative">
+    <div id="SEND_SELECT_PANEL" className="relative pt-[3px] pb-[3px]">
       <input
         className={clsx(
           'w-full h-[91px] indent-[10px] pt-[10px]',

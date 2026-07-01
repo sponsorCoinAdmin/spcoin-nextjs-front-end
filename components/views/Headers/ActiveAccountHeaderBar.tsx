@@ -46,7 +46,7 @@ export default function ActiveAccountHeaderBar() {
             alt="Open slippage settings"
             title="Open slippage settings"
             onClick={handleCogClick}
-            className="absolute right-0 h-5 w-5 object-contain cursor-pointer transition duration-300 hover:rotate-[360deg]"
+            className="ml-2 relative -top-[5px] h-[18px] w-[18px] shrink-0 object-contain cursor-pointer transition duration-300 hover:rotate-[360deg]"
             priority
           />
         )}

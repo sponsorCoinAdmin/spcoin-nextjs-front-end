@@ -24,7 +24,6 @@ export default function AccountPanelTabBar({ open = true }: Props) {
   const swapVisible    = usePanelVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
   const sendVisible    = usePanelVisible(SP_COIN_DISPLAY.SEND_PANEL);
   const configVisible    = usePanelVisible(SP_COIN_DISPLAY.WALLET_CONFIG_PANEL);
-  const slippageVisible  = usePanelVisible(SP_COIN_DISPLAY.CONFIG_SLIPPAGE_PANEL);
   const wacVisible          = usePanelVisible(SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT);
   const wncVisible          = usePanelVisible(SP_COIN_DISPLAY.WALLET_NETWORKS_COMPONENT);
   const accountPanelVisible = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_PANEL);
@@ -64,11 +63,11 @@ export default function AccountPanelTabBar({ open = true }: Props) {
     openPanel(tab.panel, `AccountPanelTabBar:${tab.key}`);
   };
 
-  const handleSlippageConfigClick = () => {
-    if (slippageVisible) {
-      closePanel(SP_COIN_DISPLAY.CONFIG_SLIPPAGE_PANEL, 'AccountPanelTabBar:Config:close');
+  const handleConfigClick = () => {
+    if (configVisible) {
+      closePanel(SP_COIN_DISPLAY.WALLET_CONFIG_PANEL, 'AccountPanelTabBar:Config:close');
     } else {
-      openPanel(SP_COIN_DISPLAY.CONFIG_SLIPPAGE_PANEL, 'AccountPanelTabBar:Config:open');
+      openPanel(SP_COIN_DISPLAY.WALLET_CONFIG_PANEL, 'AccountPanelTabBar:Config:open');
     }
   };
 
@@ -101,14 +100,14 @@ export default function AccountPanelTabBar({ open = true }: Props) {
           })}
           <button
             type="button"
-            onClick={handleSlippageConfigClick}
+            onClick={handleConfigClick}
             className={[
               'inline-flex min-w-[92px] shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-t-[12px] border px-4 py-2 text-sp-sm font-semibold tracking-[0.14em] transition-colors',
-              slippageVisible
+              configVisible
                 ? 'border-[#596fe8] bg-[#243056] text-[#9db0ff]'
                 : 'border-slate-700/70 bg-[#11162a] text-slate-300 hover:border-slate-600 hover:bg-[#1a2034]',
             ].join(' ')}
-            aria-pressed={slippageVisible}
+            aria-pressed={configVisible}
             title="Config"
           >
             <span>Config</span>

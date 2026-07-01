@@ -20,7 +20,7 @@ export default function AgentHeaderContainer({ onMenuClick }: Props) {
 
   return (
     <PanelGate panel={SP_COIN_DISPLAY.AGENT_HEADER_CONTAINER}>
-      <div className="relative shrink-0 select-none py-3 text-center">
+      <div className="relative shrink-0 select-none pt-3 pb-[2px] text-center">
         <button
           type="button"
           onClick={() => closePanel('AgentHeaderContainer:back')}

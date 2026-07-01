@@ -50,7 +50,7 @@ export default function WalletHeader({
   const isSelection = mode === 'selection';
 
   return (
-    <div className={`relative border-b border-[#21273a] bg-[#77808e] ${isSelection ? 'px-5 pt-[11px] pb-[10px]' : `pl-4 pr-[10px] pt-[6px] ${bottomSlot ? 'pb-0' : 'pb-[6px]'}`}`}>
+    <div className={`relative bg-[#77808e] ${isSelection ? 'border-b border-[#21273a] px-5 pt-[11px] pb-[10px]' : `pl-4 pr-[10px] pt-[6px] ${bottomSlot ? 'pb-0' : 'pb-[6px]'}`}`}>
       {isSelection ? (
         <>
           <span

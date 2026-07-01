@@ -4,7 +4,6 @@
 import { useEffect, useState } from 'react';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { resolveSpCoinAccountRoles } from '@/lib/spCoinLab/accountRoles';
-import { appendDebugTrace } from '@/lib/utils/debugTrace';
 import type { spCoinAccount } from '@/lib/structure';
 
 const SPCOIN_ROLE_SPONSOR   = 1;
@@ -135,23 +134,6 @@ export default function RoleTableComponent({ account, accountAddress }: Props) {
         const isSponsor   = hasRole('Sponsor',   'isSponsor',   'pendingSponsorRewards');
         const isRecipient = hasRole('Recipient',  'isRecipient', 'pendingRecipientRewards');
         const isAgent     = hasRole('Agent',      'isAgent',     'pendingAgentRewards');
-
-        const ts   = nested(r, 'totalSpCoins');
-        const pr   = nested(r, 'totalSpCoins', 'pendingRewards') ?? nested(r, 'pendingRewards');
-        const meta = nested(r, 'meta', 'rewardCalculation');
-        const fmt  = (label: string, c: Record<string, unknown> | undefined) => {
-          if (!c) return `${label}=null`;
-          const bitmask = typeof c.roles === 'number'
-            ? `0b${c.roles.toString(2)}(${c.roles})` : JSON.stringify(c.roles);
-          return `${label}:{iS=${c.isSponsor},iR=${c.isRecipient},iA=${c.isAgent}` +
-            `,pSR=${c.pendingSponsorRewards},pRR=${c.pendingRecipientRewards},pAR=${c.pendingAgentRewards}` +
-            `,roles=${bitmask}}`;
-        };
-        appendDebugTrace(
-          `[RoleTable] account=${address.slice(0, 10)}` +
-          ` RESULT: isSponsor=${isSponsor} isRecipient=${isRecipient} isAgent=${isAgent}` +
-          ` | ${fmt('root', r)} | ${fmt('ts', ts)} | ${fmt('pr', pr)} | ${fmt('meta', meta)}`,
-        );
 
         setRoles({ isSponsor, isRecipient, isAgent });
       } catch { /* silently ignore fetch errors */ }

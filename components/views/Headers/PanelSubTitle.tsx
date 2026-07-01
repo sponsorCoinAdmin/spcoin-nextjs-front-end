@@ -27,7 +27,7 @@ export default function PanelSubTitle() {
   return (
     <PanelGate panel={SP_COIN_DISPLAY.PANEL_SUB_TITLE} lazyLoad={false}>
       <div>
-        <div className="shrink-0 border-b border-slate-700/50 -mx-4 pl-4 pr-4 pb-2 flex items-center gap-2">
+        <div className="shrink-0 border-b border-slate-700/50 pl-4 pr-4 pb-2 flex items-center gap-2 bg-[#77808e]">
           <AccountSelectDropDown
             recipientAccount={activeAccount}
             onSelectClick={handleSelectClick}

@@ -71,6 +71,7 @@ export default function MeritWalletComponent({ onExpand, docked = false }: Props
             onClose={closeWallet}
           />
         </PanelGate>
+        <PanelSubTitle />
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <div id="UNDEFINED" className="hidden" aria-hidden="true" />
           <div
@@ -78,7 +79,6 @@ export default function MeritWalletComponent({ onExpand, docked = false }: Props
             className={styles.mainTradingPanel}
             style={{ transform: 'none', width: '100%', flex: 1, minHeight: 0, maxHeight: '100%', margin: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
           >
-            <PanelSubTitle />
             <AgentHeaderContainer onMenuClick={handleMenuClick} />
             <MenuTabHeaderBar />
             <ActiveAccountHeaderBar />

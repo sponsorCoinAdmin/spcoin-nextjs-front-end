@@ -3,17 +3,19 @@
 import { useState, useCallback } from 'react';
 import { parseUnits } from 'viem';
 import type { Address } from 'viem';
-import { useSendTransaction } from 'wagmi';
+import { useQueryClient } from '@tanstack/react-query';
 import { useSendTokenContract } from '@/lib/context/hooks';
 import { useNativeToken } from '@/lib/hooks/useNativeToken';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { useGetBalance } from '@/lib/hooks/useGetBalance';
-import { useTransfer } from '@/lib/hooks/wagmi/ERC20/useTransfer';
+import { useHardhatAwareTransfer } from '@/lib/hooks/useHardhatAwareTransfer';
 import SendSelectPanel from './SendSelectPanel';
 import SendRecipientPanel from './SendRecipientPanel';
 import SendButton from '@/components/views/Buttons/SendButton';
 import PanelGate from '@/components/utility/PanelGate';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
+import TxReceiptModal from '@/components/modals/TxReceiptModal';
+import type { TxReceipt } from '@/components/modals/TxReceiptModal';
 
 export default function SendComponent() {
   const [sendTokenContract] = useSendTokenContract();
@@ -21,6 +23,8 @@ export default function SendComponent() {
   const { exchangeContext } = useExchangeContext();
 
   const [amount, setAmount] = useState('0');
+  const [isPending, setIsPending] = useState(false);
+  const [txReceipt, setTxReceipt] = useState<TxReceipt | null>(null);
 
   const token = sendTokenContract ?? nativeToken;
   const tokenSymbol = token?.symbol ?? 'TOKEN';
@@ -44,25 +48,51 @@ export default function SendComponent() {
 
   const tokenBalance = parseFloat(formattedBalance ?? '0');
 
-  const { transfer } = useTransfer();
-  const { sendTransactionAsync } = useSendTransaction();
+  const { transfer, sendNative } = useHardhatAwareTransfer();
+  const queryClient = useQueryClient();
 
   const handleSend = useCallback(async () => {
     if (!toAddress) return;
     const decimals = token?.decimals ?? 18;
     const amountBigInt = parseUnits(amount.trim(), decimals);
+    setIsPending(true);
     try {
+      let txHash: string | undefined;
       if (tokenAddr) {
-        await transfer(tokenAddr, toAddress as Address, amountBigInt);
+        const result = await transfer(tokenAddr, toAddress as Address, amountBigInt);
+        txHash = typeof result === 'string' ? result : String(result ?? '');
       } else {
-        await sendTransactionAsync({ to: toAddress as Address, value: amountBigInt });
+        txHash = await sendNative(toAddress as Address, amountBigInt);
+      }
+      if (txHash) {
+        void queryClient.invalidateQueries({
+          predicate: (query) => {
+            const key = query.queryKey[0];
+            return typeof key === 'string' && key.startsWith('balance:');
+          },
+        });
+        setTxReceipt({
+          txHash,
+          from: activeAccountAddr ?? '',
+          to: toAddress,
+          amount: amount.trim(),
+          tokenSymbol,
+        });
       }
     } catch (err) {
       console.error('SendComponent: transfer failed', err);
+    } finally {
+      setIsPending(false);
     }
-  }, [toAddress, token, amount, tokenAddr, transfer, sendTransactionAsync]);
+  }, [toAddress, token, amount, tokenAddr, tokenSymbol, activeAccountAddr, transfer, sendNative]);
 
   return (
+    <>
+    <TxReceiptModal
+      isOpen={txReceipt !== null}
+      receipt={txReceipt}
+      onClose={() => setTxReceipt(null)}
+    />
     <div className="flex flex-1 flex-col gap-1">
       <PanelGate panel={SP_COIN_DISPLAY.SEND_SELECT_PANEL}>
         <div className="rounded-[12px] overflow-hidden bg-[#1f2639]">
@@ -86,9 +116,11 @@ export default function SendComponent() {
           toAddress={toAddress}
           tokenBalance={tokenBalance}
           tokenSymbol={tokenSymbol}
+          isPending={isPending}
           onSend={handleSend}
         />
       </PanelGate>
     </div>
+    </>
   );
 }

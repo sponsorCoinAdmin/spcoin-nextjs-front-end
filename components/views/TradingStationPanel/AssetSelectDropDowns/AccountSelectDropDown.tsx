@@ -73,7 +73,7 @@ const AccountSelectDropDown: React.FC<Props> = ({ recipientAccount, onSelectClic
         onClick={showRecipientListSelectPanel}
       >
         {recipientAccount && (
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg relative -top-[2px]">
             <AccountAvatar
               account={recipientAccount}
               mode={SP_COIN_DISPLAY.RECIPIENT_ACCOUNT}
