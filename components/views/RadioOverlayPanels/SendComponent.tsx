@@ -79,6 +79,7 @@ export default function SendComponent() {
           <SendRecipientPanel />
         </div>
       </PanelGate>
+
       <PanelGate panel={SP_COIN_DISPLAY.SEND_BUTTON}>
         <SendButton
           amount={amount}

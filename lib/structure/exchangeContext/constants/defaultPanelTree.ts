@@ -30,11 +30,9 @@ export const NON_PERSISTED_PANELS = new Set<SP>([]);
 
 export const MUST_INCLUDE_ON_BOOT: readonly (readonly [SP, boolean])[] = [
   [SP.MERIT_WALLET_COMPONENT, true],
-  [SP.TRADING_STATION_HEADER, true],
   [SP.MENU_TAB_HEADER_BAR, true],
   [SP.PANEL_SUB_TITLE, true],
   [SP.ACTIVE_ACCOUNT_HEADER_BAR, true],
-  [SP.ADDRESS_HEADER_BAR, true],
   [SP.AGENT_HEADER_CONTAINER, true],
   [SP.TRADING_STATION_PANEL, true],
   [SP.CONFIG_SLIPPAGE_PANEL, false],
@@ -103,15 +101,13 @@ export const MUST_INCLUDE_ON_BOOT: readonly (readonly [SP, boolean])[] = [
 export const defaultSpCoinPanelTree: SpCoinPanelTree = [
   node(SP.MERIT_WALLET_COMPONENT, true, [
     // Header bars
+    node(SP.PANEL_SUB_TITLE, true, [node(SP.ROLE_TABLE_COMPONENT, true), node(SP.ACCOUNT_SELECT_DROP_DOWN, true)]),
     node(SP.AGENT_HEADER_CONTAINER, true),
-    node(SP.ACTIVE_ACCOUNT_HEADER_BAR, true),
-    node(SP.ADDRESS_HEADER_BAR, true),
     node(SP.MENU_TAB_HEADER_BAR, true),
-    node(SP.PANEL_SUB_TITLE, true),
+    node(SP.ACTIVE_ACCOUNT_HEADER_BAR, true),
 
     // Core trading station subtree
     node(SP.TRADING_STATION_PANEL, true, [
-      node(SP.TRADING_STATION_HEADER, true),
       node(SP.CONFIG_SLIPPAGE_PANEL, false),
       node(SP.EXCHANGE_TRADING_PAIR, true, [
         node(SP.SELL_SELECT_PANEL, true, [node(SP.MANAGE_SPONSORSHIPS_BUTTON, false)]),
@@ -178,7 +174,7 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
     node(SP.SPONSOR_PANEL, false),
     node(SP.SEND_PANEL, false, [
       node(SP.SEND_SELECT_PANEL, true),
-      node(SP.SEND_ADDRESS_HEADER_BAR, true),
+      node(SP.SEND_ADDRESS_HEADER_BAR, true, [node(SP.ACCOUNT_SELECT_DROP_DOWN, true)]),
     ]),
     node(SP.SEND_RECIPIENT_SELECT_PANEL, false),
 

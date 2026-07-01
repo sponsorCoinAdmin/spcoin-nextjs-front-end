@@ -8,8 +8,6 @@ import ConnectTradeButton from '@/components/views/Buttons/ConnectTradeButton';
 import AffiliateFee from '@/components/views/TradingStationPanel/AffiliateFee';
 import FeeDisclosure from '@/components/views/TradingStationPanel/FeeDisclosure';
 import AddSponsorShipPanel from '@/components/views/TradingStationPanel/AddSponsorshipPanel';
-import TradingStationHeader from '@/components/views/TradingStationPanel/TradingStationHeader';
-
 import { usePriceAPI } from '@/lib/0x/hooks/usePriceAPI';
 import PanelGate from '@/components/utility/PanelGate';
 import SellSelectPanel from './SellSelectPanel';
@@ -24,9 +22,6 @@ export default function TradingStationPanel() {
   return (
     <PanelGate panel={SP_COIN_DISPLAY.TRADING_STATION_PANEL}>
       <div id="TRADING_STATION_PANEL" className={`flex flex-col ${TSP_TW.gap}`}>
-        <PanelGate panel={SP_COIN_DISPLAY.TRADING_STATION_HEADER}>
-          <TradingStationHeader />
-        </PanelGate>
         <PanelGate panel={SP_COIN_DISPLAY.CONFIG_SLIPPAGE_PANEL}>
           <ConfigSlippagePanel />
         </PanelGate>

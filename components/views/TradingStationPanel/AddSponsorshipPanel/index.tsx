@@ -316,7 +316,7 @@ const AddSponsorShipPanel: React.FC<Props> = ({
           </Link>
         </div>
 
-        <div className="absolute left-[160px] min-w-[50px] h-[25px] rounded-full flex items-center justify-start gap-1 font-bold text-[17px] pr-2 text-white bg-[#243056]">
+        <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center">
           <AccountSelectDropDown recipientAccount={recipientWallet} />
         </div>
 

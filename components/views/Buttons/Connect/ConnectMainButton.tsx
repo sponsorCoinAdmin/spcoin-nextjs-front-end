@@ -94,7 +94,7 @@ export default function ConnectMainButton({
           src={`/assets/blockchains/${currentId}/logo.png`}
           alt="Network"
           title={networkMenuTitle}
-          className="h-8 w-8 rounded cursor-pointer"
+          className="h-10 w-10 rounded cursor-pointer"
           role="button"
           tabIndex={0}
           onClick={(e) => stopThen(e, onImageClick)}

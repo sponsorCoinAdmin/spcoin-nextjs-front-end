@@ -35,11 +35,11 @@ export default function ReadOnlyMetaDataTable({
   return (
     <div id={id} className={`flex flex-col gap-0 ${className}`}>
       {logoVisible && logoURL ? (
-        <div className="flex justify-center items-center p-4 bg-[#0b0e19] border border-black rounded-xl mb-2">
+        <div className="flex justify-center items-center p-2 bg-[#0b0e19] border border-black rounded-xl">
           <img
             src={logoURL}
             alt={logoAlt}
-            className="w-full max-w-[160px] aspect-square rounded-full object-contain bg-[#11162A]"
+            className="w-full max-w-[320px] aspect-square rounded-full object-contain bg-[#11162A]"
           />
         </div>
       ) : null}

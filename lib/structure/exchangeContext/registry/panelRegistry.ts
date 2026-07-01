@@ -48,7 +48,6 @@ const EXCHANGE_TRADING_PAIR_CHILDREN: readonly SP[] = [
 ] as const;
 
 const TRADING_CHILDREN: readonly SP[] = [
-  SP.TRADING_STATION_HEADER,
   SP.CONFIG_SLIPPAGE_PANEL,
   SP.EXCHANGE_TRADING_PAIR,
   SP.ADD_SPONSORSHIP_PANEL,
@@ -197,16 +196,12 @@ export const PANEL_DEFS: readonly PanelDef[] = [
     children: TRADING_CHILDREN,
   }),
 
-  // Trading station header row (logo + title + cog)
-  def({ id: SP.TRADING_STATION_HEADER, kind: 'panel', defaultVisible: true }),
-
   // Popup header bars
   def({ id: SP.MENU_TAB_HEADER_BAR, kind: 'panel', defaultVisible: true }),
-  def({ id: SP.PANEL_SUB_TITLE, kind: 'panel', defaultVisible: true }),
-  def({ id: SP.ADDRESS_HEADER_BAR, kind: 'panel', defaultVisible: true, children: [SP.ACTIVE_ACCOUNT_HEADER_BAR, SP.ROLE_TABLE_COMPONENT] }),
+  def({ id: SP.PANEL_SUB_TITLE, kind: 'panel', defaultVisible: true, children: [SP.ROLE_TABLE_COMPONENT, SP.ACCOUNT_SELECT_DROP_DOWN] }),
   def({ id: SP.ACTIVE_ACCOUNT_HEADER_BAR, kind: 'panel', defaultVisible: true }),
   def({ id: SP.ROLE_TABLE_COMPONENT, kind: 'panel', defaultVisible: true }),
-  def({ id: SP.WALLET_HEADER, kind: 'panel', defaultVisible: true, children: [SP.ADDRESS_HEADER_BAR] }),
+  def({ id: SP.WALLET_HEADER, kind: 'panel', defaultVisible: true }),
   def({ id: SP.AGENT_HEADER_CONTAINER, kind: 'panel', defaultVisible: true }),
 
   // Token selector overlays
@@ -357,11 +352,11 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   def({ id: SP.WALLET_CONFIG_PANEL, kind: 'control', defaultVisible: false }),
   def({ id: SP.MANAGE_ACCOUNTS_PANEL, kind: 'panel', defaultVisible: false }),
   def({ id: SP.SPONSOR_PANEL, kind: 'panel', defaultVisible: false }),
-  def({ id: SP.SEND_PANEL, kind: 'panel', defaultVisible: false, children: [SP.PANEL_SUB_TITLE, SP.SEND_SELECT_PANEL, SP.SEND_ADDRESS_HEADER_BAR, SP.SEND_BUTTON] }),
+  def({ id: SP.SEND_PANEL, kind: 'panel', defaultVisible: false, children: [SP.SEND_SELECT_PANEL, SP.SEND_ADDRESS_HEADER_BAR, SP.SEND_BUTTON] }),
   def({ id: SP.SEND_RECIPIENT_SELECT_PANEL, kind: 'panel', defaultVisible: false }),
   def({ id: SP.SEND_BUTTON, kind: 'button', defaultVisible: true }),
   def({ id: SP.SEND_TITLE, kind: 'panel', defaultVisible: true }),
-  def({ id: SP.SEND_ADDRESS_HEADER_BAR, kind: 'panel', defaultVisible: true }),
+  def({ id: SP.SEND_ADDRESS_HEADER_BAR, kind: 'panel', defaultVisible: true, children: [SP.ACCOUNT_SELECT_DROP_DOWN] }),
   def({ id: SP.TOKEN_ADDRESS_COMPONENT, kind: 'panel', defaultVisible: true }),
   def({ id: SP.SEND_TO_ADDRESS, kind: 'panel', defaultVisible: true }),
   def({ id: SP.SEND_SELECT_PANEL, kind: 'panel', defaultVisible: true }),
@@ -386,7 +381,6 @@ export { IS_MAIN_RADIO_OVERLAY_PANEL, IS_MANAGE_SCOPED, IS_STACK_COMPONENT };
 export const NON_INDEXED_PANELS = new Set<SP>([
   SP.MERIT_WALLET_COMPONENT,
   SP.CONFIG_SLIPPAGE_PANEL,
-  SP.TRADING_STATION_HEADER,
   SP.MENU_TAB_HEADER_BAR,
   SP.PANEL_SUB_TITLE,
   SP.ACTIVE_ACCOUNT_HEADER_BAR,

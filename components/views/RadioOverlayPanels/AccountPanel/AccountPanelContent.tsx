@@ -180,7 +180,7 @@ export default function AccountPanelContent({
       <form onSubmit={handleSubmit} className="flex flex-col">
 
         <div
-          id={mode === SP_COIN_DISPLAY.ACTIVE_ACCOUNT ? 'ACTIVE_ACCOUNT_BODY' : undefined}
+          id="ACTIVE_ACCOUNT_BODY"
           className={
             mode === SP_COIN_DISPLAY.ACTIVE_ACCOUNT
               ? '-mx-4 -mb-[10px] flex flex-col gap-2 overflow-x-hidden rounded-b-[13px] px-4 pt-[2px] pb-0'

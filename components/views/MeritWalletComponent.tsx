@@ -6,8 +6,8 @@ import styles from '@/styles/Exchange.module.css';
 import ConnectNetworkButton from '@/components/views/Buttons/Connect/ConnectNetworkButton';
 import AgentHeaderContainer from '@/components/views/Headers/AgentHeaderContainer';
 import MenuTabHeaderBar from '@/components/views/Headers/MenuTabHeaderBar';
-import AddressHeaderBar from '@/components/views/Headers/AddressHeaderBar';
 import PanelSubTitle from '@/components/views/Headers/PanelSubTitle';
+import ActiveAccountHeaderBar from '@/components/views/Headers/ActiveAccountHeaderBar';
 import RadioOverlayPanelHost from '@/components/views/RadioOverlayPanelHost';
 import WalletHeader from '@/components/views/WalletHeader';
 import PanelGate from '@/components/utility/PanelGate';
@@ -67,21 +67,21 @@ export default function MeritWalletComponent({ onExpand, docked = false }: Props
                 chevronUp={walletNetworksVisible}
               />
             }
-            bottomSlot={<AddressHeaderBar />}
             onExpand={onExpand}
             onClose={closeWallet}
           />
         </PanelGate>
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <AgentHeaderContainer onMenuClick={handleMenuClick} />
           <div id="UNDEFINED" className="hidden" aria-hidden="true" />
           <div
             id="mainTradingPanel"
             className={styles.mainTradingPanel}
             style={{ transform: 'none', width: '100%', flex: 1, minHeight: 0, maxHeight: '100%', margin: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
           >
-            <MenuTabHeaderBar />
             <PanelSubTitle />
+            <AgentHeaderContainer onMenuClick={handleMenuClick} />
+            <MenuTabHeaderBar />
+            <ActiveAccountHeaderBar />
             <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto overscroll-contain flex flex-col">
               <RadioOverlayPanelHost />
             </div>

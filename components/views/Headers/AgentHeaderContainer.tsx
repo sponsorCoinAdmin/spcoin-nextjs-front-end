@@ -24,7 +24,7 @@ export default function AgentHeaderContainer({ onMenuClick }: Props) {
         <button
           type="button"
           onClick={() => closePanel('AgentHeaderContainer:back')}
-          className="absolute left-[16px] top-[16px] flex h-9 w-9 items-center justify-center rounded-full bg-[#303b68] hover:bg-[#3c487a]"
+          className="absolute left-0 top-[16px] flex h-9 w-9 items-center justify-center rounded-full bg-[#303b68] hover:bg-[#3c487a]"
           aria-label="Go back"
         >
           <ArrowLeft className="h-5 w-5 text-[#91a5ff]" />
@@ -37,7 +37,7 @@ export default function AgentHeaderContainer({ onMenuClick }: Props) {
           <button
             type="button"
             onClick={onMenuClick}
-            className="absolute right-[16px] top-[16px] flex h-9 w-9 items-center justify-center rounded-full bg-[#303b68] hover:bg-[#3c487a]"
+            className="absolute right-0 top-[16px] flex h-9 w-9 items-center justify-center rounded-full bg-[#303b68] hover:bg-[#3c487a]"
             aria-label="Open wallet menu"
           >
             <Menu className="h-5 w-5 text-[#91a5ff]" />

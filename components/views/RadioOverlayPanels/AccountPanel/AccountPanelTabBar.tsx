@@ -1,9 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import Image from 'next/image';
 import { ArrowLeftRight, FolderCog, HeartHandshake, SendHorizonal } from 'lucide-react';
-import cog_png from '@/public/assets/miscellaneous/cog.png';
 
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
@@ -25,7 +23,8 @@ export default function AccountPanelTabBar({ open = true }: Props) {
   const rewardsVisible = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
   const swapVisible    = usePanelVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
   const sendVisible    = usePanelVisible(SP_COIN_DISPLAY.SEND_PANEL);
-  const configVisible  = usePanelVisible(SP_COIN_DISPLAY.WALLET_CONFIG_PANEL);
+  const configVisible    = usePanelVisible(SP_COIN_DISPLAY.WALLET_CONFIG_PANEL);
+  const slippageVisible  = usePanelVisible(SP_COIN_DISPLAY.CONFIG_SLIPPAGE_PANEL);
   const wacVisible          = usePanelVisible(SP_COIN_DISPLAY.WALLET_ACCOUNTS_COMPONENT);
   const wncVisible          = usePanelVisible(SP_COIN_DISPLAY.WALLET_NETWORKS_COMPONENT);
   const accountPanelVisible = usePanelVisible(SP_COIN_DISPLAY.ACCOUNT_PANEL);
@@ -65,12 +64,12 @@ export default function AccountPanelTabBar({ open = true }: Props) {
     openPanel(tab.panel, `AccountPanelTabBar:${tab.key}`);
   };
 
-  const handleConfigClick = () => {
-    // Already open — clicking again is a no-op (same as clicking the active tab).
-    if (configVisible) return;
-    // Tab → config: close every tab panel so none remain highlighted.
-    TABS.forEach(tab => closePanel(tab.panel, 'AccountPanelTabBar:closeTabForConfig'));
-    openPanel(SP_COIN_DISPLAY.WALLET_CONFIG_PANEL, 'AccountPanelTabBar:cog');
+  const handleSlippageConfigClick = () => {
+    if (slippageVisible) {
+      closePanel(SP_COIN_DISPLAY.CONFIG_SLIPPAGE_PANEL, 'AccountPanelTabBar:Config:close');
+    } else {
+      openPanel(SP_COIN_DISPLAY.CONFIG_SLIPPAGE_PANEL, 'AccountPanelTabBar:Config:open');
+    }
   };
 
   return (
@@ -79,19 +78,7 @@ export default function AccountPanelTabBar({ open = true }: Props) {
       style={{ maxHeight: open ? '80px' : '0px', opacity: open ? 1 : 0 }}
     >
       <div className="relative border-b border-slate-700/70 px-4 pt-3">
-        <Image
-          src={cog_png}
-          alt="Config"
-          onClick={handleConfigClick}
-          className={[
-            'absolute right-[20px] top-[11px] h-[22px] w-[22px] cursor-pointer transition-transform duration-300 hover:rotate-[360deg]',
-            configVisible
-              ? 'brightness-200 drop-shadow-[0_0_4px_#9db0ff]'
-              : 'opacity-70 hover:opacity-100',
-          ].join(' ')}
-          priority
-        />
-        <div className="scrollbar-hide flex flex-nowrap items-center gap-2 overflow-x-auto pb-1 pr-10">
+        <div className="scrollbar-hide flex flex-nowrap items-center gap-2 overflow-x-auto pb-1">
           {TABS.map((tab) => {
             const isActive = tab.key === activeKey;
             return (
@@ -112,6 +99,20 @@ export default function AccountPanelTabBar({ open = true }: Props) {
               </button>
             );
           })}
+          <button
+            type="button"
+            onClick={handleSlippageConfigClick}
+            className={[
+              'inline-flex min-w-[92px] shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-t-[12px] border px-4 py-2 text-sp-sm font-semibold tracking-[0.14em] transition-colors',
+              slippageVisible
+                ? 'border-[#596fe8] bg-[#243056] text-[#9db0ff]'
+                : 'border-slate-700/70 bg-[#11162a] text-slate-300 hover:border-slate-600 hover:bg-[#1a2034]',
+            ].join(' ')}
+            aria-pressed={slippageVisible}
+            title="Config"
+          >
+            <span>Config</span>
+          </button>
         </div>
       </div>
     </div>

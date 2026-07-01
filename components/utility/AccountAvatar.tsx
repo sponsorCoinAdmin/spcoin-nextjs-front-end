@@ -18,6 +18,7 @@ type AccountAvatarProps = {
   name?: string;
   address?: string;
   className?: string;
+  title?: string;
   onClick?: (e: React.MouseEvent) => void;
 };
 
@@ -29,6 +30,7 @@ export default function AccountAvatar({
   name,
   address,
   className = 'h-10 w-10 object-contain',
+  title,
   onClick,
 }: AccountAvatarProps) {
   const openAccountComponent = useOpenAccountComponent();
@@ -43,7 +45,7 @@ export default function AccountAvatar({
   const [src, setSrc] = useState(resolvedLogo);
   useEffect(() => { setSrc(resolvedLogo); }, [resolvedLogo]);
 
-  const tooltip = [resolvedSymbol, resolvedName].filter(Boolean).join(': ') || resolvedAddress || '';
+  const tooltip = title ?? ([resolvedSymbol, resolvedName].filter(Boolean).join(': ') || resolvedAddress || '');
 
   const handleClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
